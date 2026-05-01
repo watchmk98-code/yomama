@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YOMAMA INVESTMENTS — FOCUS TREE</title>
+  <meta name="description" content="Derdo Merdo focus tree workspace." />
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260421-2" />
+</head>
+<body class="motion-paused">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="left-meta">
+          <span class="chip amber">2184 days in the market</span>
+          <span class="amber">Tue 23-APR-24</span>
+        </div>
+        <div class="ticker-container" aria-label="Live price action">
+          <div class="ticker-wrap" id="ticker"></div>
+        </div>
+        <div class="right-meta">
+          <span class="amber" id="clock">5:04 PM</span>
+          <button class="pill" type="button">LOG OUT</button>
+        </div>
+      </div>
+
+      <div class="banner-frame">
+        <div class="bubble-bg" aria-hidden="true"></div>
+        <div id="large-header" class="large-header" aria-hidden="true">
+          <canvas id="demo-canvas"></canvas>
+        </div>
+        <img class="hero-banner" src="./banner-colored.png" alt="YOMAMA Investments banner" />
+      </div>
+
+      <nav class="tabs" aria-label="Primary navigation">
+        <a class="tab" href="./index.html">DASH</a>
+        <a class="tab active" href="./collect.html">BUILDINGS</a>
+        <a class="tab" href="./flow.html">ANALYSTS</a>
+        <a class="tab" href="./memos.html">LEADERBOARD</a>
+        <a class="tab" href="./analysis.html">NEWS</a>
+        <a class="tab" href="./tomfort-method.html">TOMFORT METHOD</a>
+        <a class="tab" href="./about.html">PAPER</a>
+        <a class="tab" href="./chat.html">CHAT</a>
+        <a class="tab" href="./contact.html">PORT</a>
+      </nav>
+    </header>
+
+    <main class="buildings-workspace" aria-label="Derdo focus tree workspace">
+      <section class="panel buildings-main-panel" aria-label="Derdo focus tree panel">
+        <div class="buildings-main-head">
+          <div class="hdr">BUILD YOUR BASE</div>
+          <div class="muted">Plan DERDO MERDO's narrative momentum path.</div>
+          <div class="buildings-quick-links" aria-label="Buildings quick access">
+            <a class="buildings-quick-link" href="./collect.html">COLLECT</a>
+            <a class="buildings-quick-link" href="./warehouse.html">WAREHOUSE</a>
+            <a class="buildings-quick-link" href="./produce.html">PRODUCE</a>
+            <a class="buildings-quick-link" href="./advanced-hq.html">ADVANCED HQ</a>
+            <a class="buildings-quick-link" href="./marketplace.html">MARKETPLACE</a>
+            <a class="buildings-quick-link" href="./focus-tree.html" aria-current="page">FOCUS TREE</a>
+          </div>
+        </div>
+        <div class="buildings-blank-canvas focus-tree-canvas" aria-live="polite">
+          <section class="focus-tree-shell" aria-label="Derdo Merdo focus tree">
+            <header class="focus-tree-topbar">
+              <div class="focus-tree-character">
+                <img class="focus-tree-avatar" src="./assets/hero-select/player-derdo.png?v=20260216-1" alt="Derdo Merdo portrait" />
+                <div class="focus-tree-character-copy">
+                  <h2 class="focus-tree-title">DERDO MERDO — FOCUS TREE</h2>
+                  <p class="focus-tree-subtitle">High-beta equities, fast narrative loops, and disciplined risk pivots.</p>
+                </div>
+              </div>
+              <div class="focus-tree-meta" aria-label="Focus tree summary">
+                <span class="focus-tree-tag">BRANCHES: 3</span>
+                <span class="focus-tree-tag">FOCUSES: 14</span>
+              </div>
+            </header>
+
+            <div class="focus-tree-scroll">
+              <div id="focus-tree-grid" class="focus-tree-grid">
+                <svg id="focus-tree-lines" class="focus-tree-lines" aria-hidden="true"></svg>
+
+                <article class="focus-node" style="grid-column:4;grid-row:1;" data-focus-id="street_legend">
+                  <span class="focus-node-icon">SL</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Street Legend</div>
+                    <div class="focus-node-effect">Unlocks DERDO route</div>
+                  </div>
+                  <span class="focus-node-time">35D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:2;grid-row:2;" data-focus-id="media_blitz" data-focus-parents="street_legend">
+                  <span class="focus-node-icon">MB</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Media Blitz</div>
+                    <div class="focus-node-effect">Headline velocity +10%</div>
+                  </div>
+                  <span class="focus-node-time">42D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:4;grid-row:2;" data-focus-id="liquidity_sweep" data-focus-parents="street_legend">
+                  <span class="focus-node-icon">LS</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Liquidity Sweep</div>
+                    <div class="focus-node-effect">Entry speed +8%</div>
+                  </div>
+                  <span class="focus-node-time">35D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:6;grid-row:2;" data-focus-id="risk_frame" data-focus-parents="street_legend">
+                  <span class="focus-node-icon">RF</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Risk Frame</div>
+                    <div class="focus-node-effect">Max drawdown guard</div>
+                  </div>
+                  <span class="focus-node-time">42D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:1;grid-row:3;" data-focus-id="rumor_network" data-focus-parents="media_blitz">
+                  <span class="focus-node-icon">RN</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Rumor Network</div>
+                    <div class="focus-node-effect">Signal lead +12m</div>
+                  </div>
+                  <span class="focus-node-time">28D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:3;grid-row:3;" data-focus-id="crowd_capture" data-focus-parents="media_blitz">
+                  <span class="focus-node-icon">CC</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Crowd Capture</div>
+                    <div class="focus-node-effect">Trend hold +7%</div>
+                  </div>
+                  <span class="focus-node-time">35D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:5;grid-row:3;" data-focus-id="beta_rotation" data-focus-parents="liquidity_sweep">
+                  <span class="focus-node-icon">BR</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Beta Rotation</div>
+                    <div class="focus-node-effect">High-beta basket unlock</div>
+                  </div>
+                  <span class="focus-node-time">35D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:7;grid-row:3;" data-focus-id="stoploss_protocol" data-focus-parents="risk_frame">
+                  <span class="focus-node-icon">SP</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Stoploss Protocol</div>
+                    <div class="focus-node-effect">Loss cap -1.5%</div>
+                  </div>
+                  <span class="focus-node-time">28D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:2;grid-row:4;" data-focus-id="pump_and_fade" data-focus-parents="rumor_network,crowd_capture">
+                  <span class="focus-node-icon">PF</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Pump and Fade</div>
+                    <div class="focus-node-effect">Exit timing precision</div>
+                  </div>
+                  <span class="focus-node-time">35D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:4;grid-row:4;" data-focus-id="breakout_hunter" data-focus-parents="crowd_capture,beta_rotation">
+                  <span class="focus-node-icon">BH</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Breakout Hunter</div>
+                    <div class="focus-node-effect">Confirmation threshold</div>
+                  </div>
+                  <span class="focus-node-time">42D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:6;grid-row:4;" data-focus-id="volatility_shield" data-focus-parents="beta_rotation,stoploss_protocol">
+                  <span class="focus-node-icon">VS</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Volatility Shield</div>
+                    <div class="focus-node-effect">Whipsaw resistance</div>
+                  </div>
+                  <span class="focus-node-time">35D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:3;grid-row:5;" data-focus-id="moon_or_bust" data-focus-parents="pump_and_fade,breakout_hunter">
+                  <span class="focus-node-icon">MB+</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Moon or Bust</div>
+                    <div class="focus-node-effect">Aggro branch unlocked</div>
+                  </div>
+                  <span class="focus-node-time">28D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:5;grid-row:5;" data-focus-id="capital_preserve" data-focus-parents="breakout_hunter,volatility_shield">
+                  <span class="focus-node-icon">CP</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Capital Preserve</div>
+                    <div class="focus-node-effect">Defensive branch unlocked</div>
+                  </div>
+                  <span class="focus-node-time">28D</span>
+                </article>
+
+                <article class="focus-node" style="grid-column:4;grid-row:6;" data-focus-id="derdo_apex" data-focus-parents="moon_or_bust,capital_preserve">
+                  <span class="focus-node-icon">DA</span>
+                  <div class="focus-node-body">
+                    <div class="focus-node-title">Derdo Apex Doctrine</div>
+                    <div class="focus-node-effect">Adaptive alpha + narrative control</div>
+                  </div>
+                  <span class="focus-node-time">56D</span>
+                </article>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="buildings-side-panel" aria-label="Validation and stats widgets">
+        <section class="panel buildings-mini-panel" aria-label="Validation feed">
+          <div class="hdr">GAME MESSAGES</div>
+          <div id="buildings-lab-log" class="buildings-lab-log">
+            <div class="muted">No messages yet.</div>
+          </div>
+        </section>
+
+        <section class="panel buildings-mini-panel" aria-label="Stats and trait">
+          <div class="hdr">STATS + SKILL</div>
+          <div id="buildings-side-stats" class="buildings-side-stats">
+            <div class="muted">Loading stats...</div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+  <script src="./buildings-nav.js"></script>
+  <script src="./app.js?v=20260423-2"></script>
+  <script>
+    (() => {
+      const grid = document.getElementById('focus-tree-grid');
+      const linesLayer = document.getElementById('focus-tree-lines');
+      if (!grid || !linesLayer) return;
+
+      const svgNs = 'http://www.w3.org/2000/svg';
+
+      const drawLines = () => {
+        const gridRect = grid.getBoundingClientRect();
+        const width = Math.max(0, gridRect.width);
+        const height = Math.max(0, gridRect.height);
+
+        linesLayer.innerHTML = '';
+        linesLayer.setAttribute('width', String(width));
+        linesLayer.setAttribute('height', String(height));
+        linesLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+        const nodes = Array.from(grid.querySelectorAll('.focus-node[data-focus-id]'));
+        const nodeById = new Map(nodes.map((node) => [node.getAttribute('data-focus-id'), node]));
+
+        nodes.forEach((node) => {
+          const parentList = String(node.getAttribute('data-focus-parents') || '')
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean);
+          if (!parentList.length) return;
+
+          const nodeRect = node.getBoundingClientRect();
+          const targetX = nodeRect.left - gridRect.left + (nodeRect.width / 2);
+          const targetY = nodeRect.top - gridRect.top;
+
+          parentList.forEach((parentId) => {
+            const parentNode = nodeById.get(parentId);
+            if (!parentNode) return;
+
+            const parentRect = parentNode.getBoundingClientRect();
+            const sourceX = parentRect.left - gridRect.left + (parentRect.width / 2);
+            const sourceY = parentRect.top - gridRect.top + parentRect.height;
+            const middleY = sourceY + ((targetY - sourceY) * 0.56);
+
+            const path = document.createElementNS(svgNs, 'path');
+            path.setAttribute('d', `M ${sourceX} ${sourceY} L ${sourceX} ${middleY} L ${targetX} ${middleY} L ${targetX} ${targetY}`);
+            path.setAttribute('class', 'focus-tree-link');
+            linesLayer.appendChild(path);
+          });
+        });
+      };
+
+      drawLines();
+      window.addEventListener('resize', drawLines);
+      window.addEventListener('load', drawLines);
+      window.setTimeout(drawLines, 0);
+
+      if (document.fonts && typeof document.fonts.ready === 'object') {
+        document.fonts.ready.then(drawLines).catch(() => {});
+      }
+    })();
+  </script>
+</body>
+</html>

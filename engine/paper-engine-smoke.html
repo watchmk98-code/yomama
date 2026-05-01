@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paper Engine Smoke Test</title>
+</head>
+<body>
+  <pre id="output"></pre>
+
+  <script src="./paper-engine.js"></script>
+  <script>
+    (function () {
+      var engine = window.YomamaPaperEngine;
+      var contestConfig = engine.createContestConfig();
+      var paperState = engine.createPaperState({
+        contestId: "contest_demo",
+        participantId: "participant_demo",
+        alias: "Demo Trader",
+        benchmarkSymbol: contestConfig.benchmarkSymbol
+      });
+      var buyDraft = engine.createOrderDraft({
+        symbol: "spy",
+        side: "buy",
+        type: "market",
+        quantity: 10,
+        referencePrice: 500
+      });
+      var buySubmitResult = engine.submitDraftOrder(buyDraft, contestConfig, paperState);
+      var buyFillResult = engine.fillPendingOrder(
+        buySubmitResult.order.id,
+        490,
+        buySubmitResult.nextState
+      );
+      var sellDraft = engine.createOrderDraft({
+        symbol: "spy",
+        side: "sell",
+        type: "market",
+        quantity: 4
+      });
+      var sellSubmitResult = engine.submitDraftOrder(
+        sellDraft,
+        contestConfig,
+        buyFillResult.nextState
+      );
+      var sellFillResult = engine.fillPendingOrder(
+        sellSubmitResult.order.id,
+        520,
+        sellSubmitResult.nextState
+      );
+      var benchmarkBaselineResult = engine.setBenchmarkBaseline(
+        500,
+        sellFillResult.nextState,
+        { source: "smoke_manual" }
+      );
+      var benchmarkCurrentResult = engine.markBenchmarkPrice(
+        520,
+        benchmarkBaselineResult.nextState,
+        { source: "smoke_manual" }
+      );
+      var firstScoreSnapshotResult = engine.recordScoreSnapshot(
+        benchmarkCurrentResult.nextState,
+        {
+          label: "after-sell-before-mark"
+        }
+      );
+      var markResult = engine.markPortfolioToMarket(
+        { SPY: 530 },
+        firstScoreSnapshotResult.nextState
+      );
+      var secondScoreSnapshotResult = engine.recordScoreSnapshot(markResult.nextState, {
+        label: "after-mark"
+      });
+      var finalState = secondScoreSnapshotResult.nextState;
+      var scorePreview = engine.getScorePreview(finalState);
+      var officialScoreStatus = engine.getOfficialScoreStatus(finalState);
+
+      document.getElementById("output").textContent = JSON.stringify(
+        {
+          scorePreview: scorePreview,
+          firstScoreSnapshot: firstScoreSnapshotResult.snapshot,
+          secondScoreSnapshot: secondScoreSnapshotResult.snapshot,
+          scoreSnapshotsArray: finalState.scoreSnapshots,
+          officialScoreStatus: officialScoreStatus
+        },
+        null,
+        2
+      );
+    }());
+  </script>
+</body>
+</html>

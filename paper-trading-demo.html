@@ -1,0 +1,2033 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YOMAMA INVESTMENTS // YPORT</title>
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin />
+  <style>
+    @font-face {
+      font-family: "VT323 Local";
+      src: local("VT323"), url("./assets/fonts/VT323-Regular.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      --bg: #020202;
+      --panel: #070707;
+      --panel-2: #0b0b0b;
+      --panel-3: #111111;
+      --grid: rgba(255, 176, 0, 0.14);
+      --border: #805100;
+      --accent: #ffb01f;
+      --text: #f4f4f4;
+      --muted: #8f949a;
+      --green: #4de08d;
+      --red: #ff6666;
+      --top-offset: 112px;
+      --font-terminal: "VT323 Local", "VT323", "OCR A Std", "OCR A Extended", "Lucida Console", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      border-radius: 0;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        linear-gradient(180deg, rgba(255, 176, 0, 0.05), transparent 20%),
+        var(--bg);
+      color: var(--text);
+      font-family: var(--font-terminal);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.018) 0,
+          rgba(255, 255, 255, 0.018) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+      pointer-events: none;
+      opacity: 0.28;
+      z-index: 0;
+    }
+
+    body,
+    input,
+    select,
+    button,
+    textarea {
+      font-size: 15px;
+      letter-spacing: 0.04em;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+      color: inherit;
+      border-radius: 0;
+      box-shadow: none;
+      outline: none;
+    }
+
+    button {
+      cursor: pointer;
+      background: #140d00;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    button:hover,
+    button:focus-visible {
+      background: #241500;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--grid);
+      background: #040404;
+      padding: 6px 8px;
+    }
+
+    ::selection {
+      background: rgba(255, 176, 31, 0.3);
+      color: var(--text);
+    }
+
+    .terminal-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(255, 176, 31, 0.07), rgba(255, 176, 31, 0.02)),
+        rgba(3, 3, 3, 0.98);
+      backdrop-filter: none;
+    }
+
+    .terminal-header {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--grid);
+      min-width: 0;
+    }
+
+    .brand-block {
+      min-width: 0;
+    }
+
+    .brand {
+      color: var(--accent);
+      font-size: 21px;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .cmd-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .cmd-label,
+    .header-chip,
+    .summary-label,
+    .panel-kicker,
+    .field-label,
+    .worksheet-filter,
+    .note-kicker,
+    th {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .cmd-label {
+      flex: 0 0 auto;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      background: #0d0800;
+      font-size: 13px;
+    }
+
+    .cmd-input {
+      min-width: 0;
+      border-color: var(--border);
+      background: #020202;
+      color: var(--text);
+      text-transform: uppercase;
+    }
+
+    .mini-button {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .header-chip {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--grid);
+      background: #080808;
+      color: var(--text);
+      padding: 5px 8px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .header-chip strong {
+      color: var(--accent);
+      font-weight: 400;
+      margin-right: 4px;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(100px, 1fr));
+      gap: 0;
+      border-top: 1px solid var(--grid);
+      min-width: 0;
+    }
+
+    .summary-cell {
+      min-width: 0;
+      padding: 6px 8px 7px;
+      border-right: 1px solid var(--grid);
+      background: rgba(10, 10, 10, 0.97);
+    }
+
+    .summary-cell:last-child {
+      border-right: 0;
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .summary-value {
+      color: var(--text);
+      font-size: 19px;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      padding: calc(var(--top-offset) + 8px) 10px 10px;
+    }
+
+    .workspace {
+      display: grid;
+      gap: 8px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr) 320px;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(255, 176, 31, 0.02), transparent 24%),
+        var(--panel);
+      min-width: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--grid);
+      background: var(--panel-2);
+      min-width: 0;
+    }
+
+    .panel-title-wrap {
+      min-width: 0;
+    }
+
+    .panel-title {
+      margin: 0;
+      color: var(--accent);
+      font-size: 18px;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel-kicker {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+      line-height: 1;
+    }
+
+    .panel-body {
+      padding: 8px;
+    }
+
+    .left-rail,
+    .right-rail {
+      display: grid;
+      gap: 8px;
+    }
+
+    .quick-nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .quick-nav-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--grid);
+      color: var(--text);
+      text-transform: uppercase;
+    }
+
+    .quick-nav-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .quick-nav-item:first-child {
+      padding-top: 0;
+    }
+
+    .quick-nav-count {
+      color: var(--accent);
+    }
+
+    .ticket-grid {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 4px;
+    }
+
+    .field-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .button-block {
+      margin-top: 4px;
+    }
+
+    .button-block button {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+
+    .blotter-panel {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 560px;
+    }
+
+    .blotter-panel .panel-head {
+      align-items: flex-end;
+    }
+
+    .blotter-status {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      min-width: 0;
+    }
+
+    .blotter-wrap {
+      min-height: 0;
+      max-height: calc(100vh - var(--top-offset) - 230px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-variant-numeric: tabular-nums;
+      background: transparent;
+    }
+
+    th,
+    td {
+      padding: 6px 7px;
+      border-right: 1px solid var(--grid);
+      border-bottom: 1px solid var(--grid);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.05;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #080808;
+      color: var(--accent);
+      font-size: 12px;
+      text-align: left;
+    }
+
+    td:last-child,
+    th:last-child {
+      border-right: 0;
+    }
+
+    .numeric {
+      text-align: right;
+    }
+
+    .blotter-table th:nth-child(1),
+    .blotter-table td:nth-child(1) {
+      width: 10%;
+    }
+
+    .blotter-table th:nth-child(2),
+    .blotter-table td:nth-child(2) {
+      width: 8%;
+    }
+
+    .blotter-table th:nth-child(3),
+    .blotter-table td:nth-child(3),
+    .blotter-table th:nth-child(4),
+    .blotter-table td:nth-child(4),
+    .blotter-table th:nth-child(5),
+    .blotter-table td:nth-child(5) {
+      width: 12%;
+    }
+
+    .blotter-table th:nth-child(6),
+    .blotter-table td:nth-child(6),
+    .blotter-table th:nth-child(7),
+    .blotter-table td:nth-child(7),
+    .blotter-table th:nth-child(8),
+    .blotter-table td:nth-child(8),
+    .blotter-table th:nth-child(9),
+    .blotter-table td:nth-child(9) {
+      width: 11%;
+    }
+
+    tbody tr {
+      cursor: default;
+      background: transparent;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 176, 31, 0.06);
+    }
+
+    .blotter-row {
+      cursor: pointer;
+    }
+
+    .blotter-row.is-selected {
+      background: rgba(255, 176, 31, 0.16);
+      box-shadow: inset 0 0 0 1px rgba(255, 176, 31, 0.75);
+    }
+
+    .empty-row td,
+    .empty-state {
+      color: var(--muted);
+    }
+
+    .context-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 8px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .context-grid + .context-grid,
+    .context-stack + .context-stack,
+    .context-grid + .context-stack,
+    .context-stack + .context-grid {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--grid);
+    }
+
+    .context-key {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .context-value {
+      color: var(--text);
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .context-stack {
+      display: grid;
+      gap: 6px;
+    }
+
+    .benchmark-controls,
+    .mark-bar {
+      display: grid;
+      gap: 7px;
+    }
+
+    .mark-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px auto;
+      gap: 6px;
+      align-items: end;
+    }
+
+    .score-rows {
+      display: grid;
+      gap: 7px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: baseline;
+      border-bottom: 1px solid var(--grid);
+      padding-bottom: 6px;
+    }
+
+    .score-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .score-row .context-value {
+      font-size: 20px;
+      color: var(--accent);
+    }
+
+    .score-note {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    .analyst-copy {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.15;
+    }
+
+    .analyst-copy + .analyst-copy {
+      margin-top: 8px;
+      color: var(--muted);
+    }
+
+    .worksheet {
+      min-height: 250px;
+    }
+
+    .worksheet-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--grid);
+      background: var(--panel-2);
+    }
+
+    .worksheet-tab {
+      border: 0;
+      border-right: 1px solid var(--grid);
+      padding: 8px 10px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .worksheet-tab:last-child {
+      border-right: 0;
+    }
+
+    .worksheet-tab.is-active {
+      background: #1a1200;
+      color: var(--accent);
+    }
+
+    .worksheet-content {
+      padding: 8px;
+    }
+
+    .worksheet-panel {
+      display: none;
+      gap: 8px;
+    }
+
+    .worksheet-panel.is-active {
+      display: grid;
+    }
+
+    .worksheet-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .worksheet-filter {
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .worksheet-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .worksheet-table .fill-price-cell {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .worksheet-table input {
+      min-width: 72px;
+      padding: 5px 6px;
+    }
+
+    .worksheet-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .worksheet-actions button {
+      padding: 5px 7px;
+      font-size: 12px;
+      min-width: 58px;
+    }
+
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .note-block {
+      border: 1px solid var(--grid);
+      background: #050505;
+      padding: 8px;
+      min-height: 120px;
+    }
+
+    .note-kicker {
+      color: var(--accent);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .note-copy,
+    .note-list {
+      color: var(--text);
+      margin: 0;
+      line-height: 1.15;
+    }
+
+    .note-copy.muted-copy {
+      color: var(--muted);
+    }
+
+    .note-list {
+      padding-left: 16px;
+    }
+
+    .note-list li + li {
+      margin-top: 4px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 8px;
+      border: 1px solid var(--grid);
+      background: #030303;
+      color: #d7d7d7;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.1;
+      min-height: 210px;
+    }
+
+    .pos {
+      color: var(--green);
+    }
+
+    .neg {
+      color: var(--red);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .accent {
+      color: var(--accent);
+    }
+
+    @media (max-width: 1240px) {
+      .main-grid {
+        grid-template-columns: 190px minmax(0, 1fr) 280px;
+      }
+
+      .summary-strip {
+        grid-template-columns: repeat(5, minmax(120px, 1fr));
+      }
+
+      .note-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .terminal-header {
+        grid-template-columns: 1fr;
+      }
+
+      .header-meta {
+        justify-content: flex-start;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .left-rail {
+        order: 2;
+      }
+
+      .blotter-panel {
+        order: 1;
+        min-height: 420px;
+      }
+
+      .right-rail {
+        order: 3;
+      }
+
+      .blotter-wrap {
+        max-height: none;
+      }
+
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .app-shell {
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+
+      .terminal-header {
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+
+      .summary-cell,
+      .panel-head,
+      .panel-body,
+      .worksheet-content {
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+
+      .cmd-row {
+        flex-wrap: wrap;
+      }
+
+      .mark-row {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-top" id="terminal-top">
+    <header class="terminal-header">
+      <div class="brand-block">
+        <div class="brand">YOMAMA // YPORT</div>
+        <div class="brand-sub">Portfolio workspace</div>
+      </div>
+
+      <div class="cmd-row">
+        <span class="cmd-label">CMD</span>
+        <input
+          id="command-line"
+          class="cmd-input"
+          type="text"
+          value="YPORT &lt;GO&gt;"
+          readonly
+          aria-label="Command line"
+        />
+        <button class="mini-button" type="button" id="reset-demo-button">Reset Demo</button>
+      </div>
+
+      <div class="header-meta" id="header-meta" aria-label="Workspace status"></div>
+    </header>
+
+    <section class="summary-strip" id="summary-strip" aria-label="Portfolio summary strip"></section>
+  </div>
+
+  <main class="app-shell">
+    <div class="workspace">
+      <section class="main-grid" aria-label="YPORT workspace">
+        <aside class="left-rail" aria-label="Quick navigation and trade ticket">
+          <section class="panel" aria-labelledby="quick-nav-title">
+            <div class="panel-head">
+              <div class="panel-title-wrap">
+                <h2 class="panel-title" id="quick-nav-title">Quick Nav</h2>
+                <div class="panel-kicker">Desk shortcuts</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <ul class="quick-nav-list" id="quick-nav-list"></ul>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="trade-ticket-title">
+            <div class="panel-head">
+              <div class="panel-title-wrap">
+                <h2 class="panel-title" id="trade-ticket-title">Trade Ticket</h2>
+                <div class="panel-kicker">Engine-backed order entry</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <form id="trade-ticket-form" class="ticket-grid">
+                <label class="field-group">
+                  <span class="field-label">Symbol</span>
+                  <input id="ticket-symbol" name="symbol" type="text" autocomplete="off" spellcheck="false" />
+                </label>
+
+                <label class="field-group">
+                  <span class="field-label">Side</span>
+                  <select id="ticket-side" name="side">
+                    <option value="buy">buy</option>
+                    <option value="sell">sell</option>
+                  </select>
+                </label>
+
+                <label class="field-group">
+                  <span class="field-label">Order Type</span>
+                  <select id="ticket-type" name="type">
+                    <option value="market">market</option>
+                    <option value="limit">limit</option>
+                  </select>
+                </label>
+
+                <label class="field-group">
+                  <span class="field-label">Quantity</span>
+                  <input id="ticket-quantity" name="quantity" type="number" min="1" step="1" value="10" />
+                </label>
+
+                <label class="field-group">
+                  <span class="field-label">Reference Price</span>
+                  <input id="ticket-reference" name="referencePrice" type="number" min="0.01" step="0.01" />
+                </label>
+
+                <label class="field-group">
+                  <span class="field-label">Limit Price</span>
+                  <input id="ticket-limit" name="limitPrice" type="number" min="0.01" step="0.01" />
+                </label>
+
+                <label class="field-group">
+                  <span class="field-label">Session</span>
+                  <select id="ticket-session" name="session">
+                    <option value="regular">regular</option>
+                    <option value="pre">pre</option>
+                    <option value="after">after</option>
+                  </select>
+                </label>
+
+                <div class="button-block">
+                  <button type="submit">Submit Order</button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </aside>
+
+        <section class="panel blotter-panel" aria-labelledby="portfolio-blotter-title">
+          <div class="panel-head">
+            <div class="panel-title-wrap">
+              <h2 class="panel-title" id="portfolio-blotter-title">Portfolio Blotter</h2>
+              <div class="panel-kicker">Current open positions</div>
+            </div>
+            <div class="blotter-status" id="blotter-status">No rows</div>
+          </div>
+          <div class="table-wrap blotter-wrap">
+            <table class="blotter-table" aria-label="Portfolio blotter">
+              <thead>
+                <tr>
+                  <th>TKR</th>
+                  <th class="numeric">QTY</th>
+                  <th class="numeric">AVG PX</th>
+                  <th class="numeric">LAST</th>
+                  <th class="numeric">MKT VAL</th>
+                  <th class="numeric">WGT %</th>
+                  <th class="numeric">UPNL $</th>
+                  <th class="numeric">UPNL %</th>
+                  <th class="numeric">RPNL $</th>
+                </tr>
+              </thead>
+              <tbody id="blotter-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="right-rail" aria-label="Benchmark and score context">
+          <section class="panel" aria-labelledby="benchmark-title">
+            <div class="panel-head">
+              <div class="panel-title-wrap">
+                <h2 class="panel-title" id="benchmark-title">Benchmark</h2>
+                <div class="panel-kicker">Manual contest comparison</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="context-grid" id="benchmark-summary"></div>
+
+              <div class="context-stack benchmark-controls">
+                <label class="field-group">
+                  <span class="field-label">Baseline Input</span>
+                  <input id="benchmark-baseline-input" type="number" min="0.01" step="0.01" />
+                </label>
+                <button type="button" id="set-benchmark-baseline">Set Baseline</button>
+
+                <label class="field-group">
+                  <span class="field-label">Current Input</span>
+                  <input id="benchmark-current-input" type="number" min="0.01" step="0.01" />
+                </label>
+                <button type="button" id="mark-benchmark-price">Mark Benchmark</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="score-title">
+            <div class="panel-head">
+              <div class="panel-title-wrap">
+                <h2 class="panel-title" id="score-title">Score</h2>
+                <div class="panel-kicker">Preview stack</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="score-rows" id="score-summary"></div>
+              <div class="score-note">Preview only</div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="analyst-lens-title">
+            <div class="panel-head">
+              <div class="panel-title-wrap">
+                <h2 class="panel-title" id="analyst-lens-title">Analyst Lens</h2>
+                <div class="panel-kicker">YOMAMA framing</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <p class="analyst-copy">Tomfort / Discipline Mode</p>
+              <p class="analyst-copy">Focus: benchmark awareness, concentration control, repeatable habits.</p>
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="panel worksheet" aria-labelledby="worksheet-title">
+        <div class="panel-head">
+          <div class="panel-title-wrap">
+            <h2 class="panel-title" id="worksheet-title">Worksheet</h2>
+            <div class="panel-kicker">Bottom subviews</div>
+          </div>
+        </div>
+
+        <div class="worksheet-tabs" id="worksheet-tabs" role="tablist" aria-label="Worksheet tabs">
+          <button class="worksheet-tab is-active" type="button" data-tab="orders" role="tab" aria-selected="true">ORDERS</button>
+          <button class="worksheet-tab" type="button" data-tab="fills" role="tab" aria-selected="false">FILLS</button>
+          <button class="worksheet-tab" type="button" data-tab="activity" role="tab" aria-selected="false">ACTIVITY</button>
+          <button class="worksheet-tab" type="button" data-tab="notes" role="tab" aria-selected="false">NOTES</button>
+          <button class="worksheet-tab" type="button" data-tab="debug" role="tab" aria-selected="false">DEBUG</button>
+        </div>
+
+        <div class="worksheet-content">
+          <section class="worksheet-panel is-active" id="worksheet-panel-orders" data-panel="orders"></section>
+          <section class="worksheet-panel" id="worksheet-panel-fills" data-panel="fills"></section>
+          <section class="worksheet-panel" id="worksheet-panel-activity" data-panel="activity"></section>
+          <section class="worksheet-panel" id="worksheet-panel-notes" data-panel="notes"></section>
+          <section class="worksheet-panel" id="worksheet-panel-debug" data-panel="debug"></section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./engine/paper-engine.js"></script>
+  <script>
+    (function () {
+      var engine = window.YomamaPaperEngine;
+
+      if (!engine) {
+        return;
+      }
+
+      var watchlist = ["SPY", "QQQ", "AAPL", "NVDA", "MSFT", "AMD"];
+      var notesBySymbol = {
+        AAPL: [
+          "Scale gains, do not drift into benchmark blindness.",
+          "Use sells to realize process, not to chase noise."
+        ],
+        NVDA: [
+          "Concentration stays visible fast here.",
+          "If the weight climbs, the score preview will tell on you."
+        ],
+        MSFT: [
+          "Stable ballast names still need mark discipline.",
+          "Keep reference prices honest before routing size."
+        ],
+        AMD: [
+          "Pending ticket left open to show worksheet behavior.",
+          "Watch reservation drag versus unfilled conviction."
+        ]
+      };
+
+      var topShell = document.getElementById("terminal-top");
+      var headerMeta = document.getElementById("header-meta");
+      var summaryStrip = document.getElementById("summary-strip");
+      var quickNavList = document.getElementById("quick-nav-list");
+      var blotterStatus = document.getElementById("blotter-status");
+      var blotterBody = document.getElementById("blotter-body");
+      var benchmarkSummary = document.getElementById("benchmark-summary");
+      var scoreSummary = document.getElementById("score-summary");
+      var worksheetTabs = document.getElementById("worksheet-tabs");
+      var worksheetPanels = Array.prototype.slice.call(document.querySelectorAll("[data-panel]"));
+      var ordersPanel = document.getElementById("worksheet-panel-orders");
+      var fillsPanel = document.getElementById("worksheet-panel-fills");
+      var activityPanel = document.getElementById("worksheet-panel-activity");
+      var notesPanel = document.getElementById("worksheet-panel-notes");
+      var debugPanel = document.getElementById("worksheet-panel-debug");
+      var resetDemoButton = document.getElementById("reset-demo-button");
+      var tradeTicketForm = document.getElementById("trade-ticket-form");
+      var ticketSymbolInput = document.getElementById("ticket-symbol");
+      var ticketSideInput = document.getElementById("ticket-side");
+      var ticketTypeInput = document.getElementById("ticket-type");
+      var ticketQuantityInput = document.getElementById("ticket-quantity");
+      var ticketReferenceInput = document.getElementById("ticket-reference");
+      var ticketLimitInput = document.getElementById("ticket-limit");
+      var ticketSessionInput = document.getElementById("ticket-session");
+      var benchmarkBaselineInput = document.getElementById("benchmark-baseline-input");
+      var benchmarkCurrentInput = document.getElementById("benchmark-current-input");
+      var setBenchmarkBaselineButton = document.getElementById("set-benchmark-baseline");
+      var markBenchmarkPriceButton = document.getElementById("mark-benchmark-price");
+
+      var contestConfig;
+      var paperState;
+      var selectedSymbol = "";
+      var activeTab = "orders";
+      var lastActionResult = null;
+      var lastErrors = [];
+
+      function toUpper(value) {
+        return typeof value === "string" ? value.trim().toUpperCase() : "";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function readNumber(value) {
+        if (value === null || value === undefined || value === "") {
+          return undefined;
+        }
+
+        var numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : undefined;
+      }
+
+      function formatCurrency(value) {
+        if (value === null || value === undefined || value === "") {
+          return "—";
+        }
+
+        var numericValue = Number(value);
+
+        if (!Number.isFinite(numericValue)) {
+          return "—";
+        }
+
+        var prefix = numericValue < 0 ? "-$" : "$";
+        return prefix + Math.abs(numericValue).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function formatPercent(value, includePlus) {
+        if (value === null || value === undefined || value === "") {
+          return "—";
+        }
+
+        var numericValue = Number(value);
+
+        if (!Number.isFinite(numericValue)) {
+          return "—";
+        }
+
+        var prefix = "";
+
+        if (includePlus && numericValue > 0) {
+          prefix = "+";
+        }
+
+        return prefix + numericValue.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) + "%";
+      }
+
+      function formatDecimal(value) {
+        if (value === null || value === undefined || value === "") {
+          return "—";
+        }
+
+        var numericValue = Number(value);
+        return Number.isFinite(numericValue)
+          ? numericValue.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })
+          : "—";
+      }
+
+      function formatInputNumber(value) {
+        var numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue.toFixed(2) : "";
+      }
+
+      function formatTimestamp(value) {
+        if (!value) {
+          return "—";
+        }
+
+        var dateValue = new Date(value);
+
+        if (!Number.isFinite(dateValue.getTime())) {
+          return value;
+        }
+
+        return dateValue.toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).toUpperCase();
+      }
+
+      function toneClass(value) {
+        var numericValue = Number(value);
+
+        if (!Number.isFinite(numericValue) || numericValue === 0) {
+          return "";
+        }
+
+        return numericValue > 0 ? "pos" : "neg";
+      }
+
+      function syncTopOffset() {
+        document.documentElement.style.setProperty("--top-offset", topShell.offsetHeight + "px");
+      }
+
+      function setSelectedSymbol(symbol) {
+        selectedSymbol = toUpper(symbol);
+
+        if (selectedSymbol) {
+          ticketSymbolInput.value = selectedSymbol;
+
+          var position = getCurrentPosition(selectedSymbol);
+
+          if (position) {
+            ticketReferenceInput.value = formatInputNumber(
+              typeof position.marketPrice === "number" ? position.marketPrice : position.avgCost
+            );
+          }
+        }
+      }
+
+      function getCurrentPosition(symbol) {
+        var positions = paperState && paperState.positions && typeof paperState.positions === "object"
+          ? paperState.positions
+          : {};
+
+        return positions[toUpper(symbol)] || null;
+      }
+
+      function applyResult(result, preferredSymbol) {
+        lastActionResult = result;
+        lastErrors = Array.isArray(result && result.errors) ? result.errors.slice() : [];
+
+        if (result && result.ok && result.nextState) {
+          paperState = result.nextState;
+        }
+
+        if (preferredSymbol) {
+          setSelectedSymbol(preferredSymbol);
+        }
+
+        render();
+      }
+
+      function syncLimitInput() {
+        var isLimit = ticketTypeInput.value === "limit";
+        ticketLimitInput.disabled = !isLimit;
+
+        if (!isLimit) {
+          ticketLimitInput.value = "";
+        }
+      }
+
+      function commitSeed(result) {
+        if (result && result.ok && result.nextState) {
+          paperState = result.nextState;
+        }
+      }
+
+      function createFreshDemo() {
+        contestConfig = engine.createContestConfig();
+        paperState = engine.createPaperState({
+          contestId: "contest_yport_preview",
+          participantId: "student_yport_07",
+          alias: "Tomfort Student 07",
+          benchmarkSymbol: contestConfig.benchmarkSymbol
+        });
+
+        var result = engine.submitDraftOrder(
+          engine.createOrderDraft({
+            symbol: "AAPL",
+            side: "buy",
+            type: "market",
+            quantity: 120,
+            referencePrice: 184.5,
+            session: "regular"
+          }),
+          contestConfig,
+          paperState
+        );
+        commitSeed(result);
+        commitSeed(engine.fillPendingOrder(result.order.id, 184.5, paperState));
+
+        result = engine.submitDraftOrder(
+          engine.createOrderDraft({
+            symbol: "NVDA",
+            side: "buy",
+            type: "market",
+            quantity: 30,
+            referencePrice: 902,
+            session: "regular"
+          }),
+          contestConfig,
+          paperState
+        );
+        commitSeed(result);
+        commitSeed(engine.fillPendingOrder(result.order.id, 902, paperState));
+
+        result = engine.submitDraftOrder(
+          engine.createOrderDraft({
+            symbol: "MSFT",
+            side: "buy",
+            type: "market",
+            quantity: 65,
+            referencePrice: 421,
+            session: "regular"
+          }),
+          contestConfig,
+          paperState
+        );
+        commitSeed(result);
+        commitSeed(engine.fillPendingOrder(result.order.id, 421, paperState));
+
+        result = engine.submitDraftOrder(
+          engine.createOrderDraft({
+            symbol: "AAPL",
+            side: "sell",
+            type: "limit",
+            quantity: 20,
+            referencePrice: 192.4,
+            limitPrice: 192,
+            session: "regular"
+          }),
+          contestConfig,
+          paperState
+        );
+        commitSeed(result);
+        commitSeed(engine.fillPendingOrder(result.order.id, 193.1, paperState));
+
+        commitSeed(engine.submitDraftOrder(
+          engine.createOrderDraft({
+            symbol: "AMD",
+            side: "buy",
+            type: "limit",
+            quantity: 80,
+            referencePrice: 164.2,
+            limitPrice: 162.5,
+            session: "regular"
+          }),
+          contestConfig,
+          paperState
+        ));
+
+        commitSeed(engine.markPortfolioToMarket({
+          AAPL: 191.25,
+          NVDA: 887,
+          MSFT: 436.4
+        }, paperState));
+
+        commitSeed(engine.setBenchmarkBaseline(500, paperState, { source: "yport_demo" }));
+        commitSeed(engine.markBenchmarkPrice(518.5, paperState, { source: "yport_demo" }));
+
+        lastActionResult = {
+          ok: true,
+          seeded: true,
+          nextState: paperState,
+          message: "YPORT demo state bootstrapped with existing engine actions."
+        };
+        lastErrors = [];
+
+        selectedSymbol = "AAPL";
+        ticketSymbolInput.value = "AAPL";
+        ticketSideInput.value = "buy";
+        ticketTypeInput.value = "market";
+        ticketQuantityInput.value = "10";
+        ticketReferenceInput.value = "191.25";
+        ticketLimitInput.value = "";
+        ticketSessionInput.value = "regular";
+        benchmarkBaselineInput.value = "500.00";
+        benchmarkCurrentInput.value = "518.50";
+
+        syncLimitInput();
+      }
+
+      function getDerived() {
+        var portfolioSummary = engine.getPortfolioSummary(paperState);
+        var contestReturnSummary = engine.getContestReturnSummary(paperState);
+        var scorePreview = engine.getScorePreview(paperState);
+        var tradeStats = engine.getTradeStats(paperState);
+        var positionWeights = engine.getPositionWeights(paperState);
+        var orders = paperState && paperState.ledger && Array.isArray(paperState.ledger.orders)
+          ? paperState.ledger.orders.slice()
+          : [];
+        var openOrders = engine.getOpenOrders(paperState);
+        var fills = paperState && paperState.ledger && Array.isArray(paperState.ledger.fills)
+          ? paperState.ledger.fills.slice()
+          : [];
+        var cashEvents = paperState && paperState.ledger && Array.isArray(paperState.ledger.cashEvents)
+          ? paperState.ledger.cashEvents.slice()
+          : [];
+        var benchmark = paperState && paperState.benchmark && typeof paperState.benchmark === "object"
+          ? paperState.benchmark
+          : {
+              symbol: contestConfig && contestConfig.benchmarkSymbol ? contestConfig.benchmarkSymbol : "SPY",
+              baselinePrice: null,
+              currentPrice: null,
+              baselineAt: null,
+              currentAt: null,
+              source: "manual"
+            };
+        var positions = paperState && paperState.positions && typeof paperState.positions === "object"
+          ? Object.keys(paperState.positions).map(function (symbol) {
+              return paperState.positions[symbol];
+            })
+          : [];
+        var weightsBySymbol = {};
+        var realizedBySymbol = {};
+        var orderById = {};
+
+        positionWeights.forEach(function (item) {
+          weightsBySymbol[item.symbol] = item.weightPct;
+        });
+
+        fills.forEach(function (fill) {
+          if (!fill || !fill.symbol) {
+            return;
+          }
+
+          if (!realizedBySymbol[fill.symbol]) {
+            realizedBySymbol[fill.symbol] = 0;
+          }
+
+          realizedBySymbol[fill.symbol] += typeof fill.realizedPnl === "number" ? fill.realizedPnl : 0;
+        });
+
+        orders.forEach(function (order) {
+          if (order && order.id) {
+            orderById[order.id] = order;
+          }
+        });
+
+        positions.sort(function (left, right) {
+          var rightValue = typeof right.marketValue === "number" ? right.marketValue : 0;
+          var leftValue = typeof left.marketValue === "number" ? left.marketValue : 0;
+
+          if (rightValue !== leftValue) {
+            return rightValue - leftValue;
+          }
+
+          return String(left.symbol).localeCompare(String(right.symbol));
+        });
+
+        return {
+          benchmark: benchmark,
+          cashEvents: cashEvents,
+          contestReturnSummary: contestReturnSummary,
+          fills: fills,
+          openOrders: openOrders,
+          orderById: orderById,
+          orders: orders,
+          portfolioSummary: portfolioSummary,
+          positionWeights: positionWeights,
+          positions: positions,
+          realizedBySymbol: realizedBySymbol,
+          scorePreview: scorePreview,
+          tradeStats: tradeStats,
+          weightsBySymbol: weightsBySymbol
+        };
+      }
+
+      function getFilteredRows(rows, getSymbol) {
+        if (!selectedSymbol) {
+          return {
+            rows: rows,
+            filterLabel: "ALL SYMBOLS",
+            note: "Desk view"
+          };
+        }
+
+        var filteredRows = rows.filter(function (row) {
+          return toUpper(getSymbol(row)) === selectedSymbol;
+        });
+
+        if (filteredRows.length) {
+          return {
+            rows: filteredRows,
+            filterLabel: selectedSymbol,
+            note: "Selection filter applied"
+          };
+        }
+
+        return {
+          rows: rows,
+          filterLabel: "ALL SYMBOLS",
+          note: selectedSymbol + " has no rows in this view"
+        };
+      }
+
+      function renderHeader(derived) {
+        var updatedAt = paperState && paperState.meta ? paperState.meta.updatedAt : "";
+        headerMeta.innerHTML = [
+          '<span class="header-chip"><strong>STUDENT</strong>' + escapeHtml(paperState.alias || "—") + "</span>",
+          '<span class="header-chip"><strong>CONTEST</strong>' + escapeHtml(paperState.contestId || "—") + "</span>",
+          '<span class="header-chip"><strong>STATUS</strong>' + escapeHtml(String(contestConfig.quoteDelayMinutes)) + ' MIN DELAYED</span>',
+          '<span class="header-chip"><strong>AS OF</strong>' + escapeHtml(formatTimestamp(updatedAt)) + "</span>"
+        ].join("");
+
+        summaryStrip.innerHTML = [
+          {
+            label: "Cash",
+            value: formatCurrency(derived.portfolioSummary.cashTotal),
+            tone: ""
+          },
+          {
+            label: "Market Value",
+            value: formatCurrency(derived.portfolioSummary.marketValue),
+            tone: ""
+          },
+          {
+            label: "Equity",
+            value: formatCurrency(derived.portfolioSummary.equity),
+            tone: ""
+          },
+          {
+            label: "Realized P&L",
+            value: formatCurrency(derived.portfolioSummary.realizedPnl),
+            tone: toneClass(derived.portfolioSummary.realizedPnl)
+          },
+          {
+            label: "Unrealized P&L",
+            value: formatCurrency(derived.portfolioSummary.unrealizedPnl),
+            tone: toneClass(derived.portfolioSummary.unrealizedPnl)
+          },
+          {
+            label: "Total P&L",
+            value: formatCurrency(derived.portfolioSummary.totalPnl),
+            tone: toneClass(derived.portfolioSummary.totalPnl)
+          },
+          {
+            label: "Portfolio Return %",
+            value: formatPercent(derived.contestReturnSummary.portfolioReturnPct, true),
+            tone: toneClass(derived.contestReturnSummary.portfolioReturnPct)
+          },
+          {
+            label: "Benchmark Return %",
+            value: formatPercent(derived.contestReturnSummary.benchmarkReturnPct, true),
+            tone: toneClass(derived.contestReturnSummary.benchmarkReturnPct)
+          },
+          {
+            label: "Excess Return %",
+            value: formatPercent(derived.contestReturnSummary.excessReturnPct, true),
+            tone: toneClass(derived.contestReturnSummary.excessReturnPct)
+          },
+          {
+            label: "Preview Score",
+            value: formatDecimal(derived.scorePreview.totalPreviewScore),
+            tone: ""
+          }
+        ].map(function (item) {
+          return [
+            '<div class="summary-cell">',
+            '<div class="summary-label">' + escapeHtml(item.label) + "</div>",
+            '<div class="summary-value ' + escapeHtml(item.tone) + '">' + escapeHtml(item.value) + "</div>",
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderQuickNav(derived) {
+        var notesCount = Object.keys(notesBySymbol).length;
+
+        quickNavList.innerHTML = [
+          { label: "Watchlist", value: watchlist.length },
+          { label: "Orders", value: derived.tradeStats.openOrdersCount },
+          { label: "Fills", value: derived.fills.length },
+          { label: "Activity", value: derived.cashEvents.length },
+          { label: "Notes", value: notesCount }
+        ].map(function (item) {
+          return [
+            '<li class="quick-nav-item">',
+            '<span>' + escapeHtml(item.label) + "</span>",
+            '<span class="quick-nav-count">' + escapeHtml(String(item.value).padStart(2, "0")) + "</span>",
+            "</li>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderBlotter(derived) {
+        if (selectedSymbol && !getCurrentPosition(selectedSymbol) && derived.positions.length) {
+          selectedSymbol = derived.positions[0].symbol;
+        }
+
+        if (!selectedSymbol && derived.positions.length) {
+          selectedSymbol = derived.positions[0].symbol;
+        }
+
+        blotterStatus.textContent = derived.positions.length
+          ? "ROWS " + String(derived.positions.length).padStart(2, "0") + " // SEL " + selectedSymbol
+          : "NO POSITIONS";
+
+        blotterBody.innerHTML = derived.positions.length
+          ? derived.positions.map(function (position) {
+              var marketPrice = typeof position.marketPrice === "number" ? position.marketPrice : position.avgCost;
+              var marketValue = typeof position.marketValue === "number" ? position.marketValue : position.totalCost;
+              var unrealizedPnl = typeof position.unrealizedPnl === "number" ? position.unrealizedPnl : 0;
+              var totalCost = typeof position.totalCost === "number" ? position.totalCost : 0;
+              var unrealizedPct = totalCost > 0 ? (unrealizedPnl / totalCost) * 100 : 0;
+              var realizedPnl = derived.realizedBySymbol[position.symbol] || 0;
+              var weightPct = derived.weightsBySymbol[position.symbol] || 0;
+
+              return [
+                '<tr class="blotter-row ' + (selectedSymbol === position.symbol ? "is-selected" : "") + '" data-symbol="' + escapeHtml(position.symbol) + '">',
+                "<td>" + escapeHtml(position.symbol) + "</td>",
+                '<td class="numeric">' + escapeHtml(String(position.quantity)) + "</td>",
+                '<td class="numeric">' + escapeHtml(formatCurrency(position.avgCost)) + "</td>",
+                '<td class="numeric">' + escapeHtml(formatCurrency(marketPrice)) + "</td>",
+                '<td class="numeric">' + escapeHtml(formatCurrency(marketValue)) + "</td>",
+                '<td class="numeric">' + escapeHtml(formatPercent(weightPct, false)) + "</td>",
+                '<td class="numeric ' + escapeHtml(toneClass(unrealizedPnl)) + '">' + escapeHtml(formatCurrency(unrealizedPnl)) + "</td>",
+                '<td class="numeric ' + escapeHtml(toneClass(unrealizedPct)) + '">' + escapeHtml(formatPercent(unrealizedPct, true)) + "</td>",
+                '<td class="numeric ' + escapeHtml(toneClass(realizedPnl)) + '">' + escapeHtml(formatCurrency(realizedPnl)) + "</td>",
+                "</tr>"
+              ].join("");
+            }).join("")
+          : [
+              '<tr class="empty-row">',
+              '<td colspan="9" class="empty-state">NO OPEN POSITIONS // SUBMIT AND FILL ORDERS TO BUILD THE BLOTTER.</td>',
+              "</tr>"
+            ].join("");
+      }
+
+      function renderBenchmark(derived) {
+        benchmarkSummary.innerHTML = [
+          { key: "Benchmark Symbol", value: derived.benchmark.symbol || "—", tone: "" },
+          { key: "Baseline Price", value: formatCurrency(derived.benchmark.baselinePrice), tone: "" },
+          { key: "Current Price", value: formatCurrency(derived.benchmark.currentPrice), tone: "" },
+          {
+            key: "Portfolio Return %",
+            value: formatPercent(derived.contestReturnSummary.portfolioReturnPct, true),
+            tone: toneClass(derived.contestReturnSummary.portfolioReturnPct)
+          },
+          {
+            key: "Benchmark Return %",
+            value: formatPercent(derived.contestReturnSummary.benchmarkReturnPct, true),
+            tone: toneClass(derived.contestReturnSummary.benchmarkReturnPct)
+          },
+          {
+            key: "Excess Return %",
+            value: formatPercent(derived.contestReturnSummary.excessReturnPct, true),
+            tone: toneClass(derived.contestReturnSummary.excessReturnPct)
+          },
+          {
+            key: "Benchmark Value Of Starting Cash",
+            value: formatCurrency(derived.contestReturnSummary.benchmarkValueOfStartingCash),
+            tone: ""
+          }
+        ].map(function (item) {
+          return [
+            '<div class="context-key">' + escapeHtml(item.key) + "</div>",
+            '<div class="context-value ' + escapeHtml(item.tone) + '">' + escapeHtml(item.value) + "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderScore(derived) {
+        scoreSummary.innerHTML = [
+          { label: "Performance Score", value: derived.scorePreview.performance.performanceScore },
+          { label: "Discipline Score", value: derived.scorePreview.discipline.disciplineScore },
+          { label: "Total Preview Score", value: derived.scorePreview.totalPreviewScore }
+        ].map(function (item) {
+          return [
+            '<div class="score-row">',
+            '<div class="context-key">' + escapeHtml(item.label) + "</div>",
+            '<div class="context-value">' + escapeHtml(formatDecimal(item.value)) + "</div>",
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderOrdersTab(derived) {
+        var filtered = getFilteredRows(derived.openOrders, function (order) {
+          return order.symbol;
+        });
+
+        ordersPanel.innerHTML = [
+          '<div class="worksheet-toolbar">',
+          '<div class="worksheet-filter">FILTER // ' + escapeHtml(filtered.filterLabel) + "</div>",
+          '<div class="worksheet-note">' + escapeHtml(filtered.note) + "</div>",
+          "</div>",
+          '<div class="table-wrap">',
+          '<table class="worksheet-table" aria-label="Open orders worksheet">',
+          "<thead>",
+          "<tr>",
+          "<th>ORDER ID</th>",
+          "<th>SYM</th>",
+          '<th class="numeric">SIDE</th>',
+          '<th class="numeric">TYPE</th>',
+          '<th class="numeric">QTY</th>',
+          '<th class="numeric">REF PX</th>',
+          '<th class="numeric">LIMIT</th>',
+          '<th class="numeric">STATUS</th>',
+          "<th>FILL PX</th>",
+          '<th class="numeric">ACTIONS</th>',
+          "</tr>",
+          "</thead>",
+          '<tbody>',
+          filtered.rows.length
+            ? filtered.rows.map(function (order) {
+                var defaultFillPrice = order.type === "limit" && order.limitPrice
+                  ? order.limitPrice
+                  : order.referencePrice || "";
+
+                return [
+                  "<tr>",
+                  "<td>" + escapeHtml(order.id) + "</td>",
+                  "<td>" + escapeHtml(order.symbol) + "</td>",
+                  '<td class="numeric">' + escapeHtml(order.side) + "</td>",
+                  '<td class="numeric">' + escapeHtml(order.type) + "</td>",
+                  '<td class="numeric">' + escapeHtml(String(order.quantity)) + "</td>",
+                  '<td class="numeric">' + escapeHtml(formatCurrency(order.referencePrice)) + "</td>",
+                  '<td class="numeric">' + escapeHtml(formatCurrency(order.limitPrice)) + "</td>",
+                  '<td class="numeric">' + escapeHtml(order.status) + "</td>",
+                  '<td class="fill-price-cell"><input type="number" min="0.01" step="0.01" data-fill-input="' + escapeHtml(order.id) + '" value="' + escapeHtml(String(defaultFillPrice)) + '" /></td>',
+                  '<td class="numeric"><div class="worksheet-actions"><button type="button" data-order-action="fill" data-order-id="' + escapeHtml(order.id) + '">Fill</button><button type="button" data-order-action="cancel" data-order-id="' + escapeHtml(order.id) + '">Cancel</button></div></td>',
+                  "</tr>"
+                ].join("");
+              }).join("")
+            : '<tr class="empty-row"><td colspan="10">NO OPEN ORDERS IN VIEW.</td></tr>',
+          "</tbody>",
+          "</table>",
+          "</div>"
+        ].join("");
+      }
+
+      function renderFillsTab(derived) {
+        var filtered = getFilteredRows(derived.fills.slice().reverse(), function (fill) {
+          return fill.symbol;
+        });
+
+        fillsPanel.innerHTML = [
+          '<div class="worksheet-toolbar">',
+          '<div class="worksheet-filter">FILTER // ' + escapeHtml(filtered.filterLabel) + "</div>",
+          '<div class="worksheet-note">' + escapeHtml(filtered.note) + "</div>",
+          "</div>",
+          '<div class="table-wrap">',
+          '<table class="worksheet-table" aria-label="Fills worksheet">',
+          "<thead>",
+          "<tr>",
+          "<th>TIME</th>",
+          "<th>SYM</th>",
+          '<th class="numeric">SIDE</th>',
+          '<th class="numeric">QTY</th>',
+          '<th class="numeric">FILL PX</th>',
+          '<th class="numeric">GROSS</th>',
+          '<th class="numeric">RPNL</th>',
+          "</tr>",
+          "</thead>",
+          '<tbody>',
+          filtered.rows.length
+            ? filtered.rows.map(function (fill) {
+                return [
+                  "<tr>",
+                  "<td>" + escapeHtml(formatTimestamp(fill.createdAt)) + "</td>",
+                  "<td>" + escapeHtml(fill.symbol) + "</td>",
+                  '<td class="numeric">' + escapeHtml(fill.side) + "</td>",
+                  '<td class="numeric">' + escapeHtml(String(fill.quantity)) + "</td>",
+                  '<td class="numeric">' + escapeHtml(formatCurrency(fill.fillPrice)) + "</td>",
+                  '<td class="numeric">' + escapeHtml(formatCurrency(fill.grossAmount)) + "</td>",
+                  '<td class="numeric ' + escapeHtml(toneClass(fill.realizedPnl)) + '">' + escapeHtml(formatCurrency(fill.realizedPnl)) + "</td>",
+                  "</tr>"
+                ].join("");
+              }).join("")
+            : '<tr class="empty-row"><td colspan="7">NO FILLS IN VIEW.</td></tr>',
+          "</tbody>",
+          "</table>",
+          "</div>"
+        ].join("");
+      }
+
+      function renderActivityTab(derived) {
+        var filtered = getFilteredRows(derived.cashEvents.slice().reverse(), function (cashEvent) {
+          var order = derived.orderById[cashEvent.orderId];
+          return order ? order.symbol : "";
+        });
+        var position = getCurrentPosition(selectedSymbol);
+
+        activityPanel.innerHTML = [
+          '<div class="mark-bar">',
+          '<div class="worksheet-toolbar">',
+          '<div class="worksheet-filter">FILTER // ' + escapeHtml(filtered.filterLabel) + "</div>",
+          '<div class="worksheet-note">' + escapeHtml(filtered.note) + "</div>",
+          "</div>",
+          '<div class="mark-row">',
+          '<div class="field-group">',
+          '<span class="field-label">Selected Position</span>',
+          '<input type="text" value="' + escapeHtml(position ? position.symbol : "NO POSITION SELECTED") + '" readonly />',
+          "</div>",
+          '<div class="field-group">',
+          '<span class="field-label">Mark Price</span>',
+          '<input id="selected-mark-input" type="number" min="0.01" step="0.01" value="' + escapeHtml(position ? formatInputNumber(position.marketPrice || position.avgCost) : "") + '" ' + (position ? "" : "disabled") + " />",
+          "</div>",
+          '<button type="button" id="mark-selected-position" ' + (position ? "" : "disabled") + ">Mark Price</button>",
+          "</div>",
+          "</div>",
+          '<div class="table-wrap">',
+          '<table class="worksheet-table" aria-label="Cash activity worksheet">',
+          "<thead>",
+          "<tr>",
+          "<th>TIME</th>",
+          "<th>TYPE</th>",
+          "<th>ORDER</th>",
+          "<th>SYM</th>",
+          '<th class="numeric">AMOUNT</th>',
+          "</tr>",
+          "</thead>",
+          '<tbody>',
+          filtered.rows.length
+            ? filtered.rows.map(function (cashEvent) {
+                var order = derived.orderById[cashEvent.orderId];
+
+                return [
+                  "<tr>",
+                  "<td>" + escapeHtml(formatTimestamp(cashEvent.createdAt)) + "</td>",
+                  "<td>" + escapeHtml(cashEvent.type) + "</td>",
+                  "<td>" + escapeHtml(cashEvent.orderId || "—") + "</td>",
+                  "<td>" + escapeHtml(order && order.symbol ? order.symbol : "—") + "</td>",
+                  '<td class="numeric">' + escapeHtml(formatCurrency(cashEvent.amount)) + "</td>",
+                  "</tr>"
+                ].join("");
+              }).join("")
+            : '<tr class="empty-row"><td colspan="5">NO CASH EVENTS IN VIEW.</td></tr>',
+          "</tbody>",
+          "</table>",
+          "</div>"
+        ].join("");
+      }
+
+      function renderNotesTab() {
+        var noteLines = selectedSymbol && notesBySymbol[selectedSymbol]
+          ? notesBySymbol[selectedSymbol]
+          : [
+              "Select a blotter row to focus the desk notes.",
+              "Use ORDERS, FILLS, and ACTIVITY to inspect symbol-level workflow."
+            ];
+
+        var actionSummary = lastActionResult
+          ? JSON.stringify(lastActionResult, null, 2)
+          : "No actions yet.";
+
+        notesPanel.innerHTML = [
+          '<div class="worksheet-toolbar">',
+          '<div class="worksheet-filter">NOTESET // ' + escapeHtml(selectedSymbol || "DESK") + "</div>",
+          '<div class="worksheet-note">Static YOMAMA notes plus current action state</div>',
+          "</div>",
+          '<div class="note-grid">',
+          '<div class="note-block">',
+          '<div class="note-kicker">Desk Notes</div>',
+          '<ul class="note-list">' + noteLines.map(function (line) {
+            return "<li>" + escapeHtml(line) + "</li>";
+          }).join("") + "</ul>",
+          "</div>",
+          '<div class="note-block">',
+          '<div class="note-kicker">Watchlist</div>',
+          '<p class="note-copy">' + escapeHtml(watchlist.join(" // ")) + "</p>",
+          '<p class="note-copy muted-copy">Selected blotter rows prefill the ticket and tighten worksheet context when matching rows exist.</p>',
+          "</div>",
+          '<div class="note-block">',
+          '<div class="note-kicker">Last Action</div>',
+          '<pre>' + escapeHtml(actionSummary) + "</pre>",
+          lastErrors.length
+            ? '<div class="note-kicker" style="margin-top:8px;">Errors</div><ul class="note-list">' + lastErrors.map(function (errorMessage) {
+                return "<li>" + escapeHtml(errorMessage) + "</li>";
+              }).join("") + "</ul>"
+            : '<p class="note-copy muted-copy">No current engine errors.</p>',
+          "</div>",
+          "</div>"
+        ].join("");
+      }
+
+      function renderDebugTab() {
+        debugPanel.innerHTML = '<pre>' + escapeHtml(JSON.stringify(paperState, null, 2)) + "</pre>";
+      }
+
+      function renderWorksheet(derived) {
+        Array.prototype.forEach.call(worksheetTabs.querySelectorAll("[data-tab]"), function (button) {
+          var isActive = button.getAttribute("data-tab") === activeTab;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        worksheetPanels.forEach(function (panel) {
+          panel.classList.toggle("is-active", panel.getAttribute("data-panel") === activeTab);
+        });
+
+        renderOrdersTab(derived);
+        renderFillsTab(derived);
+        renderActivityTab(derived);
+        renderNotesTab();
+        renderDebugTab();
+      }
+
+      function render() {
+        var derived = getDerived();
+
+        renderHeader(derived);
+        renderQuickNav(derived);
+        renderBlotter(derived);
+        renderBenchmark(derived);
+        renderScore(derived);
+        renderWorksheet(derived);
+
+        window.requestAnimationFrame(syncTopOffset);
+      }
+
+      tradeTicketForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        var draft = engine.createOrderDraft({
+          symbol: ticketSymbolInput.value,
+          side: ticketSideInput.value,
+          type: ticketTypeInput.value,
+          quantity: readNumber(ticketQuantityInput.value),
+          referencePrice: readNumber(ticketReferenceInput.value),
+          limitPrice: readNumber(ticketLimitInput.value),
+          session: ticketSessionInput.value
+        });
+
+        applyResult(
+          engine.submitDraftOrder(draft, contestConfig, paperState),
+          toUpper(ticketSymbolInput.value)
+        );
+      });
+
+      ticketTypeInput.addEventListener("change", syncLimitInput);
+
+      blotterBody.addEventListener("click", function (event) {
+        var row = event.target.closest("[data-symbol]");
+
+        if (!row) {
+          return;
+        }
+
+        setSelectedSymbol(row.getAttribute("data-symbol"));
+        render();
+      });
+
+      worksheetTabs.addEventListener("click", function (event) {
+        var tabButton = event.target.closest("[data-tab]");
+
+        if (!tabButton) {
+          return;
+        }
+
+        activeTab = tabButton.getAttribute("data-tab");
+        render();
+      });
+
+      document.addEventListener("click", function (event) {
+        var orderActionButton = event.target.closest("[data-order-action]");
+
+        if (orderActionButton) {
+          var orderId = orderActionButton.getAttribute("data-order-id");
+          var action = orderActionButton.getAttribute("data-order-action");
+
+          if (action === "cancel") {
+            applyResult(engine.cancelPendingOrder(orderId, paperState));
+            return;
+          }
+
+          if (action === "fill") {
+            var fillInput = document.querySelector('[data-fill-input="' + orderId + '"]');
+            var fillPrice = fillInput ? readNumber(fillInput.value) : undefined;
+            var order = getDerived().orderById[orderId];
+            applyResult(engine.fillPendingOrder(orderId, fillPrice, paperState), order ? order.symbol : "");
+            return;
+          }
+        }
+
+        if (event.target && event.target.id === "mark-selected-position") {
+          var markInput = document.getElementById("selected-mark-input");
+          var priceMap = {};
+
+          if (!selectedSymbol) {
+            return;
+          }
+
+          priceMap[selectedSymbol] = markInput ? readNumber(markInput.value) : undefined;
+          applyResult(engine.markPortfolioToMarket(priceMap, paperState), selectedSymbol);
+        }
+      });
+
+      setBenchmarkBaselineButton.addEventListener("click", function () {
+        applyResult(
+          engine.setBenchmarkBaseline(
+            readNumber(benchmarkBaselineInput.value),
+            paperState,
+            { source: "yport_manual" }
+          )
+        );
+      });
+
+      markBenchmarkPriceButton.addEventListener("click", function () {
+        applyResult(
+          engine.markBenchmarkPrice(
+            readNumber(benchmarkCurrentInput.value),
+            paperState,
+            { source: "yport_manual" }
+          )
+        );
+      });
+
+      resetDemoButton.addEventListener("click", function () {
+        createFreshDemo();
+        render();
+      });
+
+      window.addEventListener("resize", syncTopOffset);
+
+      createFreshDemo();
+      render();
+    }());
+  </script>
+</body>
+</html>

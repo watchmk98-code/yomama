@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YOMAMA Paper Engine Lab</title>
+  <style>
+    :root {
+      --bg: #060606;
+      --panel: #0e0e0e;
+      --panel-alt: #121212;
+      --text: #f2f2f2;
+      --muted: #a8a8a8;
+      --border: #7a4d00;
+      --accent: #ffb000;
+      --green: #74f0a7;
+      --red: #ff8d8d;
+    }
+
+    * {
+      box-sizing: border-box;
+      border-radius: 0;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "VT323", "OCR A Std", "Lucida Console", "Courier New", monospace;
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero,
+    .panel,
+    .stat,
+    input,
+    select,
+    button,
+    table {
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .hero,
+    .panel {
+      padding: 16px;
+    }
+
+    .hero {
+      background:
+        linear-gradient(90deg, rgba(255, 176, 0, 0.12), rgba(255, 176, 0, 0.03) 45%, rgba(0, 0, 0, 0.4));
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 42px);
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 18px;
+      letter-spacing: 0.04em;
+    }
+
+    .summary {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .stat {
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+      background: var(--panel-alt);
+    }
+
+    .stat-label,
+    .panel-label,
+    th {
+      color: var(--muted);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .stat-value {
+      color: var(--accent);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .panel {
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-head {
+      display: grid;
+      gap: 4px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 176, 0, 0.22);
+    }
+
+    .panel-head h2 {
+      color: var(--accent);
+      font-size: 24px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .order-form {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.wide {
+      grid-column: span 3;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      color: var(--text);
+      font: inherit;
+      font-size: 18px;
+      padding: 10px 12px;
+      outline: none;
+      box-shadow: none;
+    }
+
+    input,
+    select {
+      background: #080808;
+    }
+
+    button {
+      cursor: pointer;
+      background: rgba(255, 176, 0, 0.14);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    button:hover {
+      background: rgba(255, 176, 0, 0.22);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .button-row button {
+      width: auto;
+      min-width: 160px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .result-box,
+    pre {
+      border: 1px solid rgba(255, 176, 0, 0.22);
+      background: #090909;
+      padding: 12px;
+      margin: 0;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .error-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--red);
+    }
+
+    .success {
+      color: var(--green);
+    }
+
+    .danger {
+      color: var(--red);
+    }
+
+    .score-row-latest td {
+      background: rgba(255, 176, 0, 0.12);
+    }
+
+    .score-row-best td {
+      box-shadow: inset 0 0 0 1px rgba(116, 240, 167, 0.5);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      border-right: 1px solid rgba(255, 176, 0, 0.18);
+      border-bottom: 1px solid rgba(255, 176, 0, 0.18);
+      text-align: left;
+      vertical-align: top;
+      font-size: 16px;
+      word-break: break-word;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: 0;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    .inline-action {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .inline-action input {
+      width: 110px;
+      padding: 8px 10px;
+      font-size: 16px;
+    }
+
+    .inline-action button {
+      width: auto;
+      min-width: 84px;
+      padding: 8px 10px;
+      font-size: 16px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 1100px) {
+      .summary,
+      .grid,
+      .order-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field.wide {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 16px;
+      }
+
+      .summary,
+      .grid,
+      .order-form {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .field.wide {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <h1>YOMAMA Paper Engine Lab</h1>
+      <p class="subtitle">Standalone trading engine sandbox</p>
+    </header>
+
+    <section class="summary" id="summary-strip" aria-label="Top summary strip"></section>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="order-panel-title">
+        <div class="panel-head">
+          <h2 id="order-panel-title">New Order</h2>
+          <p class="panel-note">BUY and SELL orders are supported here for the current long-only engine. SELL orders require existing holdings.</p>
+        </div>
+
+        <form id="order-form" class="order-form">
+          <label class="field">
+            <span class="panel-label">Side</span>
+            <select id="order-side" name="side">
+              <option value="buy">buy</option>
+              <option value="sell">sell</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="panel-label">Symbol</span>
+            <input id="order-symbol" name="symbol" type="text" value="SPY" />
+          </label>
+
+          <label class="field">
+            <span class="panel-label">Order Type</span>
+            <select id="order-type" name="type">
+              <option value="market">market</option>
+              <option value="limit">limit</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="panel-label">Quantity</span>
+            <input id="order-quantity" name="quantity" type="number" min="1" step="1" value="10" />
+          </label>
+
+          <label class="field">
+            <span class="panel-label">Reference Price</span>
+            <input id="order-reference-price" name="referencePrice" type="number" min="0.01" step="0.01" value="500" />
+          </label>
+
+          <label class="field">
+            <span class="panel-label">Limit Price</span>
+            <input id="order-limit-price" name="limitPrice" type="number" min="0.01" step="0.01" value="" />
+          </label>
+
+          <label class="field">
+            <span class="panel-label">Session</span>
+            <select id="order-session" name="session">
+              <option value="regular">regular</option>
+              <option value="pre">pre</option>
+              <option value="after">after</option>
+            </select>
+          </label>
+
+          <div class="field wide">
+            <div class="button-row">
+              <button type="submit">Submit Order</button>
+              <button type="button" id="reset-state">Reset Demo State</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" aria-labelledby="activity-panel-title">
+        <div class="panel-head">
+          <h2 id="activity-panel-title">Activity / Result</h2>
+          <p class="panel-note">Latest engine result payload and any current error messages.</p>
+        </div>
+
+        <div>
+          <div class="panel-label">Last Action Result</div>
+          <pre id="last-result-box" class="result-box">No actions yet.</pre>
+        </div>
+
+        <div>
+          <div class="panel-label">Last Error Messages</div>
+          <div id="last-errors-box" class="result-box muted">No errors.</div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="snapshot-controls-title">
+        <div class="panel-head">
+          <h2 id="snapshot-controls-title">Snapshot Controls</h2>
+          <p class="panel-note">Manual valuation snapshots only for this lab step. Trading actions do not record snapshots automatically yet.</p>
+        </div>
+
+        <div class="order-form">
+          <label class="field wide">
+            <span class="panel-label">Snapshot Label</span>
+            <input id="snapshot-label" name="snapshotLabel" type="text" value="" placeholder="after-mark" />
+          </label>
+
+          <div class="field wide">
+            <div class="button-row">
+              <button type="button" id="record-snapshot">Record Snapshot</button>
+              <button type="button" id="clear-snapshots">Clear Snapshots</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="equity-timeline-title">
+        <div class="panel-head">
+          <h2 id="equity-timeline-title">Equity Timeline</h2>
+          <p class="panel-note">Simple readout from the reusable equity timeline helper.</p>
+        </div>
+        <pre id="equity-timeline-box" class="result-box">[]</pre>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="benchmark-panel-title">
+        <div class="panel-head">
+          <h2 id="benchmark-panel-title">Benchmark</h2>
+          <p class="panel-note">Manual benchmark baseline and current price tracking for contest return comparisons.</p>
+        </div>
+
+        <div class="order-form">
+          <div class="field">
+            <span class="panel-label">Benchmark Symbol</span>
+            <div id="benchmark-symbol-display" class="result-box">SPY</div>
+          </div>
+
+          <label class="field">
+            <span class="panel-label">Baseline Price</span>
+            <input id="benchmark-baseline-price" name="benchmarkBaselinePrice" type="number" min="0.01" step="0.01" value="" placeholder="500" />
+          </label>
+
+          <div class="field">
+            <span class="panel-label">Set Baseline</span>
+            <button type="button" id="set-benchmark-baseline">Set Baseline</button>
+          </div>
+
+          <label class="field">
+            <span class="panel-label">Current Benchmark Price</span>
+            <input id="benchmark-current-price" name="benchmarkCurrentPrice" type="number" min="0.01" step="0.01" value="" placeholder="520" />
+          </label>
+
+          <div class="field">
+            <span class="panel-label">Mark Benchmark</span>
+            <button type="button" id="mark-benchmark-price">Mark Benchmark</button>
+          </div>
+
+          <div class="field wide">
+            <span class="panel-label">Stored Benchmark State</span>
+            <div id="benchmark-stored-box" class="result-box">No benchmark marks yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="contest-return-summary-title">
+        <div class="panel-head">
+          <h2 id="contest-return-summary-title">Contest Return Summary</h2>
+          <p class="panel-note">Portfolio return versus the manually tracked benchmark, with no scoring or ranking yet.</p>
+        </div>
+        <div id="contest-return-summary-box" class="result-box">No benchmark comparison yet.</div>
+      </section>
+    </div>
+
+    <section class="panel" aria-labelledby="score-preview-title">
+      <div class="panel-head">
+        <h2 id="score-preview-title">Score Preview</h2>
+        <p class="panel-note">Read-only preview values from the existing score helper. Manual score snapshots can be recorded from these values.</p>
+      </div>
+      <div id="score-preview-box" class="result-box">No score preview yet.</div>
+      <div class="order-form">
+        <label class="field wide">
+          <span class="panel-label">Score Snapshot Label</span>
+          <input id="score-snapshot-label" name="scoreSnapshotLabel" type="text" value="" placeholder="after-standard-scenario" />
+        </label>
+
+        <div class="field wide">
+          <div class="button-row">
+            <button type="button" id="record-score-snapshot">Record Score Snapshot</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="official-score-status-title">
+      <div class="panel-head">
+        <h2 id="official-score-status-title">Official Score Status</h2>
+      </div>
+      <div id="official-score-status-box" class="result-box">No recorded scores yet.</div>
+    </section>
+
+    <section class="panel" aria-labelledby="recorded-scores-title">
+      <div class="panel-head">
+        <h2 id="recorded-scores-title">Recorded Scores</h2>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Recorded scores">
+          <thead>
+            <tr>
+              <th>createdAt</th>
+              <th>label</th>
+              <th>total score</th>
+              <th>performance</th>
+              <th>discipline</th>
+              <th>portfolio return %</th>
+              <th>excess return %</th>
+              <th>turnover %</th>
+              <th>max weight %</th>
+              <th>equity</th>
+            </tr>
+          </thead>
+          <tbody id="score-snapshots-body"></tbody>
+        </table>
+      </div>
+      <p class="panel-note">Recorded scores are stored locally in the current demo state only.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="contest-rules-title">
+      <div class="panel-head">
+        <h2 id="contest-rules-title">Contest Rules</h2>
+        <p class="panel-note">Current demo contest setup and the read-only preview-score configuration used by the existing helper.</p>
+      </div>
+      <div id="contest-rules-box" class="result-box">No contest rules loaded yet.</div>
+    </section>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="pending-orders-title">
+        <div class="panel-head">
+          <h2 id="pending-orders-title">Pending Orders</h2>
+          <p class="panel-note">Fill or cancel active orders using the current engine methods.</p>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="Pending orders">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Symbol</th>
+                <th>Side</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Reserved</th>
+                <th>Status</th>
+                <th>Fill Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pending-orders-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="positions-title">
+        <div class="panel-head">
+          <h2 id="positions-title">Positions</h2>
+          <p class="panel-note">Current long positions with manual mark-to-market controls for unrealized PnL.</p>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="Positions">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Quantity</th>
+                <th>Avg Cost</th>
+                <th>Total Cost</th>
+                <th>Market Price</th>
+                <th>Market Value</th>
+                <th>Unrealized PnL</th>
+                <th>Weight %</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="positions-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="trade-stats-title">
+        <div class="panel-head">
+          <h2 id="trade-stats-title">Trade Stats</h2>
+          <p class="panel-note">Raw order-flow and turnover totals derived from the existing ledger only.</p>
+        </div>
+        <div id="trade-stats-box" class="result-box">No trade stats yet.</div>
+      </section>
+
+      <section class="panel" aria-labelledby="discipline-metrics-title">
+        <div class="panel-head">
+          <h2 id="discipline-metrics-title">Discipline Metrics</h2>
+          <p class="panel-note">Raw concentration and exposure metrics only. No contest scoring yet.</p>
+        </div>
+        <div id="discipline-metrics-box" class="result-box">No discipline metrics yet.</div>
+      </section>
+    </div>
+
+    <section class="panel" aria-labelledby="position-weights-title">
+      <div class="panel-head">
+        <h2 id="position-weights-title">Position Weights</h2>
+        <p class="panel-note">Current open-position weights ranked by exposure using market value when available.</p>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Position weights">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Quantity</th>
+              <th>Basis Value</th>
+              <th>Weight %</th>
+            </tr>
+          </thead>
+          <tbody id="position-weights-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="cash-events-title">
+        <div class="panel-head">
+          <h2 id="cash-events-title">Cash Events</h2>
+          <p class="panel-note">Reservation, release, and settlement activity from the engine ledger.</p>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="Cash events">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Order ID</th>
+                <th>Amount</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody id="cash-events-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="snapshots-title">
+        <div class="panel-head">
+          <h2 id="snapshots-title">Snapshots</h2>
+          <p class="panel-note">Manual valuation snapshots stored on the isolated paper state.</p>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="Snapshots">
+            <thead>
+              <tr>
+                <th>Created At</th>
+                <th>Label</th>
+                <th>Equity</th>
+                <th>Total PnL</th>
+                <th>Market Value</th>
+                <th>Cash Total</th>
+              </tr>
+            </thead>
+            <tbody id="snapshots-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" aria-labelledby="raw-state-title">
+      <div class="panel-head">
+        <h2 id="raw-state-title">Raw State</h2>
+        <p class="panel-note">Live paper state snapshot for debugging.</p>
+      </div>
+      <pre id="raw-state-box"></pre>
+    </section>
+  </main>
+
+  <script src="./paper-engine.js"></script>
+  <script>
+    (function () {
+      var engine = window.YomamaPaperEngine;
+      var summaryStrip = document.getElementById("summary-strip");
+      var orderForm = document.getElementById("order-form");
+      var resetStateButton = document.getElementById("reset-state");
+      var snapshotLabelInput = document.getElementById("snapshot-label");
+      var recordSnapshotButton = document.getElementById("record-snapshot");
+      var clearSnapshotsButton = document.getElementById("clear-snapshots");
+      var benchmarkSymbolDisplay = document.getElementById("benchmark-symbol-display");
+      var benchmarkBaselinePriceInput = document.getElementById("benchmark-baseline-price");
+      var setBenchmarkBaselineButton = document.getElementById("set-benchmark-baseline");
+      var benchmarkCurrentPriceInput = document.getElementById("benchmark-current-price");
+      var markBenchmarkPriceButton = document.getElementById("mark-benchmark-price");
+      var benchmarkStoredBox = document.getElementById("benchmark-stored-box");
+      var contestReturnSummaryBox = document.getElementById("contest-return-summary-box");
+      var scorePreviewBox = document.getElementById("score-preview-box");
+      var scoreSnapshotLabelInput = document.getElementById("score-snapshot-label");
+      var recordScoreSnapshotButton = document.getElementById("record-score-snapshot");
+      var officialScoreStatusBox = document.getElementById("official-score-status-box");
+      var contestRulesBox = document.getElementById("contest-rules-box");
+      var tradeStatsBox = document.getElementById("trade-stats-box");
+      var disciplineMetricsBox = document.getElementById("discipline-metrics-box");
+      var pendingOrdersBody = document.getElementById("pending-orders-body");
+      var positionsBody = document.getElementById("positions-body");
+      var positionWeightsBody = document.getElementById("position-weights-body");
+      var cashEventsBody = document.getElementById("cash-events-body");
+      var snapshotsBody = document.getElementById("snapshots-body");
+      var scoreSnapshotsBody = document.getElementById("score-snapshots-body");
+      var equityTimelineBox = document.getElementById("equity-timeline-box");
+      var lastResultBox = document.getElementById("last-result-box");
+      var lastErrorsBox = document.getElementById("last-errors-box");
+      var rawStateBox = document.getElementById("raw-state-box");
+
+      var contestConfig;
+      var paperState;
+      var lastActionResult = null;
+      var lastErrors = [];
+
+      function createFreshDemo() {
+        contestConfig = engine.createContestConfig();
+        paperState = engine.createPaperState({
+          contestId: "contest_lab",
+          participantId: "participant_lab",
+          alias: "Lab Trader",
+          benchmarkSymbol: contestConfig.benchmarkSymbol
+        });
+      }
+
+      function money(value) {
+        if (value === null || value === undefined || value === "") {
+          return "—";
+        }
+
+        var numericValue = Number(value);
+        return Number.isFinite(numericValue)
+          ? "$" + numericValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : "—";
+      }
+
+      function percent(value) {
+        if (value === null || value === undefined || value === "") {
+          return "—";
+        }
+
+        var numericValue = Number(value);
+        return Number.isFinite(numericValue)
+          ? numericValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%"
+          : "—";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function readNumber(value) {
+        if (value === "" || value === null || value === undefined) {
+          return undefined;
+        }
+
+        var numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : undefined;
+      }
+
+      function decimal(value) {
+        if (value === null || value === undefined || value === "") {
+          return "—";
+        }
+
+        var numericValue = Number(value);
+        return Number.isFinite(numericValue)
+          ? numericValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : "—";
+      }
+
+      function yesNo(value) {
+        if (typeof value !== "boolean") {
+          return "—";
+        }
+
+        return value ? "Yes" : "No";
+      }
+
+      function joinList(values) {
+        return Array.isArray(values) && values.length ? values.join(", ") : "—";
+      }
+
+      function renderMetricLines(items) {
+        return items.map(function (item) {
+          return [
+            "<div>",
+            escapeHtml(item.label) + ": " + escapeHtml(item.value),
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function applyResult(result) {
+        lastActionResult = result;
+        lastErrors = Array.isArray(result && result.errors) ? result.errors : [];
+
+        if (result && result.ok && result.nextState) {
+          paperState = result.nextState;
+        }
+
+        render();
+      }
+
+      function buildSnapshotsOnlyState(nextSnapshots) {
+        var updatedAt = new Date().toISOString();
+
+        return {
+          version: paperState.version,
+          contestId: paperState.contestId,
+          participantId: paperState.participantId,
+          alias: paperState.alias,
+          account: paperState.account,
+          ledger: paperState.ledger,
+          benchmark: paperState.benchmark,
+          positions: paperState.positions,
+          snapshots: nextSnapshots,
+          scoreSnapshots: Array.isArray(paperState.scoreSnapshots) ? paperState.scoreSnapshots : [],
+          meta: {
+            createdAt:
+              paperState.meta && typeof paperState.meta.createdAt === "string"
+                ? paperState.meta.createdAt
+                : updatedAt,
+            updatedAt: updatedAt
+          }
+        };
+      }
+
+      function render() {
+        var portfolioSummary = engine.getPortfolioSummary(paperState);
+        var contestReturnSummary = engine.getContestReturnSummary(paperState);
+        var scorePreview = engine.getScorePreview(paperState);
+        var officialScoreStatus = engine.getOfficialScoreStatus(paperState);
+        var tradeStats = engine.getTradeStats(paperState);
+        var positionWeights = engine.getPositionWeights(paperState);
+        var disciplineMetrics = engine.getDisciplineMetrics(paperState);
+        var benchmark =
+          paperState.benchmark && typeof paperState.benchmark === "object"
+            ? paperState.benchmark
+            : {
+                symbol: contestConfig && contestConfig.benchmarkSymbol ? contestConfig.benchmarkSymbol : "SPY",
+                baselinePrice: null,
+                currentPrice: null,
+                baselineAt: null,
+                currentAt: null,
+                source: "manual"
+              };
+        var snapshots = Array.isArray(paperState.snapshots) ? paperState.snapshots : [];
+        var scoreSnapshots = Array.isArray(paperState.scoreSnapshots) ? paperState.scoreSnapshots : [];
+        var equityTimeline = engine.getEquityTimeline(paperState);
+        var openOrders = engine.getOpenOrders(paperState);
+        var fills = paperState.ledger && Array.isArray(paperState.ledger.fills) ? paperState.ledger.fills : [];
+        var positions = paperState.positions && typeof paperState.positions === "object" ? Object.values(paperState.positions) : [];
+        var cashEvents = paperState.ledger && Array.isArray(paperState.ledger.cashEvents) ? paperState.ledger.cashEvents : [];
+        var positionWeightBySymbol = {};
+        var latestScoreSnapshotId =
+          officialScoreStatus.latestSnapshot && officialScoreStatus.latestSnapshot.id
+            ? officialScoreStatus.latestSnapshot.id
+            : "";
+        var bestScoreSnapshotId =
+          officialScoreStatus.bestSnapshot && officialScoreStatus.bestSnapshot.id
+            ? officialScoreStatus.bestSnapshot.id
+            : "";
+
+        positionWeights.forEach(function (item) {
+          positionWeightBySymbol[item.symbol] = item.weightPct;
+        });
+
+        summaryStrip.innerHTML = [
+          { label: "Available Cash", value: money(portfolioSummary.availableCash) },
+          { label: "Reserved Cash", value: money(portfolioSummary.reservedCash) },
+          { label: "Market Value", value: money(portfolioSummary.marketValue) },
+          { label: "Equity", value: money(portfolioSummary.equity) },
+          { label: "Realized PnL", value: money(portfolioSummary.realizedPnl) },
+          { label: "Unrealized PnL", value: money(portfolioSummary.unrealizedPnl) },
+          { label: "Total PnL", value: money(portfolioSummary.totalPnl) },
+          { label: "Portfolio Return", value: percent(contestReturnSummary.portfolioReturnPct) },
+          { label: "Benchmark Return", value: percent(contestReturnSummary.benchmarkReturnPct) },
+          { label: "Excess Return", value: percent(contestReturnSummary.excessReturnPct) },
+          { label: "Preview Score", value: decimal(scorePreview.totalPreviewScore) },
+          { label: "Official Score", value: decimal(officialScoreStatus.latestOfficialScore) },
+          { label: "Turnover", value: percent(tradeStats.turnoverPctOfStartingCash) },
+          { label: "Max Weight", value: percent(disciplineMetrics.maxPositionWeightPct) },
+          { label: "Snapshots", value: String(snapshots.length) }
+        ].map(function (item) {
+          return [
+            '<article class="stat">',
+            '<div class="stat-label">' + escapeHtml(item.label) + "</div>",
+            '<div class="stat-value">' + escapeHtml(item.value) + "</div>",
+            "</article>"
+          ].join("");
+        }).join("");
+
+        benchmarkSymbolDisplay.textContent = benchmark.symbol || "SPY";
+        benchmarkStoredBox.innerHTML = [
+          "<div>Baseline Price: " + escapeHtml(money(benchmark.baselinePrice)) + "</div>",
+          "<div>Current Price: " + escapeHtml(money(benchmark.currentPrice)) + "</div>",
+          "<div>Baseline At: " + escapeHtml(benchmark.baselineAt || "—") + "</div>",
+          "<div>Current At: " + escapeHtml(benchmark.currentAt || "—") + "</div>",
+          "<div>Source: " + escapeHtml(benchmark.source || "manual") + "</div>"
+        ].join("");
+
+        contestReturnSummaryBox.innerHTML = [
+          "<div>Starting Cash: " + escapeHtml(money(contestReturnSummary.startingCash)) + "</div>",
+          "<div>Equity: " + escapeHtml(money(contestReturnSummary.equity)) + "</div>",
+          "<div>Total PnL: " + escapeHtml(money(contestReturnSummary.totalPnl)) + "</div>",
+          "<div>Portfolio Return: " + escapeHtml(percent(contestReturnSummary.portfolioReturnPct)) + "</div>",
+          "<div>Benchmark Return: " + escapeHtml(percent(contestReturnSummary.benchmarkReturnPct)) + "</div>",
+          "<div>Excess Return: " + escapeHtml(percent(contestReturnSummary.excessReturnPct)) + "</div>",
+          "<div>Benchmark Value Of Starting Cash: " + escapeHtml(money(contestReturnSummary.benchmarkValueOfStartingCash)) + "</div>"
+        ].join("");
+
+        scorePreviewBox.innerHTML = renderMetricLines([
+          { label: "Portfolio Return %", value: percent(scorePreview.inputs && scorePreview.inputs.portfolioReturnPct) },
+          { label: "Benchmark Return %", value: percent(scorePreview.inputs && scorePreview.inputs.benchmarkReturnPct) },
+          { label: "Excess Return %", value: percent(scorePreview.inputs && scorePreview.inputs.excessReturnPct) },
+          { label: "Performance Input %", value: percent(scorePreview.performance && scorePreview.performance.performanceInputPct) },
+          { label: "Performance Score", value: decimal(scorePreview.performance && scorePreview.performance.performanceScore) },
+          { label: "Turnover Penalty", value: decimal(scorePreview.discipline && scorePreview.discipline.turnoverPenalty) },
+          { label: "Concentration Penalty", value: decimal(scorePreview.discipline && scorePreview.discipline.concentrationPenalty) },
+          { label: "Discipline Score", value: decimal(scorePreview.discipline && scorePreview.discipline.disciplineScore) },
+          { label: "Weighted Performance Score", value: decimal(scorePreview.weighted && scorePreview.weighted.weightedPerformanceScore) },
+          { label: "Weighted Discipline Score", value: decimal(scorePreview.weighted && scorePreview.weighted.weightedDisciplineScore) },
+          { label: "Total Preview Score", value: decimal(scorePreview.totalPreviewScore) }
+        ]);
+
+        officialScoreStatusBox.innerHTML = renderMetricLines([
+          { label: "official score available?", value: officialScoreStatus.hasOfficialScore ? "yes" : "no" },
+          { label: "recorded scores count", value: String(officialScoreStatus.recordedScoresCount) },
+          { label: "latest official score", value: decimal(officialScoreStatus.latestOfficialScore) },
+          { label: "previous official score", value: decimal(officialScoreStatus.previousOfficialScore) },
+          { label: "score delta from previous", value: decimal(officialScoreStatus.scoreDeltaFromPrevious) },
+          { label: "best official score", value: decimal(officialScoreStatus.bestOfficialScore) },
+          { label: "latest label", value: officialScoreStatus.latestSnapshot ? officialScoreStatus.latestSnapshot.label || "—" : "—" },
+          { label: "latest recorded at", value: officialScoreStatus.latestSnapshot ? officialScoreStatus.latestSnapshot.createdAt || "—" : "—" },
+          { label: "best label", value: officialScoreStatus.bestSnapshot ? officialScoreStatus.bestSnapshot.label || "—" : "—" },
+          { label: "preview score", value: decimal(officialScoreStatus.previewScore) },
+          { label: "preview vs latest gap", value: decimal(officialScoreStatus.previewVsLatestGap) }
+        ]);
+
+        scoreSnapshotsBody.innerHTML = scoreSnapshots.length
+          ? scoreSnapshots.map(function (snapshot, index) {
+              var rowClasses = [];
+
+              if (snapshot && snapshot.id && snapshot.id === latestScoreSnapshotId) {
+                rowClasses.push("score-row-latest");
+              } else if (index === scoreSnapshots.length - 1) {
+                rowClasses.push("score-row-latest");
+              }
+
+              if (snapshot && snapshot.id && snapshot.id === bestScoreSnapshotId) {
+                rowClasses.push("score-row-best");
+              }
+
+              return [
+                '<tr class="' + escapeHtml(rowClasses.join(" ")) + '">',
+                "<td>" + escapeHtml(snapshot.createdAt || "—") + "</td>",
+                "<td>" + escapeHtml(snapshot.label || "—") + "</td>",
+                "<td>" + escapeHtml(decimal(snapshot.totalScore)) + "</td>",
+                "<td>" + escapeHtml(decimal(snapshot.performanceScore)) + "</td>",
+                "<td>" + escapeHtml(decimal(snapshot.disciplineScore)) + "</td>",
+                "<td>" + escapeHtml(percent(snapshot.portfolioReturnPct)) + "</td>",
+                "<td>" + escapeHtml(percent(snapshot.excessReturnPct)) + "</td>",
+                "<td>" + escapeHtml(percent(snapshot.turnoverPctOfStartingCash)) + "</td>",
+                "<td>" + escapeHtml(percent(snapshot.maxPositionWeightPct)) + "</td>",
+                "<td>" + escapeHtml(money(snapshot.equity)) + "</td>",
+                "</tr>"
+              ].join("");
+            }).join("")
+          : '<tr><td colspan="10" class="muted">No recorded scores yet.</td></tr>';
+
+        contestRulesBox.innerHTML = [
+          renderMetricLines([
+            { label: "Starting Cash", value: money(contestConfig && contestConfig.startingCash) },
+            { label: "Benchmark Symbol", value: contestConfig && contestConfig.benchmarkSymbol ? contestConfig.benchmarkSymbol : "—" },
+            { label: "Long Only", value: yesNo(contestConfig && contestConfig.longOnly) },
+            { label: "Allowed Order Types", value: joinList(contestConfig && contestConfig.allowedOrderTypes) },
+            { label: "Allowed Sessions", value: joinList(contestConfig && contestConfig.allowedSessions) },
+            { label: "Quote Delay Minutes", value: contestConfig && contestConfig.quoteDelayMinutes !== undefined ? String(contestConfig.quoteDelayMinutes) : "—" },
+            { label: "Slippage Model", value: contestConfig && contestConfig.slippageModel ? contestConfig.slippageModel : "—" },
+            { label: "Asset Universe Mode", value: contestConfig && contestConfig.assetUniverseMode ? contestConfig.assetUniverseMode : "—" }
+          ]),
+          '<div class="panel-label" style="margin-top: 12px;">Preview Score Config</div>',
+          renderMetricLines([
+            { label: "Performance Weight", value: decimal(scorePreview.config && scorePreview.config.performanceWeight) },
+            { label: "Discipline Weight", value: decimal(scorePreview.config && scorePreview.config.disciplineWeight) },
+            { label: "Raw Return Weight", value: decimal(scorePreview.config && scorePreview.config.rawReturnWeight) },
+            { label: "Excess Return Weight", value: decimal(scorePreview.config && scorePreview.config.excessReturnWeight) },
+            { label: "Performance Scale", value: decimal(scorePreview.config && scorePreview.config.performanceScale) },
+            { label: "Turnover Penalty Rate", value: decimal(scorePreview.config && scorePreview.config.turnoverPenaltyRate) },
+            { label: "Concentration Soft Limit %", value: percent(scorePreview.config && scorePreview.config.concentrationSoftLimitPct) },
+            { label: "Concentration Penalty Rate", value: decimal(scorePreview.config && scorePreview.config.concentrationPenaltyRate) }
+          ]),
+          '<div class="muted" style="margin-top: 12px;">Preview score is informational only. Official contest scoring is not implemented yet.</div>'
+        ].join("");
+
+        tradeStatsBox.innerHTML = renderMetricLines([
+          { label: "Submitted Orders", value: String(tradeStats.submittedOrdersCount) },
+          { label: "Open Orders", value: String(tradeStats.openOrdersCount) },
+          { label: "Filled Orders", value: String(tradeStats.filledOrdersCount) },
+          { label: "Canceled Orders", value: String(tradeStats.canceledOrdersCount) },
+          { label: "Buy Fills", value: String(tradeStats.buyFillsCount) },
+          { label: "Sell Fills", value: String(tradeStats.sellFillsCount) },
+          { label: "Gross Buy Volume", value: money(tradeStats.grossBuyVolume) },
+          { label: "Gross Sell Volume", value: money(tradeStats.grossSellVolume) },
+          { label: "Gross Turnover", value: money(tradeStats.grossTurnover) },
+          { label: "Turnover % Of Starting Cash", value: percent(tradeStats.turnoverPctOfStartingCash) }
+        ]);
+
+        disciplineMetricsBox.innerHTML = renderMetricLines([
+          { label: "Max Position Symbol", value: disciplineMetrics.maxPositionSymbol || "—" },
+          { label: "Max Position Weight %", value: percent(disciplineMetrics.maxPositionWeightPct) },
+          { label: "Invested %", value: percent(disciplineMetrics.investedPct) },
+          { label: "Cash %", value: percent(disciplineMetrics.cashPct) },
+          { label: "Positions Count", value: String(disciplineMetrics.positionsCount) },
+          { label: "Filled Trade Count", value: String(disciplineMetrics.filledTradeCount) }
+        ]);
+
+        pendingOrdersBody.innerHTML = openOrders.length
+          ? openOrders.map(function (order) {
+              var defaultFillPrice =
+                order.type === "limit" && order.limitPrice
+                  ? order.limitPrice
+                  : order.referencePrice || "";
+
+              return [
+                "<tr>",
+                "<td>" + escapeHtml(order.id) + "</td>",
+                "<td>" + escapeHtml(order.symbol) + "</td>",
+                "<td>" + escapeHtml(order.side) + "</td>",
+                "<td>" + escapeHtml(order.type) + "</td>",
+                "<td>" + escapeHtml(String(order.quantity)) + "</td>",
+                "<td>" + escapeHtml(money(order.reservedAmount || 0)) + "</td>",
+                "<td>" + escapeHtml(order.status) + "</td>",
+                "<td>",
+                '<input type="number" min="0.01" step="0.01" data-fill-input="' + escapeHtml(order.id) + '" value="' + escapeHtml(String(defaultFillPrice)) + '" />',
+                "</td>",
+                "<td>",
+                '<div class="inline-action">',
+                '<button type="button" data-action="fill" data-order-id="' + escapeHtml(order.id) + '">Fill</button>',
+                '<button type="button" data-action="cancel" data-order-id="' + escapeHtml(order.id) + '">Cancel</button>',
+                "</div>",
+                "</td>",
+                "</tr>"
+              ].join("");
+            }).join("")
+          : '<tr><td colspan="9" class="muted">No pending orders.</td></tr>';
+
+        positionsBody.innerHTML = positions.length
+          ? positions.map(function (position) {
+              var currentMarketPrice =
+                typeof position.marketPrice === "number"
+                  ? position.marketPrice
+                  : position.avgCost;
+              var currentMarketValue =
+                typeof position.marketValue === "number"
+                  ? position.marketValue
+                  : position.totalCost;
+              var currentUnrealizedPnl =
+                typeof position.unrealizedPnl === "number"
+                  ? position.unrealizedPnl
+                  : 0;
+
+              return [
+                "<tr>",
+                "<td>" + escapeHtml(position.symbol) + "</td>",
+                "<td>" + escapeHtml(String(position.quantity)) + "</td>",
+                "<td>" + escapeHtml(money(position.avgCost)) + "</td>",
+                "<td>" + escapeHtml(money(position.totalCost)) + "</td>",
+                "<td>" + escapeHtml(money(currentMarketPrice)) + "</td>",
+                "<td>" + escapeHtml(money(currentMarketValue)) + "</td>",
+                "<td>" + escapeHtml(money(currentUnrealizedPnl)) + "</td>",
+                "<td>" + escapeHtml(percent(positionWeightBySymbol[position.symbol] || 0)) + "</td>",
+                "<td>",
+                '<div class="inline-action">',
+                '<input type="number" min="0.01" step="0.01" data-mark-input="' + escapeHtml(position.symbol) + '" value="' + escapeHtml(String(currentMarketPrice)) + '" />',
+                '<button type="button" data-action="mark" data-symbol="' + escapeHtml(position.symbol) + '">Mark</button>',
+                "</div>",
+                "</td>",
+                "</tr>"
+              ].join("");
+            }).join("")
+          : '<tr><td colspan="9" class="muted">No positions yet.</td></tr>';
+
+        positionWeightsBody.innerHTML = positionWeights.length
+          ? positionWeights.map(function (item) {
+              return [
+                "<tr>",
+                "<td>" + escapeHtml(item.symbol) + "</td>",
+                "<td>" + escapeHtml(String(item.quantity)) + "</td>",
+                "<td>" + escapeHtml(money(item.basisValue)) + "</td>",
+                "<td>" + escapeHtml(percent(item.weightPct)) + "</td>",
+                "</tr>"
+              ].join("");
+            }).join("")
+          : '<tr><td colspan="4" class="muted">No position weights yet.</td></tr>';
+
+        cashEventsBody.innerHTML = cashEvents.length
+          ? cashEvents.map(function (cashEvent) {
+              return [
+                "<tr>",
+                "<td>" + escapeHtml(cashEvent.type) + "</td>",
+                "<td>" + escapeHtml(cashEvent.orderId || "—") + "</td>",
+                "<td>" + escapeHtml(money(cashEvent.amount)) + "</td>",
+                "<td>" + escapeHtml(cashEvent.createdAt) + "</td>",
+                "</tr>"
+              ].join("");
+            }).join("")
+          : '<tr><td colspan="4" class="muted">No cash events yet.</td></tr>';
+
+        snapshotsBody.innerHTML = snapshots.length
+          ? snapshots.map(function (snapshot) {
+              return [
+                "<tr>",
+                "<td>" + escapeHtml(snapshot.createdAt || "—") + "</td>",
+                "<td>" + escapeHtml(snapshot.label || "—") + "</td>",
+                "<td>" + escapeHtml(money(snapshot.equity)) + "</td>",
+                "<td>" + escapeHtml(money(snapshot.totalPnl)) + "</td>",
+                "<td>" + escapeHtml(money(snapshot.marketValue)) + "</td>",
+                "<td>" + escapeHtml(money(snapshot.cashTotal)) + "</td>",
+                "</tr>"
+              ].join("");
+            }).join("")
+          : '<tr><td colspan="6" class="muted">No snapshots recorded yet.</td></tr>';
+
+        equityTimelineBox.textContent = JSON.stringify(equityTimeline, null, 2);
+
+        lastResultBox.textContent = lastActionResult ? JSON.stringify(lastActionResult, null, 2) : "No actions yet.";
+
+        if (lastErrors.length) {
+          lastErrorsBox.innerHTML = '<ul class="error-list">' + lastErrors.map(function (message) {
+            return "<li>" + escapeHtml(message) + "</li>";
+          }).join("") + "</ul>";
+        } else {
+          lastErrorsBox.innerHTML = '<span class="success">No errors.</span>';
+        }
+
+        rawStateBox.textContent = JSON.stringify(paperState, null, 2);
+      }
+
+      orderForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        var orderType = document.getElementById("order-type").value;
+        var draft = engine.createOrderDraft({
+          symbol: document.getElementById("order-symbol").value,
+          side: document.getElementById("order-side").value,
+          type: orderType,
+          quantity: readNumber(document.getElementById("order-quantity").value),
+          referencePrice: readNumber(document.getElementById("order-reference-price").value),
+          limitPrice: readNumber(document.getElementById("order-limit-price").value),
+          session: document.getElementById("order-session").value
+        });
+        var result = engine.submitDraftOrder(draft, contestConfig, paperState);
+
+        applyResult(result);
+      });
+
+      pendingOrdersBody.addEventListener("click", function (event) {
+        var actionButton = event.target.closest("[data-action]");
+
+        if (!actionButton) {
+          return;
+        }
+
+        var orderId = actionButton.getAttribute("data-order-id");
+
+        if (actionButton.getAttribute("data-action") === "cancel") {
+          applyResult(engine.cancelPendingOrder(orderId, paperState));
+          return;
+        }
+
+        if (actionButton.getAttribute("data-action") === "fill") {
+          var fillInput = pendingOrdersBody.querySelector('[data-fill-input="' + orderId + '"]');
+          var fillPrice = fillInput ? readNumber(fillInput.value) : undefined;
+
+          applyResult(engine.fillPendingOrder(orderId, fillPrice, paperState));
+        }
+      });
+
+      positionsBody.addEventListener("click", function (event) {
+        var markButton = event.target.closest('[data-action="mark"]');
+
+        if (!markButton) {
+          return;
+        }
+
+        var symbol = markButton.getAttribute("data-symbol");
+        var markInput = positionsBody.querySelector('[data-mark-input="' + symbol + '"]');
+        var markPrice = markInput ? readNumber(markInput.value) : undefined;
+        var priceMap = {};
+
+        priceMap[symbol] = markPrice;
+        applyResult(engine.markPortfolioToMarket(priceMap, paperState));
+      });
+
+      recordSnapshotButton.addEventListener("click", function () {
+        var result = engine.recordValuationSnapshot(paperState, {
+          label: snapshotLabelInput.value || "",
+          source: "lab_manual"
+        });
+
+        if (result.ok) {
+          snapshotLabelInput.value = "";
+        }
+
+        applyResult(result);
+      });
+
+      recordScoreSnapshotButton.addEventListener("click", function () {
+        var result = engine.recordScoreSnapshot(paperState, {
+          label: scoreSnapshotLabelInput.value || "",
+          source: "lab_manual"
+        });
+
+        if (result.ok) {
+          scoreSnapshotLabelInput.value = "";
+        }
+
+        applyResult(result);
+      });
+
+      clearSnapshotsButton.addEventListener("click", function () {
+        applyResult({
+          ok: true,
+          errors: [],
+          clearedSnapshots: true,
+          nextState: buildSnapshotsOnlyState([])
+        });
+      });
+
+      setBenchmarkBaselineButton.addEventListener("click", function () {
+        applyResult(
+          engine.setBenchmarkBaseline(
+            readNumber(benchmarkBaselinePriceInput.value),
+            paperState,
+            { source: "lab_manual" }
+          )
+        );
+      });
+
+      markBenchmarkPriceButton.addEventListener("click", function () {
+        applyResult(
+          engine.markBenchmarkPrice(
+            readNumber(benchmarkCurrentPriceInput.value),
+            paperState,
+            { source: "lab_manual" }
+          )
+        );
+      });
+
+      resetStateButton.addEventListener("click", function () {
+        createFreshDemo();
+        lastActionResult = null;
+        lastErrors = [];
+        render();
+      });
+
+      createFreshDemo();
+      render();
+    }());
+  </script>
+</body>
+</html>

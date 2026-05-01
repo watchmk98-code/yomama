@@ -1,0 +1,751 @@
+{
+  "updated_at": "2026-02-15T06:21:38.309Z",
+  "source": "SEC CompanyFacts API",
+  "symbols": {
+    "AAPL": {
+      "symbol": "AAPL",
+      "company": "Apple Inc.",
+      "cik": "0000320193",
+      "period_end": "2025-09-27",
+      "currency": "USD",
+      "revenue": {
+        "value": 416161000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      },
+      "grossProfit": {
+        "value": 195201000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "GrossProfit"
+      },
+      "operatingIncome": {
+        "value": 133050000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "OperatingIncomeLoss"
+      },
+      "netIncome": {
+        "value": 112010000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetIncomeLoss"
+      },
+      "eps": {
+        "value": 7.49,
+        "unit": "USD/shares",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "EarningsPerShareBasic"
+      },
+      "assets": {
+        "value": 359241000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Assets"
+      },
+      "liabilities": {
+        "value": 285508000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Liabilities"
+      },
+      "equity": {
+        "value": 73733000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "StockholdersEquity"
+      },
+      "cash": {
+        "value": 45317000000,
+        "unit": "USD",
+        "end": "2025-12-27",
+        "filed": "2026-01-30",
+        "fy": 2026,
+        "fp": "Q1",
+        "form": "10-Q",
+        "tag": "CashAndCashEquivalentsAtCarryingValue"
+      },
+      "operatingCashFlow": {
+        "value": 111482000000,
+        "unit": "USD",
+        "end": "2025-09-27",
+        "filed": "2025-10-31",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetCashProvidedByUsedInOperatingActivities"
+      },
+      "grossMargin": 0.4690516410716045,
+      "netMargin": 0.2691506412181824
+    },
+    "NVDA": {
+      "symbol": "NVDA",
+      "company": "NVIDIA CORP",
+      "cik": "0001045810",
+      "period_end": "2025-01-26",
+      "currency": "USD",
+      "revenue": {
+        "value": 130497000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Revenues"
+      },
+      "grossProfit": {
+        "value": 97858000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "GrossProfit"
+      },
+      "operatingIncome": {
+        "value": 81453000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "OperatingIncomeLoss"
+      },
+      "netIncome": {
+        "value": 72880000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetIncomeLoss"
+      },
+      "eps": {
+        "value": 2.97,
+        "unit": "USD/shares",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "EarningsPerShareBasic"
+      },
+      "assets": {
+        "value": 111601000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Assets"
+      },
+      "liabilities": {
+        "value": 32274000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Liabilities"
+      },
+      "equity": {
+        "value": 79327000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "StockholdersEquity"
+      },
+      "cash": {
+        "value": 11486000000,
+        "unit": "USD",
+        "end": "2025-10-26",
+        "filed": "2025-11-19",
+        "fy": 2026,
+        "fp": "Q3",
+        "form": "10-Q",
+        "tag": "CashAndCashEquivalentsAtCarryingValue"
+      },
+      "operatingCashFlow": {
+        "value": 64089000000,
+        "unit": "USD",
+        "end": "2025-01-26",
+        "filed": "2025-02-26",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetCashProvidedByUsedInOperatingActivities"
+      },
+      "grossMargin": 0.7498869705816992,
+      "netMargin": 0.5584802715771244
+    },
+    "MSFT": {
+      "symbol": "MSFT",
+      "company": "MICROSOFT CORPORATION",
+      "cik": "0000789019",
+      "period_end": "2025-06-30",
+      "currency": "USD",
+      "revenue": {
+        "value": 281724000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      },
+      "grossProfit": {
+        "value": 193893000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "GrossProfit"
+      },
+      "operatingIncome": {
+        "value": 128528000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "OperatingIncomeLoss"
+      },
+      "netIncome": {
+        "value": 101832000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetIncomeLoss"
+      },
+      "eps": {
+        "value": 13.7,
+        "unit": "USD/shares",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "EarningsPerShareBasic"
+      },
+      "assets": {
+        "value": 619003000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Assets"
+      },
+      "liabilities": {
+        "value": 275524000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Liabilities"
+      },
+      "equity": {
+        "value": 343479000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "StockholdersEquity"
+      },
+      "cash": {
+        "value": 24296000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-28",
+        "fy": 2026,
+        "fp": "Q2",
+        "form": "10-Q",
+        "tag": "CashAndCashEquivalentsAtCarryingValue"
+      },
+      "operatingCashFlow": {
+        "value": 136162000000,
+        "unit": "USD",
+        "end": "2025-06-30",
+        "filed": "2025-07-30",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetCashProvidedByUsedInOperatingActivities"
+      },
+      "grossMargin": 0.6882374238616519,
+      "netMargin": 0.3614601524896707
+    },
+    "TSLA": {
+      "symbol": "TSLA",
+      "company": "Tesla, Inc.",
+      "cik": "0001318605",
+      "period_end": "2025-12-31",
+      "currency": "USD",
+      "revenue": {
+        "value": 94827000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      },
+      "grossProfit": {
+        "value": 17094000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "GrossProfit"
+      },
+      "operatingIncome": {
+        "value": 4355000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "OperatingIncomeLoss"
+      },
+      "netIncome": {
+        "value": 3794000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetIncomeLoss"
+      },
+      "eps": {
+        "value": 1.18,
+        "unit": "USD/shares",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "EarningsPerShareBasic"
+      },
+      "assets": {
+        "value": 137806000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Assets"
+      },
+      "liabilities": {
+        "value": 54941000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Liabilities"
+      },
+      "equity": {
+        "value": 82137000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "StockholdersEquity"
+      },
+      "cash": {
+        "value": 16513000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "CashAndCashEquivalentsAtCarryingValue"
+      },
+      "operatingCashFlow": {
+        "value": 14747000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetCashProvidedByUsedInOperatingActivities"
+      },
+      "grossMargin": 0.18026511436616155,
+      "netMargin": 0.04000970187815706
+    },
+    "AMZN": {
+      "symbol": "AMZN",
+      "company": "AMAZON.COM, INC.",
+      "cik": "0001018724",
+      "period_end": "2025-12-31",
+      "currency": "USD",
+      "revenue": {
+        "value": 716924000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      },
+      "grossProfit": {
+        "value": 5531000000,
+        "unit": "USD",
+        "end": "2009-12-31",
+        "filed": "2010-01-29",
+        "fy": 2009,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "GrossProfit"
+      },
+      "operatingIncome": {
+        "value": 79975000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "OperatingIncomeLoss"
+      },
+      "netIncome": {
+        "value": 77670000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetIncomeLoss"
+      },
+      "eps": {
+        "value": 7.29,
+        "unit": "USD/shares",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "EarningsPerShareBasic"
+      },
+      "assets": {
+        "value": 818042000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Assets"
+      },
+      "liabilities": null,
+      "equity": {
+        "value": 411065000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "StockholdersEquity"
+      },
+      "cash": {
+        "value": 86810000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "CashAndCashEquivalentsAtCarryingValue"
+      },
+      "operatingCashFlow": {
+        "value": 139514000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-02-06",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetCashProvidedByUsedInOperatingActivities"
+      },
+      "grossMargin": 0.0077149042297370435,
+      "netMargin": 0.10833784334183261
+    },
+    "LULU": {
+      "symbol": "LULU",
+      "company": "LULULEMON ATHLETICA INC.",
+      "cik": "0001397187",
+      "period_end": "2025-02-02",
+      "currency": "USD",
+      "revenue": {
+        "value": 10600000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      },
+      "grossProfit": {
+        "value": 6230000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "GrossProfit"
+      },
+      "operatingIncome": {
+        "value": 1840000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "OperatingIncomeLoss"
+      },
+      "netIncome": {
+        "value": 1280000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetIncomeLoss"
+      },
+      "eps": {
+        "value": 14.10,
+        "unit": "USD/shares",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "EarningsPerShareBasic"
+      },
+      "assets": {
+        "value": 7800000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Assets"
+      },
+      "liabilities": {
+        "value": 3300000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Liabilities"
+      },
+      "equity": {
+        "value": 4500000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "StockholdersEquity"
+      },
+      "cash": {
+        "value": 1400000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "CashAndCashEquivalentsAtCarryingValue"
+      },
+      "operatingCashFlow": {
+        "value": 2000000000,
+        "unit": "USD",
+        "end": "2025-02-02",
+        "filed": "2025-03-27",
+        "fy": 2024,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetCashProvidedByUsedInOperatingActivities"
+      },
+      "grossMargin": 0.5877358490566038,
+      "netMargin": 0.12075471698113208
+    },
+    "META": {
+      "symbol": "META",
+      "company": "Meta Platforms, Inc.",
+      "cik": "0001326801",
+      "period_end": "2025-12-31",
+      "currency": "USD",
+      "revenue": {
+        "value": 200966000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      },
+      "grossProfit": null,
+      "operatingIncome": {
+        "value": 83276000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "OperatingIncomeLoss"
+      },
+      "netIncome": {
+        "value": 60458000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetIncomeLoss"
+      },
+      "eps": {
+        "value": 23.98,
+        "unit": "USD/shares",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "EarningsPerShareBasic"
+      },
+      "assets": {
+        "value": 366021000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Assets"
+      },
+      "liabilities": {
+        "value": 148778000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "Liabilities"
+      },
+      "equity": {
+        "value": 217243000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "StockholdersEquity"
+      },
+      "cash": {
+        "value": 35873000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "CashAndCashEquivalentsAtCarryingValue"
+      },
+      "operatingCashFlow": {
+        "value": 115800000000,
+        "unit": "USD",
+        "end": "2025-12-31",
+        "filed": "2026-01-29",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "tag": "NetCashProvidedByUsedInOperatingActivities"
+      },
+      "grossMargin": null,
+      "netMargin": 0.3008369574952977
+    }
+  }
+}

@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YOMAMA INVESTMENTS — PAPER TRADING</title>
+  <meta name="description" content="Paper trading desk inside the YOMAMA terminal." />
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260422-2" />
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="left-meta">
+          <span class="chip amber">2184 days in the market</span>
+          <span class="amber">Tue 23-APR-24</span>
+        </div>
+        <div class="ticker-container" aria-label="Live price action">
+          <div class="ticker-wrap" id="ticker"></div>
+        </div>
+        <div class="right-meta">
+          <span class="amber" id="clock">5:04 PM</span>
+          <button class="pill" type="button">LOG OUT</button>
+        </div>
+      </div>
+
+      <div class="banner-frame">
+        <div class="bubble-bg" aria-hidden="true"></div>
+        <div id="large-header" class="large-header" aria-hidden="true">
+          <canvas id="demo-canvas"></canvas>
+        </div>
+        <img class="hero-banner" src="./banner-colored.png" alt="YOMAMA Investments banner" />
+      </div>
+
+      <nav class="tabs" aria-label="Primary navigation">
+        <a class="tab" href="./index.html">DASH</a>
+        <a class="tab" href="./collect.html">BUILDINGS</a>
+        <a class="tab" href="./flow.html">ANALYSTS</a>
+        <a class="tab" href="./memos.html">LEADERBOARD</a>
+        <a class="tab" href="./analysis.html">NEWS</a>
+        <a class="tab" href="./tomfort-method.html">TOMFORT METHOD</a>
+        <a class="tab active" href="./about.html" aria-current="page">PAPER</a>
+        <a class="tab" href="./chat.html">CHAT</a>
+        <a class="tab" href="./contact.html">PORT</a>
+      </nav>
+    </header>
+
+    <main class="buildings-workspace paper-workspace" aria-label="Paper trading workspace">
+      <section class="panel buildings-main-panel paper-main-panel" aria-label="Paper trading desk">
+        <div class="buildings-main-head paper-main-head">
+          <div class="hdr">PAPER TRADING DESK</div>
+          <div class="muted">Use the current paper engine inside the YOMAMA terminal shell without disturbing the top header or page chrome.</div>
+          <div class="buildings-quick-links paper-quick-links" aria-label="Paper trading quick access">
+            <a class="buildings-quick-link" href="#paper-order-ticket">NEW ORDER</a>
+            <a class="buildings-quick-link" href="#paper-pending-panel">OPEN ORDERS</a>
+            <a class="buildings-quick-link" href="#paper-positions-panel">POSITIONS</a>
+            <a class="buildings-quick-link" href="#paper-cash-events-panel">CASH EVENTS</a>
+          </div>
+        </div>
+
+        <div class="buildings-blank-canvas paper-canvas">
+          <div class="paper-shell">
+            <section class="paper-summary-strip" id="paper-summary-strip" aria-label="Paper trading summary"></section>
+
+            <div class="paper-main-grid">
+              <section class="bld-card" id="paper-order-ticket" aria-label="New paper order">
+                <div class="paper-card-head">
+                  <h2 class="bld-card-title">NEW ORDER</h2>
+                  <p class="paper-card-note">BUY order creation is live here. SELL UI lands in the next engine step.</p>
+                </div>
+
+                <form id="paper-order-form" class="paper-order-form">
+                  <label class="paper-field" for="paper-order-symbol">
+                    <span class="paper-field-label">SYMBOL</span>
+                    <input id="paper-order-symbol" type="text" value="SPY" />
+                  </label>
+
+                  <label class="paper-field" for="paper-order-type">
+                    <span class="paper-field-label">ORDER TYPE</span>
+                    <select id="paper-order-type">
+                      <option value="market">market</option>
+                      <option value="limit">limit</option>
+                    </select>
+                  </label>
+
+                  <label class="paper-field" for="paper-order-quantity">
+                    <span class="paper-field-label">QUANTITY</span>
+                    <input id="paper-order-quantity" type="number" min="1" step="1" value="10" />
+                  </label>
+
+                  <label class="paper-field" for="paper-order-reference-price">
+                    <span class="paper-field-label">REFERENCE PRICE</span>
+                    <input id="paper-order-reference-price" type="number" min="0.01" step="0.01" value="500" />
+                  </label>
+
+                  <label class="paper-field" for="paper-order-limit-price">
+                    <span class="paper-field-label">LIMIT PRICE</span>
+                    <input id="paper-order-limit-price" type="number" min="0.01" step="0.01" value="" />
+                  </label>
+
+                  <label class="paper-field" for="paper-order-session">
+                    <span class="paper-field-label">SESSION</span>
+                    <select id="paper-order-session">
+                      <option value="regular">regular</option>
+                      <option value="pre">pre</option>
+                      <option value="after">after</option>
+                    </select>
+                  </label>
+
+                  <div class="paper-order-actions">
+                    <button class="bld-btn" type="submit">SUBMIT BUY ORDER</button>
+                    <button class="bld-btn alt" id="paper-reset-state" type="button">RESET DEMO STATE</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="bld-card" id="paper-pending-panel" aria-label="Pending paper orders">
+                <div class="paper-card-head">
+                  <h2 class="bld-card-title">PENDING ORDERS</h2>
+                  <p class="paper-card-note">Fill or cancel working orders directly from the book.</p>
+                </div>
+
+                <div class="data-table-wrap">
+                  <table class="data-table paper-table" aria-label="Pending paper orders table">
+                    <thead>
+                      <tr>
+                        <th class="muted">Order ID</th>
+                        <th class="muted">Symbol</th>
+                        <th class="muted">Type</th>
+                        <th class="muted">Qty</th>
+                        <th class="muted">Reserved</th>
+                        <th class="muted">Status</th>
+                        <th class="muted">Fill / Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="paper-pending-orders-body"></tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
+            <div class="paper-main-grid">
+              <section class="bld-card" id="paper-positions-panel" aria-label="Paper positions">
+                <div class="paper-card-head">
+                  <h2 class="bld-card-title">POSITIONS</h2>
+                  <p class="paper-card-note">Current long positions generated by filled BUY orders.</p>
+                </div>
+
+                <div class="data-table-wrap">
+                  <table class="data-table paper-table" aria-label="Paper positions table">
+                    <thead>
+                      <tr>
+                        <th class="muted">Symbol</th>
+                        <th class="muted">Quantity</th>
+                        <th class="muted">Avg Cost</th>
+                        <th class="muted">Total Cost</th>
+                      </tr>
+                    </thead>
+                    <tbody id="paper-positions-body"></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="bld-card" id="paper-cash-events-panel" aria-label="Paper cash events">
+                <div class="paper-card-head">
+                  <h2 class="bld-card-title">CASH EVENTS</h2>
+                  <p class="paper-card-note">Reservation, release, and settlement events from the engine ledger.</p>
+                </div>
+
+                <div class="data-table-wrap">
+                  <table class="data-table paper-table" aria-label="Paper cash events table">
+                    <thead>
+                      <tr>
+                        <th class="muted">Type</th>
+                        <th class="muted">Order ID</th>
+                        <th class="muted">Amount</th>
+                        <th class="muted">Created At</th>
+                      </tr>
+                    </thead>
+                    <tbody id="paper-cash-events-body"></tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="buildings-side-panel paper-side-panel" aria-label="Paper trading state panels">
+        <section class="panel buildings-mini-panel paper-mini-panel" aria-label="Last paper trading action">
+          <div class="hdr">ACTION RESULT</div>
+          <div class="paper-side-block">
+            <div class="paper-side-label">LAST ACTION RESULT</div>
+            <pre id="paper-last-result" class="paper-side-pre">No actions yet.</pre>
+            <div class="paper-side-label">LAST ERRORS</div>
+            <div id="paper-last-errors" class="paper-side-errors"><span class="paper-status-ok">No errors.</span></div>
+          </div>
+        </section>
+
+        <section class="panel buildings-mini-panel paper-mini-panel" aria-label="Raw paper trading state">
+          <div class="hdr">RAW STATE</div>
+          <pre id="paper-raw-state" class="paper-side-pre paper-raw-state">Loading...</pre>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <svg style="display: none;">
+    <symbol viewBox="0 0 44 44" width="44px" height="44px" id="circle" fill="none" stroke="currentColor">
+      <circle r="20" cy="22" cx="22" id="test"></circle>
+    </symbol>
+  </svg>
+
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+  <script src="./app.js?v=20260423-2"></script>
+  <script src="./engine/paper-engine.js"></script>
+  <script src="./paper-trading.js?v=20260422-1"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+*.zip
+*.log
+*.pid
+*.pyc
+__pycache__/
+.DS_Store
+.checks/
+.claude/
+*.code-workspace

@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YOMAMA INVESTMENTS - CHAT</title>
+  <meta name="description" content="YOMAMA CHAT terminal room." />
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260423-chat11" />
+</head>
+<body class="chat-page">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="left-meta">
+          <span class="chip amber">2184 days in the market</span>
+          <span class="amber">Tue 23-APR-24</span>
+        </div>
+        <div class="ticker-container" aria-label="Live price action">
+          <div class="ticker-wrap" id="ticker"></div>
+        </div>
+        <div class="right-meta">
+          <span class="amber" id="clock">5:04 PM</span>
+          <button class="pill" type="button">LOG OUT</button>
+        </div>
+      </div>
+
+      <div class="banner-frame">
+        <div class="bubble-bg" aria-hidden="true"></div>
+        <div id="large-header" class="large-header" aria-hidden="true">
+          <canvas id="demo-canvas"></canvas>
+        </div>
+        <img class="hero-banner" src="./banner-colored.png" alt="YOMAMA Investments banner" />
+      </div>
+
+      <nav class="tabs" aria-label="Primary navigation">
+        <a class="tab" href="./index.html">DASH</a>
+        <a class="tab" href="./collect.html">BUILDINGS</a>
+        <a class="tab" href="./flow.html">ANALYSTS</a>
+        <a class="tab" href="./memos.html">LEADERBOARD</a>
+        <a class="tab" href="./analysis.html">NEWS</a>
+        <a class="tab" href="./tomfort-method.html">TOMFORT METHOD</a>
+        <a class="tab" href="./about.html">PAPER</a>
+        <a class="tab active" href="./chat.html" aria-current="page">CHAT</a>
+        <a class="tab" href="./contact.html">PORT</a>
+      </nav>
+    </header>
+
+    <main class="chat-terminal-page" aria-label="CHAT terminal page">
+      <section class="chat-workspace" aria-label="YOMAMA chat workspace">
+        <div class="chat-desk-header">
+          <div class="chat-desk-brand">
+            <div class="chat-command-label">YCHAT &lt;GO&gt;</div>
+            <h1>YOMAMA CHAT</h1>
+          </div>
+          <div class="chat-desk-status" aria-label="Chat session status">
+            <span><b>ROOM</b> #beginer</span>
+            <span><b>USERS</b> 43</span>
+            <span><b>LATENCY</b> 12ms</span>
+            <span><b>MODE</b> +nt</span>
+          </div>
+        </div>
+
+        <div class="chat-market-strip" aria-label="Market alert strip">
+          <span class="chat-market-item"><b>SPX</b> <em class="up">+1.05%</em></span>
+          <span class="chat-market-item"><b>NDX</b> <em class="up">+1.64%</em></span>
+          <span class="chat-market-item"><b>VIX</b> <em class="dn">-2.97%</em></span>
+          <span class="chat-market-item"><b>USDTRY</b> <em class="amber">LIVE</em></span>
+          <span class="chat-market-item"><b>ROOM TONE</b> <em class="up">BULLISH</em></span>
+        </div>
+
+        <section class="chat-window" aria-label="mIRC style Bloomberg chatroom">
+          <div class="chat-titlebar">
+            <div class="chat-title">
+              <span class="chat-title-icon" aria-hidden="true"></span>
+              <span>#beginer [+nt]: Beginner's Help/Chat Channel-All are Welcome here</span>
+            </div>
+            <div class="chat-window-controls" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+
+          <div class="chat-menubar" aria-label="Chat menu">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Favorites</span>
+            <span>Commands</span>
+            <span>Tools</span>
+            <span>Window</span>
+            <span>Help</span>
+          </div>
+
+          <div class="chat-toolbar" aria-label="Chat commands">
+            <button type="button" data-chat-action="join">JOIN</button>
+            <button type="button" data-chat-action="whois">WHOIS</button>
+            <button type="button" data-chat-action="quote">QUOTE</button>
+            <button type="button" data-chat-action="clear">CLEAR</button>
+            <div class="chat-toolbar-readout">
+              <span>SERVER irc.yomama.local</span>
+              <span>SSL 6697</span>
+            </div>
+          </div>
+
+          <div class="chat-topicbar" aria-label="Channel topic">
+            <span class="amber">TOPIC</span>
+            <span>YOMAMA terminal floor: market gossip, paper trades, portfolio ideas, no spam.</span>
+            <span class="muted">SET BY @motherdesk</span>
+          </div>
+
+          <div class="chat-channel-tabs" role="tablist" aria-label="Chat channels">
+            <button type="button" class="active" role="tab" aria-selected="true">#beginer</button>
+            <button type="button" role="tab">#market-open</button>
+            <button type="button" role="tab">#paperdesk</button>
+            <button type="button" role="tab">#port-room</button>
+          </div>
+
+          <div class="chat-room-grid">
+            <aside class="chat-room-list" aria-label="Room list">
+              <div class="chat-pane-head">CHANNELS</div>
+              <a href="#chat-transcript" class="active">#beginer</a>
+              <a href="#chat-transcript">#wall-st</a>
+              <a href="#chat-transcript">#ai-equities</a>
+              <a href="#chat-transcript">#fx-watch</a>
+              <a href="#chat-transcript">#late-tape</a>
+              <a href="#chat-transcript">#random</a>
+            </aside>
+
+            <section class="chat-transcript" id="chat-transcript" aria-label="Chat transcript" aria-live="polite">
+              <div class="chat-line chat-line-notice">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-message">*** Topic is: Beginner's Help/Chat Channel-All are Welcome here</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-name chat-name-blue">&lt;QUIET&gt;</span>
+                <span class="chat-message">omg like</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-name chat-name-purple">&lt;Arbee&gt;</span>
+                <span class="chat-message">wow.. this is hard afterall ;]</span>
+              </div>
+              <div class="chat-line chat-line-join">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-message">*** Joins: collegob (CTM LF@ACFDD3.pt.aol.com)</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-name chat-name-green">&lt;Par&gt;</span>
+                <span class="chat-message">ashley5 (Gloub@136.py4.pym.dialup.nautnet.net)</span>
+              </div>
+              <div class="chat-line chat-line-quit">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-message">*** Parts: lycho` [somewhere@Ste | C23 saw.net]</span>
+              </div>
+              <div class="chat-line chat-line-join">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-message">*** Joins: nukw (hioko203.107.251.34)</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-name chat-name-blue">&lt;Oddjob^&gt;</span>
+                <span class="chat-message">sets mode: +i *!*amlesh_K@*.foxlink.net</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-name chat-name-blue">&lt;Oddjob^&gt;</span>
+                <span class="chat-message">sets mode: +b *!*@*.foxlink.net</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-name chat-name-red">&lt;bosmom&gt;</span>
+                <span class="chat-message">hiya desk :)</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:55]</span>
+                <span class="chat-name chat-name-purple">&lt;Arbee&gt;</span>
+                <span class="chat-message">oh nothing, just sitting here...you?</span>
+              </div>
+              <div class="chat-line chat-line-alert">
+                <span class="chat-time">[23:56]</span>
+                <span class="chat-message">*** Parts: En_Pelota [gibown@du-18-23-180-54.prodigy.net.mx]</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:56]</span>
+                <span class="chat-name chat-name-red">&lt;bosmom&gt;</span>
+                <span class="chat-message">hiya desk :)</span>
+              </div>
+              <div class="chat-line">
+                <span class="chat-time">[23:56]</span>
+                <span class="chat-name chat-name-green">&lt;collegob&gt;</span>
+                <span class="chat-message">tired and bored</span>
+              </div>
+            </section>
+
+            <aside class="chat-users" aria-label="Chat users">
+              <div class="chat-pane-head">NICKS</div>
+              <ol>
+                <li class="chat-op">@misshiler</li>
+                <li class="chat-ai-nick">@mry</li>
+                <li class="chat-op">@Oddjob^</li>
+                <li class="chat-op chat-op-red">@w</li>
+                <li class="chat-voice">+Music101</li>
+                <li>Adel</li>
+                <li>ALBERTO_</li>
+                <li>Alyssa</li>
+                <li>Amicus</li>
+                <li>aming</li>
+                <li>angel79</li>
+                <li>Bad_Boy19</li>
+                <li>batosay</li>
+                <li>BELFAST</li>
+                <li>blue_kiss</li>
+                <li>bosmom</li>
+                <li>boy76</li>
+                <li>CAITLIN</li>
+                <li>Cheepe</li>
+              </ol>
+            </aside>
+          </div>
+
+          <form class="chat-command-row" id="chat-command-form">
+            <span class="chat-prompt">watchmk@#beginer</span>
+            <input id="chat-message-input" type="text" autocomplete="off" spellcheck="false" value="@mry what is the vibe on NVDA?" aria-label="Chat message" />
+            <button type="submit">SEND</button>
+          </form>
+
+          <div class="chat-statusbar" id="chat-statusbar">
+            <span>CONNECTED</span>
+            <span>LOG ON</span>
+            <span>OPS 03</span>
+            <span>LAST 23:56</span>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <svg style="display: none;">
+    <symbol viewBox="0 0 44 44" width="44px" height="44px" id="circle" fill="none" stroke="currentColor">
+      <circle r="20" cy="22" cx="22" id="test"></circle>
+    </symbol>
+  </svg>
+
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+  <script src="https://js.puter.com/v2/"></script>
+  <script src="./app.js?v=20260423-2"></script>
+  <script>
+    (function () {
+      const form = document.getElementById('chat-command-form');
+      const input = document.getElementById('chat-message-input');
+      const transcript = document.getElementById('chat-transcript');
+      const statusbar = document.getElementById('chat-statusbar');
+      const commandButtons = document.querySelectorAll('[data-chat-action]');
+      const channelButtons = Array.from(document.querySelectorAll('.chat-channel-tabs button'));
+      const roomLinks = Array.from(document.querySelectorAll('.chat-room-list a'));
+      const promptNode = document.querySelector('.chat-prompt');
+      const titleNode = document.querySelector('.chat-title span:last-child');
+      const topicNode = document.querySelector('.chat-topicbar span:nth-child(2)');
+      const roomStatusNode = document.querySelector('.chat-desk-status span:first-child');
+      const aiDisplayName = 'Mr. Yomama';
+      const aiModel = 'gpt-5.4-nano';
+      const aiTextEndpoint = 'https://gen.pollinations.ai/text/';
+      const aiSystemPrompt = [
+        'You are Mr. Yomama, the serious trading desk boss and head economist inside the YOMAMA Investments chatroom.',
+        'You speak with institutional discipline: macro first, risk second, execution third.',
+        'You are direct, calm, and demanding, but interns are family. Correct them firmly, protect their confidence, and make them feel part of the desk.',
+        'Use trading-desk language naturally: tape, liquidity, positioning, catalysts, base case, risk case, invalidation, sizing.',
+        'Keep replies under 70 words unless the user asks for detail.',
+        'For investing or trading questions, be educational and fictional, not personalized financial advice.',
+        'No goofy roast persona. Dry warmth is allowed; clowning is not.'
+      ].join(' ');
+      const aiHistory = [];
+      const aiStateStorageKeys = Object.freeze({
+        gameSave: ['yomama_game_save_v1', 'yomama_game_save_v1_backup'],
+        sharedAccount: ['yomama_watchmk_account_v1', 'yomama_watchmk_account_v1_backup'],
+        playerSave: ['yomama_player_save_v1', 'yomama_player_save_v1_backup'],
+      });
+      const aiResourceKeys = Object.freeze(['food', 'materials', 'energy', 'data']);
+      const aiStatKeys = Object.freeze(['AGR', 'FAB', 'PWR', 'COM', 'LOG']);
+      const aiBuildingLabelMap = Object.freeze({
+        farm: 'Greenfield Farm',
+        workshop: 'Machine Workshop',
+        generator: 'Power Generator',
+        data_center: 'Data Center',
+        hq: 'Skyline HQ',
+        warehouse: 'Atlas Warehouse',
+        logistics: 'Mercury Logistics',
+        marketplace: 'Bazaar Exchange',
+        contractor_office: 'Contractor Desk',
+        automation: 'Auto Control',
+      });
+      const aiClassLabelMap = Object.freeze({
+        homesteader: 'Homesteader',
+        factory_foreman: 'Factory Foreman',
+        grid_engineer: 'Grid Engineer',
+        data_architect: 'Data Architect',
+        logistics_chief: 'Logistics Chief',
+        administrator: 'Administrator',
+      });
+      let aiIsThinking = false;
+
+      if (!form || !input || !transcript || !statusbar) return;
+
+      const getTime = () => new Date().toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      const setStatus = (message) => {
+        statusbar.innerHTML = '';
+        ['CONNECTED', 'LOG ON', 'OPS 03', message].forEach((item) => {
+          const node = document.createElement('span');
+          node.textContent = item;
+          statusbar.appendChild(node);
+        });
+      };
+
+      const appendLine = (className, name, message, nameClassName) => {
+        const line = document.createElement('div');
+        line.className = `chat-line ${className || ''}`.trim();
+
+        const timeNode = document.createElement('span');
+        timeNode.className = 'chat-time';
+        timeNode.textContent = `[${getTime()}]`;
+        line.appendChild(timeNode);
+
+        if (name) {
+          const nameNode = document.createElement('span');
+          nameNode.className = `chat-name ${nameClassName || 'chat-name-green'}`.trim();
+          nameNode.textContent = `<${name}>`;
+          line.appendChild(nameNode);
+        }
+
+        const messageNode = document.createElement('span');
+        messageNode.className = 'chat-message';
+        messageNode.textContent = message;
+        line.appendChild(messageNode);
+
+        transcript.appendChild(line);
+        transcript.scrollTop = transcript.scrollHeight;
+        return line;
+      };
+
+      const getPuterAiText = (response) => {
+        if (typeof response === 'string') return response.trim();
+        if (!response || typeof response !== 'object') return '';
+        if (typeof response.text === 'string') return response.text.trim();
+        if (typeof response.content === 'string') return response.content.trim();
+
+        const message = response.message && typeof response.message === 'object' ? response.message : null;
+        const content = message ? message.content : null;
+        if (typeof content === 'string') return content.trim();
+        if (Array.isArray(content)) {
+          return content
+            .map((part) => {
+              if (typeof part === 'string') return part;
+              if (part && typeof part.text === 'string') return part.text;
+              return '';
+            })
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        }
+
+        const choiceContent = response.choices
+          && response.choices[0]
+          && response.choices[0].message
+          && response.choices[0].message.content;
+        return typeof choiceContent === 'string' ? choiceContent.trim() : '';
+      };
+
+      const normalizeAiAnswer = (value) => String(value || '')
+        .replace(/\s+/g, ' ')
+        .replace(/^<\s*mr\.?\s*yomama\s*>\s*/i, '')
+        .replace(/^mr\.?\s*yomama\s*:\s*/i, '')
+        .trim()
+        .slice(0, 700);
+
+      const toSafeNumber = (value, fallback = Number.NaN) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+      };
+
+      const toSafeInteger = (value, fallback = 0) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? Math.floor(parsed) : fallback;
+      };
+
+      const getStorageTargets = () => {
+        const targets = [];
+        try {
+          targets.push(window.localStorage);
+        } catch (_) {}
+        try {
+          targets.push(window.sessionStorage);
+        } catch (_) {}
+        return targets;
+      };
+
+      const readFirstValidJson = (keys) => {
+        const keyList = Array.isArray(keys) ? keys : [];
+        const stores = getStorageTargets();
+        for (const storage of stores) {
+          for (const key of keyList) {
+            try {
+              const serialized = storage.getItem(key);
+              if (!serialized) continue;
+              const parsed = JSON.parse(serialized);
+              if (parsed && typeof parsed === 'object') return parsed;
+            } catch (_) {}
+          }
+        }
+        return null;
+      };
+
+      const formatCharacterLabel = (value) => String(value || '')
+        .trim()
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+
+      const formatCashLabel = (value) => `$${Math.round(Math.max(0, Number(value) || 0)).toLocaleString('en-US')}`;
+
+      const formatCountLabel = (value) => Math.max(0, Math.round(Number(value) || 0)).toLocaleString('en-US');
+
+      const formatBuildingLabel = (key) => aiBuildingLabelMap[key] || formatCharacterLabel(key);
+
+      const chooseLiveCash = (gameSave, sharedAccount, playerSave) => {
+        const candidates = [];
+        const pushCandidate = (cash, updatedAt, rank) => {
+          if (!Number.isFinite(cash) || cash < 0) return;
+          candidates.push({
+            cash: Math.floor(cash),
+            updatedAt: Math.max(0, toSafeInteger(updatedAt, 0)),
+            rank,
+          });
+        };
+
+        pushCandidate(
+          toSafeNumber(sharedAccount && sharedAccount.wallet && sharedAccount.wallet.cash),
+          Math.max(
+            toSafeInteger(sharedAccount && sharedAccount.meta && sharedAccount.meta.lastUpdatedAt, 0),
+            toSafeInteger(sharedAccount && sharedAccount.marketplace && sharedAccount.marketplace.lastUpdatedAt, 0),
+          ),
+          3,
+        );
+        pushCandidate(
+          toSafeNumber(gameSave && gameSave.wallet && gameSave.wallet.cash),
+          toSafeInteger(gameSave && gameSave.meta && gameSave.meta.lastSeenAt, 0),
+          2,
+        );
+        pushCandidate(
+          toSafeNumber(playerSave && playerSave.wallet && playerSave.wallet.cash),
+          toSafeInteger(playerSave && playerSave.meta && playerSave.meta.lastUpdatedAt, 0),
+          1,
+        );
+
+        if (!candidates.length) return null;
+        candidates.sort((left, right) => {
+          if (right.updatedAt !== left.updatedAt) return right.updatedAt - left.updatedAt;
+          return right.rank - left.rank;
+        });
+        return candidates[0].cash;
+      };
+
+      const summarizeHoldings = (holdings) => {
+        if (!holdings || typeof holdings !== 'object') return '';
+        return Object.entries(holdings)
+          .filter(([, amount]) => Number.isFinite(toSafeNumber(amount)) && toSafeNumber(amount) > 0)
+          .map(([ticker, amount]) => `${String(ticker).toUpperCase()} ${toSafeNumber(amount, 0)}`)
+          .join(', ');
+      };
+
+      const summarizeInventory = (inventory) => {
+        if (!inventory || typeof inventory !== 'object') return '';
+        const parts = aiResourceKeys
+          .map((resourceKey) => {
+            const amount = toSafeInteger(inventory[resourceKey], Number.NaN);
+            if (!Number.isFinite(amount) || amount < 0) return '';
+            return `${formatCharacterLabel(resourceKey)} ${formatCountLabel(amount)}`;
+          })
+          .filter(Boolean);
+        return parts.join(', ');
+      };
+
+      const summarizeBuildings = (buildings, limit = 6) => {
+        if (!buildings || typeof buildings !== 'object') {
+          return { total: 0, summary: '', shortSummary: '' };
+        }
+
+        const entries = Object.entries(buildings)
+          .map(([buildingKey, rawState]) => {
+            const state = rawState && typeof rawState === 'object' ? rawState : {};
+            return {
+              key: buildingKey,
+              label: formatBuildingLabel(buildingKey),
+              level: Math.max(0, toSafeInteger(state.level, 0)),
+              status: typeof state.status === 'string' ? state.status.trim().toLowerCase() : 'active',
+            };
+          })
+          .filter((entry) => entry.level > 0 || entry.status === 'constructing' || entry.status === 'upgrading')
+          .sort((left, right) => {
+            if (right.level !== left.level) return right.level - left.level;
+            return left.label.localeCompare(right.label);
+          });
+
+        if (!entries.length) return { total: 0, summary: '', shortSummary: '' };
+
+        const visible = entries.slice(0, Math.max(1, limit));
+        const longSummary = visible
+          .map((entry) => `${entry.label} L${entry.level}${entry.status !== 'active' ? ` ${entry.status}` : ''}`)
+          .join(', ');
+        const shortSummary = visible
+          .slice(0, 3)
+          .map((entry) => `${entry.label} L${entry.level}`)
+          .join(', ');
+
+        return {
+          total: entries.length,
+          summary: entries.length > visible.length ? `${longSummary}, +${entries.length - visible.length} more` : longSummary,
+          shortSummary: entries.length > 3 ? `${shortSummary}, +${entries.length - 3} more` : shortSummary,
+        };
+      };
+
+      const getLiveGameStateSnapshot = () => {
+        const gameSave = readFirstValidJson(aiStateStorageKeys.gameSave);
+        const sharedAccount = readFirstValidJson(aiStateStorageKeys.sharedAccount);
+        const playerSave = readFirstValidJson(aiStateStorageKeys.playerSave);
+        const economy = playerSave && playerSave.economyV01 && typeof playerSave.economyV01 === 'object'
+          ? playerSave.economyV01
+          : null;
+
+        const selectedCharacter = String(
+          (economy && economy.activeCharacter)
+          || (playerSave && playerSave.selectedCharacter)
+          || (gameSave && gameSave.selectedCharacter)
+          || '',
+        ).trim().toLowerCase();
+
+        const inventory = economy && economy.inventory && typeof economy.inventory === 'object'
+          ? economy.inventory
+          : (sharedAccount && sharedAccount.inventory && typeof sharedAccount.inventory === 'object'
+            ? sharedAccount.inventory
+            : null);
+        const profile = selectedCharacter
+          && economy
+          && economy.characterProfiles
+          && typeof economy.characterProfiles === 'object'
+          && economy.characterProfiles[selectedCharacter]
+          && typeof economy.characterProfiles[selectedCharacter] === 'object'
+          ? economy.characterProfiles[selectedCharacter]
+          : null;
+        const effectiveStats = profile
+          ? aiStatKeys.reduce((result, statKey) => {
+            const base = toSafeInteger(profile.baseStats && profile.baseStats[statKey], 0);
+            const allocated = toSafeInteger(profile.allocatedStats && profile.allocatedStats[statKey], 0);
+            result[statKey] = Math.max(0, Math.min(10, base + allocated));
+            return result;
+          }, {})
+          : null;
+        const latestLogEntry = economy && Array.isArray(economy.log) && economy.log.length
+          ? String(economy.log[economy.log.length - 1] && economy.log[economy.log.length - 1].message || '').replace(/\s+/g, ' ').trim()
+          : '';
+        const buildingSummary = summarizeBuildings(economy && economy.buildings && typeof economy.buildings === 'object'
+          ? economy.buildings
+          : null);
+        const statsLine = effectiveStats
+          ? aiStatKeys.map((statKey) => `${statKey} ${effectiveStats[statKey]}`).join(' | ')
+          : '';
+
+        return {
+          hasState: Boolean(gameSave || sharedAccount || playerSave),
+          selectedCharacter,
+          cash: chooseLiveCash(gameSave, sharedAccount, playerSave),
+          holdingsLine: summarizeHoldings(playerSave && playerSave.holdings),
+          inventoryLine: summarizeInventory(inventory),
+          buildingsLine: buildingSummary.summary,
+          buildingsHeadline: buildingSummary.shortSummary,
+          buildingCount: buildingSummary.total,
+          hasEconomy: Boolean(economy),
+          classLabel: profile && typeof profile.classId === 'string'
+            ? (aiClassLabelMap[profile.classId] || formatCharacterLabel(profile.classId))
+            : '',
+          statsLine,
+          latestLog: latestLogEntry ? latestLogEntry.slice(0, 160) : '',
+        };
+      };
+
+      const buildLiveGameStateBrief = () => {
+        const snapshot = getLiveGameStateSnapshot();
+        if (!snapshot.hasState) {
+          return [
+            'Live YOMAMA save state is unavailable right now.',
+            'If the user asks about their run, portfolio, buildings, resources, or character, say the save snapshot is missing instead of inventing details.',
+          ].join('\n');
+        }
+
+        return [
+          'Live YOMAMA save state for WATCHMK:',
+          snapshot.selectedCharacter ? `Active character: ${formatCharacterLabel(snapshot.selectedCharacter)}.` : '',
+          snapshot.cash !== null ? `Cash: ${formatCashLabel(snapshot.cash)}.` : '',
+          snapshot.holdingsLine ? `Holdings: ${snapshot.holdingsLine}.` : '',
+          snapshot.inventoryLine ? `Inventory: ${snapshot.inventoryLine}.` : '',
+          snapshot.buildingsLine
+            ? `Buildings (${snapshot.buildingCount}): ${snapshot.buildingsLine}.`
+            : (snapshot.hasEconomy ? 'Buildings economy is initialized, but no asset levels were found.' : 'Buildings economy has not been initialized yet.'),
+          snapshot.classLabel ? `Operator class: ${snapshot.classLabel}.` : '',
+          snapshot.statsLine ? `Stats: ${snapshot.statsLine}.` : '',
+          snapshot.latestLog ? `Latest ops log: ${snapshot.latestLog}.` : '',
+          'Use this live state when the user asks about their run, portfolio, buildings, resources, bottlenecks, or next move. Never invent missing state.',
+        ].filter(Boolean).join('\n');
+      };
+
+      const buildCompactDeskSnapshot = () => {
+        const snapshot = getLiveGameStateSnapshot();
+        const parts = [];
+        if (snapshot.selectedCharacter) parts.push(`character ${formatCharacterLabel(snapshot.selectedCharacter)}`);
+        if (snapshot.cash !== null) parts.push(`cash ${formatCashLabel(snapshot.cash)}`);
+        if (snapshot.inventoryLine) parts.push(`inventory ${snapshot.inventoryLine}`);
+        if (snapshot.buildingsHeadline) parts.push(`assets ${snapshot.buildingsHeadline}`);
+        return parts.join(' | ');
+      };
+
+      const buildAiPrompt = (question) => {
+        const liveStateBrief = buildLiveGameStateBrief();
+        const recentHistory = aiHistory.slice(-6)
+          .map((item) => `${item.role === 'user' ? 'watchmk' : aiDisplayName}: ${item.content}`)
+          .join('\n');
+        return [
+          aiSystemPrompt,
+          liveStateBrief,
+          recentHistory ? `Recent room context:\n${recentHistory}` : '',
+          `watchmk asks: ${question}`,
+          `${aiDisplayName}:`,
+        ].filter(Boolean).join('\n\n');
+      };
+
+      const requestPollinationsAnswer = async (question) => {
+        const prompt = buildAiPrompt(question);
+        const response = await fetch(`${aiTextEndpoint}${encodeURIComponent(prompt)}`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) throw new Error(`Pollinations AI failed: ${response.status}`);
+        return normalizeAiAnswer(await response.text());
+      };
+
+      const requestPuterAnswer = async (question) => {
+        if (!window.puter || !window.puter.ai || typeof window.puter.ai.chat !== 'function') {
+          throw new Error('Puter AI script unavailable');
+        }
+
+        const liveStateBrief = buildLiveGameStateBrief();
+        const messages = [
+          { role: 'system', content: aiSystemPrompt },
+          { role: 'system', content: liveStateBrief },
+          ...aiHistory.slice(-6),
+          { role: 'user', content: question },
+        ];
+        const response = await window.puter.ai.chat(messages, {
+          model: aiModel,
+          temperature: 0.72,
+          max_tokens: 170,
+        });
+        return normalizeAiAnswer(getPuterAiText(response));
+      };
+
+      const getOfflineAiReply = (question) => {
+        const normalized = String(question || '').toLowerCase();
+        const deskSnapshot = buildCompactDeskSnapshot();
+        const snapshotLead = deskSnapshot ? ` Current run: ${deskSnapshot}.` : '';
+        if (normalized.includes('nvda') || normalized.includes('nvidia')) {
+          return `AI uplink is busy.${snapshotLead} Desk view: NVDA is an expectations trade. Base case needs durable demand and margin discipline; risk case is capex fatigue. Intern rule: respect the tape, define invalidation, size like you want to be here tomorrow.`;
+        }
+        if (normalized.includes('market') || normalized.includes('stock') || normalized.includes('build') || normalized.includes('resource') || normalized.includes('cash') || normalized.includes('portfolio')) {
+          return `AI uplink is busy.${snapshotLead} Desk rule: macro sets the weather, liquidity sets the road, positioning sets the potholes. Bring a base case, a risk case, and a stop. You are family here, but the market does not grade on effort.`;
+        }
+        return `AI uplink is busy.${snapshotLead} Ask it cleaner, define the decision, and separate signal from noise. Good interns become good investors by writing down the base case before the tape bullies them.`;
+      };
+
+      const askMrYomama = async (question) => {
+        const cleanQuestion = String(question || '').trim();
+        if (!cleanQuestion) return;
+
+        if (aiIsThinking) {
+          appendLine('chat-line-notice', '', `*** ${aiDisplayName} is still typing. Tape is only so wide.`);
+          setStatus(`AI BUSY ${getTime()}`);
+          return;
+        }
+
+        aiIsThinking = true;
+        const thinkingLine = appendLine('chat-line-ai chat-line-ai-thinking', aiDisplayName, 'typing...', 'chat-name-ai');
+        setStatus(`AI CALL ${getTime()}`);
+
+        try {
+          let answer = '';
+          try {
+            answer = await requestPollinationsAnswer(cleanQuestion);
+          } catch (primaryError) {
+            console.warn('Mr. Yomama primary AI call failed.', primaryError);
+            answer = await requestPuterAnswer(cleanQuestion);
+          }
+          answer = answer || getOfflineAiReply(cleanQuestion);
+
+          thinkingLine.querySelector('.chat-message').textContent = answer;
+          thinkingLine.classList.remove('chat-line-ai-thinking');
+          transcript.scrollTop = transcript.scrollHeight;
+          aiHistory.push({ role: 'user', content: cleanQuestion }, { role: 'assistant', content: answer });
+          if (aiHistory.length > 12) aiHistory.splice(0, aiHistory.length - 12);
+          setStatus(`AI OK ${getTime()}`);
+        } catch (error) {
+          thinkingLine.querySelector('.chat-message').textContent = getOfflineAiReply(cleanQuestion);
+          thinkingLine.classList.remove('chat-line-ai-thinking');
+          transcript.scrollTop = transcript.scrollHeight;
+          console.warn('Mr. Yomama AI call failed.', error);
+          setStatus(`AI LOCAL ${getTime()}`);
+        } finally {
+          aiIsThinking = false;
+        }
+      };
+
+      const extractAiQuestion = (value) => {
+        const text = String(value || '').trim();
+        if (/^\/ask\b/i.test(text)) return text.replace(/^\/ask\b/i, '').trim();
+        if (/^@?mry\b/i.test(text)) {
+          return text.replace(/^@?mry[:,\s-]*/i, '').trim();
+        }
+        if (/^@?mr[.\s_-]*yomama\b/i.test(text)) {
+          return text.replace(/^@?mr[.\s_-]*yomama[:,\s-]*/i, '').trim();
+        }
+        if (/@?mry\b/i.test(text) && text.includes('?')) {
+          return text.replace(/@?mry[:,\s-]*/ig, '').trim();
+        }
+        if (/@?mr[.\s_-]*yomama\b/i.test(text) && text.includes('?')) {
+          return text.replace(/@?mr[.\s_-]*yomama[:,\s-]*/ig, '').trim();
+        }
+        return '';
+      };
+
+      const setActiveChannel = (rawChannel, announce) => {
+        const channel = String(rawChannel || '#beginer').trim() || '#beginer';
+
+        channelButtons.forEach((button) => {
+          const isActive = button.textContent.trim() === channel;
+          button.classList.toggle('active', isActive);
+          button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        roomLinks.forEach((link) => {
+          const isActive = link.textContent.trim() === channel;
+          link.classList.toggle('active', isActive);
+          if (isActive) {
+            link.setAttribute('aria-current', 'page');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        });
+
+        if (promptNode) promptNode.textContent = `watchmk@${channel}`;
+        if (titleNode) titleNode.textContent = `${channel} [+nt]: Beginner's Help/Chat Channel-All are Welcome here`;
+        if (topicNode) {
+          topicNode.textContent = channel === '#port-room'
+            ? 'YPORT floor: rebalance talk, watchlists, fills, exposure checks.'
+            : 'YOMAMA terminal floor: market gossip, paper trades, portfolio ideas, no spam.';
+        }
+        if (roomStatusNode) roomStatusNode.innerHTML = `<b>ROOM</b> ${channel}`;
+
+        if (announce) {
+          appendLine('chat-line-notice', '', `*** Now talking in ${channel}`);
+          setStatus(`ROOM ${channel}`);
+        }
+      };
+
+      const submitMessage = (rawValue) => {
+        const value = String(rawValue || '').trim();
+        if (!value) return;
+
+        if (value.toLowerCase() === '/clear') {
+          transcript.innerHTML = '';
+          appendLine('chat-line-notice', '', '*** Buffer cleared.');
+          setStatus(`CLEARED ${getTime()}`);
+          return;
+        }
+
+        if (value.startsWith('/join')) {
+          appendLine('chat-line-join', '', `*** ${value.replace(/^\/join\s*/i, 'Joins: watchmk -> ')}`);
+          setStatus(`JOIN ${getTime()}`);
+          return;
+        }
+
+        if (value.startsWith('/quote')) {
+          const symbol = value.replace(/^\/quote\s*/i, '').trim().toUpperCase() || 'YOMA';
+          appendLine('chat-line-alert', '', `!QUOTE ${symbol} BID 128.40 ASK 128.48 VOL 2.4M`);
+          setStatus(`QUOTE ${getTime()}`);
+          return;
+        }
+
+        appendLine('', 'watchmk', value);
+        setStatus(`SENT ${getTime()}`);
+
+        const aiQuestion = extractAiQuestion(value);
+        if (aiQuestion) {
+          askMrYomama(aiQuestion);
+        }
+      };
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitMessage(input.value);
+        input.value = '';
+        input.focus();
+      });
+
+      commandButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const action = button.getAttribute('data-chat-action');
+          if (action === 'clear') {
+            submitMessage('/clear');
+          } else if (action === 'quote') {
+            input.value = '/quote NVDA';
+            input.focus();
+          } else if (action === 'join') {
+            input.value = '/join #market-open';
+            input.focus();
+          } else if (action === 'whois') {
+            appendLine('chat-line-notice', '', '*** WHOIS @marketmom: operator, desk=bloomberg, idle=00:02');
+            setStatus(`WHOIS ${getTime()}`);
+          }
+        });
+      });
+
+      channelButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          setActiveChannel(button.textContent, true);
+          input.focus();
+        });
+      });
+
+      roomLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          setActiveChannel(link.textContent, true);
+          input.focus();
+        });
+      });
+
+      setActiveChannel('#beginer', false);
+      transcript.scrollTop = transcript.scrollHeight;
+      input.focus();
+    }());
+  </script>
+</body>
+</html>

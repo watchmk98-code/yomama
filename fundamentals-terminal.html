@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fundamentals Terminal</title>
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <style>
+    @font-face {
+      font-family: "VT323 Local";
+      src: local("VT323"), url("./assets/fonts/VT323-Regular.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      --bg: #000000;
+      --textPrimary: #ffffff;
+      --textSecondary: #b8bcc2;
+      --border: #2a2a2a;
+      --accentAmber: #ffa028;
+      --pos: #00c176;
+      --neg: #d64545;
+      --fontTerminal: "VT323 Local", "VT323", "OCR A Std", "OCR A Extended", "OCRB", "Lucida Console", "Courier New", monospace;
+    }
+
+    .terminal-ui,
+    .terminal-ui * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: #000000;
+      color: #b8bcc2;
+      font-family: var(--fontTerminal);
+    }
+
+    body {
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .terminal {
+      width: 100%;
+      max-width: 980px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 0;
+    }
+
+    .ticker {
+      text-align: center;
+      color: var(--textPrimary);
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+      margin: 0 0 10px 0;
+    }
+
+    .header-bar {
+      border-top: 2px solid var(--accentAmber);
+      border-bottom: 2px solid var(--accentAmber);
+      color: var(--accentAmber);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+
+    .meta {
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow-x: auto;
+      color: var(--textSecondary);
+    }
+
+    .meta .source {
+      display: block;
+      margin-top: 2px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+      min-height: 0;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 0;
+      min-width: 0;
+      background: var(--bg);
+    }
+
+    .card-head {
+      border-bottom: 2px solid var(--accentAmber);
+      color: var(--accentAmber);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 8px 10px;
+    }
+
+    .terminal-ui table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      color: var(--textSecondary);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .terminal-ui th,
+    .terminal-ui td {
+      border-bottom: 1px solid var(--border);
+      padding: 7px 8px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .terminal-ui th {
+      color: var(--accentAmber);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .terminal-ui th:first-child,
+    .terminal-ui td:first-child {
+      text-align: left;
+      width: 44%;
+    }
+
+    .terminal-ui th:nth-child(2),
+    .terminal-ui td:nth-child(2) {
+      width: 28%;
+      text-align: right;
+      color: var(--textPrimary);
+      font-weight: 600;
+    }
+
+    .terminal-ui th:nth-child(3),
+    .terminal-ui td:nth-child(3) {
+      width: 28%;
+      text-align: right;
+      color: var(--textSecondary);
+    }
+
+    .terminal-ui tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .chart-wrap {
+      border: 1px solid var(--border);
+      border-radius: 0;
+      padding: 10px;
+      min-height: 280px;
+    }
+
+    .chart-title {
+      border-bottom: 2px solid var(--accentAmber);
+      color: var(--accentAmber);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      font-weight: 700;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .vchart {
+      height: 220px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      align-items: end;
+      border-left: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0 8px 8px 8px;
+      margin-bottom: 6px;
+    }
+
+    .vcol {
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+      align-items: center;
+      min-width: 0;
+      height: 100%;
+      gap: 6px;
+    }
+
+    .vbar {
+      width: 100%;
+      max-width: 42px;
+      border: 1px solid var(--border);
+      background: var(--pos);
+      min-height: 2px;
+    }
+
+    .vlabel {
+      font-size: 10px;
+      color: var(--textSecondary);
+      text-align: center;
+      line-height: 1.25;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .vvalue {
+      font-size: 10px;
+      color: var(--textPrimary);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .haxis {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      color: var(--textSecondary);
+      font-size: 10px;
+      margin: 2px 0 8px 136px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .haxis span:last-child {
+      text-align: right;
+    }
+
+    .hrows {
+      display: grid;
+      gap: 8px;
+    }
+
+    .hrow {
+      display: grid;
+      grid-template-columns: 126px 1fr 54px;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .hname {
+      font-size: 11px;
+      color: var(--textSecondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .htrack {
+      width: 100%;
+      height: 14px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      position: relative;
+    }
+
+    .hfill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: var(--pos);
+    }
+
+    .hval {
+      text-align: right;
+      font-size: 11px;
+      color: var(--textPrimary);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .is-down { background: var(--neg); }
+
+    @media (max-width: 860px) {
+      body { padding: 12px; }
+      .terminal { padding: 10px; }
+      .grid-2,
+      .charts { grid-template-columns: 1fr; }
+      .haxis { margin-left: 0; }
+      .hrow { grid-template-columns: 98px 1fr 52px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="terminal-ui terminal">
+    <h1 class="ticker" id="ticker">—</h1>
+    <div class="header-bar" id="header-bar">— • FUNDAMENTALS</div>
+    <div class="meta">
+      <span id="meta-line-1">—</span>
+      <span class="source" id="meta-line-2">SOURCE: —</span>
+    </div>
+
+    <section class="grid-2">
+      <article class="card">
+        <div class="card-head">Income &amp; Cash Flow</div>
+        <table aria-label="Income and cash flow">
+          <thead>
+            <tr><th>Metric</th><th>Value</th><th>Period</th></tr>
+          </thead>
+          <tbody id="left-body"></tbody>
+        </table>
+      </article>
+      <article class="card">
+        <div class="card-head">Balance Sheet &amp; Ratios</div>
+        <table aria-label="Balance sheet and ratios">
+          <thead>
+            <tr><th>Metric</th><th>Value</th><th>Period</th></tr>
+          </thead>
+          <tbody id="right-body"></tbody>
+        </table>
+      </article>
+    </section>
+
+    <section class="charts">
+      <article class="chart-wrap">
+        <div class="chart-title">Scale (USD Billions)</div>
+        <div class="vchart" id="vchart"></div>
+      </article>
+      <article class="chart-wrap">
+        <div class="chart-title">Efficiency and Leverage</div>
+        <div class="haxis">
+          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+        </div>
+        <div class="hrows" id="hrows"></div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    /*
+      Paste your JSON object into `window.fundamentals` before this script runs,
+      or replace the constant below with your provided object:
+      const fundamentals = <PASTE_JSON_HERE>;
+    */
+    const fundamentals = (typeof window.fundamentals === "object" && window.fundamentals) ? window.fundamentals : {};
+
+    function firstSymbolEntry(input) {
+      if (!input || typeof input !== "object") return {};
+      if (input.symbol && !input.symbols) return input;
+      if (input.symbols && typeof input.symbols === "object") {
+        const firstKey = Object.keys(input.symbols)[0];
+        if (!firstKey) return {};
+        const base = input.symbols[firstKey] || {};
+        return {
+          ...base,
+          symbol: base.symbol || firstKey,
+          source: base.source || input.source,
+          data_updated: base.data_updated || input.data_updated || input.updated_at
+        };
+      }
+      return input;
+    }
+
+    const f = firstSymbolEntry(fundamentals);
+
+    function asNum(v) {
+      return Number.isFinite(v) ? v : NaN;
+    }
+
+    function metricObj(field) {
+      const value = f[field];
+      if (value && typeof value === "object" && "value" in value) return value;
+      if (Number.isFinite(value)) return { value };
+      return null;
+    }
+
+    function metricVal(field) {
+      const m = metricObj(field);
+      return m && Number.isFinite(m.value) ? m.value : NaN;
+    }
+
+    function metricPeriod(field) {
+      const m = metricObj(field);
+      if (!m) return "—";
+      if (Number.isFinite(m.fy) && m.fp) return String(m.fy) + " " + String(m.fp);
+      if (m.end) return String(m.end);
+      return "—";
+    }
+
+    function fmtMoneyUSD(v) {
+      if (!Number.isFinite(v)) return "—";
+      const abs = Math.abs(v);
+      if (abs >= 1e12) return "$" + (v / 1e12).toFixed(1) + "T";
+      if (abs >= 1e9) return "$" + (v / 1e9).toFixed(1) + "B";
+      if (abs >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
+      return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    }
+
+    function fmtPct(v) {
+      if (!Number.isFinite(v)) return "—";
+      return (v * 100).toFixed(1) + "%";
+    }
+
+    function safeRatio(a, b) {
+      if (!Number.isFinite(a) || !Number.isFinite(b) || b === 0) return NaN;
+      return a / b;
+    }
+
+    function rowHtml(label, value, period) {
+      return "<tr><td>" + label + "</td><td>" + value + "</td><td>" + period + "</td></tr>";
+    }
+
+    function render() {
+      const symbol = (f.symbol || "—").toString().toUpperCase();
+      const company = (f.company || "—").toString().toUpperCase();
+      const periodEnd = (f.period_end || "—").toString();
+      const dataUpdated = (f.data_updated || f.updated_at || "—").toString();
+      const source = (f.source || "—").toString().toUpperCase();
+
+      document.getElementById("ticker").textContent = symbol;
+      document.getElementById("header-bar").textContent = symbol + " • FUNDAMENTALS";
+      document.getElementById("meta-line-1").textContent =
+        symbol + " " + company + "   PERIOD END: " + periodEnd + "   DATA UPDATED: " + dataUpdated;
+      document.getElementById("meta-line-2").textContent = "SOURCE: " + source;
+
+      const revenue = metricVal("revenue");
+      const grossProfit = metricVal("grossProfit");
+      const operatingIncome = metricVal("operatingIncome");
+      const netIncome = metricVal("netIncome");
+      const operatingCashFlow = metricVal("operatingCashFlow");
+      const eps = metricVal("eps");
+      const cash = metricVal("cash");
+      const assets = metricVal("assets");
+      const liabilities = metricVal("liabilities");
+      const equity = metricVal("equity");
+
+      const grossMargin = Number.isFinite(f.grossMargin) ? f.grossMargin : NaN;
+      const operatingMargin = safeRatio(operatingIncome, revenue);
+      const netMargin = Number.isFinite(f.netMargin) ? f.netMargin : NaN;
+      const cashToOpCF = safeRatio(cash, operatingCashFlow);
+
+      const leftRows = [
+        ["REVENUE", fmtMoneyUSD(revenue), metricPeriod("revenue")],
+        ["GROSS PROFIT", fmtMoneyUSD(grossProfit), metricPeriod("grossProfit")],
+        ["OPERATING INCOME", fmtMoneyUSD(operatingIncome), metricPeriod("operatingIncome")],
+        ["NET INCOME", fmtMoneyUSD(netIncome), metricPeriod("netIncome")],
+        ["OP CASH FLOW", fmtMoneyUSD(operatingCashFlow), metricPeriod("operatingCashFlow")],
+        ["EPS (BASIC)", Number.isFinite(eps) ? "$" + eps.toFixed(2) : "—", metricPeriod("eps")]
+      ];
+
+      const rightRows = [
+        ["CASH", fmtMoneyUSD(cash), metricPeriod("cash")],
+        ["ASSETS", fmtMoneyUSD(assets), metricPeriod("assets")],
+        ["LIABILITIES", fmtMoneyUSD(liabilities), metricPeriod("liabilities")],
+        ["EQUITY", fmtMoneyUSD(equity), metricPeriod("equity")],
+        ["GROSS MARGIN", fmtPct(grossMargin), metricPeriod("grossProfit")],
+        ["OPERATING MARGIN", fmtPct(operatingMargin), metricPeriod("operatingIncome")],
+        ["NET MARGIN", fmtPct(netMargin), metricPeriod("netIncome")],
+        ["CASH / OP CF", fmtPct(cashToOpCF), metricPeriod("cash")]
+      ];
+
+      const leftBody = document.getElementById("left-body");
+      const rightBody = document.getElementById("right-body");
+      leftBody.innerHTML = leftRows.map(function (r) { return rowHtml(r[0], r[1], r[2]); }).join("");
+      rightBody.innerHTML = rightRows.map(function (r) { return rowHtml(r[0], r[1], r[2]); }).join("");
+
+      const vSeries = [
+        { name: "REVENUE", value: revenue },
+        { name: "GROSS PROFIT", value: grossProfit },
+        { name: "OPERATING INCOME", value: operatingIncome },
+        { name: "NET INCOME", value: netIncome },
+        { name: "OP CASH FLOW", value: operatingCashFlow }
+      ];
+      const vValid = vSeries.map(function (d) { return asNum(d.value); }).filter(Number.isFinite);
+      const vMax = vValid.length ? Math.max.apply(null, vValid.map(Math.abs)) : 0;
+      const vchart = document.getElementById("vchart");
+      vchart.innerHTML = vSeries.map(function (d) {
+        const n = asNum(d.value);
+        const pct = (Number.isFinite(n) && vMax > 0) ? (Math.abs(n) / vMax) * 100 : 0;
+        const colorClass = Number.isFinite(n) && n < 0 ? " is-down" : "";
+        const display = Number.isFinite(n) ? fmtMoneyUSD(n / 1e9).replace("$", "") : "—";
+        return (
+          '<div class="vcol">' +
+            '<div class="vvalue">' + display + '</div>' +
+            '<div class="vbar' + colorClass + '" style="height:' + pct.toFixed(2) + '%"></div>' +
+            '<div class="vlabel">' + d.name + '</div>' +
+          "</div>"
+        );
+      }).join("");
+
+      const hSeries = [
+        { name: "GROSS MARGIN", value: grossMargin },
+        { name: "OPERATING MARGIN", value: operatingMargin },
+        { name: "NET MARGIN", value: netMargin },
+        { name: "CASH / OP CF", value: cashToOpCF }
+      ];
+      const hrows = document.getElementById("hrows");
+      hrows.innerHTML = hSeries.map(function (d) {
+        if (!Number.isFinite(d.value)) {
+          return (
+            '<div class="hrow">' +
+              '<div class="hname">' + d.name + '</div>' +
+              '<div class="htrack"><div class="hfill" style="width:0%"></div></div>' +
+              '<div class="hval">—</div>' +
+            "</div>"
+          );
+        }
+        const pct = d.value * 100;
+        const width = Math.max(0, Math.min(100, pct));
+        const fillClass = pct < 0 ? "hfill is-down" : "hfill";
+        return (
+          '<div class="hrow">' +
+            '<div class="hname">' + d.name + '</div>' +
+            '<div class="htrack"><div class="' + fillClass + '" style="width:' + width.toFixed(2) + '%"></div></div>' +
+            '<div class="hval">' + pct.toFixed(1) + '%</div>' +
+          "</div>"
+        );
+      }).join("");
+    }
+
+    render();
+  </script>
+</body>
+</html>

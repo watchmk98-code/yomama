@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YOMAMA INVESTMENTS — LEADERBOARD</title>
+  <meta name="description" content="Bloomberg-like terminal landing page." />
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260217-6" />
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="left-meta">
+          <span class="chip amber">2184 days in the market</span>
+          <span class="amber">Tue 23-APR-24</span>
+        </div>
+        <div class="ticker-container" aria-label="Live price action">
+          <div class="ticker-wrap" id="ticker"></div>
+        </div>
+        <div class="right-meta">
+          <span class="amber" id="clock">5:04 PM</span>
+          <button class="pill" type="button">LOG OUT</button>
+        </div>
+      </div>
+
+      <div class="banner-frame">
+        <div class="bubble-bg" aria-hidden="true"></div>
+        <div id="large-header" class="large-header" aria-hidden="true">
+          <canvas id="demo-canvas"></canvas>
+        </div>
+        <img class="hero-banner" src="./banner-colored.png" alt="YOMAMA Investments banner" />
+      </div>
+
+      <nav class="tabs" aria-label="Primary navigation">
+        <a class="tab" href="./index.html">DASH</a>
+        <a class="tab" href="./collect.html">BUILDINGS</a>
+        <a class="tab" href="./flow.html">ANALYSTS</a>
+        <a class="tab active" href="./memos.html" aria-current="page">LEADERBOARD</a>
+        <a class="tab" href="./analysis.html">NEWS</a>
+        <a class="tab" href="./tomfort-method.html">TOMFORT METHOD</a>
+        <a class="tab" href="./about.html">PAPER</a>
+        <a class="tab" href="./chat.html">CHAT</a>
+        <a class="tab" href="./contact.html">PORT</a>
+      </nav>
+    </header>
+
+    <main class="memos-stage" aria-label="Leaderboard stage">
+      <section class="memos-leaderboard-shell" aria-labelledby="memos-leaderboard-title">
+        <header class="memos-leaderboard-header">
+          <p class="memos-kicker">LEADERBOARD // ARCADE RANKED MODE</p>
+          <h1 class="memos-title" id="memos-leaderboard-title">Street Leaderboard</h1>
+          <p class="memos-subtitle">Live ranking board.</p>
+          <div class="memos-timeframe-switch" role="tablist" aria-label="Leaderboard timeframe">
+            <button
+              type="button"
+              class="memos-timeframe-btn is-active"
+              role="tab"
+              aria-selected="true"
+              data-timeframe="daily"
+            >Daily</button>
+            <button
+              type="button"
+              class="memos-timeframe-btn"
+              role="tab"
+              aria-selected="false"
+              data-timeframe="weekly"
+            >Weekly</button>
+            <button
+              type="button"
+              class="memos-timeframe-btn"
+              role="tab"
+              aria-selected="false"
+              data-timeframe="monthly"
+            >Monthly</button>
+          </div>
+          <div class="memos-timeframe-meta" aria-live="polite" aria-label="Leaderboard update timestamps">
+            <span class="memos-timeframe-meta-item" data-timeframe-meta="daily">D: --:--:--</span>
+            <span class="memos-timeframe-meta-item" data-timeframe-meta="weekly">W: --:--:--</span>
+            <span class="memos-timeframe-meta-item" data-timeframe-meta="monthly">M: --:--:--</span>
+          </div>
+        </header>
+
+        <div class="memos-leaderboard-layout">
+          <section class="memos-roster" aria-label="Fighter roster">
+            <article class="memos-fighter player-ozan" data-character="ozan" role="button" tabindex="0" aria-label="Open Ogan Beyazca bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#1</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-ozan.png?v=20260216-1" alt="Ogan Beyazca pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">OGAN BEYAZCA</span>
+                <span class="memos-fighter-style">Specialty: Volatility</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">9,870</span></span>
+            </article>
+
+            <article class="memos-fighter player-pelli" data-character="pelli" role="button" tabindex="0" aria-label="Open Pelli Turin bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#2</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-pelli.png?v=20260216-2" alt="Pelli Turin pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">PELLI TURIN</span>
+                <span class="memos-fighter-style">Role: Quant Strategist</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">9,660</span></span>
+            </article>
+
+            <article class="memos-fighter player-irene" data-character="irene" role="button" tabindex="0" aria-label="Open Irene Carina bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#3</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-irene.png?v=20260216-1" alt="Irene Carina pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">IRENE CARINA</span>
+                <span class="memos-fighter-style">Low-volatility compounding</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">9,440</span></span>
+            </article>
+
+            <article class="memos-fighter player-buffett" data-character="buffett" role="button" tabindex="0" aria-label="Open Warren Buffett bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#4</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-buffett.png" alt="Warren Buffett pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">WARREN BUFFETT</span>
+                <span class="memos-fighter-style">Cash flow durability</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">9,310</span></span>
+            </article>
+
+            <article class="memos-fighter player-tomfort" data-character="tomfort" role="button" tabindex="0" aria-label="Open Andre Tomfort bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#5</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-tomfort.png" alt="Andre Tomfort pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">ANDRE TOMFORT</span>
+                <span class="memos-fighter-style">Catalyst timing and velocity</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">9,175</span></span>
+            </article>
+
+            <article class="memos-fighter player-marks" data-character="marks" role="button" tabindex="0" aria-label="Open Howard Marks bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#6</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-marks.png" alt="Howard Marks pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">HOWARD MARKS</span>
+                <span class="memos-fighter-style">Second-level thinking</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">9,040</span></span>
+            </article>
+
+            <article class="memos-fighter player-hara" data-character="hara" role="button" tabindex="0" aria-label="Open Hara Turanlee bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#7</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-hara.png?v=20260216-2" alt="Hara Turanlee pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">HARA TURANLEE</span>
+                <span class="memos-fighter-style">Rarity accumulation</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">8,890</span></span>
+            </article>
+
+            <article class="memos-fighter player-can" data-character="can" role="button" tabindex="0" aria-label="Open John Townman bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#8</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-can.png?v=20260216-1" alt="John Townman pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">JOHN TOWNMAN</span>
+                <span class="memos-fighter-style">Real-sector operator</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">8,720</span></span>
+            </article>
+
+            <article class="memos-fighter player-hussein" data-character="hussein" role="button" tabindex="0" aria-label="Open Hussein Fire bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#9</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-hussein.png?v=20260216-1" alt="Hussein Fire pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">HUSSEIN FIRE</span>
+                <span class="memos-fighter-style">Silent operator</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">8,540</span></span>
+            </article>
+
+            <article class="memos-fighter player-derdo" data-character="derdo" role="button" tabindex="0" aria-label="Open Derdo Merdo bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#10</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-derdo.png?v=20260216-1" alt="Derdo Merdo pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">DERDO MERDO</span>
+                <span class="memos-fighter-style">Narrative momentum</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">8,375</span></span>
+            </article>
+
+            <article class="memos-fighter player-dennis" data-character="dennis" role="button" tabindex="0" aria-label="Open Dennis Younger bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#11</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-dennis.png" alt="Dennis Younger pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">DENNIS YOUNGER</span>
+                <span class="memos-fighter-style">Clinical probability weighting</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">8,240</span></span>
+            </article>
+
+            <article class="memos-fighter player-peaker" data-character="peaker" role="button" tabindex="0" aria-label="Open Peaker S. bio on analysis page">
+              <span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>
+              <span class="memos-rank">#12</span>
+              <span class="memos-fighter-portrait-shell">
+                <img class="memos-fighter-portrait" src="./assets/hero-select/player-peaker.png" alt="Peaker pixel portrait" loading="lazy" decoding="async" />
+              </span>
+              <span class="memos-fighter-body">
+                <span class="memos-fighter-name">PEAKER S.</span>
+                <span class="memos-fighter-style">Flow-mapping signals</span>
+              </span>
+              <span class="memos-fighter-points"><span class="memos-points-label">PTS</span><span class="memos-points-value">8,090</span></span>
+            </article>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <svg style="display: none;">
+    <symbol viewBox="0 0 44 44" width="44px" height="44px" id="circle" fill="none" stroke="currentColor">
+      <circle r="20" cy="22" cx="22" id="test"></circle>
+    </symbol>
+  </svg>
+
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+  <script src="./app.js?v=20260423-2"></script>
+  <script src="./memos-bars.js?v=20260216-3"></script>
+</body>
+</html>

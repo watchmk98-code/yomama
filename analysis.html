@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YOMAMA INVESTMENTS — NEWS</title>
+  <meta name="description" content="Live Yahoo Finance news desk in the YOMAMA terminal." />
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260422-9" />
+</head>
+<body class="news-page">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="left-meta">
+          <span class="chip amber">2184 days in the market</span>
+          <span class="amber">Tue 23-APR-24</span>
+        </div>
+        <div class="ticker-container" aria-label="Live price action">
+          <div class="ticker-wrap" id="ticker"></div>
+        </div>
+        <div class="right-meta">
+          <span class="amber" id="clock">5:04 PM</span>
+          <button class="pill" type="button">LOG OUT</button>
+        </div>
+      </div>
+
+      <div class="banner-frame">
+        <div class="bubble-bg" aria-hidden="true"></div>
+        <div id="large-header" class="large-header" aria-hidden="true">
+          <canvas id="demo-canvas"></canvas>
+        </div>
+        <img class="hero-banner" src="./banner-colored.png" alt="YOMAMA Investments banner" />
+      </div>
+
+      <nav class="tabs" aria-label="Primary navigation">
+        <a class="tab" href="./index.html">DASH</a>
+        <a class="tab" href="./collect.html">BUILDINGS</a>
+        <a class="tab" href="./flow.html">ANALYSTS</a>
+        <a class="tab" href="./memos.html">LEADERBOARD</a>
+        <a class="tab active" href="./analysis.html" aria-current="page">NEWS</a>
+        <a class="tab" href="./tomfort-method.html">TOMFORT METHOD</a>
+        <a class="tab" href="./about.html">PAPER</a>
+        <a class="tab" href="./chat.html">CHAT</a>
+        <a class="tab" href="./contact.html">PORT</a>
+      </nav>
+    </header>
+
+    <main class="news-workspace" aria-label="Yahoo Finance news workspace">
+      <section class="panel news-terminal" id="news-desk" aria-live="polite">
+        <div class="panelhead news-panelhead">
+          <div class="hdr">NEWS</div>
+          <div class="news-desk-stats" aria-label="Yahoo Finance feed status">
+            <span class="news-desk-stat">
+              <span class="news-desk-stat-label">SOURCE</span>
+              <span class="news-desk-stat-value" id="news-source-label">YAHOO RSS</span>
+            </span>
+            <span class="news-desk-stat">
+              <span class="news-desk-stat-label">COUNT</span>
+              <span class="news-desk-stat-value" id="news-count-label">--</span>
+            </span>
+            <span class="news-desk-stat">
+              <span class="news-desk-stat-label">UPDATED</span>
+              <span class="news-desk-stat-value" id="news-updated-label">--</span>
+            </span>
+            <span class="news-desk-stat">
+              <span class="news-desk-stat-label">MODE</span>
+              <span class="news-desk-stat-value" id="news-mode-label">CONNECTING</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="news-status-banner is-loading" id="news-status-banner" role="status">
+          <span id="news-status-text">CONNECTING TO YAHOO FINANCE RSS...</span>
+          <span class="news-status-hint" id="news-status-hint">Waiting for the first pull.</span>
+        </div>
+
+        <div class="sep"></div>
+
+        <section class="news-feed-panel" aria-label="Yahoo Finance time ordered feed">
+          <header class="news-section-title">
+            <span class="news-wire-title">Yahoo Finance Wire</span>
+            <span class="news-section-divider" aria-hidden="true">|</span>
+            <span class="news-section-more">Click any row to open</span>
+            <span class="news-feed-meta-inline" id="news-feed-meta">NO STORIES LOADED</span>
+          </header>
+
+          <div class="news-feed-body" id="news-feed-body">
+            <div class="news-feed-empty">INITIALIZING FEED...</div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="./app.js?v=20260423-2"></script>
+</body>
+</html>
