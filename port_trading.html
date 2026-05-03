@@ -366,8 +366,28 @@
       cursor: pointer;
     }
 
-    .port-mini-portfolio-table tbody tr:hover {
-      background: rgba(255, 176, 0, 0.06);
+    .port-stocks-list {
+      display: grid;
+      gap: 0;
+    }
+
+    .port-stock-item {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--amber);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .port-stock-item:hover {
+      background: rgba(255, 176, 0, 0.08);
+    }
+
+    .port-stock-item:last-child {
+      border-bottom: 0;
     }
 
     .port-mini-portfolio-table .pm-sym {
@@ -1204,6 +1224,18 @@
               </div>
               <div class="port-panel-body">
                 <ul class="port-quick-nav" id="port-quick-nav"></ul>
+              </div>
+            </section>
+
+            <section class="port-panel" aria-labelledby="port-stocks-title">
+              <div class="port-panel-head">
+                <div class="port-panel-title-wrap">
+                  <h2 class="port-panel-title" id="port-stocks-title">Stocks</h2>
+                  <div class="port-panel-kicker">Tradeable NASDAQ</div>
+                </div>
+              </div>
+              <div class="port-panel-body" style="padding:0;">
+                <div class="port-stocks-list" id="port-stocks-list"></div>
               </div>
             </section>
           </aside>
@@ -2089,6 +2121,23 @@
 
       var miniPortfolio = document.getElementById("port-mini-portfolio");
 
+      var stocksList = document.getElementById("port-stocks-list");
+
+      function renderStocks() {
+        if (!stocksList) return;
+        stocksList.innerHTML = watchlist.map(function (sym) {
+          return '<div class="port-stock-item" data-symbol="' + escapeHtml(sym) + '">' + escapeHtml(sym) + '</div>';
+        }).join("");
+      }
+
+      if (stocksList) stocksList.addEventListener("click", function (event) {
+        var item = event.target.closest(".port-stock-item");
+        if (!item) return;
+        setSelectedSymbol(item.getAttribute("data-symbol"));
+        saveState();
+        render();
+      });
+
       function renderMiniPortfolio(derived) {
         if (!miniPortfolio) return;
         if (!derived.positions.length) {
@@ -2379,6 +2428,7 @@
 
         renderHeader(derived);
         renderQuickNav(derived);
+        renderStocks();
         renderBlotter(derived);
         renderMiniPortfolio(derived);
         renderBenchmark(derived);
