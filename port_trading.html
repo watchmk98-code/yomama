@@ -10,6 +10,8 @@
   <style>
     .port-terminal-page {
       display: block;
+      min-height: 0;
+      overflow: auto;
       padding: 0 0 var(--s3);
       color: var(--text);
     }
@@ -234,7 +236,7 @@
 
     .port-main-grid {
       display: grid;
-      grid-template-columns: 210px minmax(0, 1fr) 320px;
+      grid-template-columns: 200px minmax(0, 1fr) 300px;
       gap: var(--s1);
       min-width: 0;
       align-items: start;
@@ -321,9 +323,216 @@
       color: var(--amber);
     }
 
+    .port-mini-portfolio-wrap {
+      overflow-x: auto;
+    }
+
+    .port-mini-portfolio-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+    }
+
+    .port-mini-portfolio-table th,
+    .port-mini-portfolio-table td {
+      padding: 5px 6px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.15;
+    }
+
+    .port-mini-portfolio-table th:last-child,
+    .port-mini-portfolio-table td:last-child {
+      border-right: 0;
+    }
+
+    .port-mini-portfolio-table th {
+      position: sticky;
+      top: 0;
+      background: #000;
+      color: var(--amber);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-align: left;
+    }
+
+    .port-mini-portfolio-table tbody tr {
+      background: transparent;
+    }
+
+    .port-mini-portfolio-table tbody tr:hover {
+      background: rgba(255, 176, 0, 0.06);
+    }
+
+    .port-mini-portfolio-table .pm-sym {
+      color: var(--amber);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      width: 22%;
+    }
+
+    .port-mini-portfolio-table .pm-num {
+      text-align: right;
+      color: var(--text);
+      font-size: 11px;
+    }
+
+    .port-mini-portfolio-table .pm-wgt {
+      text-align: right;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .port-mini-portfolio-empty {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 0;
+    }
+
     .port-ticket-grid {
       display: grid;
-      gap: var(--s2);
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(145deg, rgba(255, 176, 0, 0.06), rgba(0, 0, 0, 0.4)),
+        #000;
+    }
+
+    .port-ticket-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--s1);
+      padding-bottom: var(--s1);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .port-ticket-title {
+      color: var(--amber);
+      font-size: 15px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .port-ticket-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .port-ticket-row {
+      display: grid;
+      gap: var(--s1);
+    }
+
+    .port-ticket-row.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .port-segment-group {
+      display: grid;
+      gap: 5px;
+    }
+
+    .port-segment-track {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .port-segment-button {
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 176, 0, 0.02);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .port-segment-button.is-active {
+      border-color: var(--amber);
+      background: rgba(255, 176, 0, 0.16);
+      color: var(--amber);
+    }
+
+    .port-segment-button[data-side-value="buy"].is-active {
+      border-color: rgba(61, 214, 140, 0.9);
+      background: rgba(61, 214, 140, 0.16);
+      color: #6df0b2;
+    }
+
+    .port-segment-button[data-side-value="sell"].is-active {
+      border-color: rgba(255, 106, 106, 0.9);
+      background: rgba(255, 106, 106, 0.16);
+      color: #ff8f8f;
+    }
+
+    .port-qty-chips {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .port-qty-chip {
+      padding: 5px 4px;
+      border: 1px solid var(--line);
+      background: rgba(255, 176, 0, 0.02);
+      color: var(--text);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .port-qty-chip:hover,
+    .port-qty-chip:focus-visible {
+      border-color: var(--amber);
+      background: rgba(255, 176, 0, 0.12);
+      color: var(--amber);
+    }
+
+    .port-ticket-hidden {
+      display: none;
+    }
+
+    .port-ticket-estimate {
+      display: grid;
+      gap: 2px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 176, 0, 0.04);
+    }
+
+    .port-ticket-estimate-label {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .port-ticket-estimate-value {
+      color: var(--amber);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .port-ticket-estimate-meta {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .port-field-group {
@@ -338,13 +547,106 @@
     }
 
     .port-button-block {
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .port-button-block button {
       width: 100%;
-      padding: var(--s2) var(--s3);
-      font-size: 16px;
+      padding: 8px var(--s3);
+      font-size: 14px;
+    }
+
+    .port-ticket-submit.is-buy {
+      border-color: rgba(61, 214, 140, 0.9);
+      color: #6df0b2;
+      background: rgba(61, 214, 140, 0.14);
+    }
+
+    .port-ticket-submit.is-sell {
+      border-color: rgba(255, 106, 106, 0.9);
+      color: #ff8f8f;
+      background: rgba(255, 106, 106, 0.14);
+    }
+
+    .port-trading-panel {
+      display: grid;
+      grid-template-rows: auto auto auto 1fr;
+      min-height: 0;
+    }
+
+    .port-positions-strip {
+      border-top: 1px solid var(--line);
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 200px;
+    }
+
+    .port-center-chart {
+      border-bottom: 1px solid var(--line);
+      min-height: 260px;
+      height: 300px;
+    }
+
+    .port-center-chart .port-mini-chart-wrap {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+      border: 0;
+    }
+
+    .port-center-chart .port-mini-chart {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .port-ticket-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: flex-end;
+      padding: 10px 12px;
+      background:
+        linear-gradient(145deg, rgba(255, 176, 0, 0.04), rgba(0, 0, 0, 0.3)),
+        #000;
+    }
+
+    .port-ticket-inline .port-field-group {
+      flex: 0 0 auto;
+    }
+
+    .port-ticket-inline .port-segment-group {
+      flex: 0 0 auto;
+    }
+
+    .port-ticket-inline .port-segment-track {
+      gap: 4px;
+    }
+
+    .port-ticket-inline .port-qty-chips {
+      display: flex;
+      gap: 4px;
+      flex: 0 0 auto;
+    }
+
+    .port-ticket-inline .port-ticket-estimate {
+      flex: 1 1 120px;
+    }
+
+    .port-ticket-inline .port-button-block {
+      flex: 0 0 auto;
+      margin-top: 0;
+    }
+
+    .port-ticket-inline .port-button-block button {
+      width: auto;
+      white-space: nowrap;
+      padding: 7px 16px;
+      font-size: 13px;
+    }
+
+    .port-ticket-inline .port-ticket-toggle {
+      flex: 0 0 100%;
+      padding: 4px 0 0;
     }
 
     .port-blotter-panel {
@@ -365,7 +667,65 @@
     }
 
     .port-blotter-wrap {
-      max-height: 62vh;
+      max-height: 58vh;
+    }
+
+    .port-blotter-tools {
+      display: grid;
+      gap: var(--s2);
+      padding: var(--s2);
+      border-top: 1px solid var(--line);
+      background: rgba(255, 176, 0, 0.02);
+    }
+
+    .port-mini-chart-wrap {
+      border: 1px solid var(--border);
+      background: #000;
+    }
+
+    .port-mini-chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--s2);
+      border-bottom: 1px solid var(--line);
+      color: var(--amber);
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .port-mini-chart {
+      height: 220px;
+      min-height: 220px;
+      border: 0;
+    }
+
+    .port-mini-chart .tradingview-widget-container,
+    .port-mini-chart .tradingview-widget-container__widget,
+    .port-mini-chart iframe {
+      width: 100% !important;
+      height: 100% !important;
+      border: 0;
+      display: block;
+    }
+
+    .port-ticket-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+      padding: 6px 0;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .port-ticket-toggle input {
+      width: auto;
+      margin: 0;
+      accent-color: #ffb000;
     }
 
     .port-terminal-page table {
@@ -696,7 +1056,7 @@
       }
 
       .port-main-grid {
-        grid-template-columns: 190px minmax(0, 1fr) 280px;
+        grid-template-columns: 250px minmax(0, 1fr) 260px;
       }
 
       .port-note-grid {
@@ -760,6 +1120,14 @@
       .port-summary-strip {
         grid-template-columns: 1fr 1fr;
       }
+
+      .port-ticket-row.two {
+        grid-template-columns: 1fr;
+      }
+
+      .port-qty-chips {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
     }
   </style>
 </head>
@@ -797,9 +1165,9 @@
         <a class="tab" href="./memos.html">LEADERBOARD</a>
         <a class="tab" href="./analysis.html">NEWS</a>
         <a class="tab" href="./tomfort-method.html">TOMFORT METHOD</a>
-        <a class="tab" href="./about.html">PAPER</a>
+        <a class="tab" href="./about.html" hidden>PAPER</a>
         <a class="tab" href="./chat.html">CHAT</a>
-        <a class="tab active" href="./contact.html" aria-current="page">PORT</a>
+        <a class="tab active" href="./port_trading.html" aria-current="page">PORT</a>
       </nav>
     </header>
 
@@ -825,7 +1193,7 @@
         </div>
 
         <section class="port-main-grid" aria-label="Main terminal grid">
-          <aside class="port-rail port-left-rail" aria-label="Quick nav and trade ticket">
+          <aside class="port-rail port-left-rail" aria-label="Quick nav">
             <section class="port-panel" aria-labelledby="port-quick-nav-title">
               <div class="port-panel-head">
                 <div class="port-panel-title-wrap">
@@ -837,94 +1205,115 @@
                 <ul class="port-quick-nav" id="port-quick-nav"></ul>
               </div>
             </section>
-
-            <section class="port-panel" aria-labelledby="port-trade-ticket-title">
-              <div class="port-panel-head">
-                <div class="port-panel-title-wrap">
-                  <h2 class="port-panel-title" id="port-trade-ticket-title">Trade Ticket</h2>
-                  <div class="port-panel-kicker">Engine-backed order entry</div>
-                </div>
-              </div>
-              <div class="port-panel-body">
-                <form id="port-trade-ticket-form" class="port-ticket-grid">
-                  <label class="port-field-group">
-                    <span class="port-field-label">Symbol</span>
-                    <input id="port-ticket-symbol" type="text" autocomplete="off" spellcheck="false" />
-                  </label>
-
-                  <label class="port-field-group">
-                    <span class="port-field-label">Side</span>
-                    <select id="port-ticket-side">
-                      <option value="buy">buy</option>
-                      <option value="sell">sell</option>
-                    </select>
-                  </label>
-
-                  <label class="port-field-group">
-                    <span class="port-field-label">Order Type</span>
-                    <select id="port-ticket-type">
-                      <option value="market">market</option>
-                      <option value="limit">limit</option>
-                    </select>
-                  </label>
-
-                  <label class="port-field-group">
-                    <span class="port-field-label">Quantity</span>
-                    <input id="port-ticket-quantity" type="number" min="1" step="1" value="10" />
-                  </label>
-
-                  <label class="port-field-group">
-                    <span class="port-field-label">Reference Price</span>
-                    <input id="port-ticket-reference" type="number" min="0.01" step="0.01" />
-                  </label>
-
-                  <label class="port-field-group">
-                    <span class="port-field-label">Limit Price</span>
-                    <input id="port-ticket-limit" type="number" min="0.01" step="0.01" />
-                  </label>
-
-                  <label class="port-field-group">
-                    <span class="port-field-label">Session</span>
-                    <select id="port-ticket-session">
-                      <option value="regular">regular</option>
-                      <option value="pre">pre</option>
-                      <option value="after">after</option>
-                    </select>
-                  </label>
-
-                  <div class="port-button-block">
-                    <button type="submit">Submit Order</button>
-                  </div>
-                </form>
-              </div>
-            </section>
           </aside>
 
-          <section class="port-panel port-blotter-panel" aria-labelledby="port-blotter-title">
+          <section class="port-panel port-trading-panel" aria-labelledby="port-trade-ticket-title">
             <div class="port-panel-head">
               <div class="port-panel-title-wrap">
-                <h2 class="port-panel-title" id="port-blotter-title">Portfolio Blotter</h2>
-                <div class="port-panel-kicker">Current open positions</div>
+                <h2 class="port-panel-title" id="port-trade-ticket-title">Trading Module</h2>
+                <div class="port-panel-kicker">Fast buy/sell execution</div>
               </div>
-              <div class="port-blotter-status" id="port-blotter-status">No rows</div>
             </div>
-            <div class="port-table-wrap port-blotter-wrap">
-              <table class="port-blotter-table" aria-label="Portfolio blotter">
-                <thead>
-                  <tr>
-                    <th>TKR</th>
-                    <th class="port-numeric">QTY</th>
-                    <th class="port-numeric">AVG PX</th>
-                    <th class="port-numeric">LAST</th>
-                    <th class="port-numeric">MKT VAL</th>
-                    <th class="port-numeric">WGT %</th>
-                    <th class="port-numeric">UPNL $</th>
-                    <th class="port-numeric">UPNL %</th>
-                    <th class="port-numeric">RPNL $</th>
-                  </tr>
-                </thead>
-                <tbody id="port-blotter-body"></tbody>
-              </table>
+            <div class="port-center-chart">
+              <section class="port-mini-chart-wrap" aria-label="Selected symbol chart">
+                <header class="port-mini-chart-head">
+                  <span id="port-mini-chart-title">AAPL • NASDAQ</span>
+                  <span>Chart</span>
+                </header>
+                <div class="port-mini-chart chart-api-border" id="port-tv-symbol-overview">
+                  <div class="tradingview-widget-container">
+                    <div class="tradingview-widget-container__widget"></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <form id="port-trade-ticket-form" class="port-ticket-inline">
+              <div class="port-ticket-row two" style="display:contents">
+                <label class="port-field-group">
+                  <span class="port-field-label">Symbol</span>
+                  <input id="port-ticket-symbol" type="text" autocomplete="off" spellcheck="false" list="port-symbol-suggestions" style="width:80px" />
+                </label>
+                <datalist id="port-symbol-suggestions"></datalist>
+
+                <div class="port-segment-group" aria-label="Trade side selector">
+                  <span class="port-field-label">Side</span>
+                  <div class="port-segment-track">
+                    <button type="button" class="port-segment-button" data-side-value="buy">Buy</button>
+                    <button type="button" class="port-segment-button" data-side-value="sell">Sell</button>
+                  </div>
+                </div>
+              </div>
+
+              <label class="port-field-group port-ticket-hidden">
+                <span class="port-field-label">Side</span>
+                <select id="port-ticket-side">
+                  <option value="buy">buy</option>
+                  <option value="sell">sell</option>
+                </select>
+              </label>
+
+              <div class="port-segment-group" aria-label="Order type selector">
+                <span class="port-field-label">Type</span>
+                <div class="port-segment-track">
+                  <button type="button" class="port-segment-button" data-type-value="market">Mkt</button>
+                  <button type="button" class="port-segment-button" data-type-value="limit">Lmt</button>
+                </div>
+              </div>
+
+              <label class="port-field-group port-ticket-hidden">
+                <span class="port-field-label">Order Type</span>
+                <select id="port-ticket-type">
+                  <option value="market">market</option>
+                  <option value="limit">limit</option>
+                </select>
+              </label>
+
+              <label class="port-field-group">
+                <span class="port-field-label">Qty</span>
+                <input id="port-ticket-quantity" type="number" min="1" step="1" value="10" style="width:60px" />
+              </label>
+
+              <select id="port-ticket-session" class="port-ticket-hidden">
+                <option value="regular">regular</option>
+                <option value="pre">pre</option>
+                <option value="after">after</option>
+              </select>
+
+              <div class="port-qty-chips" aria-label="Quick quantity buttons">
+                <button type="button" class="port-qty-chip" data-qty="5">5</button>
+                <button type="button" class="port-qty-chip" data-qty="10">10</button>
+                <button type="button" class="port-qty-chip" data-qty="25">25</button>
+                <button type="button" class="port-qty-chip" data-qty="50">50</button>
+                <button type="button" class="port-qty-chip" data-qty="100">100</button>
+              </div>
+
+              <label class="port-field-group">
+                <span class="port-field-label">Ref Px</span>
+                <input id="port-ticket-reference" type="number" min="0.01" step="0.01" style="width:74px" />
+              </label>
+
+              <label class="port-field-group">
+                <span class="port-field-label">Limit Px</span>
+                <input id="port-ticket-limit" type="number" min="0.01" step="0.01" style="width:74px" />
+              </label>
+
+              <div class="port-ticket-estimate" aria-live="polite">
+                <div class="port-ticket-estimate-label">Est. Notional</div>
+                <div class="port-ticket-estimate-value" id="port-ticket-estimate-value">$0.00</div>
+                <div class="port-ticket-estimate-meta" id="port-ticket-estimate-meta">—</div>
+              </div>
+
+              <div class="port-button-block">
+                <button id="port-ticket-submit" class="port-ticket-submit" type="submit">Route Buy Order</button>
+              </div>
+
+              <label class="port-ticket-toggle" for="port-ticket-instant-fill">
+                <input id="port-ticket-instant-fill" type="checkbox" checked />
+                Instant fill market orders
+              </label>
+            </form>
+            <div class="port-positions-strip">
+              <div id="port-mini-portfolio"></div>
             </div>
           </section>
 
@@ -983,7 +1372,7 @@
           </aside>
         </section>
 
-        <section class="port-panel port-worksheet" aria-labelledby="port-worksheet-title">
+        <section class="port-panel port-worksheet" aria-labelledby="port-worksheet-title" hidden>
           <div class="port-panel-head">
             <div class="port-panel-title-wrap">
               <h2 class="port-panel-title" id="port-worksheet-title">Worksheet</h2>
@@ -1022,7 +1411,15 @@
         return;
       }
 
-      var watchlist = ["SPY", "QQQ", "AAPL", "NVDA", "MSFT", "AMD"];
+      var sampleNasdaqStocks = [
+        "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL",
+        "META", "TSLA", "AVGO", "ADBE", "NFLX",
+        "AMD", "INTC", "CSCO", "QCOM", "AMAT",
+        "MU", "TXN", "BKNG", "PDD", "INTU"
+      ];
+      var watchlist = sampleNasdaqStocks.slice();
+      var PORT_STORAGE_KEY = "yport.paperState.v1";
+      var lastRenderedChartSymbol = "";
       var notesBySymbol = {
         AAPL: [
           "Scale gains, do not drift into benchmark blindness.",
@@ -1065,10 +1462,20 @@
       var ticketReferenceInput = document.getElementById("port-ticket-reference");
       var ticketLimitInput = document.getElementById("port-ticket-limit");
       var ticketSessionInput = document.getElementById("port-ticket-session");
+      var ticketInstantFillInput = document.getElementById("port-ticket-instant-fill");
+      var ticketSubmitButton = document.getElementById("port-ticket-submit");
+      var ticketSideButtons = Array.prototype.slice.call(document.querySelectorAll("[data-side-value]"));
+      var ticketTypeButtons = Array.prototype.slice.call(document.querySelectorAll("[data-type-value]"));
+      var ticketQtyChips = Array.prototype.slice.call(document.querySelectorAll("[data-qty]"));
+      var ticketEstimateValue = document.getElementById("port-ticket-estimate-value");
+      var ticketEstimateMeta = document.getElementById("port-ticket-estimate-meta");
+      var symbolSuggestionsList = document.getElementById("port-symbol-suggestions");
       var benchmarkBaselineInput = document.getElementById("port-benchmark-baseline-input");
       var benchmarkCurrentInput = document.getElementById("port-benchmark-current-input");
       var setBenchmarkBaselineButton = document.getElementById("port-set-benchmark-baseline");
       var markBenchmarkPriceButton = document.getElementById("port-mark-benchmark-price");
+      var miniChartTitle = document.getElementById("port-mini-chart-title");
+      var miniChartWidget = document.querySelector("#port-tv-symbol-overview .tradingview-widget-container__widget");
 
       var contestConfig;
       var paperState;
@@ -1205,6 +1612,163 @@
           ticketReferenceInput.value = formatInputNumber(
             typeof position.marketPrice === "number" ? position.marketPrice : position.avgCost
           );
+        } else {
+          ticketReferenceInput.value = "";
+        }
+
+        updateTicketEstimate();
+      }
+
+      function syncSegmentedControls() {
+        ticketSideButtons.forEach(function (button) {
+          var isActive = button.getAttribute("data-side-value") === ticketSideInput.value;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+
+        ticketTypeButtons.forEach(function (button) {
+          var isActive = button.getAttribute("data-type-value") === ticketTypeInput.value;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+
+        if (ticketSubmitButton) {
+          var isSell = ticketSideInput.value === "sell";
+          ticketSubmitButton.classList.toggle("is-sell", isSell);
+          ticketSubmitButton.classList.toggle("is-buy", !isSell);
+          ticketSubmitButton.textContent = isSell ? "Route Sell Order" : "Route Buy Order";
+        }
+      }
+
+      function updateTicketEstimate() {
+        if (!ticketEstimateValue || !ticketEstimateMeta) {
+          return;
+        }
+
+        var quantity = readNumber(ticketQuantityInput.value);
+        var price = ticketTypeInput.value === "limit"
+          ? readNumber(ticketLimitInput.value)
+          : readNumber(ticketReferenceInput.value);
+        var notional = Number.isFinite(quantity) && Number.isFinite(price)
+          ? quantity * price
+          : 0;
+        var sideLabel = ticketSideInput.value === "sell" ? "SELL" : "BUY";
+        var typeLabel = ticketTypeInput.value === "limit" ? "LIMIT" : "MARKET";
+
+        ticketEstimateValue.textContent = formatCurrency(notional);
+        ticketEstimateMeta.textContent = sideLabel + " • " + typeLabel + " • QTY "
+          + (Number.isFinite(quantity) ? String(quantity) : "—")
+          + " @ "
+          + (Number.isFinite(price) ? formatCurrency(price) : "—");
+      }
+
+      function buildTradingViewWidgetUrl(widgetType, config) {
+        return "https://www.tradingview-widget.com/embed-widget/" + encodeURIComponent(widgetType) + "/?locale=en#" + encodeURIComponent(JSON.stringify(config));
+      }
+
+      function renderMiniChart(symbol) {
+        var chartSymbol = toUpper(symbol || selectedSymbol || watchlist[0]);
+
+        if (!chartSymbol || !miniChartWidget) {
+          return;
+        }
+
+        if (chartSymbol === lastRenderedChartSymbol) {
+          return;
+        }
+
+        var config = {
+          autosize: true,
+          symbol: "NASDAQ:" + chartSymbol,
+          interval: "D",
+          timezone: "exchange",
+          theme: "dark",
+          style: "3",
+          locale: "en",
+          allow_symbol_change: false,
+          hide_top_toolbar: true,
+          hide_side_toolbar: true,
+          hide_legend: false,
+          withdateranges: false,
+          hide_volume: true,
+          save_image: false,
+          calendar: false,
+          backgroundColor: "#000000",
+          gridColor: "rgba(255,176,0,0.22)",
+          support_host: "https://www.tradingview.com"
+        };
+        var iframe = document.createElement("iframe");
+
+        iframe.setAttribute("scrolling", "no");
+        iframe.setAttribute("allowtransparency", "true");
+        iframe.setAttribute("frameborder", "0");
+        iframe.setAttribute("allowfullscreen", "true");
+        iframe.src = buildTradingViewWidgetUrl("advanced-chart", config);
+
+        miniChartWidget.innerHTML = "";
+        miniChartWidget.appendChild(iframe);
+        miniChartTitle.textContent = chartSymbol + " • NASDAQ";
+        lastRenderedChartSymbol = chartSymbol;
+      }
+
+      function renderSymbolSuggestions() {
+        if (!symbolSuggestionsList) {
+          return;
+        }
+
+        symbolSuggestionsList.innerHTML = sampleNasdaqStocks.map(function (symbol) {
+          return '<option value="' + escapeHtml(symbol) + '"></option>';
+        }).join("");
+      }
+
+      function saveState() {
+        var payload = {
+          contestConfig: contestConfig,
+          paperState: paperState,
+          selectedSymbol: selectedSymbol,
+          activeTab: activeTab,
+          instantFill: Boolean(ticketInstantFillInput && ticketInstantFillInput.checked)
+        };
+
+        try {
+          window.localStorage.setItem(PORT_STORAGE_KEY, JSON.stringify(payload));
+        } catch (error) {
+          // Ignore storage failures and keep in-memory state.
+        }
+      }
+
+      function loadSavedState() {
+        var raw;
+
+        try {
+          raw = window.localStorage.getItem(PORT_STORAGE_KEY);
+        } catch (error) {
+          return false;
+        }
+
+        if (!raw) {
+          return false;
+        }
+
+        try {
+          var parsed = JSON.parse(raw);
+
+          if (!parsed || typeof parsed !== "object" || !parsed.paperState || !parsed.contestConfig) {
+            return false;
+          }
+
+          contestConfig = parsed.contestConfig;
+          paperState = parsed.paperState;
+          selectedSymbol = toUpper(parsed.selectedSymbol || "");
+          activeTab = typeof parsed.activeTab === "string" ? parsed.activeTab : "orders";
+
+          if (ticketInstantFillInput && typeof parsed.instantFill === "boolean") {
+            ticketInstantFillInput.checked = parsed.instantFill;
+          }
+
+          return true;
+        } catch (error) {
+          return false;
         }
       }
 
@@ -1216,6 +1780,9 @@
         if (!isLimit) {
           ticketLimitInput.value = "";
         }
+
+        syncSegmentedControls();
+        updateTicketEstimate();
       }
 
       function applyResult(result, preferredSymbol) {
@@ -1228,6 +1795,10 @@
 
         if (preferredSymbol) {
           setSelectedSymbol(preferredSymbol);
+        }
+
+        if (result && result.ok) {
+          saveState();
         }
 
         render();
@@ -1352,6 +1923,7 @@
         benchmarkCurrentInput.value = "518.50";
 
         syncLimitInput();
+        saveState();
       }
 
       function getDerived() {
@@ -1514,6 +2086,46 @@
         }).join("");
       }
 
+      var miniPortfolio = document.getElementById("port-mini-portfolio");
+
+      function renderMiniPortfolio(derived) {
+        if (!miniPortfolio) return;
+        if (!derived.positions.length) {
+          miniPortfolio.innerHTML = '<div class="port-mini-portfolio-empty">No positions</div>';
+          return;
+        }
+        var rows = derived.positions.map(function (pos) {
+          var price = typeof pos.marketPrice === "number" ? pos.marketPrice : pos.avgCost;
+          var notional = typeof pos.marketValue === "number" ? pos.marketValue : pos.totalCost;
+          var weight = derived.weightsBySymbol[pos.symbol] || 0;
+          var upnl = typeof pos.unrealizedPnl === "number" ? pos.unrealizedPnl : 0;
+          var rpnl = derived.realizedBySymbol[pos.symbol] || 0;
+          var pnl = upnl + rpnl;
+          var pnlClass = toneClass(pnl);
+          return [
+            '<tr>',
+            '<td class="pm-sym">' + escapeHtml(pos.symbol) + '</td>',
+            '<td class="pm-num">' + escapeHtml(formatCurrency(price)) + '</td>',
+            '<td class="pm-num">' + escapeHtml(formatCurrency(notional)) + '</td>',
+            '<td class="pm-wgt">' + escapeHtml(formatPercent(weight, false)) + '</td>',
+            '<td class="pm-num ' + escapeHtml(pnlClass) + '">' + escapeHtml(formatCurrency(pnl)) + '</td>',
+            '</tr>'
+          ].join("");
+        }).join("");
+        miniPortfolio.innerHTML = [
+          '<table class="port-mini-portfolio-table">',
+          '<thead><tr>',
+          '<th class="pm-sym">TKR</th>',
+          '<th class="pm-num" style="text-align:right">PRICE</th>',
+          '<th class="pm-num" style="text-align:right">NOTIONAL</th>',
+          '<th class="pm-wgt" style="text-align:right">WGT</th>',
+          '<th class="pm-num" style="text-align:right">PNL</th>',
+          '</tr></thead>',
+          '<tbody>' + rows + '</tbody>',
+          '</table>'
+        ].join("");
+      }
+
       function renderBlotter(derived) {
         if (selectedSymbol && !getCurrentPosition(selectedSymbol) && derived.positions.length) {
           selectedSymbol = derived.positions[0].symbol;
@@ -1523,11 +2135,11 @@
           selectedSymbol = derived.positions[0].symbol;
         }
 
-        blotterStatus.textContent = derived.positions.length
+        if (blotterStatus) blotterStatus.textContent = derived.positions.length
           ? "ROWS " + String(derived.positions.length).padStart(2, "0") + " // SEL " + selectedSymbol
           : "NO POSITIONS";
 
-        blotterBody.innerHTML = derived.positions.length
+        if (blotterBody) blotterBody.innerHTML = derived.positions.length
           ? derived.positions.map(function (position) {
               var marketPrice = typeof position.marketPrice === "number" ? position.marketPrice : position.avgCost;
               var marketValue = typeof position.marketValue === "number" ? position.marketValue : position.totalCost;
@@ -1759,9 +2371,11 @@
         renderHeader(derived);
         renderQuickNav(derived);
         renderBlotter(derived);
+        renderMiniPortfolio(derived);
         renderBenchmark(derived);
         renderScore(derived);
         renderWorksheet(derived);
+        renderMiniChart(selectedSymbol);
       }
 
       tradeForm.addEventListener("submit", function (event) {
@@ -1777,15 +2391,64 @@
           session: ticketSessionInput.value
         });
 
-        applyResult(
-          engine.submitDraftOrder(draft, contestConfig, paperState),
-          toUpper(ticketSymbolInput.value)
-        );
+        var preferredSymbol = toUpper(ticketSymbolInput.value);
+        var submitResult = engine.submitDraftOrder(draft, contestConfig, paperState);
+
+        if (
+          submitResult &&
+          submitResult.ok &&
+          submitResult.order &&
+          submitResult.order.type === "market" &&
+          ticketInstantFillInput &&
+          ticketInstantFillInput.checked
+        ) {
+          var immediateFillPrice = readNumber(ticketReferenceInput.value) || submitResult.order.referencePrice;
+          var fillResult = engine.fillPendingOrder(submitResult.order.id, immediateFillPrice, submitResult.nextState);
+          applyResult(fillResult, preferredSymbol);
+          return;
+        }
+
+        applyResult(submitResult, preferredSymbol);
       });
 
       ticketTypeInput.addEventListener("change", syncLimitInput);
+      ticketSideInput.addEventListener("change", syncSegmentedControls);
 
-      blotterBody.addEventListener("click", function (event) {
+      ticketSideButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          ticketSideInput.value = button.getAttribute("data-side-value");
+          syncSegmentedControls();
+          updateTicketEstimate();
+        });
+      });
+
+      ticketTypeButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          ticketTypeInput.value = button.getAttribute("data-type-value");
+          syncLimitInput();
+        });
+      });
+
+      ticketQtyChips.forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          var chipQty = readNumber(chip.getAttribute("data-qty"));
+
+          if (!Number.isFinite(chipQty)) {
+            return;
+          }
+
+          ticketQuantityInput.value = String(chipQty);
+          updateTicketEstimate();
+        });
+      });
+
+      [ticketQuantityInput, ticketReferenceInput, ticketLimitInput, ticketSymbolInput].forEach(function (input) {
+        input.addEventListener("input", updateTicketEstimate);
+      });
+
+      ticketInstantFillInput.addEventListener("change", saveState);
+
+      if (blotterBody) blotterBody.addEventListener("click", function (event) {
         var row = event.target.closest("[data-symbol]");
 
         if (!row) {
@@ -1793,6 +2456,7 @@
         }
 
         setSelectedSymbol(row.getAttribute("data-symbol"));
+        saveState();
         render();
       });
 
@@ -1804,6 +2468,7 @@
         }
 
         activeTab = tabButton.getAttribute("data-tab");
+        saveState();
         render();
       });
 
@@ -1867,7 +2532,19 @@
         render();
       });
 
-      createFreshDemo();
+      if (!loadSavedState()) {
+        createFreshDemo();
+      }
+
+      if (!selectedSymbol) {
+        selectedSymbol = watchlist[0];
+      }
+
+      syncSegmentedControls();
+      syncLimitInput();
+      updateTicketEstimate();
+      renderSymbolSuggestions();
+
       render();
     }());
   </script>

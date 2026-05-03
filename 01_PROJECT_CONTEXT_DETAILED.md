@@ -72,7 +72,7 @@ The product is split across multiple static pages.
   Analyst / character selection screen.
 - `about.html`
   Brand/about page.
-- `contact.html`
+- `port_trading.html`
   Contact page.
 - `tomfort-method.html`
   Dedicated branded concept page.

@@ -8186,3 +8186,7 @@ body.news-page .news-feed-body{
 .character-hidden-tomfort .tabs .tab[href$="tomfort-method.html"]{
   display:none !important;
 }
+
+.tab[hidden]{
+  display:none !important;
+}
