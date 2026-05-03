@@ -363,6 +363,7 @@
 
     .port-mini-portfolio-table tbody tr {
       background: transparent;
+      cursor: pointer;
     }
 
     .port-mini-portfolio-table tbody tr:hover {
@@ -2103,7 +2104,7 @@
           var pnl = upnl + rpnl;
           var pnlClass = toneClass(pnl);
           return [
-            '<tr>',
+            '<tr data-symbol="' + escapeHtml(pos.symbol) + '">',
             '<td class="pm-sym">' + escapeHtml(pos.symbol) + '</td>',
             '<td class="pm-num">' + escapeHtml(formatCurrency(price)) + '</td>',
             '<td class="pm-num">' + escapeHtml(formatCurrency(notional)) + '</td>',
@@ -2125,6 +2126,14 @@
           '</table>'
         ].join("");
       }
+
+      if (miniPortfolio) miniPortfolio.addEventListener("click", function (event) {
+        var row = event.target.closest("[data-symbol]");
+        if (!row) return;
+        setSelectedSymbol(row.getAttribute("data-symbol"));
+        saveState();
+        render();
+      });
 
       function renderBlotter(derived) {
         if (selectedSymbol && !getCurrentPosition(selectedSymbol) && derived.positions.length) {
