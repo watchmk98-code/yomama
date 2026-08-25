@@ -13,7 +13,7 @@
   const sharedAccountBackupStorageKey = 'yomama_watchmk_account_v1_backup';
   const gameAccountUsername = 'WATCHMK';
   const legacyCharacterSelectionStorageKey = 'hero_select_active_character';
-  const temporarilyHiddenCharacterKeys = Object.freeze(['irene', 'tomfort']);
+  const temporarilyHiddenCharacterKeys = Object.freeze(['irene']);
   const hiddenCharacterKeySet = new Set(temporarilyHiddenCharacterKeys);
 
   const toSafeNumber = (value, fallback = 0) => {
@@ -276,11 +276,6 @@
       element.remove();
     });
   };
-  const removeHiddenTomfortMethodLinks = () => {
-    document.querySelectorAll('.tabs .tab[href$="tomfort-method.html"]').forEach((link) => {
-      link.remove();
-    });
-  };
   const renumberVisibleLeaderboard = () => {
     const fighters = Array.from(document.querySelectorAll('.memos-roster .memos-fighter'));
     fighters.forEach((fighter, index) => {
@@ -299,14 +294,6 @@
     temporarilyHiddenCharacterKeys.forEach((characterKey) => {
       document.body.classList.add(`character-hidden-${characterKey}`);
     });
-  }
-  if (hiddenCharacterKeySet.has('tomfort')) {
-    removeHiddenTomfortMethodLinks();
-    const currentPage = String(window.location.pathname || '').split('/').pop().toLowerCase();
-    if (currentPage === 'tomfort-method.html') {
-      window.location.replace('./index.html');
-      return;
-    }
   }
 
   const toNonNegativeNumber = (value, fallback = 0) => {
@@ -717,7 +704,6 @@
     const allowedBuildingStatuses = new Set(['active', 'upgrading', 'constructing']);
     const charactersByBio = Object.freeze({
       buffett: 'wide-moat compounders durable cash flow pricing power',
-      tomfort: 'event-driven liquid momentum catalyst timing volatility',
       marks: 'credit spreads macro-sensitive second-level risk thinking',
       peaker: 'cross-border logistics flow mapping influence network',
       dennis: 'biotech trial milestones probability-weighted positioning',
@@ -3252,15 +3238,6 @@
         signature: 'Reject weak balance sheets and fad narratives',
         text: 'Base case: mega-cap quality still holds relative strength while rates remain structurally above pre-2020 norms.\n\nAction: build in tranches on valuation dislocations, not momentum spikes. Prioritize businesses with recurring demand, conservative leverage, and reinvestment runways.\n\nInvalidation: persistent margin compression with rising capital intensity. If cash conversion drops for multiple quarters, reduce size quickly and rotate to stronger operators.',
         portrait: './assets/hero-select/player-buffett.png',
-      },
-      tomfort: {
-        name: 'ANDRE TOMFORT',
-        age: 'Event-driven equities + liquid momentum',
-        role: '1D to 6W tactical horizon',
-        style: 'Catalyst timing + volatility compression breaks',
-        signature: 'Hard stop discipline before thesis drift',
-        text: 'Base case: current tape rewards fast re-pricing after earnings and guidance revisions. Best edge remains in the first and second pullbacks after confirmed trend acceleration.\n\nAction: enter only where liquidity supports rapid exit. Scale risk by realized volatility and reduce exposure into binary catalysts.\n\nInvalidation: choppy range regime with repeated failed breakouts. In that environment, cut holding period and focus only on high-liquidity names.',
-        portrait: './assets/hero-select/player-tomfort.png',
       },
       marks: {
         name: 'HOWARD MARKS',
@@ -7895,17 +7872,6 @@
           'Build books that can absorb volatility without forced liquidation.',
         ],
       },
-      {
-        id: 'tomfort-2026',
-        title: 'Overconfidence and Feedback Delay',
-        filename: 'TOMFORT_BEHAVIORAL_MEMO.TXT',
-        authorKey: 'tomfort',
-        bodyText: [
-          'The most expensive risk is certainty. Positive outcomes can validate bad process for long periods, especially in favorable regimes.',
-          'Separate process quality from short-term results, and design pre-commitment rules before stress arrives.',
-          'A robust process should define position limits, scenario checks, and explicit invalidation conditions. If those are missing, confidence is probably narrative, not evidence.',
-        ],
-      },
     ].filter((memo) => isCharacterVisible(memo.authorKey));
 
     const memoImageCacheKey = String(Date.now());
@@ -7914,7 +7880,6 @@
       buffett: memoImageWithVersion('./memos/warren_buffett_pixel_y2k.png'),
       marks: memoImageWithVersion('./memos/howard_marks_pixel_y2k.png'),
       nomad: memoImageWithVersion('./memos/nomad_partnership_pixel_y2k_logo.png'),
-      tomfort: memoImageWithVersion('./memos/andre_tomfort_pixel_y2k.png'),
     };
 
     const mediaReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');

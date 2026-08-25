@@ -74,8 +74,6 @@ The product is split across multiple static pages.
   Brand/about page.
 - `port_trading.html`
   Contact page.
-- `tomfort-method.html`
-  Dedicated branded concept page.
 - `preview.html`
   Alternate preview/variant of the main dashboard.
 - `fundamentals-terminal.html`
@@ -184,7 +182,6 @@ The project has a roster of stylized "analysts" / characters.
 Known characters include:
 
 - Buffett
-- Tomfort
 - Marks
 - Peaker
 - Dennis

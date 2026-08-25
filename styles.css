@@ -3367,7 +3367,6 @@ textarea{
 }
 
 .player-buffett .mario-sprite{ animation-delay:0s; }
-.player-tomfort .mario-sprite{ animation-delay:.12s; }
 .player-marks .mario-sprite{ animation-delay:.24s; }
 .player-irene .mario-sprite{ animation-delay:.36s; }
 .player-peaker .mario-sprite{ animation-delay:.48s; }
@@ -8181,9 +8180,7 @@ body.news-page .news-feed-body{
   }
 }
 
-.character-hidden-irene [data-character="irene"],
-.character-hidden-tomfort [data-character="tomfort"],
-.character-hidden-tomfort .tabs .tab[href$="tomfort-method.html"]{
+.character-hidden-irene [data-character="irene"]{
   display:none !important;
 }
 
