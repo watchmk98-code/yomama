@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 import game_api
@@ -154,6 +154,49 @@ def fetch_yahoo_finance_news(limit: int = 24) -> dict[str, object]:
     }
 
 
+# Only these file types are ever served. SimpleHTTPRequestHandler otherwise
+# hands out the whole working directory - which here includes game.db (student
+# names, session tokens, the teacher token), the .git history and the backup
+# zips. Everything not listed is 404, so adding a new secret to the folder
+# cannot silently publish it.
+PUBLIC_SUFFIXES = frozenset({
+    ".html", ".css", ".js", ".json",
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico",
+    ".ttf", ".woff", ".woff2", ".otf",
+    ".wav", ".mp3", ".ogg", ".mp4", ".webm",
+})
+
+
+def is_public_path(url_path: str) -> bool:
+    """True when this request may be served off disk."""
+    path = unquote(url_path.split("?", 1)[0].split("#", 1)[0])
+
+    if path in ("", "/"):
+        return True                      # the root maps to index.html
+
+    if path.endswith("/"):
+        return False                     # never list a directory
+
+    parts = [p for p in path.split("/") if p]
+    for part in parts:
+        if part.startswith("."):
+            return False                 # .git, .env, .DS_Store, dotfiles
+        if part in ("..",):
+            return False
+
+    suffix = Path(parts[-1]).suffix.lower()
+    if suffix not in PUBLIC_SUFFIXES:
+        return False
+
+    # the resolved file must still sit inside the project folder
+    try:
+        target = (ROOT / Path(*parts)).resolve()
+        target.relative_to(ROOT.resolve())
+    except (ValueError, OSError):
+        return False
+    return True
+
+
 class NewsProxyHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -169,7 +212,16 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         if parsed.path.startswith("/api/game/"):
             self.handle_game_get(parsed)
             return
+        if not is_public_path(parsed.path):
+            self.send_error(404, "Not Found")
+            return
         super().do_GET()
+
+    def do_HEAD(self) -> None:
+        if not is_public_path(urlparse(self.path).path):
+            self.send_error(404, "Not Found")
+            return
+        super().do_HEAD()
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
