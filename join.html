@@ -48,6 +48,15 @@
           <label for="join-name">YOUR NAME</label>
           <input id="join-name" name="name" maxlength="24" placeholder="ALEX K" required spellcheck="false" />
         </div>
+        <div class="join-field">
+          <label for="join-pin">4-DIGIT PIN</label>
+          <input id="join-pin" name="pin" maxlength="4" placeholder="0000" required
+                 inputmode="numeric" pattern="[0-9]{4}" autocomplete="off" spellcheck="false" />
+          <div style="color:var(--muted); font-size:13px; margin-top:5px">
+            Pick any four digits and remember them. You need the same PIN to get
+            back into your game on another computer.
+          </div>
+        </div>
         <button class="join-btn" id="join-btn" type="submit">ENTER THE MARKET</button>
       </form>
 
@@ -82,16 +91,20 @@
         nameEl.value = s.name;
       }
 
+      var pinEl = document.getElementById('join-pin');
+
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var code = codeEl.value.trim().toUpperCase();
         var name = nameEl.value.trim();
-        if (!code || !name) { say('Both fields are required.', 'err'); return; }
+        var pin = pinEl.value.trim();
+        if (!code || !name || !pin) { say('All three fields are required.', 'err'); return; }
+        if (!/^[0-9]{4}$/.test(pin)) { say('The PIN must be exactly four digits.', 'err'); return; }
         if (!net) { say('Game script failed to load. Reload the page.', 'err'); return; }
 
         btn.disabled = true;
         say('Joining...', 'info');
-        net.join(code, name).then(function (res) {
+        net.join(code, name, pin).then(function (res) {
           say(res.rejoined
             ? 'Welcome back, ' + res.name + '. Restoring your base...'
             : 'Joined class ' + res.code + '. Setting up your base...', 'ok');
@@ -100,12 +113,16 @@
           btn.disabled = false;
           var m = (err && err.message) || 'Could not reach the server.';
           if (err && err.status === 404) m = 'No class with that code. Check the board.';
+          if (err && err.status === 409) pinEl.focus();
           say(m, 'err');
         });
       });
 
       codeEl.addEventListener('input', function () {
         this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      });
+      pinEl.addEventListener('input', function () {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4);
       });
     }());
   </script>

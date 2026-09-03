@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS players (
     token      TEXT NOT NULL UNIQUE,
     joined_at  REAL NOT NULL,
     cash       REAL NOT NULL,
+    pin        TEXT NOT NULL DEFAULT '',
     buildings  TEXT NOT NULL DEFAULT '{}',
     UNIQUE(code, name)
 );
@@ -131,6 +132,9 @@ def connect() -> sqlite3.Connection:
 def init_db() -> None:
     with connect() as conn:
         conn.executescript(SCHEMA)
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(players)")}
+        if "pin" not in cols:
+            conn.execute("ALTER TABLE players ADD COLUMN pin TEXT NOT NULL DEFAULT ''")
 
 
 # ------------------------------------------------------------- economics ---
@@ -283,23 +287,41 @@ def create_session(body) -> dict:
 
 
 def join(body) -> dict:
-    """Student joins with the class code and a display name. No password."""
+    """Student joins with the class code, a display name and a 4-digit PIN.
+
+    Names are unique within a class. The PIN is not a password protecting
+    anything valuable - it exists so that the second Emma in a class of thirty
+    cannot walk into the first Emma's game, and so a student who clears their
+    browser can still get their own seat back.
+    """
     code = str(body.get("code", "")).strip().upper()
     name = " ".join(str(body.get("name", "")).split())[:24].upper()
+    pin = str(body.get("pin", "")).strip()
+
     if not code or not name:
         raise ApiError("class code and name are required")
+    if not (pin.isdigit() and len(pin) == 4):
+        raise ApiError("pick a 4-digit PIN you will remember")
+
     with _db_lock, connect() as conn:
         s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
         if s is None:
             raise ApiError("no class with that code", 404)
-        existing = conn.execute("SELECT * FROM players WHERE code=? AND name=?", (code, name)).fetchone()
+
+        existing = conn.execute(
+            "SELECT * FROM players WHERE code=? AND name=?", (code, name)
+        ).fetchone()
         if existing is not None:
-            # Rejoin: same name in the same class returns the same seat.
-            return {"token": existing["token"], "name": name, "code": code, "rejoined": True}
+            if secrets.compare_digest(str(existing["pin"]), pin):
+                return {"token": existing["token"], "name": name, "code": code, "rejoined": True}
+            raise ApiError(
+                f"{name} is already taken in this class. If that is you, check your PIN. "
+                "Otherwise add an initial, like " + name.split()[0] + " B.", 409)
+
         token = secrets.token_urlsafe(24)
         cur = conn.execute(
-            "INSERT INTO players(code, name, token, joined_at, cash) VALUES (?,?,?,?,?)",
-            (code, name, token, time.time(), STARTING_CASH),
+            "INSERT INTO players(code, name, token, joined_at, cash, pin) VALUES (?,?,?,?,?,?)",
+            (code, name, token, time.time(), STARTING_CASH, pin),
         )
         _log(conn, code, cur.lastrowid, "join", {"name": name})
     return {"token": token, "name": name, "code": code, "rejoined": False}

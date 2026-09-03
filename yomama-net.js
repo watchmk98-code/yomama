@@ -108,8 +108,8 @@
       return probe;
     },
 
-    join: function (code, name) {
-      return request('POST', '/join', { code: code, name: name }).then(function (data) {
+    join: function (code, name, pin) {
+      return request('POST', '/join', { code: code, name: name, pin: pin }).then(function (data) {
         session = { token: data.token, name: data.name, code: data.code };
         writeJson(SESSION_KEY, session);
         live = true;

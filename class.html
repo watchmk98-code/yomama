@@ -78,6 +78,8 @@
       <p class="cc-sub" style="margin:14px 0 0">
         Class size sets how deep the shared market is. With 30 students one sale nudges
         the price; the whole class selling at once moves it about 20%.
+        Students pick a name and a 4-digit PIN — names have to be unique in a class,
+        so a second Alex is asked to add an initial.
       </p>
       <div class="cc-msg info" id="cc-start-msg" role="status" aria-live="polite"></div>
     </section>
@@ -245,7 +247,10 @@
           try { localStorage.setItem(KEY, JSON.stringify(teacher)); } catch (e) {}
           // Take the first seat too, so the class can be tried solo without a
           // second device. The student token is separate from the teacher one.
-          return api('/join', { code: d.code, name: myName }).then(function (j) {
+          var myPin = String(Math.floor(1000 + Math.random() * 9000));
+          teacher.pin = myPin;
+          try { localStorage.setItem(KEY, JSON.stringify(teacher)); } catch (e) {}
+          return api('/join', { code: d.code, name: myName, pin: myPin }).then(function (j) {
             // same shape yomama-net.js reads, so every game page picks it up
             try {
               localStorage.setItem('yomama_session_v1',
@@ -274,6 +279,9 @@
           el('cc-play-btn').setAttribute('href', './join.html');
         } else {
           el('cc-play-name').textContent = 'Playing as ' + name;
+          el('cc-play-note').innerHTML = 'You are player #1 in this class. Your PIN is <strong>'
+            + (teacher && teacher.pin ? teacher.pin : '----')
+            + '</strong> — you need it to open this seat on another computer.';
           el('cc-play-btn').setAttribute('href', './collect.html');
         }
         show('cc-play', true);
