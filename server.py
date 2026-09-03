@@ -21,6 +21,7 @@ import game_api
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_PORT = 3000
+SERVER_PORT = DEFAULT_PORT
 YAHOO_FINANCE_RSS_URL = "https://finance.yahoo.com/news/rssindex"
 YAHOO_FINANCE_USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -200,6 +201,15 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
     }
 
     def handle_game_get(self, parsed) -> None:
+        if parsed.path == "/api/game/hostinfo":
+            lan_ip = detect_lan_ip()
+            self.send_json(200, {
+                "lan_ip": lan_ip,
+                "port": SERVER_PORT,
+                "join_url": f"http://{lan_ip}:{SERVER_PORT}/join.html",
+                "reachable": lan_ip != "127.0.0.1",
+            })
+            return
         handler = self.GAME_GET_ROUTES.get(parsed.path)
         if handler is None:
             self.send_json(404, {"error": "unknown endpoint"})
@@ -325,6 +335,9 @@ def main() -> None:
         port = DEFAULT_PORT
 
     game_api.init_db()
+
+    global SERVER_PORT
+    SERVER_PORT = port
 
     server = ThreadingHTTPServer(("0.0.0.0", port), NewsProxyHandler)
     lan_ip = detect_lan_ip()

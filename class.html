@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YOMAMA INVESTMENTS — CLASS CONSOLE</title>
+  <meta name="description" content="Open a class, project the code, watch the roster." />
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260421-2" />
+  <style>
+    .cc-wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+    .cc-h1{ color:var(--amber); font-size:26px; letter-spacing:.08em; margin:0 0 2px; }
+    .cc-sub{ color:var(--muted); margin:0 0 22px; font-size:15px; }
+    .cc-panel{ border:1px solid var(--border); background:#000; padding:20px; margin-bottom:18px; }
+    .cc-hd{ color:var(--amber); font-size:15px; letter-spacing:.12em; margin:0 0 14px;
+            padding-bottom:8px; border-bottom:1px solid var(--line); }
+
+    /* the code, sized to read from the back of a room */
+    .cc-code{ font-size:clamp(64px,13vw,150px); line-height:1; color:var(--green);
+              letter-spacing:.12em; text-align:center; margin:10px 0 4px; }
+    .cc-codelbl{ text-align:center; color:var(--muted); font-size:15px; letter-spacing:.24em; }
+    .cc-url{ text-align:center; margin-top:18px; font-size:clamp(18px,2.6vw,30px); color:var(--amber);
+             word-break:break-all; }
+    .cc-url small{ display:block; color:var(--muted); font-size:14px; letter-spacing:.2em; margin-bottom:4px; }
+
+    .cc-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .cc-field label{ display:block; color:var(--amber); font-size:13px; letter-spacing:.1em; margin-bottom:5px; }
+    .cc-field input{ background:#000; color:var(--text); border:1px solid var(--line);
+                     padding:9px 10px; font-family:inherit; font-size:18px; border-radius:0; width:110px; }
+    .cc-field input:focus{ outline:none; border-color:var(--amber); }
+    button.cc-btn{ background:#000; color:var(--amber); border:1px solid var(--border);
+                   padding:10px 16px; font-family:inherit; font-size:16px; letter-spacing:.08em;
+                   border-radius:0; cursor:pointer; }
+    button.cc-btn:hover{ background:var(--amber); color:#000; }
+    button.cc-btn.primary{ background:var(--amber); color:#000; border-color:var(--amber); }
+    button.cc-btn.danger{ color:var(--red); border-color:var(--red); }
+    button.cc-btn.danger:hover{ background:var(--red); color:#000; }
+    button.cc-btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+    table.cc-tbl{ width:100%; border-collapse:collapse; font-size:16px; }
+    .cc-tbl th{ text-align:left; color:var(--amber); font-size:13px; letter-spacing:.1em;
+                border-bottom:1px solid var(--line); padding:7px 8px; font-weight:normal; }
+    .cc-tbl td{ padding:7px 8px; border-bottom:1px solid #1c1c1c; }
+    .cc-tbl tr:hover td{ background:#0b0b0b; }
+    .cc-num{ text-align:right; font-variant-numeric:tabular-nums; }
+    .cc-rank{ color:var(--muted); width:44px; }
+    .cc-empty{ color:var(--muted); padding:22px 8px; text-align:center; }
+    .cc-msg{ min-height:22px; font-size:15px; margin-top:12px; }
+    .cc-msg.err{ color:var(--red); } .cc-msg.ok{ color:var(--green); } .cc-msg.info{ color:var(--muted); }
+    .cc-pill{ display:inline-block; border:1px solid var(--border); padding:3px 10px;
+              font-size:13px; letter-spacing:.1em; color:var(--muted); }
+    .cc-pill.live{ color:var(--green); border-color:var(--green); }
+    .cc-pill.paused{ color:var(--red); border-color:var(--red); }
+    .cc-hide{ display:none; }
+  </style>
+</head>
+<body class="motion-paused">
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="cc-wrap">
+    <h1 class="cc-h1">CLASS CONSOLE</h1>
+    <p class="cc-sub">Open a class, project the code, watch the room.</p>
+
+    <!-- no class yet -->
+    <section class="cc-panel" id="cc-start">
+      <h2 class="cc-hd">START A CLASS</h2>
+      <div class="cc-row">
+        <div class="cc-field">
+          <label for="cc-size">CLASS SIZE</label>
+          <input id="cc-size" type="number" min="1" max="200" value="30" />
+        </div>
+        <button class="cc-btn primary" id="cc-create">OPEN CLASS</button>
+      </div>
+      <p class="cc-sub" style="margin:14px 0 0">
+        Class size sets how deep the shared market is. With 30 students one sale nudges
+        the price; the whole class selling at once moves it about 20%.
+      </p>
+      <div class="cc-msg info" id="cc-start-msg" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- live class -->
+    <section class="cc-panel cc-hide" id="cc-live">
+      <h2 class="cc-hd">PROJECT THIS</h2>
+      <div class="cc-codelbl">CLASS CODE</div>
+      <div class="cc-code" id="cc-code">—</div>
+      <div class="cc-url"><small>STUDENTS OPEN</small><span id="cc-url">—</span></div>
+    </section>
+
+    <section class="cc-panel cc-hide" id="cc-controls">
+      <h2 class="cc-hd">CONTROLS</h2>
+      <div class="cc-row">
+        <button class="cc-btn" id="cc-pause">PAUSE</button>
+        <button class="cc-btn" id="cc-shock-up">SUPPLY GLUT &nbsp;(prices down)</button>
+        <button class="cc-btn" id="cc-shock-dn">SHORTAGE &nbsp;(prices up)</button>
+        <button class="cc-btn danger" id="cc-close">CLOSE CLASS</button>
+        <span style="margin-left:auto; align-self:center">
+          <span class="cc-pill" id="cc-state">—</span>
+          <span class="cc-pill" id="cc-count">0 STUDENTS</span>
+        </span>
+      </div>
+      <div class="cc-msg info" id="cc-msg" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="cc-panel cc-hide" id="cc-roster-panel">
+      <h2 class="cc-hd">ROSTER <span style="color:var(--muted)">— refreshes every 10s</span></h2>
+      <table class="cc-tbl">
+        <thead><tr>
+          <th class="cc-rank">#</th><th>STUDENT</th>
+          <th class="cc-num">CASH</th><th class="cc-num">NET WORTH</th><th class="cc-num">JOINED</th><th></th>
+        </tr></thead>
+        <tbody id="cc-roster"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var KEY = 'yomama_teacher_v1';
+      var el = function (id) { return document.getElementById(id); };
+      var teacher = null;   // { code, teacher_token }
+      var timer = null;
+
+      try { teacher = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { teacher = null; }
+
+      function say(node, text, tone) { node.textContent = text; node.className = 'cc-msg ' + (tone || 'info'); }
+      function show(id, on) { el(id).classList.toggle('cc-hide', !on); }
+      function money(v) { return '$' + Math.round(v).toLocaleString('en-US'); }
+      function ago(ts) {
+        var m = Math.max(0, Math.floor((Date.now() / 1000 - ts) / 60));
+        if (m < 60) return m + 'm';
+        if (m < 1440) return Math.floor(m / 60) + 'h';
+        return Math.floor(m / 1440) + 'd';
+      }
+
+      function api(path, body) {
+        return fetch('/api/game' + path, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body || {}),
+        }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (d) {
+            if (!r.ok) { var e = new Error(d.error || ('HTTP ' + r.status)); e.status = r.status; throw e; }
+            return d;
+          });
+        });
+      }
+
+      function act(action, extra) {
+        var body = { teacher_token: teacher.teacher_token, action: action };
+        if (extra) Object.keys(extra).forEach(function (k) { body[k] = extra[k]; });
+        return api('/teacher', body);
+      }
+
+      function renderRoster(d) {
+        el('cc-count').textContent = d.count + (d.count === 1 ? ' STUDENT' : ' STUDENTS');
+        var st = el('cc-state');
+        st.textContent = d.paused ? 'PAUSED' : 'LIVE';
+        st.className = 'cc-pill ' + (d.paused ? 'paused' : 'live');
+        el('cc-pause').textContent = d.paused ? 'RESUME' : 'PAUSE';
+
+        var body = el('cc-roster');
+        if (!d.roster.length) {
+          body.innerHTML = '<tr><td colspan="6" class="cc-empty">Nobody has joined yet. '
+            + 'Students open the link above and enter the code.</td></tr>';
+          return;
+        }
+        body.innerHTML = d.roster.map(function (s) {
+          return '<tr>'
+            + '<td class="cc-rank">' + s.rank + '</td>'
+            + '<td>' + s.name.replace(/[<>&]/g, '') + '</td>'
+            + '<td class="cc-num">' + money(s.cash) + '</td>'
+            + '<td class="cc-num">' + money(s.net_worth) + '</td>'
+            + '<td class="cc-num">' + ago(s.joined_at) + '</td>'
+            + '<td class="cc-num"><button class="cc-btn danger" data-reset="'
+            + s.name.replace(/"/g, '') + '" style="padding:3px 9px;font-size:13px">RESET</button></td>'
+            + '</tr>';
+        }).join('');
+      }
+
+      function poll() {
+        if (!teacher) return;
+        act('roster').then(renderRoster).catch(function (err) {
+          if (err.status === 403 || err.status === 404) { forget(); }
+          else say(el('cc-msg'), 'Lost contact with the server. Retrying...', 'err');
+        });
+      }
+
+      function enterClass(code) {
+        el('cc-code').textContent = code;
+        // Ask the server for the address students can actually reach. Opening this
+        // console on localhost would otherwise project a URL nobody else can use.
+        el('cc-url').textContent = window.location.origin + '/join.html';
+        fetch('/api/game/hostinfo').then(function (r) { return r.json(); }).then(function (h) {
+          if (h.join_url) el('cc-url').textContent = h.join_url;
+          if (!h.reachable) {
+            say(el('cc-msg'), 'This machine has no LAN address right now, so students on other '
+              + 'computers cannot reach it. Check the wifi connection.', 'err');
+          }
+        }).catch(function () {});
+        show('cc-start', false); show('cc-live', true);
+        show('cc-controls', true); show('cc-roster-panel', true);
+        poll();
+        if (timer) clearInterval(timer);
+        timer = setInterval(poll, 10000);
+      }
+
+      function forget() {
+        teacher = null;
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        if (timer) { clearInterval(timer); timer = null; }
+        show('cc-start', true); show('cc-live', false);
+        show('cc-controls', false); show('cc-roster-panel', false);
+        say(el('cc-start-msg'), 'That class is no longer on the server. Start a new one.', 'err');
+      }
+
+      el('cc-create').addEventListener('click', function () {
+        var size = Math.max(1, Math.min(200, parseInt(el('cc-size').value, 10) || 30));
+        this.disabled = true;
+        say(el('cc-start-msg'), 'Opening...', 'info');
+        api('/session', { class_size: size }).then(function (d) {
+          teacher = { code: d.code, teacher_token: d.teacher_token };
+          try { localStorage.setItem(KEY, JSON.stringify(teacher)); } catch (e) {}
+          el('cc-create').disabled = false;
+          enterClass(d.code);
+        }).catch(function (err) {
+          el('cc-create').disabled = false;
+          say(el('cc-start-msg'), err.message || 'Could not reach the server.', 'err');
+        });
+      });
+
+      el('cc-pause').addEventListener('click', function () {
+        var resuming = this.textContent === 'RESUME';
+        act(resuming ? 'resume' : 'pause').then(function (d) {
+          renderRoster(d);
+          say(el('cc-msg'), resuming ? 'Class resumed. Trading is open.'
+                                     : 'Class paused. Students cannot trade.', 'ok');
+        }).catch(function (e) { say(el('cc-msg'), e.message, 'err'); });
+      });
+
+      el('cc-shock-up').addEventListener('click', function () {
+        act('shock', { magnitude: 0.35 }).then(function (d) {
+          renderRoster(d);
+          say(el('cc-msg'), 'Supply glut: the market is flooded, prices dropped. Ask them what happens next.', 'ok');
+        }).catch(function (e) { say(el('cc-msg'), e.message, 'err'); });
+      });
+
+      el('cc-shock-dn').addEventListener('click', function () {
+        act('shock', { magnitude: -0.35 }).then(function (d) {
+          renderRoster(d);
+          say(el('cc-msg'), 'Shortage: stock is scarce, prices jumped.', 'ok');
+        }).catch(function (e) { say(el('cc-msg'), e.message, 'err'); });
+      });
+
+      el('cc-close').addEventListener('click', function () {
+        if (!window.confirm('Close this class? Students keep their progress, but you will '
+          + 'lose the console link to it and cannot get this class back.')) return;
+        forget();
+        say(el('cc-start-msg'), 'Console closed. Students are unaffected.', 'info');
+      });
+
+      el('cc-roster').addEventListener('click', function (ev) {
+        var btn = ev.target.closest('button[data-reset]');
+        if (!btn) return;
+        var name = btn.getAttribute('data-reset');
+        if (!window.confirm('Reset ' + name + '? Their cash, buildings, goods and positions '
+          + 'all go back to the start. This cannot be undone.')) return;
+        act('reset_player', { name: name }).then(function (d) {
+          renderRoster(d);
+          say(el('cc-msg'), name + ' was reset to a fresh start.', 'ok');
+        }).catch(function (e) { say(el('cc-msg'), e.message, 'err'); });
+      });
+
+      if (teacher && teacher.code) enterClass(teacher.code);
+    }());
+  </script>
+</body>
+</html>
