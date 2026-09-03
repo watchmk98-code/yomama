@@ -68,6 +68,11 @@
           <label for="cc-size">CLASS SIZE</label>
           <input id="cc-size" type="number" min="1" max="200" value="30" />
         </div>
+        <div class="cc-field">
+          <label for="cc-teacher-name">PLAY AS</label>
+          <input id="cc-teacher-name" type="text" maxlength="24" value="TEACHER"
+                 style="width:190px" spellcheck="false" />
+        </div>
         <button class="cc-btn primary" id="cc-create">OPEN CLASS</button>
       </div>
       <p class="cc-sub" style="margin:14px 0 0">
@@ -83,6 +88,20 @@
       <div class="cc-codelbl">CLASS CODE</div>
       <div class="cc-code" id="cc-code">—</div>
       <div class="cc-url"><small>STUDENTS OPEN</small><span id="cc-url">—</span></div>
+    </section>
+
+    <section class="cc-panel cc-hide" id="cc-play">
+      <h2 class="cc-hd">YOUR SEAT</h2>
+      <div class="cc-row" style="align-items:center">
+        <div style="flex:1 1 260px">
+          <div style="font-size:22px; color:var(--green)" id="cc-play-name">—</div>
+          <div style="color:var(--muted); font-size:14px" id="cc-play-note">
+            You are player #1 in this class. Everything you do counts on the roster below.
+          </div>
+        </div>
+        <a class="cc-btn primary" id="cc-play-btn" href="./collect.html"
+           style="text-decoration:none; padding:12px 22px; font-size:18px">PLAY NOW</a>
+      </div>
     </section>
 
     <section class="cc-panel cc-hide" id="cc-controls">
@@ -112,6 +131,7 @@
     </section>
   </div>
 
+  <script src="./yomama-net.js?v=1"></script>
   <script>
     (function () {
       var KEY = 'yomama_teacher_v1';
@@ -197,6 +217,10 @@
         }).catch(function () {});
         show('cc-start', false); show('cc-live', true);
         show('cc-controls', true); show('cc-roster-panel', true);
+        try {
+          var mine = JSON.parse(localStorage.getItem('yomama_session_v1') || 'null');
+          if (mine && mine.code === code) showSeat(mine.name);
+        } catch (e) {}
         poll();
         if (timer) clearInterval(timer);
         timer = setInterval(poll, 10000);
@@ -207,17 +231,33 @@
         try { localStorage.removeItem(KEY); } catch (e) {}
         if (timer) { clearInterval(timer); timer = null; }
         show('cc-start', true); show('cc-live', false);
-        show('cc-controls', false); show('cc-roster-panel', false);
+        show('cc-controls', false); show('cc-roster-panel', false); show('cc-play', false);
         say(el('cc-start-msg'), 'That class is no longer on the server. Start a new one.', 'err');
       }
 
       el('cc-create').addEventListener('click', function () {
         var size = Math.max(1, Math.min(200, parseInt(el('cc-size').value, 10) || 30));
+        var myName = (el('cc-teacher-name').value || 'TEACHER').trim() || 'TEACHER';
         this.disabled = true;
         say(el('cc-start-msg'), 'Opening...', 'info');
         api('/session', { class_size: size }).then(function (d) {
           teacher = { code: d.code, teacher_token: d.teacher_token };
           try { localStorage.setItem(KEY, JSON.stringify(teacher)); } catch (e) {}
+          // Take the first seat too, so the class can be tried solo without a
+          // second device. The student token is separate from the teacher one.
+          return api('/join', { code: d.code, name: myName }).then(function (j) {
+            // same shape yomama-net.js reads, so every game page picks it up
+            try {
+              localStorage.setItem('yomama_session_v1',
+                JSON.stringify({ token: j.token, name: j.name, code: j.code }));
+            } catch (e) {}
+            showSeat(j.name);
+            return d;
+          }).catch(function () {
+            showSeat(null);            // class still opened; just no seat
+            return d;
+          });
+        }).then(function (d) {
           el('cc-create').disabled = false;
           enterClass(d.code);
         }).catch(function (err) {
@@ -225,6 +265,19 @@
           say(el('cc-start-msg'), err.message || 'Could not reach the server.', 'err');
         });
       });
+
+      function showSeat(name) {
+        if (!name) {
+          el('cc-play-name').textContent = 'Not seated';
+          el('cc-play-note').textContent =
+            'The class is open, but taking a seat failed. Join from ./join.html with the code above.';
+          el('cc-play-btn').setAttribute('href', './join.html');
+        } else {
+          el('cc-play-name').textContent = 'Playing as ' + name;
+          el('cc-play-btn').setAttribute('href', './collect.html');
+        }
+        show('cc-play', true);
+      }
 
       el('cc-pause').addEventListener('click', function () {
         var resuming = this.textContent === 'RESUME';
