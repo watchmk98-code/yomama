@@ -9,6 +9,9 @@
 
   const gameSaveStorageKey = 'yomama_game_save_v1';
   const gameSaveStorageBackupKey = 'yomama_game_save_v1_backup';
+  // Shared with the buildings lab; declared out here so renderSideWidgetsFromSave
+  // can reach it on pages that have no #buildings-lab-root.
+  const defaultCharacterKey = 'derdo';
   const sharedAccountStorageKey = 'yomama_watchmk_account_v1';
   const sharedAccountBackupStorageKey = 'yomama_watchmk_account_v1_backup';
   const gameAccountUsername = 'WATCHMK';
@@ -136,6 +139,41 @@
         lastUpdatedAt: Math.max(0, toSafeInteger(meta.lastUpdatedAt, now)),
       },
     };
+  };
+
+  // --- cash ----------------------------------------------------------------
+  // The server owns cash whenever a class session is live; localStorage is the
+  // solo-play fallback and the synchronous mirror for code that cannot await.
+
+  const getAvailableCash = () => {
+    const net = window.YomamaNet;
+    if (net && net.isLive()) {
+      const mirrored = net.cachedCash();
+      if (typeof mirrored === 'number' && Number.isFinite(mirrored)) {
+        return Math.max(0, Math.floor(mirrored));
+      }
+    }
+    return Math.max(0, toSafeInteger(sanitizeSharedAccount(readSharedAccount()).wallet.cash, 0));
+  };
+
+  const applyCashDelta = (delta) => {
+    const account = sanitizeSharedAccount(readSharedAccount());
+    account.wallet.cash = Math.max(0, toSafeInteger(account.wallet.cash, 0) + delta);
+    account.meta.lastUpdatedAt = Date.now();
+    writeSharedAccount(account);
+    return account.wallet.cash;
+  };
+
+  // Deduct immediately so the synchronous build path stays synchronous, then
+  // confirm against the server. A rejection refunds locally.
+  const spendCash = (amount, reason) => {
+    const cost = Math.max(0, toSafeInteger(amount, 0));
+    if (cost <= 0) return;
+    applyCashDelta(-cost);
+    const net = window.YomamaNet;
+    if (net && net.isLive()) {
+      net.spend(cost, reason).catch(() => { applyCashDelta(cost); });
+    }
   };
 
   const syncSharedAccountFromGameSave = (save) => {
@@ -676,9 +714,9 @@
   const buildingsSidePanel = document.querySelector('.buildings-side-panel');
   if (buildingsLabRoot) {
     const BUILDINGS_LAB_USERNAME = 'WATCHMK';
-    const BUILDINGS_LAB_DEFAULT_CHARACTER = 'derdo';
-    const BUILDINGS_LAB_BUILD_TIME_TEST_CAP_SECONDS = 29;
-    const BUILDINGS_LAB_PAYOUT_CYCLE_TEST_CAP_SECONDS = 29;
+    const BUILDINGS_LAB_DEFAULT_CHARACTER = defaultCharacterKey;
+    const BUILDINGS_LAB_BUILD_TIME_TEST_CAP_SECONDS = 86400;
+    const BUILDINGS_LAB_PAYOUT_CYCLE_TEST_CAP_SECONDS = 0;
     const BUILDINGS_LAB_BUILDER_CREW_OVERRIDE = 5;
     const berlinDayFormatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Europe/Berlin',
@@ -1059,7 +1097,12 @@
       if (!Array.isArray(schedule) || !schedule.length) return normalizeResourceMap({});
       const rawIndex = action === 'upgrade' ? targetLevel - 2 : targetLevel - 1;
       const index = clamp(rawIndex, 0, schedule.length - 1);
-      return normalizeResourceMap(schedule[index]);
+      const step = schedule[index];
+      // normalizeResourceMap keeps only the four resources; cost schedules also
+      // carry a cash price, so carry it through here.
+      const cost = normalizeResourceMap(step);
+      cost.cash = Math.max(0, toSafeInteger(step && step.cash, 0));
+      return cost;
     };
 
     const readScheduleSeconds = (schedule, targetLevel, action) => {
@@ -1661,9 +1704,24 @@
         }
       }
 
+      const cashCost = Math.max(0, toSafeInteger(estimate.finalCash, 0));
+      if (cashCost > 0) {
+        const availableCash = getAvailableCash();
+        if (availableCash < cashCost) {
+          return {
+            ok: false,
+            message: `${buildingConfig.name}: not enough cash. Need ${formatCashLabel(cashCost)}, have ${formatCashLabel(availableCash)}.`,
+          };
+        }
+      }
+
       resourceKeys.forEach((resourceKey) => {
         economy.inventory[resourceKey] = Math.max(0, toSafeInteger(economy.inventory[resourceKey], 0) - estimate.finalCost[resourceKey]);
       });
+
+      if (cashCost > 0) {
+        spendCash(cashCost, `${estimate.action}:${buildingKey}`);
+      }
 
       if (estimate.willConsumeBalancedBudget) {
         const profile = getActiveProfile(economy, now);
@@ -1679,7 +1737,7 @@
         `${buildingConfig.name}: ${estimate.action} started (${formatDurationMs(estimate.finalSeconds * 1000)}).`,
         now,
       );
-      return { ok: true, message: `${buildingConfig.name}: ${estimate.action} started.`, actualCost: estimate.finalCost };
+      return { ok: true, message: `${buildingConfig.name}: ${estimate.action} started.`, actualCost: estimate.finalCost, actualCash: cashCost };
     };
 
     const allocateStatPoint = (economy, statKey, now) => {
@@ -2466,7 +2524,7 @@
 
       const selectedCharacter = normalizeVisibleCharacterKey(
         economy.activeCharacter || (rawPlayerSave && rawPlayerSave.selectedCharacter) || '',
-        BUILDINGS_LAB_DEFAULT_CHARACTER,
+        defaultCharacterKey,
       );
       const profiles = economy.characterProfiles && typeof economy.characterProfiles === 'object'
         ? economy.characterProfiles

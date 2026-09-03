@@ -16,8 +16,8 @@
     {
       id: 'hydro_lettuce_crate',
       name: 'Hydro Lettuce Crate',
-      buyPrice: 14,
-      sellPrice: 11,
+      buyPrice: 23,
+      sellPrice: 21,
       startStock: 48,
       marketStartStock: 140,
       marketCap: 220,
@@ -317,12 +317,107 @@
   };
 
   const findProduct = (id) => products.find((product) => product.id === id) || null;
-  const getMarketAvailable = (product) => toNonNegativeInt(state.marketStock[product.id], product.marketStartStock);
-  const getMarketCap = (product) => Math.max(
+  const getMarketAvailable = (product) => {
+    const row = (typeof liveRow === 'function') ? liveRow(product) : null;
+    if (row) return Math.floor(row.stock);
+    return toNonNegativeInt(state.marketStock[product.id], product.marketStartStock);
+  };
+  const getMarketCap = (product) => {
+    const row = (typeof liveRow === 'function') ? liveRow(product) : null;
+    if (row) return Math.floor(row.capacity);
+    return localMarketCap(product);
+  };
+  const localMarketCap = (product) => Math.max(
     toNonNegativeInt(product.marketCap, product.marketStartStock),
     toNonNegativeInt(product.marketStartStock, 0),
   );
   const getMarketSpace = (product) => Math.max(0, getMarketCap(product) - getMarketAvailable(product));
+
+  // --- shared market overlay -----------------------------------------------
+  // When the student has joined a class, prices, stock and capacity all come
+  // from the server so 30 students trade against one order book. Without a
+  // session everything below falls through to the local values above.
+
+  const liveMarket = Object.create(null);
+  let liveMode = false;
+
+  const netLive = () => liveMode && window.YomamaNet && window.YomamaNet.isLive();
+  const liveRow = (product) => (netLive() ? liveMarket[product.id] : null);
+
+  const buyPriceOf = (product) => {
+    const row = liveRow(product);
+    return row ? row.buy : product.buyPrice;
+  };
+  const sellPriceOf = (product) => {
+    const row = liveRow(product);
+    return row ? row.sell : product.sellPrice;
+  };
+  const priceMoveOf = (product) => {
+    const row = liveRow(product);
+    return row && typeof row.change_pct === 'number' ? row.change_pct : null;
+  };
+
+  const applyServerState = (snapshot) => {
+    if (!snapshot || !Array.isArray(snapshot.market)) return false;
+    snapshot.market.forEach((row) => { liveMarket[row.id] = row; });
+    liveMode = true;
+    if (snapshot.player && typeof snapshot.player.cash === 'number') {
+      state.cash = Math.max(0, Math.floor(snapshot.player.cash));
+    }
+    if (snapshot.inventory && typeof snapshot.inventory === 'object') {
+      products.forEach((product) => {
+        state.inventory[product.id] = toNonNegativeInt(snapshot.inventory[product.id], 0);
+      });
+    }
+    return true;
+  };
+
+  const refreshFromServer = () => {
+    const net = window.YomamaNet;
+    if (!net || !net.isJoined()) return Promise.resolve(false);
+    return net.refresh().then((snapshot) => {
+      const ok = applyServerState(snapshot);
+      if (ok) renderAll(false);
+      return ok;
+    }).catch(() => false);
+  };
+
+  const serverTrade = (productId, side, all) => {
+    const product = findProduct(productId);
+    const net = window.YomamaNet;
+    if (!product || !net) return;
+    const row = liveMarket[productId];
+    let qty;
+    if (all) {
+      qty = side === 'sell'
+        ? toNonNegativeInt(state.inventory[productId], 0)
+        : Math.max(1, Math.floor(state.cash / Math.max(1, buyPriceOf(product))));
+      if (row) qty = Math.min(qty, side === 'sell' ? row.space : Math.floor(row.stock));
+    } else {
+      qty = readQtyForAction(side, productId);
+    }
+    qty = Math.max(0, Math.floor(qty));
+    if (qty <= 0) {
+      setStatus(side === 'sell' ? `Nothing to sell for ${product.name}.` : `Not enough cash for ${product.name}.`, 'error');
+      return;
+    }
+    setStatus(`Sending ${side.toUpperCase()} ${qty} ${product.name}...`);
+    net.tradeProduct(productId, side, qty).then((result) => {
+      return refreshFromServer().then(() => result);
+    }).then((result) => {
+      const filled = result.filled;
+      const short = filled < result.requested ? ` (${result.requested - filled} unfilled - market moved)` : '';
+      setStatus(
+        side === 'sell'
+          ? `Sold ${filled} ${product.name} at avg ${formatMoney(result.avg_price)} for ${formatMoney(Math.abs(result.proceeds))}.${short}`
+          : `Bought ${filled} ${product.name} at avg ${formatMoney(result.avg_price)}.${short}`,
+        'success',
+      );
+    }).catch((err) => {
+      setStatus((err && err.message) || 'Trade rejected by the server.', 'error');
+      refreshFromServer();
+    });
+  };
 
   const renderInventoryTable = () => {
     inventoryBody.innerHTML = products.map((product) => `
@@ -358,7 +453,11 @@
       return `
         <tr>
           <td>${product.name}</td>
-          <td class="${isBuy ? 'amber' : 'up'}">${formatMoney(isBuy ? product.buyPrice : product.sellPrice)}</td>
+          <td class="${isBuy ? 'amber' : 'up'}">${formatMoney(isBuy ? buyPriceOf(product) : sellPriceOf(product))}${(() => {
+            const move = priceMoveOf(product);
+            if (move === null || Math.abs(move) < 0.05) return '';
+            return ` <span class="${move > 0 ? 'up' : 'dn'}" style="font-size:0.85em">${move > 0 ? '+' : ''}${move.toFixed(1)}%</span>`;
+          })()}</td>
           <td class="marketplace-qty ${availabilityClass}">${availabilityValue}</td>
           <td class="marketplace-qty">
             <input
@@ -507,6 +606,13 @@
     const action = String(target.getAttribute('data-action') || '').toLowerCase();
     const productId = String(target.getAttribute('data-product') || '');
     if (!productId) return;
+    if (netLive()) {
+      if (action === 'buy') serverTrade(productId, 'buy', false);
+      if (action === 'buy-all') serverTrade(productId, 'buy', true);
+      if (action === 'sell') serverTrade(productId, 'sell', false);
+      if (action === 'sell-all') serverTrade(productId, 'sell', true);
+      return;
+    }
     if (action === 'buy') handleBuy(productId);
     if (action === 'buy-all') handleBuy(productId, true);
     if (action === 'sell') handleSell(productId);
@@ -523,6 +629,20 @@
 
   persistState();
   renderAll(false);
+
+  const net = window.YomamaNet;
+  if (net && net.isJoined()) {
+    net.connect().then((ok) => {
+      if (!ok) return;
+      return refreshFromServer().then((live) => {
+        if (!live) return;
+        const who = net.session();
+        setStatus(`Live market - class ${who.code}, playing as ${who.name}. Prices move with the whole class.`, 'success');
+        window.setInterval(refreshFromServer, 15000);
+      });
+    }).catch(() => {});
+  }
+
   setStatus(
     hasAccountState
       ? `WATCHMK account loaded. Cash, inventory, and capped marketplace stock synced.`

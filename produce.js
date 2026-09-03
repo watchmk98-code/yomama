@@ -393,6 +393,23 @@
 
     persistState();
     renderAll();
+
+    // In a class session the finished goods must also reach the server, or they
+    // never appear in the shared marketplace.
+    const net = window.YomamaNet;
+    if (net && net.isLive()) {
+      setStatus(`Produced ${formatNumber(qty)} ${product.name}. Sending to your warehouse...`);
+      net.deposit(product.id, qty).then((res) => {
+        setStatus(
+          `Produced ${formatNumber(qty)} ${product.name}. Ready to sell (${res.qty} in stock).`,
+          'success',
+        );
+      }).catch((err) => {
+        setStatus((err && err.message) || `Produced ${formatNumber(qty)} ${product.name}, but the server did not record it.`, 'error');
+      });
+      return;
+    }
+
     setStatus(`Produced ${formatNumber(qty)} ${product.name}. Inventory updated.`, 'success');
   };
 

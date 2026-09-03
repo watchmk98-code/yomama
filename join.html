@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YOMAMA INVESTMENTS — JOIN CLASS</title>
+  <meta name="description" content="Join your class with a code." />
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260421-2" />
+  <style>
+    .join-wrap{ min-height:100vh; display:grid; place-items:center; padding:var(--s4,20px); }
+    .join-card{ width:min(420px,100%); border:1px solid var(--border); background:#000; padding:28px 26px; }
+    .join-title{ color:var(--amber); font-size:28px; letter-spacing:.06em; margin:0 0 4px; }
+    .join-sub{ color:var(--muted); margin:0 0 22px; font-size:15px; }
+    .join-field{ margin-bottom:16px; }
+    .join-field label{ display:block; color:var(--amber); font-size:14px; letter-spacing:.08em; margin-bottom:6px; }
+    .join-field input{
+      width:100%; background:#000; color:var(--text); border:1px solid var(--line);
+      padding:11px 12px; font-family:inherit; font-size:20px; letter-spacing:.14em; border-radius:0;
+    }
+    .join-field input:focus{ outline:none; border-color:var(--amber); }
+    #join-code{ text-transform:uppercase; }
+    .join-btn{
+      width:100%; margin-top:8px; padding:12px; background:var(--amber); color:#000;
+      border:none; border-radius:0; font-family:inherit; font-size:19px; letter-spacing:.1em; cursor:pointer;
+    }
+    .join-btn:disabled{ opacity:.5; cursor:not-allowed; }
+    .join-msg{ margin-top:16px; font-size:15px; min-height:22px; }
+    .join-msg.err{ color:var(--red); } .join-msg.ok{ color:var(--green); } .join-msg.info{ color:var(--muted); }
+    .join-foot{ margin-top:20px; padding-top:16px; border-top:1px solid var(--line); font-size:14px; color:var(--muted); }
+    .join-foot a{ color:var(--amber); }
+  </style>
+</head>
+<body class="motion-paused">
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="join-wrap">
+    <main class="join-card">
+      <h1 class="join-title">JOIN YOUR CLASS</h1>
+      <p class="join-sub">Enter the code on the board. No password needed.</p>
+
+      <form id="join-form" autocomplete="off">
+        <div class="join-field">
+          <label for="join-code">CLASS CODE</label>
+          <input id="join-code" name="code" maxlength="5" placeholder="ABC12" required
+                 inputmode="latin" autocapitalize="characters" spellcheck="false" />
+        </div>
+        <div class="join-field">
+          <label for="join-name">YOUR NAME</label>
+          <input id="join-name" name="name" maxlength="24" placeholder="ALEX K" required spellcheck="false" />
+        </div>
+        <button class="join-btn" id="join-btn" type="submit">ENTER THE MARKET</button>
+      </form>
+
+      <div class="join-msg info" id="join-msg" role="status" aria-live="polite"></div>
+      <div class="join-foot" id="join-foot"></div>
+    </main>
+  </div>
+
+  <script src="./yomama-net.js?v=1"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('join-form');
+      var codeEl = document.getElementById('join-code');
+      var nameEl = document.getElementById('join-name');
+      var btn = document.getElementById('join-btn');
+      var msg = document.getElementById('join-msg');
+      var foot = document.getElementById('join-foot');
+      var net = window.YomamaNet;
+
+      function say(text, tone) { msg.textContent = text; msg.className = 'join-msg ' + (tone || 'info'); }
+
+      // Already in a class? Offer to continue or switch.
+      if (net && net.isJoined()) {
+        var s = net.session();
+        foot.innerHTML = 'Signed in as <strong>' + s.name + '</strong> in class <strong>' + s.code +
+          '</strong>. <a href="./collect.html">Continue</a> &middot; <a href="#" id="join-leave">leave</a>';
+        var leave = document.getElementById('join-leave');
+        if (leave) leave.addEventListener('click', function (e) {
+          e.preventDefault(); net.leave(); window.location.reload();
+        });
+        codeEl.value = s.code;
+        nameEl.value = s.name;
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var code = codeEl.value.trim().toUpperCase();
+        var name = nameEl.value.trim();
+        if (!code || !name) { say('Both fields are required.', 'err'); return; }
+        if (!net) { say('Game script failed to load. Reload the page.', 'err'); return; }
+
+        btn.disabled = true;
+        say('Joining...', 'info');
+        net.join(code, name).then(function (res) {
+          say(res.rejoined
+            ? 'Welcome back, ' + res.name + '. Restoring your base...'
+            : 'Joined class ' + res.code + '. Setting up your base...', 'ok');
+          window.setTimeout(function () { window.location.href = './collect.html'; }, 700);
+        }).catch(function (err) {
+          btn.disabled = false;
+          var m = (err && err.message) || 'Could not reach the server.';
+          if (err && err.status === 404) m = 'No class with that code. Check the board.';
+          say(m, 'err');
+        });
+      });
+
+      codeEl.addEventListener('input', function () {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      });
+    }());
+  </script>
+</body>
+</html>

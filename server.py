@@ -16,6 +16,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
 
+import game_api
+
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_PORT = 3000
@@ -163,7 +165,87 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/fx-quote":
             self.handle_fx_quote(parsed.query)
             return
+        if parsed.path.startswith("/api/game/"):
+            self.handle_game_get(parsed)
+            return
         super().do_GET()
+
+    def do_POST(self) -> None:
+        parsed = urlparse(self.path)
+        if not parsed.path.startswith("/api/game/"):
+            self.send_error(404, "Not Found")
+            return
+        self.handle_game_post(parsed)
+
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    GAME_GET_ROUTES = {
+        "/api/game/state": game_api.get_state,
+        "/api/game/buildings": game_api.load_buildings,
+    }
+    GAME_POST_ROUTES = {
+        "/api/game/session": game_api.create_session,
+        "/api/game/join": game_api.join,
+        "/api/game/product": game_api.trade_product,
+        "/api/game/produce": game_api.deposit_products,
+        "/api/game/equity": game_api.trade_equity,
+        "/api/game/spend": game_api.spend_cash,
+        "/api/game/buildings": game_api.save_buildings,
+        "/api/game/teacher": game_api.teacher,
+    }
+
+    def handle_game_get(self, parsed) -> None:
+        handler = self.GAME_GET_ROUTES.get(parsed.path)
+        if handler is None:
+            self.send_json(404, {"error": "unknown endpoint"})
+            return
+        self.run_game_handler(handler, parse_qs(parsed.query))
+
+    def handle_game_post(self, parsed) -> None:
+        handler = self.GAME_POST_ROUTES.get(parsed.path)
+        if handler is None:
+            self.send_json(404, {"error": "unknown endpoint"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        if length > 1_000_000:
+            self.send_json(413, {"error": "payload too large"})
+            return
+        raw = self.rfile.read(length) if length else b"{}"
+        try:
+            body = json.loads(raw or b"{}")
+            if not isinstance(body, dict):
+                raise ValueError("body must be a JSON object")
+        except (ValueError, UnicodeDecodeError) as exc:
+            self.send_json(400, {"error": f"invalid JSON body: {exc}"})
+            return
+        self.run_game_handler(handler, body)
+
+    def run_game_handler(self, handler, payload) -> None:
+        try:
+            self.send_json(200, handler(payload))
+        except game_api.ApiError as exc:
+            self.send_json(exc.status, {"error": exc.message})
+        except Exception as exc:  # noqa: BLE001 - never take the class server down
+            self.log_error("game api failure: %r", exc)
+            self.send_json(500, {"error": "internal error"})
+
+    def send_json(self, status: int, payload: dict) -> None:
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def handle_fx_quote(self, query_string: str) -> None:
         params = parse_qs(query_string)
@@ -222,15 +304,34 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
 
+def detect_lan_ip() -> str:
+    """Best-effort local address students on the same wifi can reach."""
+    import socket
+
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.connect(("8.8.8.8", 80))       # no packets sent; just picks the route
+        return probe.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        probe.close()
+
+
 def main() -> None:
     try:
         port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
     except ValueError:
         port = DEFAULT_PORT
 
-    server = ThreadingHTTPServer(("127.0.0.1", port), NewsProxyHandler)
-    print(f"Serving {ROOT} at http://127.0.0.1:{port}")
-    print(f"Yahoo Finance endpoint: http://127.0.0.1:{port}/api/yahoo-finance-news")
+    game_api.init_db()
+
+    server = ThreadingHTTPServer(("0.0.0.0", port), NewsProxyHandler)
+    lan_ip = detect_lan_ip()
+    print(f"Serving {ROOT}")
+    print(f"  this machine : http://127.0.0.1:{port}/index.html")
+    print(f"  students use : http://{lan_ip}:{port}/index.html")
+    print(f"  teacher       : http://{lan_ip}:{port}/teach.html")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
