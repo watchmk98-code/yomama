@@ -1,137 +1,211 @@
-# YOMAMA INVESTMENTS — developer handover
+# YOMAMA INVESTMENTS — Geliştirici Devir Belgesi
 
-Read this before changing anything. It is short on purpose; the parts that
-will bite you are marked.
+Bu belge, projeyi devralacak geliştirici için yazıldı. Kısa tutuldu; sizi
+yanıltabilecek yerler ⚠️ ile işaretlendi. Kod değiştirmeden önce okuyun.
 
-## What this is
+---
 
-A browser game for a cohort of ~30 players sharing one market, designed to run
-continuously for a ~3 month term. Players run a small industrial base
-(buildings → resources → products), sell into a **shared** marketplace where
-prices move with everyone's supply, and invest the proceeds.
+## Proje nedir
 
-Half finance terminal, half tycoon game. The visual identity is deliberate and
-finished — see "Do not break" below.
+Yaklaşık 30 kişilik bir grubun **aynı piyasayı paylaşarak** oynadığı, bir dönem
+(~3 ay) boyunca kesintisiz çalışacak şekilde tasarlanmış bir tarayıcı oyunu.
 
-## Run it
+Oyuncu küçük bir üretim üssü işletir (binalar → kaynaklar → ürünler), ürünleri
+**ortak pazara** satar — fiyatlar herkesin arzına göre hareket eder — ve
+kazandığı parayı yatırıma yönlendirir.
+
+Yarı finans terminali, yarı tycoon oyunu. Görsel dil bilinçli olarak seçildi ve
+tamamlanmış durumda; "Bozulmaması gerekenler" bölümüne bakın.
+
+## Nasıl çalıştırılır
 
 ```bash
 python3 server.py 3000
 ```
 
-No build step, no package install, no framework. Python 3.9+ stdlib only.
-It prints the LAN address other machines should use.
+Build adımı yok, paket kurulumu yok, framework yok. Yalnızca Python 3.9+
+standart kütüphanesi. Komut, diğer cihazların bağlanacağı yerel ağ adresini
+ekrana yazar.
 
-- Teacher/host console: `/class.html` — opens a class, prints the code, shows a live roster
-- Players: `/join.html` — class code + name + 4-digit PIN
-- Game: `/collect.html` (base), `/produce.html` (recipes), `/marketplace.html` (selling)
-
-## Architecture
-
-Plain HTML pages + one shared `app.js` (335KB, hand-authored) + `styles.css`.
-No bundler. Pages are independent; shared state moves through the server.
-
-| File | Role |
+| Sayfa | İşlev |
 |---|---|
-| `server.py` | Static file server (allowlisted), news/FX proxies, game API routing |
-| `game_api.py` | All game logic that must be authoritative. SQLite. |
-| `yomama-net.js` | The **only** thing that talks to the game API |
-| `app.js` | Buildings/economy simulation, most UI |
-| `marketplace.js`, `produce.js` | Per-page logic |
-| `config/economy.v0.1.json` | All economy tuning |
+| `/class.html` | Sınıf açma konsolu: kod üretir, canlı liste gösterir |
+| `/join.html` | Oyuncu girişi: sınıf kodu + isim + 4 haneli PIN |
+| `/collect.html` | Üs ve binalar |
+| `/produce.html` | Üretim reçeteleri |
+| `/marketplace.html` | Ortak pazar |
 
-**The split that matters:**
+## Mimari
 
-- **Server owns** (in `game.db`): cash, product inventory, equity positions,
-  market prices and stock, the leaderboard, the roster. These are scored, so
-  they must not be editable in devtools.
-- **Client owns**: building levels, build timers, resources. Simulated in the
-  browser, then synced to the server as an opaque blob.
+Düz HTML sayfaları + tek bir paylaşılan `app.js` (335KB, elle yazılmış) +
+`styles.css`. Bundler yok. Sayfalar birbirinden bağımsız; ortak durum sunucu
+üzerinden akar.
 
-Everything degrades: with no session, or an unreachable server, pages fall back
-to the original localStorage behaviour.
+| Dosya | Rolü |
+|---|---|
+| `server.py` | Statik dosya sunumu (izin listeli), haber/döviz proxy'leri, API yönlendirme |
+| `game_api.py` | Otoriter olması gereken tüm oyun mantığı. SQLite. |
+| `yomama-net.js` | Oyun API'siyle konuşan **tek** dosya |
+| `app.js` | Bina/ekonomi simülasyonu ve arayüzün büyük kısmı |
+| `marketplace.js`, `produce.js` | Sayfaya özel mantık |
+| `config/economy.v0.1.json` | Tüm ekonomi ayarları |
 
-## ⚠️ The economy is a solved system — do not tune one number
+**Kritik ayrım:**
 
-The costs in `config/economy.v0.1.json` are **derived**, not hand-picked:
+- **Sunucu sahibi** (`game.db` içinde): nakit, ürün envanteri, hisse
+  pozisyonları, pazar fiyatları ve stok, sıralama tablosu, oyuncu listesi.
+  Bunlar puanlamaya girdiği için tarayıcıdan değiştirilebilir olmamalı.
+- **İstemci sahibi**: bina seviyeleri, inşaat süreleri, kaynaklar. Tarayıcıda
+  simüle edilir, sonra sunucuya tek parça halinde senkronlanır.
+
+Oturum yoksa veya sunucuya ulaşılamıyorsa her sayfa eski localStorage
+davranışına düşer; oyun çalışmaya devam eder.
+
+---
+
+# İSTENEN İŞ
+
+Üç başlık. Yetenek ağacı (`focus-tree.html`) **kapsam dışıdır**, dokunulmayacak.
+
+## 1. Bina mantıklarının tamamlanması
+
+Altı gelişmiş binanın **dördü hiçbir şey yapmıyor.** Kaynak ve nakit
+harcatıyor, inşa süresi işletiyor, arayüzde yer kaplıyor — ama hiçbir etkileri
+yok.
+
+| Bina | Durum |
+|---|---|
+| `contractor_office` | ✅ Seviye başına +1 inşaat ekibi |
+| `automation` | ✅ Çevrimdışı üretim süresini uzatıyor |
+| `hq` | ❌ Etkisi yok |
+| `warehouse` | ❌ **Depo limiti hiçbir yerde uygulanmıyor** |
+| `logistics` | ❌ Etkisi yok |
+| `marketplace` | ❌ Etkisi yok |
+
+`logistics` ve `marketplace` 335KB'lık `app.js` içinde **birer kez** geçiyor.
+Depo mekaniği tamamen dekoratif: kaynaklar hiçbir üst sınıra takılmıyor.
+
+Yapılacak: bu dört binanın ne yapacağının **tasarlanması**, uygulanması ve
+maliyetlerinin yeniden türetilmesi. Not: mevcut maliyet modeli yalnızca dört
+üretim binası için türetildi; gelişmiş binalara sabit bir çarpan uygulandı.
+
+## 2. Sınıfla test edilebilir hale getirme
+
+Giriş akışı, oyuncu listesi, ortak pazar, öğretmen kontrolleri ve cihazlar
+arası kayıt **çalışıyor ve test edildi**. Eksik olanlar:
+
+- **Yayına alma**: HTTPS, `ThreadingHTTPServer` önüne gerçek bir web sunucusu
+  (Caddy önerilir), `game.db` için gecelik yedek, servis yöneticisi (systemd).
+- **`teach.html`**: 815 satır, 52 handler — arayüz hazır, ama verisi sahte.
+  Tohumlanmış bir PRNG'den üretilen 54 uydurma öğrenci gösteriyor. Gerçek API'ye
+  bağlanması gerekiyor.
+
+## 3. Gerçek hisse fiyatları
+
+Şu an hisse fiyatları sunucuda tohumlanmış rastgele yürüyüşle üretiliyor
+(`game_api.py` içindeki `equity_price`). Gerçek fiyatlarla değiştirilecek.
+
+**Kaynak hazır ve çalışıyor.** `server.py` içinde döviz için kullanılan
+TradingView uç noktası hisseler için de veri dönüyor:
 
 ```
-cash cost of an upgrade = its marginal income gain × 40 days
+NASDAQ:AAPL   close=328.21
+NASDAQ:NVDA   close=228.45
+AMEX:SPY      close=773.17
 ```
 
-That is why every building pays back in the same time, why all four get
-upgraded roughly equally over a term, and why the base finishes around day 91.
-Changing any single input silently breaks the others. In particular:
+`fetch_fx_quote` fonksiyonundaki kalıp aynen kullanılabilir. Gereken:
+önbellekleme (her istekte dış servise gidilmemeli), internet kesildiğinde
+yedek davranış, ve tatil/kapanış saatlerinin ele alınması.
 
-- **Building outputs are set to the ratio recipes consume.** Change one output
-  ladder and resources start being wasted again.
-- **Product prices set the value of every resource.** These are shadow prices
-  from a 4-recipe linear program — supply does *not* affect them. Hydro Lettuce
-  was repriced from \$11.88 to \$21.18 specifically to stop food being worth
-  \$0.04/unit, which had made the farm a dead building.
-- **Cycle times and cash costs are coupled.** Income scales linearly with cycle
-  speed, so halving `cycleMinutes` doubles income and every cost must move with
-  it.
+---
 
-If you need to rebalance, re-derive with a linear program over the five
-recipes; do not nudge values by feel. The intended shape is: base maxes near
-the end of the term, a daily player finishes, a weekly player gets about half
-way.
+## ⚠️ Ekonomi türetilmiş bir sistemdir — tek bir sayıyı elle değiştirmeyin
 
-## ⚠️ The cross-device save has four invariants
+`config/economy.v0.1.json` içindeki maliyetler elle seçilmedi, **hesaplandı**:
 
-Buildings and resources sync through `/api/game/buildings`. It is easy to
-break; each of these was a real bug:
+```
+bir yükseltmenin nakit maliyeti = getirdiği ek gelir × 40 gün
+```
 
-1. **Never push before hydrating.** A newly opened device must not write its
-   blank starting state over the real save. `pushBuildings` refuses until
-   hydration has settled.
-2. **Do not use `location.reload()` to apply a fetched save.** `app.js`
-   finishes its own async init and persists in-memory defaults over whatever
-   was adopted. Pages must `await YomamaNet.ready()` instead.
-3. **`getPlayerSave()` memoises.** After adopting a server copy you must clear
-   `playerSaveState`, or the adopted data sits unread in localStorage.
-4. **Stamp saves when state changes, not when it sends.** Otherwise merely
-   reopening the game on an old device makes it look newer and silently reverts
-   another device's progress.
+Her binanın kendini aynı sürede amorti etmesi, dört binanın da dönem boyunca
+yaklaşık eşit sayıda yükseltilmesi ve üssün ~91. günde tamamlanması bu yüzden.
+Girdilerden birini değiştirmek diğerlerini sessizce bozar:
 
-`produce.js` still reads its resources without awaiting `ready()`. The normal
-path is safe because joining always lands on `collect.html` first, but landing
-directly on `produce.html` in a fresh browser can briefly show a stale base.
-Worth closing.
+- **Bina üretimleri, reçetelerin tükettiği orana göre ayarlandı.** Bir üretim
+  merdivenini değiştirirseniz kaynaklar yeniden israf olmaya başlar.
+- **Ürün fiyatları, her kaynağın değerini belirler.** Bunlar beş reçeteli bir
+  doğrusal programın gölge fiyatları; arz bu değeri değiştirmez. Hydro Lettuce
+  fiyatı 11,88 → 21,18 olarak güncellendi, çünkü aksi halde gıdanın birim
+  değeri 0,04 dolarda kalıyor ve çiftlik işlevsiz bir binaya dönüşüyordu.
+- **Döngü süreleri ile nakit maliyetler birbirine bağlı.** Gelir döngü hızıyla
+  doğru orantılı; `cycleMinutes` yarıya inerse gelir ikiye katlanır ve tüm
+  maliyetlerin buna göre kayması gerekir.
 
-## Known gaps
+Denge değişikliği gerekiyorsa beş reçete üzerinden doğrusal programı yeniden
+çözün; sezgiyle sayı oynatmayın. Hedeflenen his: üs dönemin sonuna doğru
+tamamlanır, her gün oynayan bitirir, haftada bir oynayan yarı yola gelir.
 
-| Area | State |
+## ⚠️ Cihazlar arası kaydın dört kuralı
+
+Binalar ve kaynaklar `/api/game/buildings` üzerinden senkronlanır. Kırılması
+kolaydır; aşağıdakilerin her biri gerçekten yaşanmış birer hatadır:
+
+1. **Senkron tamamlanmadan sunucuya yazmayın.** Yeni açılan ikinci bir cihaz,
+   boş başlangıç durumunu gerçek kaydın üzerine yazar. `pushBuildings` bu yüzden
+   senkron bitene kadar hiçbir şey göndermez.
+2. **Sunucudan gelen kaydı uygulamak için `location.reload()` kullanmayın.**
+   `app.js` kendi asenkron başlatmasını tamamlayıp bellekteki varsayılanları
+   yeni alınan kaydın üzerine yazar; sayfa yenilendiğinde varsayılanlar okunur.
+   Bunun yerine sayfalar `await YomamaNet.ready()` beklemeli.
+3. **`getPlayerSave()` sonucu bellekte tutar.** Sunucudan kayıt alındığında
+   `playerSaveState` temizlenmezse, gelen veri localStorage'da durur ama hiç
+   okunmaz.
+4. **Zaman damgası, gönderim anına değil değişim anına ait olmalı.** Aksi halde
+   eski bir cihazda oyunu açmak bile o cihazı "daha yeni" gösterir ve diğer
+   cihazdaki gerçek ilerlemeyi sessizce geri alır.
+
+`produce.js` kaynaklarını `ready()` beklemeden okuyor. Normal akış güvenli
+(girişten sonra önce `collect.html` açılıyor ve senkron orada tamamlanıyor),
+ama temiz bir tarayıcıda doğrudan `produce.html` açılırsa kısa süreli eski veri
+görünebilir. Kapatılması iyi olur.
+
+## Şu an çalışmayan kısımlar
+
+| Alan | Durum |
 |---|---|
-| `teach.html` | Gradebook mock — 54 invented students from a seeded PRNG. Not wired to anything. |
-| `memos.html` leaderboard | Animation of fictional characters with random jitter. The real leaderboard is in the API and on `class.html`. |
-| `focus-tree.html` | Static markup. No handlers, no state, no costs. |
-| Paper trading (`port_trading.html`) | No price source; position marks are typed in by the player. |
-| Production anti-cheat | Production is simulated client-side. `/api/game/produce` meters deposits (400 units + 120/hour) but a determined player can inflate within that. |
-| PINs | Stored in plaintext. Fine for a known cohort, weak for public signup. |
-| Hosting | Runs on a laptop over LAN. Not deployed. Needs HTTPS, a real server in front of `ThreadingHTTPServer`, and `game.db` backups. |
+| `teach.html` | Sahte veri (bkz. İstenen İş #2) |
+| `memos.html` | Sıralama tablosu, kurgusal karakterlerin rastgele oynatıldığı bir animasyon. Gerçek sıralama API'de ve `class.html` içinde. |
+| `focus-tree.html` | Statik HTML. 85 düğüm, durum yok, maliyet yok. **Kapsam dışı.** |
+| `port_trading.html` | 2646 satır, arayüz hazır; fiyat kaynağı yok, pozisyon değerleri oyuncunun elle girdiği sayıdan geliyor. |
+| Üretim doğrulaması | Üretim istemcide simüle ediliyor. `/api/game/produce` sınır koyuyor (400 birim + saatte 120) ama bu sınır içinde şişirme mümkün. |
+| PIN'ler | Veritabanında açık metin. Tanıdık bir grup için sorun değil, halka açık kullanım için zayıf. |
 
-## Do not break
+## Bozulmaması gerekenler
 
-- **No build step.** Plain files, opened directly or served statically. Keep it that way.
-- **The visual language is finished**: near-black background, amber accent, green/red for
-  gain/loss, VT323 terminal type, zero border radius, dense layout. Do not soften
-  it into rounded fintech cards or add gradients.
-- **The static-file allowlist in `server.py`.** It exists because the server
-  previously handed out `game.db` (player names, session tokens, the host
-  token), `.git/`, and backup archives to anyone who asked. It is an allowlist
-  deliberately — a blocklist would republish every new secret dropped in the folder.
-- **Server authority.** Anything that appears on the leaderboard must be
-  computed server-side.
+- **Build adımı yok.** Düz dosyalar, doğrudan açılabiliyor. Böyle kalsın; React
+  veya bundler eklemek bu projenin çalışma modelini bozar.
+- **Görsel dil tamamlanmış durumda**: siyaha yakın zemin, amber vurgu, kazanç
+  için yeşil / kayıp için kırmızı, VT323 terminal yazı tipi, sıfır köşe
+  yuvarlaklığı, yoğun yerleşim. Yuvarlak kartlı "modern fintech" görünümüne
+  çevirmeyin, gradient eklemeyin.
+- **`server.py` içindeki statik dosya izin listesi.** Bu liste var, çünkü sunucu
+  daha önce `game.db` (oyuncu isimleri, oturum anahtarları, öğretmen anahtarı),
+  `.git/` klasörünü ve yedek arşivlerini isteyen herkese veriyordu. Bilinçli
+  olarak *izin listesi* (whitelist); yasak listesi olsaydı klasöre eklenen her
+  yeni dosya otomatik olarak yayına çıkardı.
+- **Sunucu otoritesi.** Sıralama tablosuna giren her değer sunucuda
+  hesaplanmalı.
 
-## Testing
+## Test
 
-There is no test suite. Behaviour was verified by driving real browsers with
-Playwright — join flows, cross-device saves, the trade loop, price movement
-under load, and the static-file allowlist. Worth formalising: the save sync in
-particular has four non-obvious invariants and no regression test.
+Otomatik test paketi yok. Davranış, Playwright ile gerçek tarayıcılar
+sürülerek doğrulandı: giriş akışları, cihazlar arası kayıt, alım-satım
+döngüsü, yük altında fiyat hareketi ve statik dosya izin listesi.
 
-Useful check for economy changes: simulate 91 days of greedy play against the
-config and confirm the base still finishes near day 85–91 with all four
-buildings upgraded roughly equally.
+Yazılması gereken: özellikle kayıt senkronizasyonu için regresyon testi —
+yukarıdaki dört kuralın hiçbirini koruyan bir test şu an mevcut değil.
+
+Ekonomi değişikliklerinde faydalı kontrol: config üzerinden 91 günlük oyun
+simüle edip üssün hâlâ 85–91. gün civarında, dört bina da yaklaşık eşit
+yükseltilmiş halde tamamlandığını doğrulayın.
