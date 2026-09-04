@@ -1,211 +1,174 @@
-# YOMAMA INVESTMENTS — Geliştirici Devir Belgesi
+# YOMAMA INVESTMENTS — İş Tanımı
 
-Bu belge, projeyi devralacak geliştirici için yazıldı. Kısa tutuldu; sizi
-yanıltabilecek yerler ⚠️ ile işaretlendi. Kod değiştirmeden önce okuyun.
+## Proje tek cümlede
+
+30 kişilik bir grubun aynı pazarı paylaşarak, 3 ay boyunca kesintisiz oynadığı
+bir tarayıcı oyunu: fabrika kur, ürün üret, ortak pazarda sat, kazancı borsada
+değerlendir.
+
+Oyun **şu an çalışıyor.** Girip oynayabilirsiniz. Üç eksik iş var.
 
 ---
 
-## Proje nedir
+# YAPILMASINI İSTEDİĞİM 3 İŞ
 
-Yaklaşık 30 kişilik bir grubun **aynı piyasayı paylaşarak** oynadığı, bir dönem
-(~3 ay) boyunca kesintisiz çalışacak şekilde tasarlanmış bir tarayıcı oyunu.
+## İş 1 — Çalışmayan 4 binayı çalışır hale getir
 
-Oyuncu küçük bir üretim üssü işletir (binalar → kaynaklar → ürünler), ürünleri
-**ortak pazara** satar — fiyatlar herkesin arzına göre hareket eder — ve
-kazandığı parayı yatırıma yönlendirir.
+Oyunda 6 tane "gelişmiş bina" var. **4'ü hiçbir işe yaramıyor.** Oyuncu para
+veriyor, inşaat süresini bekliyor, bina ekranda görünüyor — ama hiçbir etkisi
+olmuyor.
 
-Yarı finans terminali, yarı tycoon oyunu. Görsel dil bilinçli olarak seçildi ve
-tamamlanmış durumda; "Bozulmaması gerekenler" bölümüne bakın.
+| Bina | Durum |
+|---|---|
+| Müteahhit Ofisi | ✅ Çalışıyor (aynı anda daha çok inşaat yapılmasını sağlıyor) |
+| Otomasyon | ✅ Çalışıyor (oyuncu yokken üretimin devam etme süresini uzatıyor) |
+| Merkez Bina (HQ) | ❌ Hiçbir şey yapmıyor |
+| Depo | ❌ Hiçbir şey yapmıyor (depo limiti diye bir şey yok) |
+| Lojistik | ❌ Hiçbir şey yapmıyor |
+| Pazar Binası | ❌ Hiçbir şey yapmıyor |
 
-## Nasıl çalıştırılır
+**Yapılacak:** Bu 4 binanın ne işe yarayacağını tasarla ve kodla. Sonra
+fiyatlarını dengele (fiyatlama yöntemi aşağıda "Dikkat 1"de anlatılıyor).
+
+**Not:** Bu üç işin en büyüğü. Tasarım kararı da içeriyor, sadece kodlama değil.
+
+## İş 2 — Sınıfla test edilebilir hale getir
+
+İki parçası var:
+
+**a) Sunucuya al.** Oyun şu an sadece benim bilgisayarımda, aynı wifi'daki
+cihazlar bağlanabiliyor. İnternete açılması lazım: HTTPS, sunucunun sürekli
+ayakta kalması, veritabanının her gece yedeklenmesi.
+
+**b) Öğretmen ekranını gerçek veriye bağla.** `teach.html` sayfasının arayüzü
+hazır ve güzel görünüyor — ama gösterdiği öğrenciler **uydurma**. Kodun içine
+yazılmış 54 sahte isim var. Gerçek oyuncu verisine bağlanması gerekiyor.
+(Veriyi veren API zaten yazılmış durumda.)
+
+## İş 3 — Borsayı gerçek fiyatlara bağla
+
+Oyunda hisse alıp satılabiliyor ama fiyatlar sahte, rastgele üretiliyor.
+Gerçek fiyatlara bağlanacak.
+
+**Bu iş kolay olmalı:** Gerekli veri kaynağı projede zaten var ve çalışıyor
+(döviz kuru için kullanılıyor). Aynı kaynak hisse fiyatı da veriyor, test
+ettim:
+
+```
+AAPL  328.21      NVDA  228.45      SPY  773.17
+```
+
+**Yapılacak:** Sahte fiyat üretimini bu kaynakla değiştir. Her istekte dış
+servise gitmemek için önbellek koy. İnternet kesilirse veya borsa kapalıysa ne
+olacağını çöz.
+
+---
+
+## KAPSAM DIŞI
+
+**Yetenek ağacı (`focus-tree.html`) — dokunulmayacak.** Boş bir sayfa, 85
+düğüm var ama hiçbiri çalışmıyor. Şimdilik böyle kalacak.
+
+---
+
+# ŞU AN NELER HAZIR
+
+Bunlara dokunmanıza gerek yok, çalışıyor ve test edildi:
+
+- Oyuncu girişi (sınıf kodu + isim + PIN), tekrar giriş, aynı isim çakışması
+- 30 kişinin aynı anda alışveriş yaptığı ortak pazar — biri çok satınca fiyat
+  düşüyor, sonra toparlanıyor
+- Sıralama tablosu, canlı oyuncu listesi
+- Öğretmen kontrolleri: sınıfı durdur/başlat, piyasaya şok ver, oyuncu sıfırla
+- **Cihaz değiştirince ilerlemenin kaybolmaması** (telefonda oyna, bilgisayarda
+  devam et)
+- Bina inşası, yükseltme, üretim, satış — yani oyunun ana döngüsü
+- Sunucu güvenliği: dosya sızıntısı kapatıldı
+
+---
+
+# PROJEYİ ÇALIŞTIRMA
 
 ```bash
 python3 server.py 3000
 ```
 
-Build adımı yok, paket kurulumu yok, framework yok. Yalnızca Python 3.9+
-standart kütüphanesi. Komut, diğer cihazların bağlanacağı yerel ağ adresini
-ekrana yazar.
+Kurulum yok, `npm install` yok, build yok. Sadece Python 3.9 gerekiyor.
+Komut çalışınca ekrana adres yazar.
 
-| Sayfa | İşlev |
-|---|---|
-| `/class.html` | Sınıf açma konsolu: kod üretir, canlı liste gösterir |
-| `/join.html` | Oyuncu girişi: sınıf kodu + isim + 4 haneli PIN |
-| `/collect.html` | Üs ve binalar |
-| `/produce.html` | Üretim reçeteleri |
-| `/marketplace.html` | Ortak pazar |
-
-## Mimari
-
-Düz HTML sayfaları + tek bir paylaşılan `app.js` (335KB, elle yazılmış) +
-`styles.css`. Bundler yok. Sayfalar birbirinden bağımsız; ortak durum sunucu
-üzerinden akar.
-
-| Dosya | Rolü |
-|---|---|
-| `server.py` | Statik dosya sunumu (izin listeli), haber/döviz proxy'leri, API yönlendirme |
-| `game_api.py` | Otoriter olması gereken tüm oyun mantığı. SQLite. |
-| `yomama-net.js` | Oyun API'siyle konuşan **tek** dosya |
-| `app.js` | Bina/ekonomi simülasyonu ve arayüzün büyük kısmı |
-| `marketplace.js`, `produce.js` | Sayfaya özel mantık |
-| `config/economy.v0.1.json` | Tüm ekonomi ayarları |
-
-**Kritik ayrım:**
-
-- **Sunucu sahibi** (`game.db` içinde): nakit, ürün envanteri, hisse
-  pozisyonları, pazar fiyatları ve stok, sıralama tablosu, oyuncu listesi.
-  Bunlar puanlamaya girdiği için tarayıcıdan değiştirilebilir olmamalı.
-- **İstemci sahibi**: bina seviyeleri, inşaat süreleri, kaynaklar. Tarayıcıda
-  simüle edilir, sonra sunucuya tek parça halinde senkronlanır.
-
-Oturum yoksa veya sunucuya ulaşılamıyorsa her sayfa eski localStorage
-davranışına düşer; oyun çalışmaya devam eder.
+Sayfalar: `/class.html` (sınıf aç), `/join.html` (oyuncu girişi),
+`/collect.html` (üs), `/produce.html` (üretim), `/marketplace.html` (pazar).
 
 ---
 
-# İSTENEN İŞ
+# DİKKAT — 3 TUZAK
 
-Üç başlık. Yetenek ağacı (`focus-tree.html`) **kapsam dışıdır**, dokunulmayacak.
+Bunları bilmeden kod değiştirirseniz oyunu bozarsınız ve **hata mesajı
+almazsınız.**
 
-## 1. Bina mantıklarının tamamlanması
+## Dikkat 1 — Ekonomi rastgele ayarlanmış sayılardan ibaret değil
 
-Altı gelişmiş binanın **dördü hiçbir şey yapmıyor.** Kaynak ve nakit
-harcatıyor, inşa süresi işletiyor, arayüzde yer kaplıyor — ama hiçbir etkileri
-yok.
+`config/economy.v0.1.json` içindeki fiyatlar elle yazılmadı, hesaplandı.
+Formül şu:
 
-| Bina | Durum |
-|---|---|
-| `contractor_office` | ✅ Seviye başına +1 inşaat ekibi |
-| `automation` | ✅ Çevrimdışı üretim süresini uzatıyor |
-| `hq` | ❌ Etkisi yok |
-| `warehouse` | ❌ **Depo limiti hiçbir yerde uygulanmıyor** |
-| `logistics` | ❌ Etkisi yok |
-| `marketplace` | ❌ Etkisi yok |
+> Bir yükseltmenin fiyatı = o yükseltmenin kazandırdığı günlük gelir × 40 gün
 
-`logistics` ve `marketplace` 335KB'lık `app.js` içinde **birer kez** geçiyor.
-Depo mekaniği tamamen dekoratif: kaynaklar hiçbir üst sınıra takılmıyor.
+Yani her bina kendini aynı sürede geri ödüyor. Oyuncunun "hangi binayı
+yükseltsem" diye gerçekten düşünmesi bu yüzden. Üssün tam olarak dönem sonunda
+(91. gün) bitmesi de bu yüzden.
 
-Yapılacak: bu dört binanın ne yapacağının **tasarlanması**, uygulanması ve
-maliyetlerinin yeniden türetilmesi. Not: mevcut maliyet modeli yalnızca dört
-üretim binası için türetildi; gelişmiş binalara sabit bir çarpan uygulandı.
+**"Şu bina pahalı, biraz ucuzlatayım" derseniz bu denge bozulur.** Hata vermez,
+oyun çalışmaya devam eder, ama aylar sonra oyun anlamsız hale gelir.
 
-## 2. Sınıfla test edilebilir hale getirme
+Bağlı olan üç şey: bina üretim miktarları, ürün satış fiyatları, üretim döngü
+süreleri. Birini değiştirirseniz diğerlerini yeniden hesaplamanız gerekir.
 
-Giriş akışı, oyuncu listesi, ortak pazar, öğretmen kontrolleri ve cihazlar
-arası kayıt **çalışıyor ve test edildi**. Eksik olanlar:
+## Dikkat 2 — Cihaz değiştirince ilerleme kaybolmaması hassas bir mekanizma
 
-- **Yayına alma**: HTTPS, `ThreadingHTTPServer` önüne gerçek bir web sunucusu
-  (Caddy önerilir), `game.db` için gecelik yedek, servis yöneticisi (systemd).
-- **`teach.html`**: 815 satır, 52 handler — arayüz hazır, ama verisi sahte.
-  Tohumlanmış bir PRNG'den üretilen 54 uydurma öğrenci gösteriyor. Gerçek API'ye
-  bağlanması gerekiyor.
+Oyuncunun binaları ve kaynakları tarayıcıda tutuluyor, sonra sunucuya
+gönderiliyor. Bu senkronizasyonun 4 kuralı var ve **dördü de daha önce gerçekten
+bozuldu.** `yomama-net.js` dosyasında bu kısma dokunacaksanız:
 
-## 3. Gerçek hisse fiyatları
+1. Sunucudan veri gelmeden sunucuya veri gönderme. Yeni açılan ikinci bir cihaz
+   boş verisini gerçek kaydın üzerine yazar.
+2. Sunucudan gelen kaydı uygulamak için sayfayı yenileme (`location.reload`).
+   Çalışmıyor — oyun kendi eski verisini geri yazıyor. Bunun yerine
+   `await YomamaNet.ready()` beklenmeli.
+3. `getPlayerSave()` sonucu hafızada tutuyor. Sunucudan yeni kayıt gelince bu
+   hafızayı temizlemezseniz gelen veri hiç okunmaz.
+4. Zaman damgası "kaydı ne zaman gönderdim" değil, "veri ne zaman değişti"
+   olmalı. Yoksa eski bir cihazda oyunu açmak bile diğer cihazdaki ilerlemeyi
+   siler.
 
-Şu an hisse fiyatları sunucuda tohumlanmış rastgele yürüyüşle üretiliyor
-(`game_api.py` içindeki `equity_price`). Gerçek fiyatlarla değiştirilecek.
+## Dikkat 3 — Sunucu neyin doğru olduğuna karar verir
 
-**Kaynak hazır ve çalışıyor.** `server.py` içinde döviz için kullanılan
-TradingView uç noktası hisseler için de veri dönüyor:
+Puanlamaya giren her şey (para, envanter, hisseler, sıralama) sunucuda tutulur
+ve orada hesaplanır. Tarayıcıya güvenilmez, çünkü oyuncu tarayıcıdaki değerleri
+değiştirebilir.
 
-```
-NASDAQ:AAPL   close=328.21
-NASDAQ:NVDA   close=228.45
-AMEX:SPY      close=773.17
-```
-
-`fetch_fx_quote` fonksiyonundaki kalıp aynen kullanılabilir. Gereken:
-önbellekleme (her istekte dış servise gidilmemeli), internet kesildiğinde
-yedek davranış, ve tatil/kapanış saatlerinin ele alınması.
+Yeni bir özellik eklerken puanı etkiliyorsa sunucuda hesaplayın.
 
 ---
 
-## ⚠️ Ekonomi türetilmiş bir sistemdir — tek bir sayıyı elle değiştirmeyin
+# DOKUNMAYIN
 
-`config/economy.v0.1.json` içindeki maliyetler elle seçilmedi, **hesaplandı**:
+- **Build sistemi eklemeyin.** React, Vue, webpack yok ve olmayacak. Düz HTML
+  dosyaları, çift tıklayınca açılıyor. Projenin çalışma mantığı bu.
+- **Görsel tasarımı değiştirmeyin.** Siyah zemin, amber sarısı, terminal yazı
+  tipi, köşeleri keskin kutular. Bilinçli bir tercih ve bitmiş durumda.
+  Yuvarlak köşeli modern arayüze çevirmeyin.
+- **`server.py` içindeki dosya izin listesini gevşetmeyin.** O liste var, çünkü
+  sunucu daha önce oyuncu isimlerinin ve şifrelerinin olduğu veritabanı
+  dosyasını isteyen herkese veriyordu.
 
-```
-bir yükseltmenin nakit maliyeti = getirdiği ek gelir × 40 gün
-```
+---
 
-Her binanın kendini aynı sürede amorti etmesi, dört binanın da dönem boyunca
-yaklaşık eşit sayıda yükseltilmesi ve üssün ~91. günde tamamlanması bu yüzden.
-Girdilerden birini değiştirmek diğerlerini sessizce bozar:
+# BİLİNEN EKSİKLER (kapsam dışı, bilginiz olsun)
 
-- **Bina üretimleri, reçetelerin tükettiği orana göre ayarlandı.** Bir üretim
-  merdivenini değiştirirseniz kaynaklar yeniden israf olmaya başlar.
-- **Ürün fiyatları, her kaynağın değerini belirler.** Bunlar beş reçeteli bir
-  doğrusal programın gölge fiyatları; arz bu değeri değiştirmez. Hydro Lettuce
-  fiyatı 11,88 → 21,18 olarak güncellendi, çünkü aksi halde gıdanın birim
-  değeri 0,04 dolarda kalıyor ve çiftlik işlevsiz bir binaya dönüşüyordu.
-- **Döngü süreleri ile nakit maliyetler birbirine bağlı.** Gelir döngü hızıyla
-  doğru orantılı; `cycleMinutes` yarıya inerse gelir ikiye katlanır ve tüm
-  maliyetlerin buna göre kayması gerekir.
-
-Denge değişikliği gerekiyorsa beş reçete üzerinden doğrusal programı yeniden
-çözün; sezgiyle sayı oynatmayın. Hedeflenen his: üs dönemin sonuna doğru
-tamamlanır, her gün oynayan bitirir, haftada bir oynayan yarı yola gelir.
-
-## ⚠️ Cihazlar arası kaydın dört kuralı
-
-Binalar ve kaynaklar `/api/game/buildings` üzerinden senkronlanır. Kırılması
-kolaydır; aşağıdakilerin her biri gerçekten yaşanmış birer hatadır:
-
-1. **Senkron tamamlanmadan sunucuya yazmayın.** Yeni açılan ikinci bir cihaz,
-   boş başlangıç durumunu gerçek kaydın üzerine yazar. `pushBuildings` bu yüzden
-   senkron bitene kadar hiçbir şey göndermez.
-2. **Sunucudan gelen kaydı uygulamak için `location.reload()` kullanmayın.**
-   `app.js` kendi asenkron başlatmasını tamamlayıp bellekteki varsayılanları
-   yeni alınan kaydın üzerine yazar; sayfa yenilendiğinde varsayılanlar okunur.
-   Bunun yerine sayfalar `await YomamaNet.ready()` beklemeli.
-3. **`getPlayerSave()` sonucu bellekte tutar.** Sunucudan kayıt alındığında
-   `playerSaveState` temizlenmezse, gelen veri localStorage'da durur ama hiç
-   okunmaz.
-4. **Zaman damgası, gönderim anına değil değişim anına ait olmalı.** Aksi halde
-   eski bir cihazda oyunu açmak bile o cihazı "daha yeni" gösterir ve diğer
-   cihazdaki gerçek ilerlemeyi sessizce geri alır.
-
-`produce.js` kaynaklarını `ready()` beklemeden okuyor. Normal akış güvenli
-(girişten sonra önce `collect.html` açılıyor ve senkron orada tamamlanıyor),
-ama temiz bir tarayıcıda doğrudan `produce.html` açılırsa kısa süreli eski veri
-görünebilir. Kapatılması iyi olur.
-
-## Şu an çalışmayan kısımlar
-
-| Alan | Durum |
+| Ne | Durum |
 |---|---|
-| `teach.html` | Sahte veri (bkz. İstenen İş #2) |
-| `memos.html` | Sıralama tablosu, kurgusal karakterlerin rastgele oynatıldığı bir animasyon. Gerçek sıralama API'de ve `class.html` içinde. |
-| `focus-tree.html` | Statik HTML. 85 düğüm, durum yok, maliyet yok. **Kapsam dışı.** |
-| `port_trading.html` | 2646 satır, arayüz hazır; fiyat kaynağı yok, pozisyon değerleri oyuncunun elle girdiği sayıdan geliyor. |
-| Üretim doğrulaması | Üretim istemcide simüle ediliyor. `/api/game/produce` sınır koyuyor (400 birim + saatte 120) ama bu sınır içinde şişirme mümkün. |
-| PIN'ler | Veritabanında açık metin. Tanıdık bir grup için sorun değil, halka açık kullanım için zayıf. |
-
-## Bozulmaması gerekenler
-
-- **Build adımı yok.** Düz dosyalar, doğrudan açılabiliyor. Böyle kalsın; React
-  veya bundler eklemek bu projenin çalışma modelini bozar.
-- **Görsel dil tamamlanmış durumda**: siyaha yakın zemin, amber vurgu, kazanç
-  için yeşil / kayıp için kırmızı, VT323 terminal yazı tipi, sıfır köşe
-  yuvarlaklığı, yoğun yerleşim. Yuvarlak kartlı "modern fintech" görünümüne
-  çevirmeyin, gradient eklemeyin.
-- **`server.py` içindeki statik dosya izin listesi.** Bu liste var, çünkü sunucu
-  daha önce `game.db` (oyuncu isimleri, oturum anahtarları, öğretmen anahtarı),
-  `.git/` klasörünü ve yedek arşivlerini isteyen herkese veriyordu. Bilinçli
-  olarak *izin listesi* (whitelist); yasak listesi olsaydı klasöre eklenen her
-  yeni dosya otomatik olarak yayına çıkardı.
-- **Sunucu otoritesi.** Sıralama tablosuna giren her değer sunucuda
-  hesaplanmalı.
-
-## Test
-
-Otomatik test paketi yok. Davranış, Playwright ile gerçek tarayıcılar
-sürülerek doğrulandı: giriş akışları, cihazlar arası kayıt, alım-satım
-döngüsü, yük altında fiyat hareketi ve statik dosya izin listesi.
-
-Yazılması gereken: özellikle kayıt senkronizasyonu için regresyon testi —
-yukarıdaki dört kuralın hiçbirini koruyan bir test şu an mevcut değil.
-
-Ekonomi değişikliklerinde faydalı kontrol: config üzerinden 91 günlük oyun
-simüle edip üssün hâlâ 85–91. gün civarında, dört bina da yaklaşık eşit
-yükseltilmiş halde tamamlandığını doğrulayın.
+| `memos.html` sıralama sayfası | Sahte animasyon. Gerçek sıralama `class.html`'de. |
+| `port_trading.html` | Arayüz hazır, fiyat kaynağı yok |
+| PIN'ler | Veritabanında açık yazıyor. Tanıdık grup için sorun değil. |
+| Üretim doğrulaması | Üretim tarayıcıda hesaplanıyor, sınırlı da olsa hile mümkün |
+| Otomatik test | Yok. Test için gerçek tarayıcı sürüldü (Playwright). |
