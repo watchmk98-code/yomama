@@ -2221,6 +2221,16 @@
 
     const initBuildingsLab = async () => {
       const config = await loadEconomyV01Config();
+      // Let the server settle this browser's base first, or we would read a
+      // stale local copy and then persist it back over the good one.
+      if (window.YomamaNet) {
+        try {
+          const adopted = await window.YomamaNet.ready();
+          // getPlayerSave() memoises into playerSaveState, and something reads
+          // it before this point, so the adopted save has to be re-read.
+          if (adopted) playerSaveState = null;
+        } catch (_) {}
+      }
       const currentSave = getPlayerSave();
       const seededCharacter = BUILDINGS_LAB_DEFAULT_CHARACTER;
       const sanitizedEconomy = sanitizeEconomyV01State(currentSave.economyV01, config, seededCharacter, Date.now());
@@ -2243,6 +2253,10 @@
           economyV01: state.economy,
         };
         applyPlayerSave(nextSave);
+        // Buildings and resources live in this browser; without this the base
+        // resets when the player opens the game on another machine.
+        const net = window.YomamaNet;
+        if (net && net.isLive()) net.pushBuildings(state.economy);
       };
       appendLog(state.economy, 'Buildings simulator initialized.', getCurrentNow(state.economy));
       state.persist();
