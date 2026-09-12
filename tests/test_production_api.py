@@ -44,6 +44,14 @@ def test_breakfast_persists_isolated_and_awards_only_once(town):
     assert state(token)['breakfastEvent']['status'] == 'new'
     def event(action, **kw):
         return A.econ_breakfast(dict(token=token, action=action, **kw))
+    assert state(token)['breakfastEvent']['locked']
+    with pytest.raises(A.ApiError):
+        event('start')
+    def open_roastery(cfg, st):
+        st['tierOf'].append(2)
+        st['b'].append(E._building(2))
+    edit(token, open_roastery)
+    assert not state(token)['breakfastEvent']['locked']
     event('start')
     event('make', recipe='coffee')
     now[0] += 30

@@ -10,6 +10,9 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from delivery_recipes import ORDER_RECIPES
+import earnings
+import town_projects
 import economy as legacy
 from economy import *  # Stable public helpers used by the classroom API.
 
@@ -85,10 +88,12 @@ def _building(tier, lv=1, sales=1, storage=1):
 def new_state(cfg, start_tick=0, seed=1):
     st=legacy.new_state(cfg,start_tick,seed)
     st.update(modelVersion=4,b=[_building(0)],inventory={},productionWork={},salesWork={},
-              materials=0,lastActiveTick=start_tick,orderSerial=0,
+              materials=0,lastActiveTick=start_tick,orderSerial=0,orderRecipeHistory=[[],[],[]],
               report=dict(produced=0,unitsProduced=0,retailEarned=0,unitsSold=0,
                           overflowSold=0,overflowCost=0,builds=0,offlineTicksSkipped=0))
     _customer_defaults(st)
+    earnings.ensure(st)
+    town_projects.default(cfg,st)
     offer_contracts(cfg,st,start_tick)
     return st
 
@@ -101,9 +106,13 @@ def migrate_state(cfg, st, tick=None):
     The API records original JSON and handles clock reset for old snapshots.
     """
     if not isinstance(st,State): st=State(st)
+    st.setdefault('orderRecipeHistory',[[],[],[]])
+    earnings.ensure(st)
     # Existing v4 towns gain an empty roster without resetting their economy.
     _customer_defaults(st)
     if st.get('modelVersion')==4:
+        town_projects.migrate(cfg,st)
+        _sync_project_offer(cfg,st)
         return st
     old_gate=legacy.gate_open(legacy.load_config(),st) if st.get('b') else False
     keep=st.get('keepPercent')
@@ -133,6 +142,8 @@ def migrate_state(cfg, st, tick=None):
         delta=tick-st.get('tick',tick)
         if st.get('build'): st['build']['t']+=delta
         st['tick']=tick;st['lastActiveTick']=tick
+    earnings.prune(cfg,st,clear=True)
+    town_projects.migrate(cfg,st)
     offer_contracts(cfg,st,st.get('tick',0))
     return st
 
@@ -173,8 +184,8 @@ def set_focus(cfg,st,slot,focus):
 
 
 def town_income(cfg,st):
-    goods=catalog(cfg)
-    return sum(r['retail']*goods[gid]['unitPrice'] for gid,r in flow_rates(cfg,st).items())
+    goods=catalog(cfg);rates,regulars=_flows(cfg,st)
+    return sum(r['retail']*goods[gid]['unitPrice'] for gid,r in rates.items())+regulars['incomePerMinute']
 
 
 def upgrade_preview(cfg,st,slot,kind):
@@ -182,9 +193,9 @@ def upgrade_preview(cfg,st,slot,kind):
     after['b'][slot][key]+=1
     delta=round(town_income(cfg,after)-town_income(cfg,st),2)
     if kind=='storage':
-        message=f'+{_capacity(cfg,after,slot)-_capacity(cfg,st,slot)} spaces · sales unchanged'
-    elif delta!=0: message=f'Town sales {delta:+g} YM/min'
-    else: message='Sales unchanged · more stock' if kind=='production' else 'Supply limits sales'
+        message=f'+{_capacity(cfg,after,slot)-_capacity(cfg,st,slot)} spaces · income unchanged'
+    elif delta!=0: message=f'Est. ongoing income {delta:+g} YM/min'
+    else: message='Income unchanged · more stock' if kind=='production' else 'Supply limits income'
     unlocks=kind=='production' and after['b'][slot]['lv']==3 and bool(focus_options(cfg,after['b'][slot]))
     return dict(incomeDelta=delta,consequence=message,unlocksSpecialty=unlocks)
 
@@ -278,8 +289,8 @@ def _produce(cfg,st):
     st['report']['produced']+=value;st['report']['unitsProduced']+=made
 
 
-def _retail(cfg,st):
-    inv=st['inventory'];protected=protected_stock(cfg,st);earned=sold=0
+def _retail(cfg,st,tick=None):
+    inv=st['inventory'];protected=protected_stock(cfg,st);earned=sold=0;by_building={}
     for slot,b in enumerate(st['b']):
         slot_income=0
         for good in cfg['tiers'][st['tierOf'][slot]]['goods']:
@@ -294,17 +305,19 @@ def _retail(cfg,st):
                 inv[gid]-=take;gross=take*good['unitPrice']
                 earned+=gross;slot_income+=gross;sold+=take;work-=take*denom
             st['salesWork'][gid]=work%denom
+        by_building[slot]=slot_income
         history=st.setdefault('recentRetail',{}).setdefault(str(slot),[])
         history.append(slot_income)
         del history[:-max(1,round(60/cfg['global']['tick']))]
     st['cash']+=earned
     st['report']['retailEarned']+=earned;st['report']['unitsSold']+=sold
+    earnings.record(cfg,st,'walkIns',earned,tick=tick,by_building=by_building)
 
 
 def player_tick(cfg,cls,st,k):
     if st.get('build') is not None and k>=st['build']['t']:
         finish_build(cfg,st,k)
-    _produce(cfg,st);_tick_customer_contracts(cfg,st,k+1);_retail(cfg,st);_sync_pools(cfg,st)
+    _produce(cfg,st);_tick_customer_contracts(cfg,st,k+1);_retail(cfg,st,k+1);_sync_pools(cfg,st)
     st['tick']=k+1
 
 
@@ -340,6 +353,7 @@ def advance_class(cfg,cls,players,start,target):
             skipped=target-max(begin,stop)
             st['report']['offlineTicksSkipped']+=skipped
             st['recentRetail']={}
+            earnings.prune(cfg,st,tick=target,clear=True)
             # Production beyond the absence cap is never paid or caught up.
             # Preserve the interval remaining at the cap for the next visit.
             for contract in st.get('customerContracts',{}).get('active',[]):
@@ -415,6 +429,7 @@ def sell_one(cfg,st,bi,price=1,manual=True):
     gross=value*cfg['production']['clearStockPercent']//100
     for gid,q in removed: st['inventory'][gid]-=q
     st['cash']+=gross;_sync_pools(cfg,st)
+    earnings.record(cfg,st,'clearance',gross,by_building={bi:gross})
     return dict(ok=True,gross=gross,net=gross,tax=0,quantity=units,discountPercent=100-cfg['production']['clearStockPercent'])
 
 
@@ -433,8 +448,12 @@ def expansion_quote(cfg,st,ti):
     required=math.ceil(t['baseCost']*cfg['production']['materialPremiumPercent']/100/substitute) if t['materialCost'] else 0
     used=min(st['materials'],required)
     missing=required-used
-    return dict(baseCost=t['baseCost'],cost=t['baseCost']+missing*substitute,materialUnitValue=substitute,
-                materialCost=required,materialsCost=required,materialsUsed=used,materialsMissing=missing)
+    full_cost=t['baseCost']+missing*substitute
+    grant=town_projects.construction_grant(cfg,st,ti)
+    return dict(baseCost=t['baseCost'],cost=0 if grant else full_cost,materialUnitValue=substitute,
+                materialCost=required,materialsCost=required,materialsUsed=0 if grant else used,
+                materialsMissing=0 if grant else missing,constructionGrant=grant,
+                fundedValue=t['baseCost']+required*substitute if grant else 0)
 
 
 def can_expand(cfg,st,ti):
@@ -450,7 +469,10 @@ def can_expand(cfg,st,ti):
 def expand(cfg,st,ti,tick):
     result=can_expand(cfg,st,ti)
     if not result['ok']: return result
-    st['cash']-=result['cost'];st['book']+=result['cost'];st['materials']-=result['materialsUsed']
+    if result.get('constructionGrant'):
+        claimed=town_projects.consume_construction_grant(cfg,st,ti)
+        if not claimed['ok']: return claimed
+    st['cash']-=result['cost'];st['book']+=result['cost']+result.get('fundedValue',0);st['materials']-=result['materialsUsed']
     if st.get('build') is None:
         st['build']=dict(i=ti,t=tick+max(1,jsround(cfg['tiers'][ti]['timerH']*3600/cfg['global']['tick'])))
     else: st['queue'].append(ti)
@@ -615,6 +637,7 @@ def _tick_customer_contracts(cfg,st,tick):
         # Debit every item together; shortages never receive partial payments.
         for need in contract['requirements']: st['inventory'][need['goodId']]-=need['quantity']
         st['cash']+=contract['reward']
+        earnings.record_goods(cfg,st,'regularBuyers',contract['reward'],contract['requirements'],tick=tick)
         contract['deliveries']+=1;contract['earned']+=contract['reward']
         data['deliveries']+=1;data['earned']+=contract['reward']
         st['report']['customerEarned']+=contract['reward']
@@ -653,11 +676,65 @@ def customer_contract_payload(cfg,st):
                 earned=data.get('earned',0),deliveries=data.get('deliveries',0),customers=customers,active=active)
 
 
+def _order_recipe(cfg,st,index,rarity,digest,goods):
+    """Deal a complete job the town can produce, with a saved rotation per slot.
+
+    Eligibility follows the whole supply chain, including suppliers of inputs.
+    Recipes are authored bundles: larger rolls never pad them with random goods.
+    """
+    owned=set(st['tierOf']);producible={}
+    def can_make(gid,visiting=frozenset()):
+        if gid in producible: return producible[gid]
+        if gid in visiting or gid not in goods or goods[gid]['tier'] not in owned: return False
+        producible[gid]=all(can_make(n['goodId'],visiting|{gid}) for n in goods[gid].get('inputs',[]))
+        return producible[gid]
+    eligible=[r for r in ORDER_RECIPES if all(can_make(gid) for gid in r['goods'])]
+    if index==2:
+        # Legacy migrations can preserve a town with only an industrial
+        # business. Give it ordinary jobs until it can supply breakfast food.
+        eligible=[r for r in eligible if r['breakfast']] or eligible
+    target=rarity['items'] or (1 if index==0 else 2)
+    size=max(len(r['goods']) for r in eligible if len(r['goods'])<=target)
+    candidates=[r for r in eligible if len(r['goods'])==size]
+    history=st.setdefault('orderRecipeHistory',[[],[],[]])[index]
+    # Deal every unseen recipe of this size before recycling the oldest one.
+    # Prefer distinct cards among unseen jobs, but a parked card must never
+    # make its recipe unreachable through another slot's New Order button.
+    on_board={o.get('recipeId') for o in st.get('offers') or []}
+    seen=set(history)
+    unseen=[r for r in candidates if r['id'] not in seen]
+    if unseen:
+        unseen=[r for r in unseen if r['id'] not in on_board] or unseen
+        recipe=unseen[int.from_bytes(digest[8:16],'big')%len(unseen)]
+    else:
+        rank={rid:i for i,rid in enumerate(history)}
+        recipe=min(candidates,key=lambda r:rank[r['id']])
+    # A starter's first cash job teaches one fast, raw product.
+    if st['orderSerial']==1 and index==0:
+        recipe=next((r for r in candidates if r['goods']==('farm_tomatoes',)),recipe)
+    if recipe['id'] in seen: history.remove(recipe['id'])
+    history.append(recipe['id'])
+    del history[:-len(ORDER_RECIPES)]
+    return recipe
+
+
+def _project_order(cfg,st):
+    return town_projects.current_order(cfg,st) or dict(
+        id='town-project-complete',name='Town projects complete',project=True,completed=True,
+        requirements=[],reward=0,materials=0,customer=None,committed=False,
+        purpose='Your opening projects are complete.',channelLabel='Town projects')
+
+
+def _sync_project_offer(cfg,st):
+    offers=st.get('offers') or []
+    if len(offers)>2 and offers[2].get('project'):
+        current=_project_order(cfg,st)
+        if offers[2]['id']!=current['id']: offers[2]=current
+
+
 def _make_order(cfg,st,index):
-    goods=catalog(cfg);owned=set(st['tierOf']);eligible=[]
-    for ti in st['tierOf']:
-        for g in cfg['tiers'][ti]['goods']:
-            if all(goods[n['goodId']]['tier'] in owned for n in g.get('inputs',[])): eligible.append(g)
+    if index==2 and town_projects.enabled(cfg): return _project_order(cfg,st)
+    goods=catalog(cfg)
     serial=st['orderSerial'];st['orderSerial']+=1
     # Independent deterministic randomness: saving/reloading cannot reroll the
     # next offer, and class/player request timing cannot change its rarity.
@@ -668,18 +745,8 @@ def _make_order(cfg,st,index):
         if roll<candidate['chance']:
             rarity=candidate;break
         roll-=candidate['chance']
-    # Unit stride covers every eligible product even when the count shares
-    # factors with seven (for example, seven businesses with 21 products).
-    offset=(serial+index*3)%len(eligible)
-    picks=[eligible[offset]]
-    if index>0 and len(eligible)>1: picks.append(eligible[(offset+max(1,len(eligible)//2))%len(eligible)])
-    if index == 2:
-        ids = ['roastery_espresso_shots', 'roastery_pastries'] if 2 in owned else ['farm_eggs', 'farm_honey']
-        regulars = [g for g in eligible if g['id'] in ids]
-        if regulars: picks=regulars
-    extras=sorted((g for g in eligible if g not in picks),
-                  key=lambda g:hashlib.sha256(digest+g['id'].encode()).digest())
-    picks+=extras[:max(0,min(len(eligible),rarity['items'])-len(picks))]
+    recipe=_order_recipe(cfg,st,index,rarity,digest,goods)
+    picks=[goods[gid] for gid in recipe['goods']]
     requirements=[];value=0
     for good in picks:
         # Fixed order sizes do not scale with cash; upgrades shorten lead time.
@@ -691,9 +758,11 @@ def _make_order(cfg,st,index):
     material_value=cfg['production']['materialCashValue']
     materials=max(1,jsround(value*.25/material_value)) if index == 1 else 0
     reward_percent=jsround([125,110,115][index]*rarity['payoutPercent']/100)
-    return dict(id=f'order-{st.get("rngState",1)}-{serial}',name=['Quick cash','Building supplies','Breakfast regulars'][index],
+    breakfast=index==2 and recipe['breakfast']
+    return dict(id=f'order-{st.get("rngState",1)}-{serial}',name=recipe['name'],recipeId=recipe['id'],purpose=recipe['purpose'],
+                channelLabel=['Quick cash','Building supplies','Breakfast regulars' if breakfast else 'Town deliveries'][index],
                 requirements=requirements,reward=jsround(value*reward_percent/100),materials=materials,
-                customer='breakfast' if index == 2 else None,committed=False,
+                customer='breakfast' if breakfast else None,committed=False,
                 rarity=rarity['id'],rarityLabel=rarity['label'],rewardPercent=reward_percent,retailValue=value)
 
 
@@ -713,26 +782,45 @@ def fulfill_order(cfg,st,offerIndex,order_id=None):
     check=_order_check(st,offerIndex,order_id)
     if not check['ok']: return check
     order=st['offers'][offerIndex];goods=catalog(cfg)
+    if order.get('project'):
+        access=town_projects.check(cfg,st,order['id'])
+        if not access['ok']: return access
     held=delivery_reservations(cfg,st,exclude=order['id'])
     for need in order['requirements']:
         if st['inventory'].get(need['goodId'],0)-held.get(need['goodId'],0)<need['quantity']:
             return dict(ok=False,why='Need unreserved '+goods[need['goodId']]['name'])
     for need in order['requirements']: st['inventory'][need['goodId']]-=need['quantity']
     st['cash']+=order['reward'];st['materials']+=order['materials']
+    earnings.record_goods(cfg,st,'orders',order['reward'],order['requirements'])
     st['cStats']['accepted']+=1;st['cStats']['done']+=1
     raw_value=sum(goods[n['goodId']]['unitPrice']*n['quantity'] for n in order['requirements'])
     st['cStats']['net']+=order['reward']-raw_value;st['checklist']['goodSales']=st['cStats']['done']
     if order.get('customer') == 'breakfast':
         st['regularDeliveries']=min(3,st.get('regularDeliveries',0)+1)
+    project_result=town_projects.complete(cfg,st,order['id']) if order.get('project') else {}
     st['offers'][offerIndex]=_make_order(cfg,st,offerIndex);_sync_pools(cfg,st)
-    return dict(ok=True,kind='delivery',reward=order['reward'],materials=order['materials'],orderId=order['id'])
+    return dict(ok=True,kind='delivery',reward=order['reward'],materials=order['materials'],orderId=order['id'],
+                projectReward=project_result.get('rewardText',''))
 
 
 def replace_order(cfg,st,offerIndex,order_id=None):
     check=_order_check(st,offerIndex,order_id)
     if not check['ok']: return check
+    if st['offers'][offerIndex].get('project'): return dict(ok=False,why='Town projects are fixed goals. Save goods and deliver to advance.')
     st['offers'][offerIndex]=_make_order(cfg,st,offerIndex)
     return dict(ok=True,kind='replace_order')
+
+
+def _commit_room(cfg,st,order):
+    goods=catalog(cfg);held=order_reservations(st,exclude=order['id'])
+    for need in order['requirements']:
+        gid=need['goodId'];tier=goods[gid]['tier']
+        if tier not in st['tierOf']:
+            return dict(ok=False,why='Open '+cfg['tiers'][tier]['name']+' first')
+        slot=st['tierOf'].index(tier)
+        if held.get(gid,0)+need['quantity']>_good_capacity(cfg,st,slot,gid):
+            return dict(ok=False,why='Not enough shelf room for both orders. Release another order or upgrade storage.')
+    return dict(ok=True)
 
 
 def commit_order(cfg,st,index,order_id,committed):
@@ -740,12 +828,12 @@ def commit_order(cfg,st,index,order_id,committed):
     if not check['ok']: return check
     if type(committed) is not bool: return dict(ok=False,why='committed must be true or false')
     order=st['offers'][index]
+    if committed and order.get('project'):
+        access=town_projects.check(cfg,st,order['id'])
+        if not access['ok']: return access
     if committed:
-        goods=catalog(cfg);held=order_reservations(st,exclude=order_id)
-        for need in order['requirements']:
-            gid=need['goodId'];slot=st['tierOf'].index(goods[gid]['tier'])
-            if held.get(gid,0)+need['quantity']>_good_capacity(cfg,st,slot,gid):
-                return dict(ok=False,why='Not enough shelf room for both orders. Release another order or upgrade storage.')
+        room=_commit_room(cfg,st,order)
+        if not room['ok']: return room
     order['committed']=committed
     return dict(ok=True,kind='order_commit',committed=committed)
 
@@ -760,7 +848,7 @@ def gate_open(cfg,st):
     return len(st['b'])>=cfg['global']['gateTier'] and c['lv25'] and c['auto'] and experience and c['quiz']
 
 
-def flow_rates(cfg,st):
+def _flows(cfg,st):
     """Sustainable full-store-free flow, including ingredients used downstream.
 
     This forecast shows the current configuration's capacity; actual income is
@@ -776,12 +864,19 @@ def flow_rates(cfg,st):
             for need in g.get('inputs',[]): pool[need['goodId']]=max(0,pool.get(need['goodId'],0)-rate*need['quantity'])
             pool[g['id']]=rate
             rates[g['id']]=dict(production=rate,retail=0)
+    regulars=earnings.allocate_regular_flow(cfg,st,pool)
+    pool=regulars['remaining']
     for ti,slot in by_tier.items():
         b=st['b'][slot]
         for g in cfg['tiers'][ti]['goods']:
+            rates[g['id']]['regulars']=regulars['unitsPerMinute'].get(g['id'],0)
             demand=customer_demand(cfg,st,b)/10000*60/(g['cycleTicks']*cfg['global']['tick'])
             rates[g['id']]['retail']=0 if b['reserve'] else min(pool[g['id']],demand)
-    return rates
+    return rates,regulars
+
+
+def flow_rates(cfg,st):
+    return _flows(cfg,st)[0]
 
 
 def _rate(cfg,st,slot,selling=False):
@@ -791,9 +886,56 @@ def _rate(cfg,st,slot,selling=False):
             round(sum(rates[g['id']][key]*g['unitPrice'] for g in goods),2))
 
 
+def _project_supply_conflicts(cfg,st,order):
+    if not order or not order.get('project') or order.get('completed'): return []
+    goods=catalog(cfg);needed=set()
+    def include(gid):
+        if gid in needed: return
+        needed.add(gid)
+        for ingredient in goods[gid].get('inputs',[]): include(ingredient['goodId'])
+    for need in order['requirements']: include(need['goodId'])
+    return [other['name'] for other in st.get('offers') or []
+            if other['id']!=order['id'] and other.get('committed')
+            and any(need['goodId'] in needed for need in other['requirements'])]
+
+
+def opening_step(cfg,st,project,order,frontier,build):
+    if not town_projects.enabled(cfg) or project['completed']>=3: return None
+    count=project['completed']
+    if build:
+        return dict(title=build['name']+' is being built',
+                    detail='Projects '+str(count)+'/3 · '+str(build['remainingSec'])+'s remaining. Other businesses keep earning.')
+    funded=next((item for item in frontier if item.get('constructionGrant')),None)
+    if funded:
+        return dict(title='Your '+funded['name']+' is fully funded',
+                    detail='Projects '+str(count)+'/3 · This grant pays construction only. Upgrades cannot spend it.',
+                    action='expand:'+str(funded['tier']),actionLabel='Build with grant',disabled=not funded['canExpand'])
+    if order is None:
+        return dict(title='Finish or replace your saved delivery',
+                    detail='Your earlier delivery is preserved. The next card starts your town project.',
+                    href='./marketplace.html',actionLabel='View saved delivery')
+    if order.get('locked'):
+        return dict(title=order['why'],detail=project['description'])
+    if not order['canFulfill'] and not order.get('canCommit',True):
+        return dict(title='Make room for your town project',
+                    detail='Other saved orders fill the shelf. Finish or release one in Market, then save the project goods.',
+                    href='./marketplace.html#town-project',actionLabel='Review saved goods')
+    conflicts=order.get('supplyConflicts',[])
+    if conflicts and not order['canFulfill']:
+        return dict(title='Your project shares saved supplies',
+                    detail=conflicts[0]+' also needs these supplies. Release it in Market to finish your project sooner.',
+                    href='./marketplace.html#town-project',actionLabel='Review saved goods')
+    return dict(title='Project '+str(count+1)+'/3 · '+project['title'],
+                detail=('Ready to deliver. ' if order['canFulfill'] else
+                        'Goods are being saved. ' if order.get('committed') else 'Save the project goods in Market. ')+project['rewardText']+'.',
+                href='./marketplace.html#town-project',actionLabel='View project')
+
+
 def payload(cfg,st,cls,session,behind=False):
+    _sync_project_offer(cfg,st)
     _sync_pools(cfg,st)
-    g=cfg['global'];goods=catalog(cfg);rates=flow_rates(cfg,st);protected=protected_stock(cfg,st)
+    g=cfg['global'];goods=catalog(cfg);rates,regular_flow=_flows(cfg,st);protected=protected_stock(cfg,st)
+    receipts=earnings.payload(cfg,st)
     buildings=[];board=[];inventory=st['inventory']
     for slot,b in enumerate(st['b']):
         ti=st['tierOf'][slot];t=cfg['tiers'][ti];rows=[]
@@ -811,8 +953,9 @@ def payload(cfg,st,cls,session,behind=False):
             rows.append(row);board.append(row)
         production=sum(rates[x['id']]['production'] for x in t['goods'])
         sales=sum(rates[x['id']]['retail'] for x in t['goods'])
-        potential_income=sum(rates[x['id']]['retail']*x['unitPrice'] for x in t['goods'])
-        income=sum(st.get('recentRetail',{}).get(str(slot),[]))
+        potential_income=sum(rates[x['id']]['retail']*x['unitPrice'] for x in t['goods'])+regular_flow['byBuilding'].get(str(slot),0)
+        shop_receipts=receipts['byBuilding'][str(slot)]
+        income=shop_receipts['operatingIncome']
         recipe_goods=[x for x in t['goods'] if x.get('inputs')]
         recipes=[dict(inputs=[dict(n,name=goods[n['goodId']]['name'],owned=inventory.get(n['goodId'],0),buildingId=goods[n['goodId']]['buildingId']) for n in x['inputs']],
                       output=dict(goodId=x['id'],name=x['name'],quantity=x['quantity']),
@@ -838,7 +981,7 @@ def payload(cfg,st,cls,session,behind=False):
             if cost is not None: upgrades[kind].update(upgrade_preview(cfg,st,slot,kind))
         clear_qty=sum(max(0,inventory.get(x['id'],0)-protected.get(x['id'],0)) for x in t['goods'])
         clear_value=sum(max(0,inventory.get(x['id'],0)-protected.get(x['id'],0))*x['unitPrice'] for x in t['goods'])*cfg['production']['clearStockPercent']//100
-        item=dict(slot=slot,tier=ti,id=t['id'],name=t['name'],family=t['family'],lv=b['lv'],
+        item=dict(earnings=shop_receipts,slot=slot,tier=ti,id=t['id'],name=t['name'],family=t['family'],lv=b['lv'],
                   maxed=upgrades['production']['cost'] is None,auto=b['sales'],autoLabel='Customers '+str(b['sales']),
                   revenuePerTick=jsround(income*g['tick']/60),productionPerMinute=round(production,2),
                   salesPerMinute=round(sales,2),customerCapacityPerMinute=round(sum(r['customerCapacityPerMinute'] for r in rows),2),incomePerMinute=round(income,2),potentialIncomePerMinute=round(potential_income,2),status=status,reserve=b['reserve'],
@@ -847,7 +990,8 @@ def payload(cfg,st,cls,session,behind=False):
                   recipe=recipes[-1] if recipes else None,recipes=recipes,price=1,priceTrend='flat',setBadges=[],
                   levelCost=upgrades['production']['cost'],levelPayback=None,autoCost=upgrades['sales']['cost'],autoPayback=None,
                   clearableQuantity=clear_qty,clearStockValue=clear_value)
-        item['artLevel']=6 if max(b['lv'],b['sales'],b['storage'])>=6 else 3 if max(b['lv'],b['sales'],b['storage'])>=3 else 1
+        art_level=max(b['lv'],b['sales'],b['storage'])
+        item['artLevel']=6 if art_level>=6 else min(3,art_level)
         item['focus']=b.get('focus','balanced')
         item['focusUnlocked']=b['lv']>=3
         item['focusOptions']=[dict(id=o[0],name=o[1],effect=o[2]) for o in focus_options(cfg,b)]
@@ -866,27 +1010,32 @@ def payload(cfg,st,cls,session,behind=False):
         requirements=[dict(n,name=goods[n['goodId']]['name'],owned=max(0,inventory.get(n['goodId'],0)-held.get(n['goodId'],0)),
                            buildingId=goods[n['goodId']]['buildingId']) for n in order['requirements']]
         missing=[n for n in requirements if n['owned']<n['quantity']]
-        ready=not missing
+        access=town_projects.check(cfg,st,order['id']) if order.get('project') else dict(ok=True)
+        ready=not missing and access['ok']
+        room=_commit_room(cfg,st,order) if access['ok'] else access
         target=sum(n['quantity'] for n in requirements);owned=sum(min(n['quantity'],n['owned']) for n in requirements)
-        orders.append(dict(order,requirements=requirements,canFulfill=ready,
-                           why='' if ready else 'Need '+str(missing[0]['quantity']-missing[0]['owned'])+' '+missing[0]['name'],
-                           target=target,delivered=owned,penalty=0,remainingSec=None,progressPercent=round(owned/target*100,1),building=order['name']))
+        orders.append(dict(order,requirements=requirements,canFulfill=ready,locked=not access['ok'],
+                           canCommit=room['ok'],commitWhy=room.get('why',''),
+                           why=access.get('why','') if not access['ok'] else '' if ready else 'Need '+str(missing[0]['quantity']-missing[0]['owned'])+' '+missing[0]['name'],
+                           target=target,delivered=owned,penalty=0,remainingSec=None,progressPercent=round(owned/target*100,1) if target else 100,building=order['name']))
+        orders[-1]['supplyConflicts']=_project_supply_conflicts(cfg,st,order)
         orders[-1]['replaceRemainingSec']=0  # Also clears cooldowns from older saves.
     build=dict(tier=st['build']['i'],name=cfg['tiers'][st['build']['i']]['name'],remainingSec=max(0,(st['build']['t']-st['tick'])*g['tick'])) if st.get('build') else None
     capacity=sum(b['capacity'] for b in buildings);stored=sum(b['stored'] for b in buildings)
     income=round(sum(b['incomePerMinute'] for b in buildings),2);prod=round(sum(b['productionPerMinute'] for b in buildings),2)
-    next_goal='Open '+frontier[0]['name'] if frontier else 'Grow your businesses'
-    if len(buildings)==1 and buildings[0]['upgrades']['sales']['level']==1: next_goal='Upgrade customers'
-    elif any(o['canFulfill'] for o in orders): next_goal='Delivery ready'
-    elif build: next_goal=build['name']+' opening soon'
+    project_order=next((o for o in orders if o.get('project')),None)
+    available={n['goodId']:n['owned'] for n in project_order['requirements']} if project_order else {}
+    project=town_projects.project_payload(cfg,st,available)
+    step=opening_step(cfg,st,project,project_order,frontier,build)
+    next_goal=step['title'] if step else 'Grow your businesses'
     newest=buildings[-1]
     return dict(modelVersion=4,tick=st['tick'],tickSeconds=g['tick'],behind=behind,cash=int(st['cash']),
-                rulesRevision=2,regularDeliveries=st.get('regularDeliveries',0),regularTarget=3,
+                rulesRevision=3,townProjects=project,nextStep=step,earnings=receipts,potentialIncomePerMinute=round(town_income(cfg,st),2),regularDeliveries=st.get('regularDeliveries',0),regularTarget=3,
                 customerContracts=customer_contract_payload(cfg,st),
                 customerUnitsSold=st['report'].get('unitsSold',0),customerUnitsNeeded=100,materialUnitValue=cfg['production']['materialCashValue'],
                 netWorth=net_worth(st),book=st['book'],taxPaid=st['taxPaid'],taxRate=0,
                 incomePerMinute=income,productionPerMinute=prod,revenuePerTick=jsround(income*g['tick']/60),
-                revenuePerDay=jsround(income*1440),materials=st['materials'],buildings=buildings,buildingsOwned=len(buildings),
+                revenuePerDay=jsround(town_income(cfg,st)*1440),materials=st['materials'],buildings=buildings,buildingsOwned=len(buildings),
                 frontier=frontier,build=build,queue=[dict(tier=i,name=cfg['tiers'][i]['name']) for i in st['queue']],queueDepth=g['queueDepth'],
                 warehouseCap=capacity,warehouseStored=stored,warehouseValue=sum(st['pend'].values()),
                 warehouseFillPercent=round(stored/capacity*100,1) if capacity else 0,

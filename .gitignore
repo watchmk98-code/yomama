@@ -17,3 +17,5 @@ backups/
 *.db-shm
 *.db-wal
 roster*.json
+output/
+previews/missed-order-*.png

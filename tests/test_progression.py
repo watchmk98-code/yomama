@@ -35,6 +35,16 @@ def test_upgrade_explains_bottleneck_and_art_milestone():
     assert b['artLevel']==3 and b['focusUnlocked']
 
 
+@pytest.mark.parametrize('kind', ['lv', 'sales', 'storage'])
+@pytest.mark.parametrize('level, expected', [(1, 1), (2, 2), (3, 3), (5, 3), (6, 6)])
+def test_art_tracks_highest_upgrade_without_changing_buildings(kind, level, expected):
+    cfg,st=setup()
+    st['b'][0][kind]=level
+    before=copy.deepcopy(st['b'])
+    assert snapshot(cfg,st)['buildings'][0]['artLevel']==expected
+    assert st['b']==before
+
+
 def test_commit_saves_goods_while_other_goods_keep_selling():
     cfg,st=setup();order=st['offers'][0]
     assert E.commit_order(cfg,st,0,order['id'],True)['ok']
@@ -47,14 +57,15 @@ def test_commit_saves_goods_while_other_goods_keep_selling():
 
 def test_committed_ingredients_survive_processing_and_clearance():
     cfg,st=setup(True)
-    order=st['offers'][2]
-    assert E.commit_order(cfg,st,2,order['id'],True)['ok']
+    order=st['offers'][0]
+    order['requirements']=[dict(goodId='farm_eggs',quantity=4),dict(goodId='farm_honey',quantity=2)]
+    assert E.commit_order(cfg,st,0,order['id'],True)['ok']
     run(cfg,st,120)
     required={n['goodId']:n['quantity'] for n in order['requirements']}
     assert all(st['inventory'][gid]>=qty for gid,qty in required.items())
     E.sell_one(cfg,st,0)
     assert all(st['inventory'][gid]>=qty for gid,qty in required.items())
-    assert E.fulfill_order(cfg,st,2,order['id'])['ok']
+    assert E.fulfill_order(cfg,st,0,order['id'])['ok']
 
 
 def test_conflicting_orders_cannot_double_spend_or_overcommit_shelf():
@@ -114,7 +125,7 @@ def test_order_roll_sequence_survives_json_reload_and_does_not_change_inventory(
     cfg,st=setup(True);other=E.State(json.loads(json.dumps(st)))
     before=copy.deepcopy(st['inventory'])
     for i in range(100):
-        slot=i%3
+        slot=i%2
         E.replace_order(cfg,st,slot,st['offers'][slot]['id'])
         other=E.State(json.loads(json.dumps(other)))
         E.replace_order(cfg,other,slot,other['offers'][slot]['id'])
@@ -150,12 +161,13 @@ def test_specialty_changes_actual_production_and_has_a_cost_in_output():
     assert E.set_focus(cfg,st,0,'balanced')['ok']
 
 
-def test_regular_customers_unlock_once_and_increase_actual_demand():
+def test_cafe_project_unlocks_once_and_increases_actual_walk_in_demand():
     cfg,st=setup(True)
-    for _ in range(3):
-        o=st['offers'][2]
-        for n in o['requirements']:st['inventory'][n['goodId']]=n['quantity']
-        assert E.fulfill_order(cfg,st,2,o['id'])['ok']
+    snapshot(cfg,st)  # Existing roastery satisfies the two construction steps.
+    o=st['offers'][2]
+    for n in o['requirements']:st['inventory'][n['goodId']]=n['quantity']
+    assert E.fulfill_order(cfg,st,2,o['id'])['ok']
+    assert not E.fulfill_order(cfg,st,2,o['id'])['ok']
     assert st['regularDeliveries']==3
     assert E.customer_demand(cfg,st,st['b'][1])==7800
     b=snapshot(cfg,st)['buildings'][1];assert b['regularBonus']==20

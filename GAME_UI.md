@@ -53,22 +53,24 @@ through its pager. No fake data, filler paragraphs, or repeated order cards.
 ## Market feedback
 
 Market gives a brief pixel-art crying-face reaction on an order card when the player
-successfully replaces an order that was fulfillable when its request was sent,
-including orders skipped by queued spam clicks. New Order has no cooldown.
+successfully replaces an order that was fulfillable or a jackpot when its request
+was sent, including orders skipped by queued spam clicks. Saving a jackpot with
+Save for this order shows a green pixel dollar sign using the same reaction;
+releasing goods or saving other orders does not trigger it. New Order has no cooldown.
 The reaction appears immediately, lasts 0.5 seconds with a fade at the end,
 survives rapid card re-renders, and does not
 intercept clicks. Failed requests and newly generated ready orders do not
-trigger it. Reduced motion shows the same face without animation. This is
+trigger it. Merely finding a jackpot does not trigger it either. Reduced motion
+shows the same icon without animation. This is
 local visual feedback with no economic penalty or saved state. Verify with
 `node tests/ui_order_reaction.cjs` using intercepted API responses.
 The transparent sprite is `assets/game-art/reactions/crying-face-pixel.png`,
-preloaded by Market. The generation prompt is stored beside it.
+preloaded by Market alongside `assets/game-art/reactions/dollar-sign-pixel.svg`.
+The crying face's generation prompt is stored beside it.
 
 ## Breakfast Club
 
-The event has its own ingredients and coins, one cooking slot and one queue,
-four deliveries and one upgrade choice. Completion grants five town materials
-once. Progress saves on the server; Close/Escape restores focus. Existing art
+Breakfast Club is a recipe workshop unlocked by a completed roastery. Existing started workshops stay accessible. It uses separate workshop supplies and practice coins, one cooking slot and one queue, four deliveries and one upgrade choice. Completion grants five town materials and +25% of base speed for the selected roastery recipe, once. Progress saves on the server; Close/Escape restores focus. Existing art
 is used without new animations. Four simulated paths take 360–465 seconds of
 cooking; enjoyment still needs human playtesting.
 
@@ -92,9 +94,7 @@ roastery gain a specialty selector at production level 3; its output tradeoff is
 shown below the selector. Their level 3/6 exterior sprites reflect the highest
 upgrade level and remain static (no misleading animation toggle).
 
-Market's three offer types explain cash, material savings or permanent regular
-customers. Save for this order / Release goods controls bounded reservations;
-replacement is free and immediately repeatable. Ready-order reactions remain.
+Market shows an active Town project first, followed by Quick cash and Building supplies deliveries. Projects fund the first two expansions and then café reputation. Only the two ordinary delivery channels have free rarity rolls. Save / Release controls bounded reservations; existing reactions remain on ordinary deliveries. Regular buyers provide automatic repeat income in their own panel.
 Licence accepts 100 ordinary goods sold as an alternative to three deliveries.
 Breakfast Club completion explains the permanent roastery recipe bonus.
 
@@ -110,3 +110,7 @@ Recipe requirements paginate within a card when needed, preserving access to
 Deliver, Save and New Order on short screens. A new offer resets its ingredient
 page to the beginning. `tests/ui_order_rolls.cjs` verifies six rapid clicks,
 correct IDs, five-product jackpot display, and four screen sizes.
+
+## Opening and income revision
+
+See [GAMEPLAY_SEQUENCE.md](GAMEPLAY_SEQUENCE.md) for the finite project sequence, construction grant rules, income accounting, migration and pacing evidence. Build keeps its three-column desktop layout and uses the lower strip for the current goal and workshop. Compact layouts combine business selection with view tabs; no selector appears for a single business. Tablets below 1100px use those tabs to keep every control readable. Actual shop income includes walk-ins and regular buyers; the estimate is labeled separately. `tests/ui_purpose_fixes.cjs` checks the new behavior and content bounds without mutating the preview save.

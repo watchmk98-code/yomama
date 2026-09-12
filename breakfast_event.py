@@ -1,7 +1,8 @@
-"""Small, persistent cooking event. All time and rewards are server-owned.
+"""Persistent batch-planning workshop. All time and rewards are server-owned.
 
-Event supplies and coins are isolated from the town. Only completion grants
-town materials, once. Supply catches up arithmetically when no jobs remain.
+Workshop supplies and practice coins are isolated from the town. Completion
+grants town materials and a chosen roastery recipe improvement, once. Supply
+catches up arithmetically when no jobs remain. Existing workshops stay open.
 """
 import copy
 
@@ -19,6 +20,56 @@ ORDERS = [
     [('final', 'The breakfast club', {'coffee': 4, 'pastry': 4}, 0)],
     [],
 ]
+
+SPECIALIZATIONS = {
+    'coffee': dict(name='Coffee', townRecipe='Espresso', goodId='roastery_espresso_shots'),
+    'pastry': dict(name='Pastry', townRecipe='Pastries', goodId='roastery_pastries'),
+}
+
+
+def _locked(st, cfg):
+    """Use completed ownership in the class config, never a browser intention.
+
+    The workshop also runs as a standalone simulation without town ownership.
+    A town always needs its configuration to resolve the roastery's tier; a
+    missing configuration fails closed rather than assuming a fixed tier index.
+    Old started/completed workshops are grandfathered without changing state.
+    """
+    if st.get('breakfastEvent') is not None:
+        return False
+    town = st.get('modelVersion') == 4 or 'b' in st or 'tierOf' in st or cfg is not None
+    if not town:
+        return False
+    tiers = (cfg or {}).get('tiers', [])
+    return not any(type(ti) is int and 0 <= ti < len(tiers)
+                   and tiers[ti].get('id') == 'roastery'
+                   for ti in st.get('tierOf', []))
+
+
+def _description(st, cfg):
+    e = st.get('breakfastEvent') or {}
+    selected = SPECIALIZATIONS.get(e.get('upgrade'))
+    perk = (selected['townRecipe'] + ' +25% of base production speed at your roastery'
+            if selected else 'Choose espresso or pastries for +25% of base production speed at your roastery')
+    locked = _locked(st, cfg)
+    return dict(
+        name='Breakfast Club · recipe workshop',
+        locked=locked,
+        unlockText='Open the roastery to unlock this workshop.' if locked else '',
+        purpose='Plan batches with one cooking station and one queued batch. Choose a recipe improvement to bring back to your roastery.',
+        suppliesLabel='Workshop supplies',
+        coinsLabel='Practice coins',
+        suppliesDescription='Separate from town inventory. Ingredients refill up to 12; only batches already started or queued can finish while you are away.',
+        coinsDescription='Earned and spent only in this workshop. They never spend or become town cash.',
+        reward=5,
+        townPerk=perk,
+        rewardDescription=('Earned once: 5 town materials and ' + perk + '.' if e.get('stage') == 5 else
+                           'Complete four orders to earn 5 town materials and a permanent recipe improvement: ' + perk + '.'),
+        specializations={name: dict(choice,
+            townPerk=choice['townRecipe'] + ' +25% of base production speed at your roastery',
+            workshopPerk='Double batch output and ingredients; cooking time stays the same.')
+            for name, choice in SPECIALIZATIONS.items()},
+    )
 
 
 def recipe(e, name):
@@ -67,14 +118,14 @@ def advance(st, now):
     e['last'] = now
 
 
-def payload(st, now):
+def payload(st, now, cfg=None):
     e = st.get('breakfastEvent')
+    description = _description(st, cfg)
     if not e:
-        return dict(status='new', reward=5)
+        return dict(description, status='new')
     p = copy.deepcopy(e)
+    p.update(description)
     p['status'] = 'done' if e['stage'] == 5 else 'playing'
-    p['reward'] = 5
-    p['townPerk'] = ('Espresso' if e.get('upgrade') == 'coffee' else 'Pastries') + ' +25% base production speed at your roastery'
     p['elapsed'] = (e.get('finished', now) - e['started'])
     p['orders'] = [dict(id=key, name=name, needs=needs, coins=coins, ready=enough(e, needs))
                    for key, name, needs, coins in ORDERS[e['stage']]]
@@ -86,17 +137,19 @@ def payload(st, now):
     return p
 
 
-def act(st, now, body):
+def act(st, now, body, cfg=None):
     action = body.get('action')
     fail = lambda why: dict(ok=False, why=why)
     if action not in ('start', 'make', 'cancel', 'deliver', 'upgrade'):
         return fail('Unknown event action')
     if action == 'start':
         if 'breakfastEvent' not in st:
+            if _locked(st, cfg):
+                return fail('Open the roastery to unlock this workshop.')
             st['breakfastEvent'] = dict(started=now, last=now, stage=0, coins=0,
                 stock=dict(beans=4, eggs=2, honey=1, coffee=0, pastry=0),
                 active=None, queued=None, upgrade=None, serial=0)
-        return dict(ok=True, kind='breakfast', message='Breakfast is open')
+        return dict(ok=True, kind='breakfast', message='Recipe workshop is open')
     advance(st, now)
     e = st.get('breakfastEvent')
     if not e or e['stage'] == 5:
@@ -138,11 +191,11 @@ def act(st, now, body):
             e['stock'][k] -= v
         e['coins'] += order[3]
         e['stage'] += 1
-        message = 'Served! +' + str(order[3]) + ' event coins'
+        message = 'Served! +' + str(order[3]) + ' Practice coins'
         if e['stage'] == 5:
             st['materials'] += 5
             e['coins'] = 0
             e['finished'] = now
             e['active'] = e['queued'] = None
-            message = 'Breakfast complete! +5 materials and a permanent roastery recipe upgrade'
+            message = 'Workshop complete! +5 town materials and ' + _description(st, cfg)['townPerk']
     return dict(ok=True, kind='breakfast', message=message)

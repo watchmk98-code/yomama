@@ -347,7 +347,7 @@ def _event_payload(cfg, cls, k, history=False):
 def econ_payload(cfg, st, cls, session, behind=False):
     if cfg.get('version') == 4:
         result = economy.payload(cfg, st, cls, session, behind)
-        result['breakfastEvent'] = breakfast_event.payload(st, cls['nextTick'] * cfg['global']['tick'])
+        result['breakfastEvent'] = breakfast_event.payload(st, cls['nextTick'] * cfg['global']['tick'], cfg)
     else:
         result = _legacy_econ_payload(cfg, st, cls, session, behind)
     result['classCompetition'] = session['code'] != SOLO_CODE
@@ -734,7 +734,7 @@ def econ_breakfast(body):
     def apply(cfg, st, cls):
         if cfg.get('version') != 4:
             return dict(ok=False, why='Event unavailable')
-        return breakfast_event.act(st, cls['nextTick'] * cfg['global']['tick'], body)
+        return breakfast_event.act(st, cls['nextTick'] * cfg['global']['tick'], body, cfg)
     return _act(body, apply)
 
 

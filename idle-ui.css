@@ -63,7 +63,7 @@
 .game-workspace .game-check a {color:var(--amber);text-underline-offset:3px;}
 
 @media(min-width:900px) and (max-width:1150px) {
-  .game-workspace .game-site-stage {flex-direction:column;gap:8px;text-align:center;padding:8px;}
+  .game-fitted:not(.game-compact) .game-site-stage {flex-direction:column;gap:8px;text-align:center;padding:8px;}
   .game-fitted:not(.game-compact) .game-site-stage .k-art {width:140px;height:140px;flex-basis:140px;}
   .game-workspace .game-operation {gap:6px;}
   .game-workspace .game-operation .game-small-button {min-width:80px;}
@@ -143,4 +143,27 @@
 }
 @media(prefers-reduced-motion:reduce) {
   .game-production-loop *, .game-next-action * {transition:none!important;animation:none!important;}
+}
+
+/* Keep the opening goal and actual income readable on compact screens. */
+.game-fit-controls {display:flex;flex:none;gap:6px;align-items:stretch;min-width:0;}
+.game-fit-controls .game-view-tabs {flex:1;min-width:0;}
+.game-fit-controls .game-fit-picker {width:auto;max-width:40%;min-width:0;}
+.game-income-detail {flex:none;}
+.game-page.game-compact #econ-building:has(.game-opening-guide) .game-next-action {display:none;}
+@media(max-width:899px) and (min-height:651px) {
+ .game-page.game-compact .game-site-stage {min-height:110px;padding:6px 10px;}
+ .game-page.game-compact .game-site-stage .k-art {width:96px;height:96px;flex-basis:96px;}
+ .game-page.game-compact .game-production-loop {margin-block:0;padding-block:6px;}
+}
+@media(min-width:600px) and (max-height:650px) {
+ .game-page.game-compact .game-site {grid-template-rows:auto minmax(65px,1fr) auto auto auto;}
+ .game-page.game-compact .game-site-stage {grid-row:2;}
+ .game-page.game-compact .game-site .game-income-detail {grid-column:1/-1;grid-row:3;}
+ .game-page.game-compact .game-site .game-next-action {grid-column:1/-1;grid-row:4;}
+ .game-page.game-compact .game-site > .game-site-footer {grid-row:5;min-height:24px;}
+ .game-page.game-compact .game-site-stage .k-art {width:64px;height:64px;flex-basis:64px;}
+ .game-page.game-compact .game-site-stage .game-output {font-size:24px;}
+ .game-page.game-compact .game-site .game-production-loop {margin:0;padding:2px 6px;}
+ .game-page.game-compact .game-site .game-income-detail {padding-block:2px;line-height:1.1;}
 }

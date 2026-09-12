@@ -1,0 +1,14 @@
+{
+  "tool": "Built-in image_gen",
+  "layout": "4 columns × 2 rows, eight frames; solid black background",
+  "assets": [
+    {
+      "id": "farm",
+      "level": 3,
+      "file": "farm-level-3_8f.png",
+      "reference": "assets/buildings/upgrades/farm-level-3.png",
+      "prompt": "Use case: precise-object-edit. Asset type: production pixel-art building animation sprite sheet for an existing economy game. Reference image is the existing LEVEL 3 Greenfield Farm design. Preserve this same red barn, white trim, slate roof, silver silo, greenhouse on the left, chicken coop on the right, haystack, produce and oval grass island. Create its idle animation as exactly EIGHT frames in a regular 4-column by 2-row grid, read left to right then down, on a 2048 by 1024 PNG canvas with eight 512 by 512 cells. SAME building and SAME camera and SAME scale and SAME anchor in every cell. Entire grass island and all details contained inside each cell with 8% clear margin. No visible grid or borders. Only tiny intentional animation: hen pecking, bees moving around the hive, greenhouse sunlight glint, subtle leaf movement. The barn and foundations must remain perfectly stationary and identical across all eight frames. Seamless loop. Faithful warm outlined isometric pixel-art style of the reference, crisp chunky readable pixels, no smooth illustration rendering. Background outside each island must be genuinely transparent alpha, not a checkerboard drawing. No text, no numbers, no labels, no watermark. This is ONE building at ONE upgrade level, repeated eight times for animation.",
+      "correction": "Edit only the background of this EIGHT FRAME 4-column by 2-row farm animation sheet. Replace every gray-white checkerboard region outside the grassy islands with uniform solid pure black RGB 0,0,0. Keep all eight farm buildings and their animation variations, composition, relative positions, per-cell framing, pixel art and total image dimensions exactly unchanged. No gridlines. No checkerboard remains anywhere outside the islands. Do not zoom, shift, crop or add margins. Deliver the same 4x2 animation sprite sheet with pure black background."
+    }
+  ]
+}

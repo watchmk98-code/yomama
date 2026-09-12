@@ -7,7 +7,7 @@ by rolling an offer.
 
 | Roll | Chance | Distinct products | Quantity factor | Cash premium factor |
 |---|---:|---:|---:|---:|
-| Standard | 65% | Usual 1–2 | 1× | 1× |
+| Standard | 65% | 1 for cash; up to 2 for supplies/regulars | 1× | 1× |
 | Large | 25% | Up to 3 | 1.5× | 1.3× |
 | Rare | 8% | Up to 4 | 2× | 1.75× |
 | Jackpot | 2% | Up to 5 | 2.5× | 2.5× |
@@ -18,9 +18,22 @@ after valuing all requested quantities. Thus a Quick Cash jackpot pays about
 also retain material rewards proportional to their goods; Breakfast Regulars
 still progress their customer relationship only on delivery.
 
-Orders use distinct eligible products and never request more of a product than
-its shelf can hold. Early towns with fewer products get fewer distinct requests.
-More advanced towns can receive orders spanning several businesses and recipes.
+Orders now draw complete named jobs from the [delivery recipe catalog](../DELIVERY_RECIPES.md).
+Each has a specific purpose and a distinct combination of products. Larger rolls
+choose a larger authored bundle; they never add unrelated products to a small job.
+If a town cannot yet supply that many products coherently, the roll uses the
+largest eligible recipe below its target size and keeps its rarity premium.
+Every product's full supply chain must be owned. A bundle never pairs a finished
+product with its own ingredients, so saving the order cannot hold back those
+ingredients from making the same order's finished goods. Quantities remain
+bounded by each product's shelf capacity.
+
+Cash and building-supply jobs span the town's industries. Breakfast Regulars
+draw only food jobs and retain their three-delivery roastery demand bonus.
+Each slot remembers which recipes it has shown, deals unseen eligible recipes
+of the rolled size first, and then returns to the least recently shown jobs.
+Among unseen jobs it prefers recipes not already displayed on the board, while
+still allowing every recipe to be reached when other cards are left parked.
 Stored goods are consumed only on successful fulfillment; missing even one item
 rejects the whole action. Each fulfilled ID pays once.
 
@@ -31,9 +44,13 @@ successful replacement skips a ready order, including offers skipped by queued
 spam clicks. It does not delay rerolls or charge a penalty.
 
 Existing orders retain their requirements and rewards until replaced or fulfilled.
-Old saved cooldown timestamps are ignored. Rarity and product selection use an
-independent hash of the saved player seed, order serial and board slot, so timing
-or reloading does not change the sequence.
+Old saved cooldown timestamps are ignored. Rarity and recipe selection use an
+independent hash of the saved player seed, order serial and board slot plus saved
+recipe history, so timing or reloading does not change the sequence.
+The catalog ships with the engine and uses each class's existing configuration
+for quantities and supply chains. Existing v4 saves gain empty recipe histories
+in place and start drawing the catalog when offers are replaced or fulfilled;
+no class reset is needed. Release to the live site needs Manual Deploy.
 
 ## Verification
 
@@ -44,8 +61,10 @@ or reloading does not change the sequence.
 - Browser tests hold a response, click six times, and verify six sequential
   requests with the latest order ID. Five-product jackpot cards are checked at
   1366×768, 1728×694, 390×844 and 844×390.
-- Full current Python suite: 86 passed. Existing interaction, ready-order reaction
-  and eight-viewport tests also pass.
+- Full Python suite after named recipes: 205 passed. The new recipe-card check
+  and general viewport check pass at eight sizes; the rapid-order queue check
+  also passes. Recipe tests cover all 185 jobs, saved rotation, old towns without
+  food businesses, and production followed by atomic delivery.
 
 ```sh
 .venv/bin/python -m pytest tests -q

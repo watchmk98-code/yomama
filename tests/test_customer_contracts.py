@@ -280,6 +280,10 @@ def test_old_v4_saves_gain_empty_customers_without_reset_and_migrate_idempotentl
     cfg,st=town
     replay(cfg,st,40)
     st['regularDeliveries']=3
+    st.pop('townProjects',None)
+    # Represent a pre-project v4 board, preserving its promised delivery.
+    st['offers'][2]=E._make_order(cfg,st,1)
+    st['offers'][2].update(customer='breakfast',channelLabel='Breakfast regulars',committed=True)
     st['customerContracts']={}
     del st['customerContracts']
     del st['report']['customerEarned']

@@ -1,10 +1,11 @@
 /* Shared economic-game UI. Palette and geometry come directly from Dash. */
 .game-order {position:relative;}
-.game-missed-order {position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none;}
-.game-missed-order > span {display:block;width:clamp(52px,6vw,86px);aspect-ratio:1;filter:drop-shadow(0 3px 0 #000);animation:game-missed-order .5s ease-out both;}
-.game-missed-order img {display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;}
+.game-order-reaction {position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none;}
+.game-order-reaction > span {display:block;width:clamp(52px,6vw,86px);aspect-ratio:1;filter:drop-shadow(0 3px 0 #000);animation:game-missed-order .5s ease-out both;}
+.game-page.motion-paused .game-order-reaction > span {animation:game-missed-order .5s ease-out both !important;}
+.game-order-reaction img {display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;}
 @keyframes game-missed-order {0%,35%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(.96);}}
-@media(prefers-reduced-motion:reduce){.game-missed-order > span {animation:none;}}
+@media(prefers-reduced-motion:reduce){.game-order-reaction > span,.game-page.motion-paused .game-order-reaction > span {animation:none !important;}}
 /* Each management screen has one action domain; common chrome stays quiet. */
 .game-wallet { display:flex; justify-content:flex-end; gap:24px; padding:7px 0 10px; font-size:16px; color:var(--muted); }
 .game-wallet strong { color:var(--amber); font-size:22px; font-weight:400; margin-left:8px; }
@@ -202,9 +203,21 @@
 .econ-kid .k-art { position:relative; width:148px; height:148px; flex:0 0 148px; overflow:hidden; background:var(--bg); }
 .econ-kid .k-art > img { display:block; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
 .econ-kid .k-art--animated > img { position:absolute; left:0; top:0; width:800%; max-width:none; height:100%; object-fit:fill; }
+.econ-kid .k-art--grid > img { width:400%; height:200%; }
 .game-page.motion-paused .k-art--animated > img { animation:game-building-frames .96s steps(8,end) infinite !important; }
+.game-page.motion-paused .k-art--grid > img { animation:game-building-grid .96s step-end infinite !important; }
 .game-page.motion-paused .k-art--paused > img { animation-play-state:paused !important; }
 @keyframes game-building-frames { from {transform:translateX(0)} to {transform:translateX(-100%)} }
+@keyframes game-building-grid {
+  0%,100% {transform:translate(0,0)}
+  12.5% {transform:translate(-25%,0)}
+  25% {transform:translate(-50%,0)}
+  37.5% {transform:translate(-75%,0)}
+  50% {transform:translate(0,-50%)}
+  62.5% {transform:translate(-25%,-50%)}
+  75% {transform:translate(-50%,-50%)}
+  87.5% {transform:translate(-75%,-50%)}
+}
 .game-page .game-building-choice .k-art { width:46px; height:46px; flex-basis:46px; }
 .game-page.motion-paused .game-building-choice .k-art img { animation:none !important; transform:none; }
 .k-art--missing::after { content:attr(data-initial); display:grid; height:100%; place-items:center; font-size:48px; color:var(--amber); }
@@ -631,7 +644,11 @@
 .game-specialty small {display:block;color:var(--muted);font-size:14px;line-height:1.1;margin-top:3px;}
 .game-upgrade-impact {display:block;font-size:14px;line-height:1.1;max-width:260px;}
 .game-operation > div {min-width:0;}
-.game-order-purpose {font-size:16px;color:var(--muted);margin:0;line-height:1.1;}
+.game-order-context {flex:none;min-width:0;display:grid;gap:4px;}
+.game-order-channel {color:var(--amber);font-size:13px;line-height:1.1;}
+.game-order-purpose {font-size:15px;color:var(--text);margin:0;line-height:1.15;}
+.game-order-progress {font-size:13px;color:var(--muted);margin:0;line-height:1.1;}
+.game-order-caption {flex:none;font-size:13px;color:var(--muted);line-height:1.1;margin-bottom:3px;}
 .game-order-controls {display:flex;flex-direction:column;gap:5px;}
 .game-order-controls .k-btn {min-height:36px;}
 .game-order-commit {min-height:32px;font-size:16px;}
@@ -640,7 +657,9 @@
 @media (max-height:650px) and (min-width:650px) {
  .game-compact .game-order {grid-template-rows:auto auto auto auto;}
  .game-compact .game-order h3 {grid-column:1;grid-row:1;}
- .game-compact .game-order-purpose {grid-column:2;grid-row:1;font-size:14px;}
+ .game-compact .game-order-context {grid-column:2;grid-row:1;gap:2px;}
+ .game-compact .game-order-purpose {font-size:14px;}
+ .game-compact .game-order-channel,.game-compact .game-order-progress {font-size:12px;}
  .game-compact .game-order-controls {grid-column:2;grid-row:3;gap:3px;}
  .game-compact .game-order-controls .k-btn,.game-compact .game-order-commit {min-height:28px;padding:2px 5px;}
  .game-specialty {padding:3px 8px;}
@@ -673,7 +692,8 @@
 
 /* Free order rolls: rarer offers ask for more goods and pay a higher premium. */
 .econ-kid .game-order {gap:5px;padding:10px;}
-.game-order h3 {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.game-order h3 {display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0;flex:none;}
+.game-order-name {min-width:0;overflow-wrap:anywhere;}
 .game-order-tier {flex:none;font-size:14px;line-height:1;padding:3px 5px;border:1px solid var(--border);color:var(--muted);}
 .game-order[data-rarity=large] .game-order-tier {color:#66d3ff;border-color:#337088;}
 .game-order[data-rarity=rare] {border-color:#b387ef;}
@@ -694,7 +714,7 @@
 @media(max-height:650px) and (min-width:650px){
  .game-compact .game-order-items {grid-column:1;grid-row:2/span 3;}
  .game-compact .game-order-items .game-order-goods {grid-column:auto;grid-row:auto;align-self:stretch;}
- .game-compact .game-order-controls {display:flex;}
+ .game-compact .game-order-controls {display:flex;flex-direction:row;}
  .game-compact .game-order-controls>* {flex:1;min-width:0;}
  .game-compact .game-order-tier {font-size:12px;}
 }
@@ -709,15 +729,38 @@
 .game-customer-contracts {display:flex;flex-direction:column;min-width:0;border-color:#456458;}
 .game-customer-contracts .game-panel-head {background:rgba(91,184,138,.06);}
 .game-customer-contracts .game-panel-head h2 {color:var(--green);}
-.game-contract-intro {flex:none;margin:0;padding:7px 10px;color:var(--muted);font-size:14px;line-height:1.15;}
-.game-contract-slots {display:flex;flex:none;gap:5px;padding:0 10px 7px;}
-.game-contract-slots button {flex:1;min-width:0;min-height:30px;padding:3px;font:inherit;font-size:15px;color:var(--muted);background:var(--bg);border:1px solid var(--border);cursor:pointer;}
+.game-contract-intro {flex:none;margin:0;padding:5px 10px;color:var(--muted);font-size:14px;line-height:1.15;}
+.game-contract-slots {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);flex:1;min-height:0;gap:5px;padding:0 10px 8px;}
+.game-contract-slots button {container-type:size;--customer-portrait:min(100cqh,60cqw);display:flex;align-items:center;gap:5px;min-width:0;min-height:30px;padding:4px;font:inherit;font-size:15px;text-align:left;color:var(--muted);background:var(--bg);border:1px solid var(--border);cursor:pointer;}
 .game-contract-slots button[aria-pressed=true] {color:var(--green);border-color:var(--green);box-shadow:inset 0 -2px var(--green);}
-.game-contract-body {display:flex;flex-direction:column;justify-content:space-evenly;gap:8px;padding:0 10px 8px;flex:1;min-height:0;}
+.game-contract-slots button:focus-visible {outline:2px solid var(--green);outline-offset:1px;}
+.game-customer-slot-label {flex:1;min-width:0;}
+.game-customer-slot-label strong {display:block;font-size:16px;line-height:1;font-weight:400;color:var(--text);overflow-wrap:break-word;}
+.game-customer-slot-label small {display:block;margin-top:5px;font-size:13px;line-height:1;}
+.game-contract-slots button[aria-pressed=true] .game-customer-slot-label strong {color:var(--green);}
+.game-contract-body {display:flex;flex-direction:column;justify-content:flex-start;gap:8px;padding:0 10px 8px;flex:none;min-height:0;}
 .game-contract-summary,.game-contract-supply {min-width:0;}
 .game-contract-summary > label {display:block;font-size:14px;color:var(--muted);margin-bottom:4px;}
 .game-contract-summary > h3 {font-size:22px;font-weight:400;margin:0 0 4px;line-height:1.05;}
 .game-contract-summary > select {width:100%;min-width:0;min-height:34px;padding:4px 6px;font:inherit;font-size:17px;background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.game-customer-character {flex:0 0 var(--customer-portrait);min-width:0;}
+.game-customer-avatar {position:relative;width:var(--customer-portrait);height:var(--customer-portrait);overflow:hidden;background:#000;}
+.game-customer-empty {display:grid;place-items:center;flex:0 0 var(--customer-portrait);height:var(--customer-portrait);font-size:32px;}
+.game-customer-avatar > img {position:absolute;left:var(--customer-left);top:calc(var(--customer-row)*var(--customer-stride) + var(--customer-offset));display:block;width:var(--customer-sheet-size);height:var(--customer-sheet-size);max-width:none;object-fit:fill;image-rendering:pixelated;}
+.game-page.motion-paused .game-customer-avatar > img {animation:game-customer-emote 3.2s steps(4,end) infinite !important;}
+.game-page.motion-paused .game-customer-avatar[data-emote=thanks] > img {animation-duration:1.6s !important;}
+.game-page.motion-paused .game-customer-avatar[data-emote=paused] > img,
+.game-page.motion-paused .game-customer-avatar[data-motion=false] > img,
+.game-page.motion-paused .game-view-hidden .game-customer-avatar > img {animation:none !important;transform:none;}
+.game-customer-avatar.is-missing::after {content:attr(data-initial);display:grid;place-items:center;height:100%;font-size:40px;color:var(--green);}
+.game-customer-emote-label {display:none;}
+.game-customer-motion {flex:none;border:0;background:transparent;color:var(--green);font:inherit;font-size:12px;padding:2px;min-height:20px;cursor:pointer;}
+.game-customer-motion:hover,.game-customer-motion:focus-visible {outline:1px solid var(--green);outline-offset:1px;}
+@keyframes game-customer-emote {from {transform:translateX(0)} to {transform:translateX(-100%)}}
+@media(prefers-reduced-motion:reduce){
+ .game-page.motion-paused .game-customer-avatar > img {animation:none !important;transform:none;}
+ .game-customer-motion {display:none;}
+}
 .game-contract-description {font-size:14px;line-height:1.1;color:var(--muted);margin:5px 0;}
 .game-contract-pay {display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 8px;margin-top:5px;}
 .game-contract-pay strong {font-size:23px;line-height:1;font-weight:400;color:var(--green);}
@@ -730,16 +773,16 @@
 .game-contract-controls {display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:7px;}
 .game-contract-controls .game-small-button {flex:1;min-width:0;min-height:32px;padding:3px 6px;font-size:16px;}
 .game-contract-controls .game-text-button {min-height:30px;padding:2px 5px;font-size:14px;}
-.econ-kid .game-contract-controls .k-btn {width:100%;min-height:34px;padding:4px 8px;font-size:18px;}
+.econ-kid .game-contract-controls .k-btn {flex:1;width:auto;min-width:0;min-height:34px;padding:4px 8px;font-size:18px;}
 .game-contract-help {font-size:13px;line-height:1.1;color:var(--muted);margin:5px 0 0;}
-.game-contract-order-choice {display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:7px;border-top:1px solid var(--line);}
+.game-contract-order-choice {display:flex;align-items:center;gap:8px;margin-top:4px;padding-top:4px;border-top:1px solid var(--line);}
 .game-contract-order-choice > span {flex:1;min-width:0;font-size:14px;line-height:1.1;color:var(--muted);}
 .game-contract-order-choice strong {color:var(--green);font-weight:400;}
 .game-contract-order-choice .game-small-button {flex:none;min-height:32px;padding:4px 6px;font-size:15px;}
-.game-contract-status {color:var(--green);font-size:16px;line-height:1.1;margin:8px 0 4px;}
+.game-contract-status {color:var(--green);font-size:16px;line-height:1.1;margin:3px 0;}
 .game-contract-status.is-paused {color:var(--muted);}
 .game-contract-history {color:var(--muted);font-size:14px;}
-.game-contract-footer {flex:none;display:flex;justify-content:space-between;gap:6px;padding:5px 10px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);}
+.game-contract-footer {flex:none;display:flex;justify-content:space-between;gap:6px;padding:3px 10px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);}
 .game-contract-footer > span:first-child {color:var(--green);}
 .game-fitted:not(.game-compact) .game-market-surface.has-contracts {display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,.42fr);grid-template-rows:minmax(0,1fr) auto auto;gap:10px 12px;}
 .game-fitted:not(.game-compact) .game-market-surface.has-contracts .game-market-income {display:contents;}
@@ -750,20 +793,35 @@
 .game-compact .game-market-surface {display:contents;}
 .game-compact .game-market-income {display:contents;}
 .game-compact .game-customer-contracts:not(.game-view-hidden) {flex:1;}
-.game-compact .game-contract-body {gap:12px;padding:8px 12px;}
-.game-compact .game-contract-intro {padding:9px 12px;font-size:15px;}
+.game-compact .game-contract-body {gap:8px;padding:0 12px 8px;}
+.game-compact .game-contract-intro {padding:7px 12px;font-size:14px;}
 .game-compact .game-contract-slots {padding-inline:12px;}
-.game-compact .game-contract-summary > h3 {font-size:27px;}
-.game-compact .game-contract-pay strong {font-size:29px;}
+.game-compact .game-contract-summary > h3 {font-size:23px;}
+.game-compact .game-contract-pay strong {font-size:25px;}
 .game-compact .game-contract-goods .econ-good-line {min-height:34px;font-size:18px;}
 .game-compact .game-contract-goods .econ-good-name {font-size:18px;}
+@media(min-width:650px) and (max-width:899px) and (min-height:651px){
+ .game-compact .game-contract-slots {grid-template-columns:repeat(4,minmax(0,1fr));}
+ .game-compact .game-contract-body {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-content:start;align-items:start;gap:16px;}
+}
+@media(min-width:900px) and (max-width:1150px){
+ .game-page:not(.game-compact) .game-contract-slots {grid-template-columns:repeat(4,minmax(0,1fr));}
+ .game-page:not(.game-compact) .game-contract-slots button {--customer-portrait:min(calc(100cqh - 18px),100cqw);flex-direction:column;justify-content:center;gap:0;}
+ .game-page:not(.game-compact) .game-customer-character {flex:none;}
+ .game-page:not(.game-compact) .game-customer-slot-label {flex:none;}
+ .game-page:not(.game-compact) .game-customer-slot-label strong {display:none;}
+ .game-page:not(.game-compact) .game-customer-slot-label small {font-size:12px;}
+ .game-page:not(.game-compact) .game-contract-intro {font-size:12px;}
+ .game-page:not(.game-compact) .game-contract-body {gap:4px;}
+ .game-page:not(.game-compact) .game-contract-footer {padding-block:2px;}
+}
 @media(max-height:650px) and (min-width:650px){
- .game-compact .game-customer-contracts {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;column-gap:12px;}
+ .game-compact .game-customer-contracts {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;column-gap:12px;}
  .game-compact .game-customer-contracts .game-panel-head {grid-column:1;grid-row:1;}
- .game-compact .game-contract-intro {grid-column:2;grid-row:1/span 2;padding:4px 10px 4px 0;font-size:12px;align-self:center;}
- .game-compact .game-contract-slots {grid-column:1;grid-row:2;padding:2px 10px 4px;}
+ .game-compact .game-contract-intro {grid-column:2;grid-row:1;padding:4px 10px 4px 0;font-size:12px;align-self:center;}
+ .game-compact .game-contract-slots {grid-column:1/-1;grid-row:2;grid-template-columns:repeat(4,minmax(0,1fr));padding:2px 10px 4px;}
  .game-compact .game-contract-slots button {min-height:25px;font-size:14px;}
- .game-compact .game-contract-body {grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center;padding:0 10px 3px;}
+ .game-compact .game-contract-body {grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-content:start;align-items:start;padding:0 10px 3px;}
  .game-compact .game-contract-footer {grid-column:1/-1;grid-row:4;padding-block:3px;font-size:12px;}
  .game-compact .game-contract-summary > label {font-size:12px;margin:0 0 2px;}
  .game-compact .game-contract-summary > select {min-height:28px;padding:2px 4px;font-size:16px;}
@@ -782,3 +840,40 @@
  .game-compact .game-contract-order-choice .game-small-button {min-height:27px;padding:2px 4px;font-size:14px;}
  .game-compact .game-contract-controls .k-btn,.game-compact .game-contract-controls .game-small-button,.game-compact .game-contract-controls .game-text-button {min-height:27px;font-size:15px;padding-block:2px;}
 }
+.game-opening-guide {display:flex;align-items:center;gap:12px;flex:none;padding:8px 12px;border:1px solid var(--amber);background:var(--bg);margin-bottom:8px;}
+.game-opening-guide > div {flex:1;min-width:0;}
+.game-opening-guide strong {display:block;font-size:20px;font-weight:400;color:var(--amber);}
+.game-opening-guide small {display:block;font-size:15px;color:var(--muted);line-height:1.2;}
+.game-opening-guide .game-small-button,.game-opening-guide .k-btn {flex:0 0 auto;width:auto;font-size:16px;min-height:38px;margin:0;}
+.game-income-detail {padding:5px 10px;border-top:1px solid var(--line);font-size:16px;line-height:1.2;}
+.game-income-detail b {font-weight:400;color:var(--amber);}
+.game-income-detail small {display:block;font-size:14px;color:var(--muted);margin-top:3px;}
+.game-grant-note {font-size:15px;color:var(--amber);line-height:1.15;margin:5px 0;}
+.game-town-project .game-order-tier {color:var(--amber);}
+.game-town-project .game-project-reward {color:var(--amber);font-size:19px;line-height:1.15;margin:6px 0;}
+.game-town-project.is-complete {justify-content:center;}
+.game-event-strip.is-locked {border-color:var(--line);}
+@media(max-width:600px) {
+ .game-opening-guide {gap:7px;padding:6px 8px;}
+ .game-opening-guide strong {font-size:18px;}
+ .game-opening-guide small {font-size:14px;}
+ .game-opening-guide .game-small-button,.game-opening-guide .k-btn {font-size:14px;padding:5px;max-width:112px;}
+ .game-income-detail {font-size:15px;}
+}
+@media(max-height:650px) and (min-width:600px) {
+ .game-opening-guide {padding:3px 8px;margin-bottom:4px;}
+ .game-opening-guide strong,.game-opening-guide small {display:inline;font-size:15px;}
+ .game-opening-guide small {margin-left:8px;}
+ .game-income-detail {font-size:14px;padding-block:3px;}
+ .game-income-detail small {display:inline;margin-left:6px;}
+}
+
+/* The opening goal uses the existing lower strip, preserving room for upgrades. */
+.game-build-bottom .game-opening-guide {margin:0;}
+.game-compact #econ-building .game-build-bottom {display:contents;}
+.game-compact #econ-building .game-opening-guide {order:-1;margin:0;}
+@media(max-height:650px) and (min-width:600px) {
+ .game-compact.game-build-page:not([data-fit-build-view="0"]) .game-event-strip {display:none;}
+}
+
+.game-fitted:not(.game-compact) .game-actions {grid-template-rows:max-content minmax(0,1fr);}
