@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from http.cookies import SimpleCookie
 from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
@@ -176,6 +175,7 @@ PUBLIC_SUFFIXES = frozenset({
 # hold nothing personal. The API has its own token checks.
 SESSION_COOKIE = "yomama_session"
 PUBLIC_PAGES = frozenset({"/join.html", "/class.html"})
+TOKEN_RE = re.compile(r"[A-Za-z0-9_-]{16,64}")      # secrets.token_urlsafe(24) is 32 of these
 
 
 def needs_sign_in(url_path: str) -> bool:
@@ -226,6 +226,7 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
+        self.private_page = False
         if parsed.path == "/api/yahoo-finance-news":
             self.handle_yahoo_finance_news(parsed.query)
             return
@@ -240,25 +241,41 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
             return
         if self.sent_to_sign_in(parsed):
             return
+        self.private_page = needs_sign_in(parsed.path)
         super().do_GET()
 
     def do_HEAD(self) -> None:
         parsed = urlparse(self.path)
+        self.private_page = False
         if not is_public_path(parsed.path):
             self.send_error(404, "Not Found")
             return
         if self.sent_to_sign_in(parsed):
             return
+        self.private_page = needs_sign_in(parsed.path)
         super().do_HEAD()
 
+    # Set per request. A page behind the wall must never be cached, or a
+    # signed-out browser could show it again without asking the server.
+    private_page = False
+
+    def end_headers(self) -> None:
+        if self.private_page:
+            self.send_header("Cache-Control", "no-store, max-age=0")
+            self.send_header("Vary", "Cookie")
+        super().end_headers()
+
     def signed_in(self) -> bool:
-        cookie = SimpleCookie()
-        try:
-            cookie.load(self.headers.get("Cookie", ""))
-        except Exception:  # noqa: BLE001 - a malformed cookie is just "not signed in"
-            return False
-        morsel = cookie.get(SESSION_COOKIE)
-        return bool(morsel) and game_api.token_may_browse(morsel.value)
+        """Only our own cookie is read, by hand. http.cookies.SimpleCookie would
+        drop the whole header as soon as any other cookie on this host - some
+        other app on the same LAN machine, say - is one it does not like."""
+        for part in (self.headers.get("Cookie") or "").split(";"):
+            name, _, value = part.strip().partition("=")
+            if name.strip() != SESSION_COOKIE:
+                continue
+            value = unquote(value.strip().strip('"'))
+            return bool(TOKEN_RE.fullmatch(value)) and game_api.token_may_browse(value)
+        return False
 
     def sent_to_sign_in(self, parsed) -> bool:
         """True when a redirect to the login screen was sent instead of the page."""

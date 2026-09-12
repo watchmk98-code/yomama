@@ -28,15 +28,22 @@ def site(db):
     opener = urllib.request.build_opener(NoRedirect())
 
     def get(path, cookie=None, method="GET"):
+        """(status, Location, headers)"""
         req = urllib.request.Request(base + path, method=method, headers={"Cookie": cookie} if cookie else {})
         try:
             with opener.open(req, timeout=5) as r:
-                return r.status, r.headers.get("Location")
+                r.read()                       # drain, or the server logs a broken pipe
+                return r.status, r.headers.get("Location"), dict(r.headers)
         except urllib.error.HTTPError as e:
-            return e.code, e.headers.get("Location")
+            return e.code, e.headers.get("Location"), dict(e.headers)
     yield get
     srv.shutdown()
     srv.server_close()
+
+
+def seat(db):
+    c = opened(db)
+    return c, A.join(dict(code=c["code"], name="ALICE", pin="1234"))["token"]
 
 
 def test_every_page_but_the_login_screens_needs_a_seat(site):
@@ -44,19 +51,19 @@ def test_every_page_but_the_login_screens_needs_a_seat(site):
                        ("/classroom-sim.html", 302), ("/join.html", 200), ("/class.html", 200),
                        ("/styles.css", 200), ("/account.js", 200), ("/api/game/hostinfo", 200)):
         assert site(path)[0] == want, path
-    status, location = site("/buildings.html?tab=market")
+    status, location, _ = site("/buildings.html?tab=market")
     assert (status, location) == (302, "/join.html?next=%2Fbuildings.html%3Ftab%3Dmarket")
     assert site("/")[1] == "/join.html?next=%2F"
     assert site("/index.html", method="HEAD")[0] == 302
 
 
 def test_a_live_seat_cookie_opens_the_site_and_dies_with_the_seat(site, db):
-    c = opened(db)
-    token = A.join(dict(code=c["code"], name="ALICE", pin="1234"))["token"]
+    c, token = seat(db)
     good = "yomama_session=" + token
     assert site("/index.html", good)[0] == 200
     assert site("/buildings.html?x=1", good)[0] == 200
-    for bad in ("yomama_session=nope", "yomama_session=", "other=" + token, "garbage;;=;;", "yomama_session=" + token[:-1]):
+    for bad in ("yomama_session=nope", "yomama_session=", "other=" + token, "garbage;;=;;",
+                "yomama_session=" + token[:-1], "yomama_session=<script>alert(1)</script>"):
         assert site("/index.html", bad)[0] == 302, bad
     admin_do(db, admin.revoke_class, c["code"])
     assert site("/index.html", good)[0] == 302            # revoked class: out
@@ -64,6 +71,32 @@ def test_a_live_seat_cookie_opens_the_site_and_dies_with_the_seat(site, db):
     assert site("/index.html", good)[0] == 200
     admin_do(db, admin.kick, c["code"], "ALICE")
     assert site("/index.html", good)[0] == 302            # kicked: out
+
+
+def test_our_cookie_is_read_next_to_cookies_python_dislikes(site, db):
+    # Cookies are per host, not per port: on a LAN machine any other app may
+    # have set one with spaces, JSON, a bare name or non-ASCII in it.
+    _, token = seat(db)
+    for header in ("weird=a b c; yomama_session=" + token,
+                   "yomama_session=" + token + '; json={"a":1}',
+                   "bare; yomama_session=" + token,
+                   "utf=ç; yomama_session=" + token,
+                   'yomama_session="' + token + '"',
+                   "  yomama_session = " + token + " ; x=y",
+                   "yomama_session=" + token + "; yomama_session=other"):
+        assert site("/index.html", header)[0] == 200, header
+
+
+def test_pages_behind_the_wall_are_never_cached(site, db):
+    _, token = seat(db)
+    for path in ("/index.html", "/buildings.html", "/"):
+        _, _, headers = site(path, "yomama_session=" + token)
+        assert "no-store" in headers.get("Cache-Control", ""), path
+        assert headers.get("Vary") == "Cookie", path
+    _, _, headers = site("/index.html")                 # the redirect itself too
+    assert "no-store" in headers.get("Cache-Control", "")
+    _, _, headers = site("/styles.css")                 # assets may be cached as before
+    assert "Cache-Control" not in headers
 
 
 def test_spelling_tricks_do_not_slip_past_the_gate(site):

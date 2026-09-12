@@ -80,7 +80,15 @@
       // wanted>. Only a path on this site is honoured, never another origin.
       var next = (window.location.search.match(/[?&]next=([^&]*)/) || [])[1];
       try { next = next ? decodeURIComponent(next) : ''; } catch (e) { next = ''; }
-      if (!/^\/[^\/\\]/.test(next) || /\/join\.html/.test(next)) next = '';
+      // The URL parser drops tabs and newlines before it reads the string, so
+      // drop every control character first; then let the parser, not a regex,
+      // say which origin the value means.
+      next = next.split('').filter(function (ch) { var c = ch.charCodeAt(0); return c > 31 && c !== 127; }).join('');
+      try {
+        var target = new URL(next, window.location.href);
+        next = (next.charAt(0) === '/' && target.origin === window.location.origin
+                && !/\/join\.html$/i.test(target.pathname)) ? target.pathname + target.search : '';
+      } catch (e) { next = ''; }
       var afterJoin = next || './buildings.html';
 
       // account.js sends people here after LOG OUT or an idle sign-out.
@@ -104,11 +112,24 @@
         // Sent here for a page while already signed in (the cookie was missing,
         // say): confirm the seat still exists, then go straight on.
         if (next) {
-          say('Checking your seat...', 'info');
-          net.connect().then(function (live) {
-            if (live) window.location.replace(next);
-            else { foot.textContent = ''; say('Your seat is no longer valid. Sign in again.', 'err'); }
-          });
+          // A browser that cannot keep the cookie would bounce between here
+          // and the page for ever; after a few quick returns, stop and say so.
+          var bounces = 1;
+          try {
+            var b = JSON.parse(sessionStorage.getItem('yomama_bounce') || '[0,0]');
+            bounces = (Date.now() - b[1] < 30000) ? b[0] + 1 : 1;
+            sessionStorage.setItem('yomama_bounce', JSON.stringify([bounces, Date.now()]));
+          } catch (e) {}
+          if (bounces > 3) {
+            say('This browser is not keeping the sign-in cookie, so pages cannot open. '
+              + 'Allow cookies for this site, then sign in again.', 'err');
+          } else {
+            say('Checking your seat...', 'info');
+            net.connect().then(function (live) {
+              if (live) window.location.replace(next);
+              else { foot.textContent = ''; say('Your seat is no longer valid. Sign in again.', 'err'); }
+            });
+          }
         }
       }
 

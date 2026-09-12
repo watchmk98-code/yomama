@@ -33,12 +33,24 @@ if(!code){console.error('usage: node tests/ui_account.cjs BASE CLASSCODE');proce
    const btn=page.locator('button[data-account]').first();
    assert.equal((await btn.textContent()).trim(),'LOG OUT',p+': LOG OUT wired');
   }
+  // ?next= never takes the browser off this site, whatever it says.
+  await page.route(/^https?:\/\/evil\.example\//,r=>r.fulfill({status:200,contentType:'text/html',body:'EVIL'}));
+  for(const bad of ['/%09/evil.example','/%0A/evil.example','//evil.example','/%2F%2Fevil.example','https://evil.example/x','/\\\\evil.example']){
+   await page.goto(base+'/join.html?next='+bad);
+   await page.waitForTimeout(1500);
+   assert.ok(page.url().startsWith(base+'/join.html'),bad+': stayed on the sign-in page, got '+page.url());
+  }
   // A browser that still holds its seat but lost the cookie is sent to join.html
   // and straight back again, without retyping anything.
   await ctx.clearCookies();
   await page.goto(base+'/marketplace.html');
   await page.waitForURL(/marketplace\.html$/,{timeout:15000});
   assert.equal((await page.locator('button[data-account]').first().textContent()).trim(),'LOG OUT');
+  // The bare site address, likewise, comes back to the dashboard.
+  await ctx.clearCookies();
+  await page.goto(base+'/');
+  await page.waitForURL(u=>u.href===base+'/',{timeout:15000});
+  assert.equal((await page.locator('button[data-account]').first().textContent()).trim(),'LOG OUT','dashboard served after the bounce');
   // A second tab of the same browser is signed out too.
   const other=await ctx.newPage();await other.route('https://**/*',r=>r.abort());
   await other.goto(base+'/buildings.html');
