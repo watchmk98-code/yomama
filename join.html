@@ -76,6 +76,11 @@
       var foot = document.getElementById('join-foot');
       var net = window.YomamaNet;
 
+      // account.js sends people here after LOG OUT or an idle sign-out.
+      var why = (window.location.search.match(/[?&]signedout=([^&]*)/) || [])[1];
+      if (why === 'idle') say('You were signed out after a while without activity. Sign in again to continue.', 'info');
+      else if (why) say('Signed out. The next person can sign in here.', 'info');
+
       function say(text, tone) { msg.textContent = text; msg.className = 'join-msg ' + (tone || 'info'); }
 
       // Already in a class? Offer to continue or switch.

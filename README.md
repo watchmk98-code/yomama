@@ -62,6 +62,8 @@ client-side economy. They are off the navigation but still on disk.
   Students join from `join.html` with the class code, a name and a 4-digit PIN;
   the teacher opens `class.html` with the teacher code. Without a class the
   economy screens say so.
+- LOG OUT (top right of every page) signs the browser out so the next person
+  can sign in; a browser idle for 20 minutes is signed out on its own.
 - Money, buildings and prices live on the server, not in the browser. Only
   display preferences (character choice and the like) use localStorage.
 - Some market/news/chart features use external APIs or CDN scripts and may fall back to sample data when offline.
@@ -75,6 +77,7 @@ client-side economy. They are off the navigation but still on disk.
 - `server.py` - local static server, proxy endpoints, API routing
 - `game_api.py` - classroom server: sessions, players, endpoints (SQLite)
 - `access.py` - who may join, play or open the console; rate limit on wrong codes
+- `account.js` - the LOG OUT pill on every page; idle and cross-tab sign-out for shared computers
 - `admin.py` - developer CLI: open, list, close, revoke, resize classes; kick; rotate codes
 - `run_server.py`, `render.yaml`, `DEPLOY.md` - hosting on Render
 - `production_economy.py` - the current economy engine (`economy.py` retains v3)
