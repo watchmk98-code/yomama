@@ -175,6 +175,11 @@ Playwright is installed one directory above the project (`../node_modules`);
   goods, positions and the class clock start over. Without `--yes` nothing
   happens. Saying "the balance changed" is not enough: say the classes need a
   reset, or that old saves migrate in place.
+- To move a class ahead in time without wiping anything:
+  `python3 admin.py advance CODE --days 4 --yes` (`game_api.advance_class_clock`)
+  bumps `sessions.clock_accum` and replays every town through the span in
+  slices, marking everyone present so the offline allowance never skips
+  production. Same seats, same tokens; not reversible.
 - Old saves in a class that keeps its snapshot go through
   `production_economy.migrate_state` on load. A new state field needs a
   default there, not only in `new_state`.

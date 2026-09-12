@@ -84,6 +84,23 @@ new rules. Every name, PIN, class code and teacher code stays exactly as it
 was, and browsers that were signed in stay signed in. Without `--yes`
 nothing happens.
 
+## 6b. Jump ahead in time (a simulation)
+
+To show what a few days of play look like without waiting for them:
+
+    python3 admin.py --db /data/game.db advance YSNRD F2XHJ --days 4 --random-hours 24 --yes
+
+Each class named moves 4 days ahead in game time, plus a random 0-24 hours
+drawn separately per class, and every town in it is replayed as if its
+owner had been playing the whole time: buildings produce, shops sell,
+regular customers collect, construction finishes. Nothing is wiped and
+nobody is signed out; the next time a student opens the game they get the
+usual "while you were away" report for the whole stretch. All towns in a
+class share one clock, so the jump is per class, not per student. There
+is no way back, so the command does nothing without `--yes`. Run it
+between sessions: a big jump takes a little while, and a student who is
+playing during it would see the days pass in front of them.
+
 ## 7. Updating the code
 
 `render.yaml` turns auto-deploy off: a service with a disk restarts on every

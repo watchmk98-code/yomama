@@ -15,6 +15,8 @@
     python3 admin.py import roster.json          # recreate or refresh them: same codes, same PINs
     python3 admin.py reset KRT39 --yes           # a new game, same seats: progress wiped, codes and PINs kept
     python3 admin.py reset --all --yes
+    python3 admin.py advance KRT39 --days 4 --yes                    # the class jumps 4 days ahead in game time; every town simulated
+    python3 admin.py advance --all --days 4 --random-hours 24 --yes  # ...plus a random 0-24 h, drawn separately per class
 
 Classes are created here and nowhere else: no page and no endpoint can do it.
 `open` prints two codes. Students type the class code into join.html with a
@@ -30,8 +32,8 @@ This file does not import game_api on purpose. Provisioning has to keep
 working while the economy is being reworked, and must not need the economy
 config to load. The columns it needs are added here with the same idempotent
 pattern game_api.MIGRATIONS uses; access.py reads them. The exceptions are
-import and reset: creating a fresh player state needs the real rules, so
-those two load game_api when they run (see _game_api).
+import, reset and advance: a player state needs the real rules, so those
+three load game_api when they run (see _game_api).
 
 Keep roster.json out of git. The repository is public; the roster holds the
 teacher codes and every PIN. On Render, keep it on the disk: /data/roster.json.
@@ -42,6 +44,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 import secrets
 import sqlite3
 import sys
@@ -232,6 +235,9 @@ def _game_api(db_path):
     command keeps working without it."""
     import game_api
     game_api.DB_PATH = Path(db_path)
+    # Same tables and columns the server adds at start-up (all idempotent), so
+    # a database an older server created still has everything a state save needs.
+    game_api.init_db()
     return game_api
 
 
@@ -281,6 +287,32 @@ def reset_classes(db_path, codes, yes) -> list:
     return out
 
 
+def advance_classes(db_path, codes, days=0.0, hours=0.0, random_hours=0.0, yes=False) -> list:
+    """Move classes ahead in game time; every town is replayed as if present.
+
+    Nothing is wiped and nobody is signed out. The random part is drawn
+    separately for each class, so two classes never land on the same tick.
+    """
+    base = float(days) * 86400 + float(hours) * 3600
+    spread = float(random_hours) * 3600
+    if base < 0 or spread < 0 or base + spread <= 0:
+        raise AdminError("say how far ahead: --days and/or --hours, and/or --random-hours")
+    if not yes:
+        raise AdminError(f"advance moves {', '.join(codes)} {span(base)} ahead"
+                         + (f" plus up to {span(spread)} at random" if spread else "")
+                         + " and cannot be undone; add --yes to confirm")
+    rng = random.SystemRandom()
+    G = _game_api(db_path)
+    out = []
+    for code in codes:
+        seconds = int(base + (rng.uniform(0, spread) if spread else 0))
+        try:
+            out.append(G.advance_class_clock(code, seconds))
+        except G.ApiError as exc:
+            raise AdminError(f"{code}: {exc.message}")
+    return out
+
+
 def rotate(conn, code: str) -> dict:
     with tx(conn):
         session_of(conn, code)
@@ -296,6 +328,22 @@ def rotate(conn, code: str) -> dict:
 
 def when(ts: float) -> str:
     return time.strftime("%Y-%m-%d %H:%M", time.localtime(ts))
+
+
+def span(seconds: float) -> str:
+    minutes = int(round(float(seconds) / 60))
+    days, minutes = divmod(minutes, 1440)
+    hours, minutes = divmod(minutes, 60)
+    return f"{days}d {hours:02d}h {minutes:02d}m"
+
+
+def print_advance(rows: list) -> None:
+    for r in rows:
+        label = f" ({r['label']})" if r.get("label") else ""
+        print(f"class {r['code']}{label}: {span(r['seconds'])} ahead, tick {r['tick_before']:,} -> "
+              f"{r['tick_after']:,} ({r['days']} game days); {len(r['players'])} towns simulated")
+        for p in r["players"]:
+            print(f"  {p['name']:24} {p['before']:>10,} -> {p['after']:>10,}")
 
 
 def print_open(d: dict) -> None:
@@ -363,6 +411,14 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("code", nargs="?")
     x.add_argument("--all", action="store_true", help="every class")
     x.add_argument("--yes", action="store_true", help="confirm; without it nothing happens")
+    v = sub.add_parser("advance", help="move classes ahead in game time; every town is simulated as if present")
+    v.add_argument("codes", nargs="*", help="class codes")
+    v.add_argument("--all", action="store_true", help="every active class")
+    v.add_argument("--days", type=float, default=0.0, help="game days to jump")
+    v.add_argument("--hours", type=float, default=0.0, help="game hours to jump (adds to --days)")
+    v.add_argument("--random-hours", type=float, default=0.0, dest="random_hours",
+                   help="add a random 0..N hours on top, drawn separately per class")
+    v.add_argument("--yes", action="store_true", help="confirm; without it nothing happens")
     return p
 
 
@@ -402,6 +458,16 @@ def run(conn, args) -> object:
         if not args.json:
             for r in out:
                 print(f"reset class {r['code']}: {r['players']} seats start over under version {r['version']} rules")
+    elif args.command == "advance":
+        if args.all:
+            codes = [r["code"] for r in list_classes(conn) if r["active"]]
+        else:
+            codes = [norm_code(c) for c in args.codes if norm_code(c)]
+        if not codes:
+            raise AdminError("say which classes to advance, or --all")
+        out = advance_classes(args.db_path, codes, args.days, args.hours, args.random_hours, args.yes)
+        if not args.json:
+            print_advance(out)
     else:
         fn = {"close": close_class, "reopen": reopen_class, "revoke": revoke_class,
               "restore": restore_class, "rotate": rotate}.get(args.command)
