@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 import game_api
+import access
 
 
 ROOT = Path(__file__).resolve().parent
@@ -240,16 +241,37 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
     GAME_GET_ROUTES = {
         "/api/game/state": game_api.get_state,
         "/api/game/buildings": game_api.load_buildings,
+        "/api/game/econ/state": game_api.econ_state,
+        "/api/game/econ/contracts": game_api.econ_contracts,
+        "/api/game/econ/ticker": game_api.econ_ticker,
+        "/api/game/econ/quiz": game_api.econ_quiz_questions,
+        "/api/game/teacher/econ": game_api.teacher_econ,
     }
+    # No route opens a class: admin.py does that, off the web.
     GAME_POST_ROUTES = {
-        "/api/game/session": game_api.create_session,
         "/api/game/join": game_api.join,
-        "/api/game/product": game_api.trade_product,
-        "/api/game/produce": game_api.deposit_products,
         "/api/game/equity": game_api.trade_equity,
-        "/api/game/spend": game_api.spend_cash,
         "/api/game/buildings": game_api.save_buildings,
         "/api/game/teacher": game_api.teacher,
+        "/api/game/teacher/login": game_api.teacher_login,
+        "/api/game/econ/login": game_api.econ_login,
+        "/api/game/econ/sell": game_api.econ_sell,
+        "/api/game/econ/level": game_api.econ_level,
+        "/api/game/econ/auto": game_api.econ_auto,
+        "/api/game/econ/upgrade": game_api.econ_upgrade,
+        "/api/game/econ/reserve": game_api.econ_reserve,
+        "/api/game/econ/processing": game_api.econ_processing,
+        "/api/game/econ/event/breakfast": game_api.econ_breakfast,
+        "/api/game/econ/orders/fulfill": game_api.econ_fulfill_order,
+        "/api/game/econ/orders/replace": game_api.econ_replace_order,
+        "/api/game/econ/orders/commit": game_api.econ_commit_order,
+        "/api/game/econ/focus": game_api.econ_focus,
+        "/api/game/econ/graduate": game_api.econ_graduate,
+        "/api/game/econ/expand": game_api.econ_expand,
+        "/api/game/econ/contracts/accept": game_api.econ_accept_contract,
+        "/api/game/teacher/event": game_api.teacher_event,
+        "/api/game/econ/quiz": game_api.econ_quiz,
+        "/api/game/econ/keep": game_api.econ_keep,
     }
 
     def handle_game_get(self, parsed) -> None:
@@ -273,6 +295,14 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         if handler is None:
             self.send_json(404, {"error": "unknown endpoint"})
             return
+        # The two endpoints that take a code from a stranger get a budget of
+        # wrong answers per address, so nobody can guess their way into a class.
+        limiter = access.LOGIN_LIMITS.get(parsed.path)
+        ip = access.client_ip(self.headers, self.client_address[0]) if limiter else ""
+        if limiter and limiter.blocked(ip):
+            self.send_json(429, {"error": "too many wrong codes from this address; "
+                                          "try again in ten minutes"})
+            return
         try:
             length = int(self.headers.get("Content-Length") or 0)
         except ValueError:
@@ -288,13 +318,16 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         except (ValueError, UnicodeDecodeError) as exc:
             self.send_json(400, {"error": f"invalid JSON body: {exc}"})
             return
-        self.run_game_handler(handler, body)
+        self.run_game_handler(handler, body,
+                              on_reject=(lambda: limiter.hit(ip)) if limiter else None)
 
-    def run_game_handler(self, handler, payload) -> None:
+    def run_game_handler(self, handler, payload, on_reject=None) -> None:
         try:
             self.send_json(200, handler(payload))
         except game_api.ApiError as exc:
-            self.send_json(exc.status, {"error": exc.message})
+            if on_reject and exc.status in (401, 403, 404, 409):   # a wrong code, name or PIN
+                on_reject()
+            self.send_json(exc.status, {"error": exc.message, **exc.details})
         except Exception as exc:  # noqa: BLE001 - never take the class server down
             self.log_error("game api failure: %r", exc)
             self.send_json(500, {"error": "internal error"})

@@ -12,3 +12,7 @@ __pycache__/
 game.db
 game.db-wal
 game.db-shm
+backups/
+*.db
+*.db-shm
+*.db-wal

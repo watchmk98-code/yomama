@@ -62,23 +62,25 @@
 
     <!-- no class yet -->
     <section class="cc-panel" id="cc-start">
-      <h2 class="cc-hd">START A CLASS</h2>
+      <h2 class="cc-hd">OPEN THE CONSOLE</h2>
       <div class="cc-row">
         <div class="cc-field">
-          <label for="cc-size">CLASS SIZE</label>
-          <input id="cc-size" type="number" min="1" max="200" value="30" />
+          <label for="cc-teacher-code">TEACHER CODE</label>
+          <input id="cc-teacher-code" type="text" maxlength="6" placeholder="MQ4TVX"
+                 style="width:150px; text-transform:uppercase" inputmode="latin"
+                 autocapitalize="characters" autocomplete="off" spellcheck="false" />
         </div>
         <div class="cc-field">
           <label for="cc-teacher-name">PLAY AS</label>
           <input id="cc-teacher-name" type="text" maxlength="24" value="TEACHER"
                  style="width:190px" spellcheck="false" />
         </div>
-        <button class="cc-btn primary" id="cc-create">OPEN CLASS</button>
+        <button class="cc-btn primary" id="cc-enter">ENTER</button>
       </div>
       <p class="cc-sub" style="margin:14px 0 0">
-        Class size sets how deep the shared market is. With 30 students one sale nudges
-        the price; the whole class selling at once moves it about 20%.
-        Students pick a name and a 4-digit PIN — names have to be unique in a class,
+        Classes are opened by the administrator, who gives you two codes: a class code
+        for the students and this teacher code for you. Students go to join.html with
+        the class code, a name and a 4-digit PIN — names have to be unique in a class,
         so a second Alex is asked to add an initial.
       </p>
       <div class="cc-msg info" id="cc-start-msg" role="status" aria-live="polite"></div>
@@ -101,7 +103,7 @@
             You are player #1 in this class. Everything you do counts on the roster below.
           </div>
         </div>
-        <a class="cc-btn primary" id="cc-play-btn" href="./collect.html"
+        <a class="cc-btn primary" id="cc-play-btn" href="./buildings.html"
            style="text-decoration:none; padding:12px 22px; font-size:18px">PLAY NOW</a>
       </div>
     </section>
@@ -110,9 +112,7 @@
       <h2 class="cc-hd">CONTROLS</h2>
       <div class="cc-row">
         <button class="cc-btn" id="cc-pause">PAUSE</button>
-        <button class="cc-btn" id="cc-shock-up">SUPPLY GLUT &nbsp;(prices down)</button>
-        <button class="cc-btn" id="cc-shock-dn">SHORTAGE &nbsp;(prices up)</button>
-        <button class="cc-btn danger" id="cc-close">CLOSE CLASS</button>
+        <button class="cc-btn danger" id="cc-close">LEAVE CONSOLE</button>
         <span style="margin-left:auto; align-self:center">
           <span class="cc-pill" id="cc-state">—</span>
           <span class="cc-pill" id="cc-count">0 STUDENTS</span>
@@ -126,13 +126,16 @@
       <table class="cc-tbl">
         <thead><tr>
           <th class="cc-rank">#</th><th>STUDENT</th>
-          <th class="cc-num">CASH</th><th class="cc-num">NET WORTH</th><th class="cc-num">JOINED</th><th></th>
+          <th>BUILDING</th><th class="cc-num">NET WORTH</th><th class="cc-num">PER DAY</th>
+          <th>LICENCE</th><th class="cc-num">JOINED</th><th></th>
         </tr></thead>
         <tbody id="cc-roster"></tbody>
       </table>
     </section>
   </div>
 
+  <section class="panel" id="econ-teacher" aria-label="Live class economy"></section>
+  <script src="./teacher-econ.js?v=20260912-production4"></script>
   <script src="./yomama-net.js?v=1"></script>
   <script>
     (function () {
@@ -140,12 +143,15 @@
       var el = function (id) { return document.getElementById(id); };
       var teacher = null;   // { code, teacher_token }
       var timer = null;
+      var econByName = {};  // student name -> economy progress
+      var econNeeded = 10;  // good sales needed for the third licence box
+      var lastRoster = null;
 
       try { teacher = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { teacher = null; }
 
       function say(node, text, tone) { node.textContent = text; node.className = 'cc-msg ' + (tone || 'info'); }
       function show(id, on) { el(id).classList.toggle('cc-hide', !on); }
-      function money(v) { return '$' + Math.round(v).toLocaleString('en-US'); }
+      function money(v) { return Math.round(v || 0).toLocaleString('en-US') + ' YM'; }
       function ago(ts) {
         var m = Math.max(0, Math.floor((Date.now() / 1000 - ts) / 60));
         if (m < 60) return m + 'm';
@@ -180,16 +186,30 @@
 
         var body = el('cc-roster');
         if (!d.roster.length) {
-          body.innerHTML = '<tr><td colspan="6" class="cc-empty">Nobody has joined yet. '
+          body.innerHTML = '<tr><td colspan="8" class="cc-empty">Nobody has joined yet. '
             + 'Students open the link above and enter the code.</td></tr>';
           return;
         }
         body.innerHTML = d.roster.map(function (s) {
+          var e = econByName[s.name] || null;
+          var dim = function (t) { return '<span style="color:var(--muted)">' + t + '</span>'; };
+          var marks = '—';
+          if (e) {
+            marks = [
+              ['L', e.checklist.lv25],
+              ['A', e.checklist.auto],
+              ['S', e.checklist.goodSales >= econNeeded],
+              ['Q', e.checklist.quiz],
+            ].map(function (m) { return m[1] ? m[0] : dim(m[0].toLowerCase()); }).join(' ');
+            marks += e.gateOpen ? ' OPEN' : '';
+          }
           return '<tr>'
             + '<td class="cc-rank">' + s.rank + '</td>'
             + '<td>' + s.name.replace(/[<>&]/g, '') + '</td>'
-            + '<td class="cc-num">' + money(s.cash) + '</td>'
+            + '<td>' + (e ? e.tierName.replace(/[<>&]/g, '') + ' Lv' + e.level : dim('—')) + '</td>'
             + '<td class="cc-num">' + money(s.net_worth) + '</td>'
+            + '<td class="cc-num">' + (e ? money(e.revenuePerDay) : dim('—')) + '</td>'
+            + '<td>' + marks + '</td>'
             + '<td class="cc-num">' + ago(s.joined_at) + '</td>'
             + '<td class="cc-num"><button class="cc-btn danger" data-reset="'
             + s.name.replace(/"/g, '') + '" style="padding:3px 9px;font-size:13px">RESET</button></td>'
@@ -197,9 +217,29 @@
         }).join('');
       }
 
+      // Progress through the four licence boxes comes from the economy endpoint,
+      // which also advances every student's factory to the current tick.
+      function pollEcon() {
+        if (!teacher) return Promise.resolve();
+        return fetch('/api/game/teacher/econ?teacher_token=' + encodeURIComponent(teacher.teacher_token))
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.students) return;
+            econNeeded = d.goodSalesNeeded || econNeeded;
+            econByName = {};
+            d.students.forEach(function (s) { econByName[s.name] = s; });
+            if (lastRoster) renderRoster(lastRoster);
+          })
+          .catch(function () {});
+      }
+
       function poll() {
         if (!teacher) return;
-        act('roster').then(renderRoster).catch(function (err) {
+        act('roster').then(function (d) {
+          lastRoster = d;
+          renderRoster(d);
+          pollEcon();
+        }).catch(function (err) {
           if (err.status === 403 || err.status === 404) { forget(); }
           else say(el('cc-msg'), 'Lost contact with the server. Retrying...', 'err');
         });
@@ -207,16 +247,19 @@
 
       function enterClass(code) {
         el('cc-code').textContent = code;
-        // Ask the server for the address students can actually reach. Opening this
-        // console on localhost would otherwise project a URL nobody else can use.
+        // The address students type. On a hosted server it is this page's own
+        // origin. Only when the console itself runs on localhost is that useless
+        // to others, so then ask the server for its LAN address instead.
         el('cc-url').textContent = window.location.origin + '/join.html';
-        fetch('/api/game/hostinfo').then(function (r) { return r.json(); }).then(function (h) {
-          if (h.join_url) el('cc-url').textContent = h.join_url;
-          if (!h.reachable) {
-            say(el('cc-msg'), 'This machine has no LAN address right now, so students on other '
-              + 'computers cannot reach it. Check the wifi connection.', 'err');
-          }
-        }).catch(function () {});
+        if (['localhost', '127.0.0.1', '[::1]'].indexOf(window.location.hostname) >= 0) {
+          fetch('/api/game/hostinfo').then(function (r) { return r.json(); }).then(function (h) {
+            if (h.join_url) el('cc-url').textContent = h.join_url;
+            if (!h.reachable) {
+              say(el('cc-msg'), 'This machine has no LAN address right now, so students on other '
+                + 'computers cannot reach it. Check the wifi connection.', 'err');
+            }
+          }).catch(function () {});
+        }
         show('cc-start', false); show('cc-live', true);
         show('cc-controls', true); show('cc-roster-panel', true);
         try {
@@ -234,20 +277,23 @@
         if (timer) { clearInterval(timer); timer = null; }
         show('cc-start', true); show('cc-live', false);
         show('cc-controls', false); show('cc-roster-panel', false); show('cc-play', false);
-        say(el('cc-start-msg'), 'That class is no longer on the server. Start a new one.', 'err');
+        say(el('cc-start-msg'), 'That class is no longer on the server. Enter a teacher code to open another.', 'err');
       }
 
-      el('cc-create').addEventListener('click', function () {
-        var size = Math.max(1, Math.min(200, parseInt(el('cc-size').value, 10) || 30));
+      function enter() {
+        var prev = teacher;    // a seat this browser already took in the same class
+        var code = (el('cc-teacher-code').value || '').replace(/\s+/g, '').toUpperCase();
         var myName = (el('cc-teacher-name').value || 'TEACHER').trim() || 'TEACHER';
-        this.disabled = true;
+        if (!code) { say(el('cc-start-msg'), 'Type the teacher code you were given.', 'err'); return; }
+        el('cc-enter').disabled = true;
         say(el('cc-start-msg'), 'Opening...', 'info');
-        api('/session', { class_size: size }).then(function (d) {
+        api('/teacher/login', { teacher_code: code }).then(function (d) {
           teacher = { code: d.code, teacher_token: d.teacher_token };
           try { localStorage.setItem(KEY, JSON.stringify(teacher)); } catch (e) {}
-          // Take the first seat too, so the class can be tried solo without a
-          // second device. The student token is separate from the teacher one.
-          var myPin = String(Math.floor(1000 + Math.random() * 9000));
+          // Take a seat too, so the class can be tried solo without a second
+          // device. The student token is separate from the teacher one.
+          var myPin = (prev && prev.code === d.code && prev.pin)
+            || String(Math.floor(1000 + Math.random() * 9000));
           teacher.pin = myPin;
           try { localStorage.setItem(KEY, JSON.stringify(teacher)); } catch (e) {}
           return api('/join', { code: d.code, name: myName, pin: myPin }).then(function (j) {
@@ -259,17 +305,21 @@
             showSeat(j.name);
             return d;
           }).catch(function () {
-            showSeat(null);            // class still opened; just no seat
+            showSeat(null);            // console is open; just no seat
             return d;
           });
         }).then(function (d) {
-          el('cc-create').disabled = false;
+          el('cc-enter').disabled = false;
           enterClass(d.code);
         }).catch(function (err) {
-          el('cc-create').disabled = false;
-          say(el('cc-start-msg'), err.message || 'Could not reach the server.', 'err');
+          el('cc-enter').disabled = false;
+          var m = err.message || 'Could not reach the server.';
+          if (err.status === 404) m = 'No class with that teacher code. Check it with the administrator.';
+          say(el('cc-start-msg'), m, 'err');
         });
-      });
+      }
+      el('cc-enter').addEventListener('click', enter);
+      el('cc-teacher-code').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') enter(); });
 
       function showSeat(name) {
         if (!name) {
@@ -282,7 +332,7 @@
           el('cc-play-note').innerHTML = 'You are player #1 in this class. Your PIN is <strong>'
             + (teacher && teacher.pin ? teacher.pin : '----')
             + '</strong> — you need it to open this seat on another computer.';
-          el('cc-play-btn').setAttribute('href', './collect.html');
+          el('cc-play-btn').setAttribute('href', './buildings.html');
         }
         show('cc-play', true);
       }
@@ -296,23 +346,9 @@
         }).catch(function (e) { say(el('cc-msg'), e.message, 'err'); });
       });
 
-      el('cc-shock-up').addEventListener('click', function () {
-        act('shock', { magnitude: 0.35 }).then(function (d) {
-          renderRoster(d);
-          say(el('cc-msg'), 'Supply glut: the market is flooded, prices dropped. Ask them what happens next.', 'ok');
-        }).catch(function (e) { say(el('cc-msg'), e.message, 'err'); });
-      });
-
-      el('cc-shock-dn').addEventListener('click', function () {
-        act('shock', { magnitude: -0.35 }).then(function (d) {
-          renderRoster(d);
-          say(el('cc-msg'), 'Shortage: stock is scarce, prices jumped.', 'ok');
-        }).catch(function (e) { say(el('cc-msg'), e.message, 'err'); });
-      });
-
       el('cc-close').addEventListener('click', function () {
-        if (!window.confirm('Close this class? Students keep their progress, but you will '
-          + 'lose the console link to it and cannot get this class back.')) return;
+        if (!window.confirm('Leave the console? Students keep playing. Enter the teacher '
+          + 'code again to come back.')) return;
         forget();
         say(el('cc-start-msg'), 'Console closed. Students are unaffected.', 'info');
       });

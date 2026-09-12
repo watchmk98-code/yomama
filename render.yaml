@@ -1,0 +1,29 @@
+# Render Blueprint - https://render.com/docs/blueprint-spec
+# Dashboard: New + > Blueprint > pick this repo. Render reads this file and
+# creates the service, its disk and its environment in one go.
+services:
+  - type: web
+    name: yomama
+    runtime: python
+    plan: starter               # 0.5 CPU / 512 MB. The free plan cannot have
+                                # a disk, and without one game.db is wiped on
+                                # every restart.
+    region: frankfurt           # closest to Turkey; change if the class is elsewhere
+    buildCommand: python3 --version    # no build step, no dependencies
+    startCommand: python3 run_server.py $PORT
+    healthCheckPath: /join.html
+    autoDeploy: false           # a service with a disk restarts on every
+                                # deploy, which would kick a class mid-lesson.
+                                # Push any time; press Manual Deploy between
+                                # classes.
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"         # CI runs 3.12; the code also runs on plain 3.9
+      - key: YOMAMA_DB
+        value: /data/game.db    # on the disk below, so progress survives deploys
+      - key: YOMAMA_BEHIND_PROXY
+        value: "1"              # Render's proxy sets X-Forwarded-For; rate-limit by it
+    disk:
+      name: yomama-data
+      mountPath: /data
+      sizeGB: 1
