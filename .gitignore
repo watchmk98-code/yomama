@@ -16,3 +16,4 @@ backups/
 *.db
 *.db-shm
 *.db-wal
+roster*.json

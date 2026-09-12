@@ -11,6 +11,10 @@
     python3 admin.py kick KRT39 "ALEX K"
     python3 admin.py rotate KRT39        # new teacher code; the old one stops working
     python3 admin.py resize KRT39 40     # seats, the teacher's own included
+    python3 admin.py export > roster.json        # every code, name and PIN, to keep safe
+    python3 admin.py import roster.json          # recreate or refresh them: same codes, same PINs
+    python3 admin.py reset KRT39 --yes           # a new game, same seats: progress wiped, codes and PINs kept
+    python3 admin.py reset --all --yes
 
 Classes are created here and nowhere else: no page and no endpoint can do it.
 `open` prints two codes. Students type the class code into join.html with a
@@ -25,7 +29,12 @@ output.
 This file does not import game_api on purpose. Provisioning has to keep
 working while the economy is being reworked, and must not need the economy
 config to load. The columns it needs are added here with the same idempotent
-pattern game_api.MIGRATIONS uses; access.py reads them.
+pattern game_api.MIGRATIONS uses; access.py reads them. The exceptions are
+import and reset: creating a fresh player state needs the real rules, so
+those two load game_api when they run (see _game_api).
+
+Keep roster.json out of git. The repository is public; the roster holds the
+teacher codes and every PIN. On Render, keep it on the disk: /data/roster.json.
 """
 
 from __future__ import annotations
@@ -218,6 +227,60 @@ def resize(conn, code: str, size: int) -> dict:
     return {"code": code, "class_size": size}
 
 
+def _game_api(db_path):
+    """The one place this file loads the economy. Lazy, so every other
+    command keeps working without it."""
+    import game_api
+    game_api.DB_PATH = Path(db_path)
+    return game_api
+
+
+def export_roster(conn, codes=None) -> dict:
+    """Everything needed to recreate the classes elsewhere: codes, names, PINs."""
+    codes = [norm_code(c) for c in codes] or [r["code"] for r in conn.execute(
+        "SELECT code FROM sessions ORDER BY created_at")]
+    classes = []
+    for code in codes:
+        s = session_of(conn, code)
+        seats = [{"name": r["name"], "pin": r["pin"]} for r in conn.execute(
+            "SELECT name, pin FROM players WHERE code=? ORDER BY id", (code,))]
+        classes.append({"code": code, "teacher_code": s["teacher_code"], "label": s["label"],
+                        "class_size": int(s["class_size"]), "seats": seats})
+    return {"classes": classes}
+
+
+def import_roster(db_path, path) -> dict:
+    """Recreate or refresh the classes in a roster file. Never touches progress."""
+    try:
+        data = json.loads(Path(path).read_text())
+    except (OSError, ValueError) as exc:
+        raise AdminError(f"cannot read roster {path}: {exc}")
+    G = _game_api(db_path)
+    out = []
+    for c in data.get("classes", []):
+        try:
+            cls = G.ensure_class(c.get("code"), c.get("teacher_code"), c.get("label", ""), c.get("class_size", 30))
+            seats = [G.ensure_seat(cls["code"], seat.get("name"), seat.get("pin")) for seat in c.get("seats", [])]
+        except G.ApiError as exc:
+            raise AdminError(f"{c.get('code')}: {exc.message}")
+        out.append({**cls, "seats": seats})
+    return {"classes": out}
+
+
+def reset_classes(db_path, codes, yes) -> list:
+    """A new game for every seat in the classes: progress wiped, codes kept."""
+    if not yes:
+        raise AdminError("reset wipes everyone's progress in the class; add --yes to confirm")
+    G = _game_api(db_path)
+    out = []
+    for code in codes:
+        try:
+            out.append(G.reset_class(code))
+        except G.ApiError as exc:
+            raise AdminError(f"{code}: {exc.message}")
+    return out
+
+
 def rotate(conn, code: str) -> dict:
     with tx(conn):
         session_of(conn, code)
@@ -292,6 +355,14 @@ def build_parser() -> argparse.ArgumentParser:
     r = sub.add_parser("resize", help="change the number of seats (the teacher's own included)")
     r.add_argument("code")
     r.add_argument("size", type=int)
+    e = sub.add_parser("export", help="print a roster: every code, name and PIN (keep it out of git)")
+    e.add_argument("codes", nargs="*", help="class codes (default: all)")
+    i = sub.add_parser("import", help="recreate or refresh the classes in a roster file, same codes and PINs")
+    i.add_argument("file")
+    x = sub.add_parser("reset", help="a new game, same seats: progress wiped, codes and PINs kept")
+    x.add_argument("code", nargs="?")
+    x.add_argument("--all", action="store_true", help="every class")
+    x.add_argument("--yes", action="store_true", help="confirm; without it nothing happens")
     return p
 
 
@@ -309,6 +380,28 @@ def run(conn, args) -> object:
         out = roster(conn, code)
         if not args.json:
             print_roster(code, out)
+    elif args.command == "export":
+        out = export_roster(conn, args.codes)
+        if not args.json:                      # the roster is the output; always JSON
+            print(json.dumps(out, indent=2))
+    elif args.command == "import":
+        out = import_roster(args.db_path, args.file)
+        if not args.json:
+            for c in out["classes"]:
+                new = sum(1 for x in c["seats"] if x["created"])
+                print(f"class {c['code']} ({'created' if c['created'] else 'refreshed'}): "
+                      f"{len(c['seats'])} seats, {new} new")
+    elif args.command == "reset":
+        if args.all:
+            codes = [r["code"] for r in list_classes(conn)]
+        elif code:
+            codes = [code]
+        else:
+            raise AdminError("say which class to reset, or --all")
+        out = reset_classes(args.db_path, codes, args.yes)
+        if not args.json:
+            for r in out:
+                print(f"reset class {r['code']}: {r['players']} seats start over under version {r['version']} rules")
     else:
         fn = {"close": close_class, "reopen": reopen_class, "revoke": revoke_class,
               "restore": restore_class, "rotate": rotate}.get(args.command)
@@ -325,8 +418,9 @@ def run(conn, args) -> object:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    args.db_path = Path(args.db) if args.db else default_db_path()
     try:
-        conn = connect(Path(args.db) if args.db else default_db_path())
+        conn = connect(args.db_path)
         try:
             out = run(conn, args)
         finally:

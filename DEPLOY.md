@@ -51,7 +51,40 @@ type `KRT39`, a name, and a 4-digit PIN they will remember"; "you go to
 
 The same commands work on your machine against `./game.db`.
 
-## 5. Updating the code
+## 5. Keeping the accounts
+
+The codes and PINs you hand out live in `game.db` on the disk. Keep a copy
+of them outside the database too, so they survive anything:
+
+    python3 admin.py --db /data/game.db export > /data/roster.json
+
+and download that file to your own machine as well. It holds every class
+code, teacher code, name and PIN - **never put it in git**; the repository
+is public, and `roster*.json` is in `.gitignore` for that reason.
+
+To bring the same classes and seats back - a new database, a new service,
+or a PIN you changed in the file:
+
+    python3 admin.py --db /data/game.db import /data/roster.json
+
+It creates what is missing and refreshes what exists, with the same codes
+and PINs, and never touches anyone's progress.
+
+## 6. A new game, same seats
+
+When the economy has changed and everyone should start over:
+
+1. Deploy the new code first (Manual Deploy), so the rules on disk are the
+   rules the server runs.
+2. In the Shell: `python3 admin.py --db /data/game.db reset YSNRD --yes`
+   (or `reset --all --yes`).
+
+Cash, buildings, goods, positions and the class clock start over under the
+new rules. Every name, PIN, class code and teacher code stays exactly as it
+was, and browsers that were signed in stay signed in. Without `--yes`
+nothing happens.
+
+## 7. Updating the code
 
 `render.yaml` turns auto-deploy off: a service with a disk restarts on every
 deploy, which would throw a class out mid-lesson. Push whenever you like and

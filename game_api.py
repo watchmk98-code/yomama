@@ -19,6 +19,7 @@ import json
 import copy
 import functools
 import math
+import re
 import secrets
 import sqlite3
 import threading
@@ -983,6 +984,104 @@ def token_may_browse(token) -> bool:
         except ApiError:
             return False
     return True
+
+
+# ------------------------------------------------------------ provisioning ---
+# Called by admin.py only; no HTTP route reaches these.
+
+def reset_class(code: str) -> dict:
+    """A new game for everyone in the class, under the rules on disk now.
+
+    Every seat keeps its name, PIN and token - browsers stay signed in and
+    the codes on the students' cards stay valid - but cash, buildings,
+    goods, positions and the class clock start over. The class seed changes
+    too, so a running server drops its cached price book for the class.
+    """
+    cfg = economy.load_config()
+    now = time.time()
+    with _db_lock, connect() as conn:
+        s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
+        if s is None:
+            raise ApiError("no class with that code", 404)
+        conn.execute(
+            "UPDATE sessions SET econ_config=?, class_seed=?, seed=?, paused=0, clock_base=?,"
+            " clock_accum=0, started_at=?, econ_tick=0, pressure='[]', income_per_hour=1,"
+            " custom_events='[]' WHERE code=?",
+            (json.dumps(cfg, separators=(",", ":")), 1 + secrets.randbelow((1 << 30) - 1),
+             secrets.randbelow(1 << 30), now, now, code))
+        s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
+        cfg = econ_config(s)
+        players = conn.execute("SELECT id FROM players WHERE code=?", (code,)).fetchall()
+        for p in players:
+            st = economy.new_state(cfg, 0, seed=cfg["global"]["seed"] * 48611 + p["id"] * 7 + 5)
+            conn.execute("UPDATE players SET cash=?, buildings='{}' WHERE id=?", (STARTING_CASH, p["id"]))
+            _save_state(conn, p["id"], cfg, st)
+            conn.execute("DELETE FROM positions WHERE player_id=?", (p["id"],))
+        _log(conn, code, None, "admin_reset_class", {"players": len(players), "version": cfg.get("version")})
+    return {"code": code, "players": len(players), "version": cfg.get("version")}
+
+
+def ensure_class(code, teacher_code, label="", class_size=30) -> dict:
+    """A class with GIVEN codes - a roster import. Creates it, or refreshes the
+    teacher code, label and size of an existing one. Never touches progress."""
+    code = "".join(str(code or "").split()).upper()
+    teacher_code = "".join(str(teacher_code or "").split()).upper()
+    if not re.fullmatch(r"[A-Z0-9]{4,8}", code) or not re.fullmatch(r"[A-Z0-9]{4,8}", teacher_code):
+        raise ApiError("codes are 4 to 8 letters or digits")
+    label = " ".join(str(label or "").split())[:40]
+    class_size = max(1, min(200, int(class_size or 30)))
+    cfg = economy.load_config()
+    now = time.time()
+    with _db_lock, connect() as conn:
+        clash = conn.execute("SELECT code FROM sessions WHERE teacher_code=? AND code<>?",
+                             (teacher_code, code)).fetchone()
+        if clash is not None:
+            raise ApiError(f"teacher code {teacher_code} already belongs to class {clash['code']}", 409)
+        s = conn.execute("SELECT code FROM sessions WHERE code=?", (code,)).fetchone()
+        if s is None:
+            conn.execute(
+                "INSERT INTO sessions(code, teacher_token, seed, created_at, paused, clock_base,"
+                " clock_accum, class_size, class_seed, started_at, econ_config, teacher_code, label)"
+                " VALUES (?,?,?,?,0,?,0,?,?,?,?,?,?)",
+                (code, secrets.token_urlsafe(24), secrets.randbelow(1 << 30), now, now, class_size,
+                 1 + secrets.randbelow((1 << 30) - 1), now, json.dumps(cfg, separators=(",", ":")),
+                 teacher_code, label))
+            _log(conn, code, None, "admin_import_class", {"label": label, "class_size": class_size})
+        else:
+            conn.execute("UPDATE sessions SET teacher_code=?, label=?, class_size=? WHERE code=?",
+                         (teacher_code, label, class_size, code))
+    return {"code": code, "teacher_code": teacher_code, "created": s is None}
+
+
+def ensure_seat(code, name, pin) -> dict:
+    """A seat with a GIVEN name and PIN - a roster import. Creates it exactly
+    as join() would, or sets the PIN of an existing one. Never touches progress."""
+    code = "".join(str(code or "").split()).upper()
+    name = " ".join(str(name or "").split())[:24].upper()
+    pin = str(pin or "").strip()
+    if not name:
+        raise ApiError("a seat needs a name")
+    if not (pin.isdigit() and len(pin) == 4):
+        raise ApiError(f"{name}: the PIN must be 4 digits")
+    with _db_lock, connect() as conn:
+        s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
+        if s is None:
+            raise ApiError("no class with that code", 404)
+        p = conn.execute("SELECT id, pin FROM players WHERE code=? AND name=?", (code, name)).fetchone()
+        if p is not None:
+            if str(p["pin"]) != pin:
+                conn.execute("UPDATE players SET pin=? WHERE id=?", (pin, p["id"]))
+                _log(conn, code, p["id"], "admin_set_pin", {"name": name})
+            return {"code": code, "name": name, "created": False}
+        cfg = econ_config(s)
+        st = economy.new_state(cfg, econ_tick_now(cfg, s))
+        cur = conn.execute(
+            "INSERT INTO players(code, name, token, joined_at, cash, pin, econ, econ_nw)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (code, name, secrets.token_urlsafe(24), time.time(), STARTING_CASH, pin,
+             json.dumps(st, separators=(",", ":")), int(economy.net_worth(cfg, st))))
+        _log(conn, code, cur.lastrowid, "admin_import_seat", {"name": name})
+    return {"code": code, "name": name, "created": True}
 
 
 # ----------------------------------------------------------------- teacher ---
