@@ -254,7 +254,13 @@ def _class_econ(conn, session):
     rows=list(conn.execute('SELECT * FROM players WHERE code=? ORDER BY id',(session['code'],)))
     states={p['id']:_load_state(p,cfg,session) for p in rows}
     start=session['econ_tick']
-    if cfg.get('version') == 4 and old.get('version') != 4:
+    if not old and not rows:
+        # A class admin.py opened stores no config until its first student
+        # (join stamps it). Empty and nobody in it yet is a new class, not a
+        # legacy one: record the rules and skip the migration below.
+        conn.execute('UPDATE sessions SET econ_config=? WHERE code=?',(json.dumps(cfg),session['code']))
+        session=_session_of(conn,session['code'])
+    elif cfg.get('version') == 4 and old.get('version') != 4:
         # Preserve the old snapshot in the ledger. New rules start now: past
         # years of class time must not mint new-model goods or money.
         start=econ_tick_now(cfg,session)
@@ -536,8 +542,12 @@ def join(body) -> dict:
             "SELECT * FROM players WHERE code=? AND name=?", (code, name)
         ).fetchone()
         if existing is not None:
+            seat = f"{code}/{name}"
+            if access.PIN_LIMIT.blocked(seat):
+                raise ApiError("too many wrong PINs for this name; try again in ten minutes", 429)
             if secrets.compare_digest(str(existing["pin"]), pin):
                 return {"token": existing["token"], "name": name, "code": code, "rejoined": True}
+            access.PIN_LIMIT.hit(seat)
             raise ApiError(
                 f"{name} is already taken in this class. If that is you, check your PIN. "
                 "Otherwise add an initial, like " + name.split()[0] + " B.", 409)
@@ -545,7 +555,16 @@ def join(body) -> dict:
         # A closed class still lets its own students back in (same name + PIN,
         # handled above); only a new seat is refused.
         access.check_joins_open(s)
+        seats = int(s["class_size"] or 0)
+        taken = conn.execute("SELECT COUNT(*) FROM players WHERE code=?", (code,)).fetchone()[0]
+        if seats and taken >= seats:
+            raise ApiError(f"this class is full ({seats} seats); ask the teacher", 403)
         cfg = econ_config(s)
+        if not s["econ_config"]:
+            # admin.py opens classes without a config. The first student fixes
+            # the rules, so later reads see a version-4 class, not a legacy one.
+            conn.execute("UPDATE sessions SET econ_config=? WHERE code=?",
+                         (json.dumps(cfg, separators=(",", ":")), code))
         st = economy.new_state(cfg, econ_tick_now(cfg, s))
         token = secrets.token_urlsafe(24)
         cur = conn.execute(
@@ -932,6 +951,7 @@ def save_buildings(body) -> dict:
         p = _player_by_token(conn, token)
         if p is None:
             raise ApiError("unknown or expired token", 401)
+        _session_of(conn, p["code"])         # a revoked class refuses this too
         conn.execute("UPDATE players SET buildings=? WHERE id=?", (encoded, p["id"]))
     return {"saved": True}
 
@@ -942,6 +962,7 @@ def load_buildings(query) -> dict:
         p = _player_by_token(conn, token)
         if p is None:
             raise ApiError("unknown or expired token", 401)
+        _session_of(conn, p["code"])         # a revoked class refuses this too
         try:
             return {"buildings": json.loads(p["buildings"] or "{}")}
         except json.JSONDecodeError:
@@ -1056,11 +1077,16 @@ def _class_locked(fn):
             token=data.get('token','');teacher_token=data.get('teacher_token','')
             if isinstance(token,list): token=token[0] if token else ''
             if isinstance(teacher_token,list): teacher_token=teacher_token[0] if teacher_token else ''
+            # Anything but a string is a bad request, not a crash: bind '' so the
+            # handler answers 401/403 instead of sqlite raising here.
+            if not isinstance(token,str): token=''
+            if not isinstance(teacher_token,str): teacher_token=''
             row=conn.execute('SELECT code FROM players WHERE token=?',(token,)).fetchone()
             if row is None and teacher_token:
                 row=conn.execute('SELECT code FROM sessions WHERE teacher_token=?',(teacher_token,)).fetchone()
             code=row['code'] if row else data.get('code',SOLO_CODE)
-            if isinstance(code,list): code=code[0]
+            if isinstance(code,list): code=code[0] if code else SOLO_CODE
+            if not isinstance(code,str): code=SOLO_CODE
         with _db_lock: lock=_class_locks.setdefault(code,threading.RLock())
         with lock: return fn(data)
     return wrapped

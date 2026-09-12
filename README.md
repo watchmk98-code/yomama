@@ -75,7 +75,7 @@ client-side economy. They are off the navigation but still on disk.
 - `server.py` - local static server, proxy endpoints, API routing
 - `game_api.py` - classroom server: sessions, players, endpoints (SQLite)
 - `access.py` - who may join, play or open the console; rate limit on wrong codes
-- `admin.py` - developer CLI: open, list, close, revoke classes; kick; rotate codes
+- `admin.py` - developer CLI: open, list, close, revoke, resize classes; kick; rotate codes
 - `run_server.py`, `render.yaml`, `DEPLOY.md` - hosting on Render
 - `production_economy.py` - the current economy engine (`economy.py` retains v3)
 - `config/economy.v4.json` - production economy configuration

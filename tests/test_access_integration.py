@@ -144,7 +144,7 @@ def test_http_teacher_login_then_console_then_student_join(http, db):
 
 def test_http_wrong_codes_are_budgeted_per_address_and_right_ones_are_free(http, db, monkeypatch):
     monkeypatch.setattr(access, "BEHIND_PROXY", True)
-    c = opened(db)
+    c = opened(db, size=60)                     # room for the joins below; 30 is a seat cap now
     limit = access.LOGIN_LIMITS["/api/game/teacher/login"].limit
     for _ in range(limit):
         assert http("POST", "/api/game/teacher/login", {"teacher_code": "ZZZZZZ"})[0] == 404

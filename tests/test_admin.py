@@ -212,6 +212,8 @@ def test_rate_limiter_counts_failures_within_the_window_only():
 def test_client_ip_trusts_the_proxy_header_only_when_told_to():
     hdrs = {"X-Forwarded-For": "203.0.113.7, 10.0.0.1"}
     assert access.client_ip(hdrs, "10.0.0.2", behind_proxy=True) == "203.0.113.7"
+    cf = {"CF-Connecting-IP": "198.51.100.4", "X-Forwarded-For": "203.0.113.7, 10.0.0.1"}
+    assert access.client_ip(cf, "10.0.0.2", behind_proxy=True) == "198.51.100.4"   # the edge wins
     assert access.client_ip({}, "10.0.0.2", behind_proxy=True) == "10.0.0.2"
     assert access.client_ip(hdrs, "10.0.0.2", behind_proxy=False) == "10.0.0.2"   # forgeable on a LAN
     assert "/api/game/join" in access.LOGIN_LIMITS and "/api/game/teacher/login" in access.LOGIN_LIMITS

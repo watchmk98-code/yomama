@@ -10,6 +10,7 @@
     python3 admin.py restore KRT39
     python3 admin.py kick KRT39 "ALEX K"
     python3 admin.py rotate KRT39        # new teacher code; the old one stops working
+    python3 admin.py resize KRT39 40     # seats, the teacher's own included
 
 Classes are created here and nowhere else: no page and no endpoint can do it.
 `open` prints two codes. Students type the class code into join.html with a
@@ -207,6 +208,16 @@ def kick(conn, code: str, name: str) -> dict:
     return {"code": code, "name": name, "kicked": True}
 
 
+def resize(conn, code: str, size: int) -> dict:
+    """Seats, the teacher's own included. join() refuses the next student."""
+    size = max(1, min(200, int(size or 30)))
+    with tx(conn):
+        session_of(conn, code)
+        conn.execute("UPDATE sessions SET class_size=? WHERE code=?", (size, code))
+        log(conn, code, "admin_resize", {"class_size": size})
+    return {"code": code, "class_size": size}
+
+
 def rotate(conn, code: str) -> dict:
     with tx(conn):
         session_of(conn, code)
@@ -265,7 +276,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     o = sub.add_parser("open", help="open a new class; prints its two codes")
     o.add_argument("--label", default="", help='e.g. "9-B" or "Ms. Yilmaz", for your own list')
-    o.add_argument("--size", type=int, default=30, help="seats (1-200, default 30)")
+    o.add_argument("--size", type=int, default=30,
+                   help="seats, the teacher's own included (1-200, default 30); the next student is refused")
     sub.add_parser("list", help="every class with its state")
     for name, help_ in (("roster", "who has joined a class"),
                         ("close", "stop new students joining"),
@@ -277,6 +289,9 @@ def build_parser() -> argparse.ArgumentParser:
     k = sub.add_parser("kick", help="remove a student; frees the seat")
     k.add_argument("code")
     k.add_argument("name")
+    r = sub.add_parser("resize", help="change the number of seats (the teacher's own included)")
+    r.add_argument("code")
+    r.add_argument("size", type=int)
     return p
 
 
@@ -297,7 +312,12 @@ def run(conn, args) -> object:
     else:
         fn = {"close": close_class, "reopen": reopen_class, "revoke": revoke_class,
               "restore": restore_class, "rotate": rotate}.get(args.command)
-        out = kick(conn, code, args.name) if args.command == "kick" else fn(conn, code)
+        if args.command == "kick":
+            out = kick(conn, code, args.name)
+        elif args.command == "resize":
+            out = resize(conn, code, args.size)
+        else:
+            out = fn(conn, code)
         if not args.json:
             print(json.dumps(out))
     return out

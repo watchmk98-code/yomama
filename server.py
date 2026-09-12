@@ -189,6 +189,11 @@ def is_public_path(url_path: str) -> bool:
     if suffix not in PUBLIC_SUFFIXES:
         return False
 
+    # The quiz files hold the answer key. The API hands out the questions with
+    # the answers stripped; the raw file must not be one GET away.
+    if parts[0] == "config" and parts[-1].lower().startswith("quiz"):
+        return False
+
     # the resolved file must still sit inside the project folder
     try:
         target = (ROOT / Path(*parts)).resolve()
@@ -296,7 +301,9 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
             self.send_json(404, {"error": "unknown endpoint"})
             return
         # The two endpoints that take a code from a stranger get a budget of
-        # wrong answers per address, so nobody can guess their way into a class.
+        # wrong codes per address, so nobody can guess their way into a class.
+        # Only an unknown code counts: a closed or full class and a wrong PIN
+        # are refusals of a right code, and a whole class shares one address.
         limiter = access.LOGIN_LIMITS.get(parsed.path)
         ip = access.client_ip(self.headers, self.client_address[0]) if limiter else ""
         if limiter and limiter.blocked(ip):
@@ -325,7 +332,7 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         try:
             self.send_json(200, handler(payload))
         except game_api.ApiError as exc:
-            if on_reject and exc.status in (401, 403, 404, 409):   # a wrong code, name or PIN
+            if on_reject and exc.status == 404:   # a code nobody has: the only real guess
                 on_reject()
             self.send_json(exc.status, {"error": exc.message, **exc.details})
         except Exception as exc:  # noqa: BLE001 - never take the class server down

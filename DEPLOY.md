@@ -47,6 +47,7 @@ type `KRT39`, a name, and a 4-digit PIN they will remember"; "you go to
     python3 admin.py restore KRT39
     python3 admin.py kick KRT39 "ALEX K"   # frees the seat; they can rejoin from zero
     python3 admin.py rotate KRT39          # new teacher code if the old one got out
+    python3 admin.py resize KRT39 40       # seats, your own included; the next student is refused
 
 The same commands work on your machine against `./game.db`.
 
@@ -65,8 +66,14 @@ press **Manual Deploy** between classes.
   their name and PIN. A revoked class refuses everyone, teacher included.
 - `class.html` exchanges the teacher code for the console token at
   `POST /api/game/teacher/login`; `rotate` invalidates both.
-- Wrong codes are budgeted per address: 30 per ten minutes on `join`, 10 on
-  `teacher/login`, then 429. Right answers never count, so a whole class
-  behind one router is fine. On Render the address comes from
-  `X-Forwarded-For` (`YOMAMA_BEHIND_PROXY=1`); on a LAN, from the socket.
-- `game.db`, `.git`, `*.py` and every other non-page file are never served.
+- `--size` is a seat cap, the teacher's own seat included; the next student
+  is told the class is full. `resize` raises it.
+- Unknown codes are budgeted per address: 30 per ten minutes on `join`, 10 on
+  `teacher/login`, then 429. Only a code nobody has counts - a closed or full
+  class and a wrong PIN are refusals of a right code - so a whole class
+  behind one router is never locked out. Wrong PINs have their own budget of
+  ten per seat. On Render the address is Cloudflare's `CF-Connecting-IP`,
+  else the first `X-Forwarded-For` entry (`YOMAMA_BEHIND_PROXY=1`); on a LAN,
+  the socket.
+- `game.db`, `.git`, `*.py`, the quiz answer key under `config/` and every
+  other non-page file are never served.

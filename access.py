@@ -108,18 +108,28 @@ LOGIN_LIMITS = {
     "/api/game/teacher/login": RateLimiter(10, 600),
 }
 
+# Wrong PINs are budgeted per (class, name) instead of per address: someone
+# working on one seat is stopped after ten tries, and nobody else in the class
+# notices. join() keys it as "CODE/NAME".
+PIN_LIMIT = RateLimiter(10, 600)
+
 
 def client_ip(headers, peer: str, behind_proxy: bool | None = None) -> str:
     """The visitor's address, as the limiter keys it.
 
-    Behind a proxy the first X-Forwarded-For entry is the client. A client can
-    forge that entry, which only lets it dodge its own budget - the safer
-    failure. The last entry is what the nearest hop saw, which behind a CDN is
-    the CDN, and one key for everybody would lock a whole class out at once.
+    Behind a proxy, Cloudflare's CF-Connecting-IP / True-Client-IP are the
+    client and cannot be forged past the edge; otherwise the first
+    X-Forwarded-For entry, which Render states it sets to the real client
+    address. Never the last entry: behind a CDN that is the CDN, and one key
+    for everybody would lock a whole class out at once.
     """
     if behind_proxy is None:
         behind_proxy = BEHIND_PROXY
     if behind_proxy:
+        for name in ("CF-Connecting-IP", "True-Client-IP"):
+            value = (headers.get(name) or "").strip()
+            if value:
+                return value
         forwarded = (headers.get("X-Forwarded-For") or "").split(",")[0].strip()
         if forwarded:
             return forwarded
