@@ -330,6 +330,7 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         "/api/game/econ/orders/fulfill": game_api.econ_fulfill_order,
         "/api/game/econ/orders/replace": game_api.econ_replace_order,
         "/api/game/econ/orders/commit": game_api.econ_commit_order,
+        "/api/game/econ/customers": game_api.econ_customers,
         "/api/game/econ/focus": game_api.econ_focus,
         "/api/game/econ/graduate": game_api.econ_graduate,
         "/api/game/econ/expand": game_api.econ_expand,

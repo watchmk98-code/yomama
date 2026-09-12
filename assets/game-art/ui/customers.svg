@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges">
+  <title>Customers</title>
+  <g fill="#111111">
+    <rect x="14" y="2" width="6" height="2"/>
+    <rect x="12" y="4" width="10" height="5"/>
+    <rect x="14" y="9" width="6" height="3"/>
+    <rect x="12" y="12" width="10" height="2"/>
+    <rect x="10" y="14" width="14" height="7"/>
+  </g>
+  <g fill="#ffb000">
+    <rect x="14" y="4" width="6" height="5"/>
+    <rect x="16" y="9" width="2" height="3"/>
+    <rect x="13" y="14" width="8" height="5"/>
+    <rect x="12" y="16" width="10" height="3"/>
+  </g>
+  <rect x="14" y="4" width="4" height="2" fill="#ffe7a0"/>
+  <rect x="20" y="16" width="2" height="3" fill="#7a4d00"/>
+  <g fill="#111111">
+    <rect x="5" y="4" width="6" height="2"/>
+    <rect x="3" y="6" width="10" height="5"/>
+    <rect x="5" y="11" width="6" height="3"/>
+    <rect x="3" y="14" width="10" height="2"/>
+    <rect x="1" y="16" width="14" height="6"/>
+  </g>
+  <g fill="#00ff66">
+    <rect x="5" y="6" width="6" height="5"/>
+    <rect x="7" y="11" width="2" height="3"/>
+    <rect x="4" y="16" width="8" height="4"/>
+    <rect x="3" y="18" width="10" height="2"/>
+  </g>
+  <rect x="5" y="6" width="4" height="2" fill="#aaffcc"/>
+  <rect x="4" y="16" width="6" height="2" fill="#66ff99"/>
+  <rect x="11" y="18" width="2" height="2" fill="#00993d"/>
+</svg>

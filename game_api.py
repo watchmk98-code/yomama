@@ -562,9 +562,11 @@ def join(body) -> dict:
             if secrets.compare_digest(str(existing["pin"]), pin):
                 return {"token": existing["token"], "name": name, "code": code, "rejoined": True}
             access.PIN_LIMIT.hit(seat)
+            # A seat is shared by whoever holds its name and PIN, on any number of
+            # devices. Say only that the PIN is wrong: suggesting another name once
+            # turned a typo into a stray second seat.
             raise ApiError(
-                f"{name} is already taken in this class. If that is you, check your PIN. "
-                "Otherwise add an initial, like " + name.split()[0] + " B.", 409)
+                f"Wrong PIN for {name}. Check the four digits you were given and try again.", 409)
 
         # A closed class still lets its own students back in (same name + PIN,
         # handled above); only a new seat is refused.
@@ -821,6 +823,28 @@ def econ_focus(body):
     if not isinstance(focus,str): raise ApiError('focus must be a specialty name')
     return _act(body,lambda cfg,st,cls:economy.set_focus(cfg,st,slot,focus)
                 if cfg.get('version')==4 else dict(ok=False,why='Specialties unavailable'))
+
+
+def econ_customers(body):
+    """Manage one recurring customer after authenticating the player's seat."""
+    def apply(cfg, st, cls):
+        if cfg.get('version') != 4:
+            return dict(ok=False, why='Customer contracts unavailable')
+        slot = _index(body, 'slot')
+        action = body.get('action')
+        if action not in ('accept', 'switch', 'release', 'pause', 'resume', 'upgrade', 'downgrade'):
+            raise ApiError('Choose a customer contract action')
+        customer_id = body.get('customerId')
+        contract_id = body.get('contractId')
+        if action in ('accept', 'switch'):
+            if not isinstance(customer_id, str) or not customer_id or len(customer_id) > 100:
+                raise ApiError('customerId is required')
+        if action != 'accept':
+            if not isinstance(contract_id, str) or not contract_id or len(contract_id) > 100:
+                raise ApiError('contractId is required')
+        return economy.manage_customer_contract(cfg, st, slot, action,
+                                                customer_id=customer_id, contract_id=contract_id)
+    return _act(body, apply)
 
 
 def econ_expand(body):
@@ -1247,5 +1271,5 @@ def _class_locked(fn):
 
 for _name in ('get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
               'econ_upgrade','econ_reserve','econ_processing','econ_fulfill_order','econ_replace_order','econ_commit_order','econ_focus','econ_breakfast',
-              'econ_contracts','econ_accept_contract','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
+              'econ_contracts','econ_accept_contract','econ_customers','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
     globals()[_name]=_class_locked(globals()[_name])

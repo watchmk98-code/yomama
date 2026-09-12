@@ -23,6 +23,46 @@ ORDER_ROLLS = (
     dict(id='jackpot', label='Jackpot order', chance=2, items=5, quantityPercent=250, payoutPercent=250),
 )
 
+# Regular customers buy one small shipment at a time. Terms are deterministic;
+# accepting a customer authorizes automatic inventory sales, never cash spending.
+# Bundles never combine a recipe with its own ingredients.
+CUSTOMER_CATALOG = (
+    ('corner_grocer', 'Corner Grocer', 'Small tomato shipments with a quick turnaround.', 120,
+     (('farm_tomatoes', 6),)),
+    ('sunrise_diner', 'Sunrise Diner', 'A steady egg buyer for your farm.', 180,
+     (('farm_eggs', 4),)),
+    ('honey_collective', 'Honey Collective', 'Larger payments for slower honey shipments.', 300,
+     (('farm_honey', 3),)),
+    ('harbor_bistro', 'Harbor Bistro', 'Oysters and smoked fish for the lunch menu.', 240,
+     (('fish_stall_oysters', 3), ('fish_stall_smoked_fish', 2))),
+    ('copper_cafe', 'Copper Café', 'Coffee and pastries keep your farm and roastery busy.', 300,
+     (('roastery_espresso_shots', 4), ('roastery_pastries', 2))),
+    ('rally_crew', 'Rally Crew', 'Custom mods turn spare parts into a regular payday.', 300,
+     (('garage_custom_mods', 3),)),
+    ('builders_union', 'Builders Union', 'Frames and machined bolts for local building work.', 360,
+     (('workshop_welded_frames', 3), ('workshop_machined_bolts', 2))),
+    ('neighborhood_grid', 'Neighborhood Grid', 'Battery storage and credits for local power users.', 360,
+     (('solar_coop_battery_storage', 3), ('solar_coop_carbon_credits', 2))),
+    ('pantry_network', 'Pantry Network', 'Canned food connects your farm, fish stall and cannery.', 360,
+     (('cannery_canned_goods', 4), ('cannery_preserves', 2))),
+    ('inventors_lab', 'Inventors Lab', 'Prototypes bring your workshop and garage together.', 420,
+     (('machine_works_tooling', 3), ('machine_works_prototypes', 2))),
+    ('clean_power_group', 'Clean Power Group', 'A regular buyer for wind capacity and certificates.', 420,
+     (('turbine_field_capacity_contracts', 3), ('turbine_field_green_certificates', 2))),
+    ('district_heating', 'District Heating', 'Peak power and steam heat supplied through your grid.', 420,
+     (('generator_peak_power', 3), ('generator_steam_heat', 2))),
+    ('mobile_network', 'Mobile Network', 'Tower leases and messages need reliable power.', 480,
+     (('relay_station_sms_traffic', 3), ('relay_station_tower_leases', 2))),
+    ('city_couriers', 'City Couriers', 'Delivery work depends on parts and communications.', 480,
+     (('freight_terminal_cold_storage', 3), ('freight_terminal_last_mile_delivery', 2))),
+    ('cloud_studio', 'Cloud Studio', 'Storage and API calls put your power and network to work.', 480,
+     (('data_center_cloud_storage', 3), ('data_center_api_calls', 2))),
+    ('regional_utility', 'Regional Utility', 'Reserve capacity and credits connect your energy businesses.', 540,
+     (('solar_array_reserve_capacity', 3), ('solar_array_renewable_credits', 2))),
+    ('orbital_research', 'Orbital Research', 'Ground time and telemetry draw on your whole technology chain.', 540,
+     (('uplink_center_ground_time', 3), ('uplink_center_telemetry', 2))),
+)
+
 
 def load_config(path=CONFIG_PATH):
     with open(path, encoding='utf8') as source:
@@ -48,6 +88,7 @@ def new_state(cfg, start_tick=0, seed=1):
               materials=0,lastActiveTick=start_tick,orderSerial=0,
               report=dict(produced=0,unitsProduced=0,retailEarned=0,unitsSold=0,
                           overflowSold=0,overflowCost=0,builds=0,offlineTicksSkipped=0))
+    _customer_defaults(st)
     offer_contracts(cfg,st,start_tick)
     return st
 
@@ -60,6 +101,8 @@ def migrate_state(cfg, st, tick=None):
     The API records original JSON and handles clock reset for old snapshots.
     """
     if not isinstance(st,State): st=State(st)
+    # Existing v4 towns gain an empty roster without resetting their economy.
+    _customer_defaults(st)
     if st.get('modelVersion')==4:
         return st
     old_gate=legacy.gate_open(legacy.load_config(),st) if st.get('b') else False
@@ -84,7 +127,7 @@ def migrate_state(cfg, st, tick=None):
              auto=bool(c.get('auto') or any(b['sales']>1 for b in st['b'])),
              goodSales=min(cfg['gate']['goodSalesNeeded'],st['cStats'].get('done',0)),quiz=bool(c.get('quiz')))
     st.setdefault('report',{})
-    for key in ('produced','unitsProduced','retailEarned','unitsSold','overflowSold','overflowCost','builds','offlineTicksSkipped'):
+    for key in ('produced','unitsProduced','retailEarned','unitsSold','overflowSold','overflowCost','builds','offlineTicksSkipped','customerEarned','customerDeliveries'):
         st['report'].setdefault(key,0)
     if tick is not None:
         delta=tick-st.get('tick',tick)
@@ -167,6 +210,8 @@ def order_reservations(st, exclude=None):
 def protected_stock(cfg, st):
     protected = chain_reservations(cfg, st)
     for gid, qty in order_reservations(st).items():
+        protected[gid] = protected.get(gid, 0) + qty
+    for gid, qty in _customer_reservations(cfg, st).items():
         protected[gid] = protected.get(gid, 0) + qty
     return protected
 
@@ -259,7 +304,7 @@ def _retail(cfg,st):
 def player_tick(cfg,cls,st,k):
     if st.get('build') is not None and k>=st['build']['t']:
         finish_build(cfg,st,k)
-    _produce(cfg,st);_retail(cfg,st);_sync_pools(cfg,st)
+    _produce(cfg,st);_tick_customer_contracts(cfg,st,k+1);_retail(cfg,st);_sync_pools(cfg,st)
     st['tick']=k+1
 
 
@@ -292,8 +337,13 @@ def advance_class(cfg,cls,players,start,target):
         begin=max(start,st['tick']);stop=min(target,st.get('lastActiveTick',begin)+allowance)
         for k in range(begin,max(begin,stop)): player_tick(cfg,cls,st,k)
         if target>max(begin,stop):
-            st['report']['offlineTicksSkipped']+=target-max(begin,stop)
+            skipped=target-max(begin,stop)
+            st['report']['offlineTicksSkipped']+=skipped
             st['recentRetail']={}
+            # Production beyond the absence cap is never paid or caught up.
+            # Preserve the interval remaining at the cap for the next visit.
+            for contract in st.get('customerContracts',{}).get('active',[]):
+                contract['nextDeliveryTick']+=skipped
         while st.get('build') and st['build']['t']<target:
             finish_build(cfg,st,st['build']['t'])
         st['tick']=max(st['tick'],target)
@@ -420,6 +470,189 @@ def finish_build(cfg,st,k,DAY=None):
 def auto_continue(cfg,st,tick): return None
 
 
+def _customer_defaults(st):
+    customers=st.setdefault('customerContracts',{})
+    for key,value in (('serial',0),('earned',0),('deliveries',0),('active',[]),('history',{})):
+        customers.setdefault(key,value)
+    for contract in customers['active']:
+        contract.setdefault('largerOrder',False)
+    report=st.setdefault('report',{})
+    report.setdefault('customerEarned',0)
+    report.setdefault('customerDeliveries',0)
+    return customers
+
+
+def _customer_slots(st):
+    return 4 if len(st['b'])>=6 else 3 if len(st['b'])>=3 else 2
+
+
+def _customer_catalog(cfg,st):
+    goods=catalog(cfg);owned=set(st['tierOf']);customers=[]
+
+    def dependencies(gid,seen):
+        if gid in seen: return
+        seen.add(gid)
+        for need in goods[gid].get('inputs',[]): dependencies(need['goodId'],seen)
+
+    for customer_id,name,description,seconds,needs in CUSTOMER_CATALOG:
+        # Small test/preview configurations may contain only some products.
+        if any(gid not in goods for gid,qty in needs): continue
+        required=set()
+        for gid,qty in needs: dependencies(gid,required)
+        missing=sorted({goods[gid]['tier'] for gid in required}-owned)
+        requirements=[dict(goodId=gid,name=goods[gid]['name'],buildingId=goods[gid]['buildingId'],quantity=qty)
+                      for gid,qty in needs]
+        customers.append(dict(id=customer_id,name=name,description=description,available=not missing,
+                              unlockText='Open '+', '.join(cfg['tiers'][ti]['name'] for ti in missing) if missing else '',
+                              requirements=requirements,reward=jsround(sum(goods[gid]['unitPrice']*qty for gid,qty in needs)*1.25),
+                              intervalSeconds=seconds))
+    return customers
+
+
+def _customer_stock_plan(cfg,st):
+    """Reserve one shipment per regular, after manual orders and recipe buffers.
+
+    Earlier slots have first claim, but reservations never exceed shelf space.
+    These holds protect against sales only: recipes can use them, so a regular
+    asking for an ingredient cannot deadlock a customer's finished product.
+    """
+    active=st.get('customerContracts',{}).get('active',[])
+    if not active: return {},{}
+    goods=catalog(cfg);protected=chain_reservations(cfg,st)
+    for gid,qty in order_reservations(st).items(): protected[gid]=protected.get(gid,0)+qty
+    totals={};assigned={};by_tier={ti:i for i,ti in enumerate(st['tierOf'])}
+    for contract in sorted(active,key=lambda c:c['slot']):
+        stock={};assigned[contract['id']]=stock
+        if contract['paused']: continue
+        for need in contract['requirements']:
+            gid=need['goodId'];slot=by_tier[goods[gid]['tier']]
+            prior=protected.get(gid,0)+totals.get(gid,0)
+            target=min(need['quantity'],max(0,_good_capacity(cfg,st,slot,gid)-prior))
+            stock[gid]=min(target,max(0,st['inventory'].get(gid,0)-prior))
+            totals[gid]=totals.get(gid,0)+target
+    return totals,assigned
+
+
+def _customer_reservations(cfg,st):
+    return _customer_stock_plan(cfg,st)[0]
+
+
+def delivery_reservations(cfg,st,exclude=None):
+    """Manual commitments have priority; other deliveries respect regular stock."""
+    held=order_reservations(st,exclude=exclude)
+    for stock in _customer_stock_plan(cfg,st)[1].values():
+        for gid,qty in stock.items(): held[gid]=held.get(gid,0)+qty
+    return held
+
+
+def manage_customer_contract(cfg,st,slot,action,customer_id=None,contract_id=None):
+    """Manage automatic regular sales; existing contracts require their exact ID."""
+    if type(slot) is not int or not 0<=slot<_customer_slots(st):
+        return dict(ok=False,why='This customer slot is not open')
+    if not isinstance(action,str) or action not in ('accept','switch','release','pause','resume','upgrade','downgrade'):
+        return dict(ok=False,why='Unknown customer action')
+    data=st.get('customerContracts',{})
+    active=data.get('active',[])
+    current=next((c for c in active if c['slot']==slot),None)
+    if action=='accept':
+        if current is not None: return dict(ok=False,why='This slot already has a customer')
+    elif current is None or not isinstance(contract_id,str) or current['id']!=contract_id:
+        return dict(ok=False,why='This customer changed. Refresh and try again.')
+    customer=None
+    if action in ('accept','switch'):
+        customer=next((c for c in _customer_catalog(cfg,st) if c['id']==customer_id),None)
+        if customer is None: return dict(ok=False,why='Choose a customer')
+        if not customer['available']: return dict(ok=False,why=customer['unlockText'])
+        if any(c['customerId']==customer_id for c in active):
+            return dict(ok=False,why='This customer already has a slot')
+    elif action in ('upgrade','downgrade'):
+        if action=='upgrade' and current.get('largerOrder',False):
+            return dict(ok=False,why='This customer already has the larger order')
+        if action=='upgrade' and current['deliveries']<3:
+            return dict(ok=False,why='Larger orders become available after three deliveries')
+        if action=='downgrade' and not current.get('largerOrder',False):
+            return dict(ok=False,why='This customer already has the smaller order')
+        customer=next((c for c in _customer_catalog(cfg,st) if c['id']==current['customerId']),None)
+        if customer is None: return dict(ok=False,why='This customer is no longer available')
+    data=_customer_defaults(st)
+    if action in ('accept','switch'):
+        interval=max(1,math.ceil(customer['intervalSeconds']/cfg['global']['tick']))
+        data['serial']+=1
+        history=data['history'].get(customer_id,{})
+        replacement=dict(slot=slot,id='regular-{}-{}'.format(st.get('rngState',1),data['serial']),
+                         customerId=customer_id,name=customer['name'],paused=False,largerOrder=False,
+                         deliveries=history.get('deliveries',0),earned=history.get('earned',0),
+                         reward=customer['reward'],intervalTicks=interval,
+                         intervalSeconds=interval*cfg['global']['tick'],nextDeliveryTick=st['tick']+interval,
+                         requirements=[dict(goodId=n['goodId'],quantity=n['quantity']) for n in customer['requirements']])
+        if current is not None: data['active'].remove(current)
+        data['active'].append(replacement)
+        data['active'].sort(key=lambda c:c['slot'])
+        return dict(ok=True,kind='customer_contract',action=action,contractId=replacement['id'])
+    if action in ('upgrade','downgrade'):
+        larger=action=='upgrade'
+        data['serial']+=1
+        current.update(id='regular-{}-{}'.format(st.get('rngState',1),data['serial']),largerOrder=larger,
+                       reward=jsround(customer['reward']*2.2) if larger else customer['reward'],
+                       requirements=[dict(goodId=n['goodId'],quantity=n['quantity']*(2 if larger else 1))
+                                     for n in customer['requirements']],
+                       nextDeliveryTick=st['tick']+current['intervalTicks'])
+        return dict(ok=True,kind='customer_contract',action=action,contractId=current['id'])
+    if action=='release': data['active'].remove(current)
+    elif action=='pause': current['paused']=True
+    elif current['paused']:
+        current['paused']=False
+        current['nextDeliveryTick']=st['tick']+current['intervalTicks']
+    return dict(ok=True,kind='customer_contract',action=action,contractId=contract_id)
+
+
+def _tick_customer_contracts(cfg,st,tick):
+    data=st.get('customerContracts',{})
+    for contract in sorted(data.get('active',[]),key=lambda c:c['slot']):
+        if contract['paused'] or tick<contract['nextDeliveryTick']: continue
+        stock=_customer_stock_plan(cfg,st)[1].get(contract['id'],{})
+        if any(stock.get(n['goodId'],0)<n['quantity'] for n in contract['requirements']): continue
+        # Debit every item together; shortages never receive partial payments.
+        for need in contract['requirements']: st['inventory'][need['goodId']]-=need['quantity']
+        st['cash']+=contract['reward']
+        contract['deliveries']+=1;contract['earned']+=contract['reward']
+        data['deliveries']+=1;data['earned']+=contract['reward']
+        st['report']['customerEarned']+=contract['reward']
+        st['report']['customerDeliveries']+=1
+        data['history'][contract['customerId']]=dict(deliveries=contract['deliveries'],earned=contract['earned'])
+        # A late shipment starts a new full interval; there is no missed backlog.
+        contract['nextDeliveryTick']=tick+contract['intervalTicks']
+
+
+def customer_contract_payload(cfg,st):
+    data=st.get('customerContracts',{});goods=catalog(cfg);slots=_customer_slots(st)
+    customers=_customer_catalog(cfg,st);by_id={c['id']:c for c in customers}
+    assigned=_customer_stock_plan(cfg,st)[1];active=[]
+    for contract in sorted(data.get('active',[]),key=lambda c:c['slot']):
+        stock=assigned.get(contract['id'],{})
+        requirements=[dict(n,name=goods[n['goodId']]['name'],buildingId=goods[n['goodId']]['buildingId'],
+                           owned=stock.get(n['goodId'],0),reserved=stock.get(n['goodId'],0))
+                      for n in contract['requirements']]
+        missing=[n for n in requirements if n['owned']<n['quantity']]
+        remaining=max(0,(contract['nextDeliveryTick']-st['tick'])*cfg['global']['tick'])
+        status='paused' if contract['paused'] else 'waiting' if remaining==0 and missing else 'supplying'
+        status_text='Paused · goods released' if contract['paused'] else (
+            'Waiting for {} {}'.format(missing[0]['quantity']-missing[0]['owned'],missing[0]['name']) if status=='waiting'
+            else 'Stock ready · ships automatically' if not missing else 'Saving the next shipment')
+        larger=contract.get('largerOrder',False);offer=None
+        if not larger and contract['deliveries']>=3 and contract['customerId'] in by_id:
+            base=by_id[contract['customerId']]
+            offer=dict(reward=jsround(base['reward']*2.2),intervalSeconds=contract['intervalSeconds'],
+                       requirements=[dict(n,quantity=n['quantity']*2) for n in base['requirements']])
+        active.append(dict(slot=contract['slot'],id=contract['id'],customerId=contract['customerId'],
+                           name=contract['name'],paused=contract['paused'],deliveries=contract['deliveries'],
+                           earned=contract['earned'],reward=contract['reward'],intervalSeconds=contract['intervalSeconds'],
+                           nextDeliverySeconds=remaining,requirements=requirements,status=status,statusText=status_text,
+                           largerOrder=larger,largerOffer=offer))
+    return dict(slots=slots,maxSlots=4,nextUnlock=dict(buildings=3,slots=3) if slots==2 else dict(buildings=6,slots=4) if slots==3 else None,
+                earned=data.get('earned',0),deliveries=data.get('deliveries',0),customers=customers,active=active)
+
+
 def _make_order(cfg,st,index):
     goods=catalog(cfg);owned=set(st['tierOf']);eligible=[]
     for ti in st['tierOf']:
@@ -480,7 +713,7 @@ def fulfill_order(cfg,st,offerIndex,order_id=None):
     check=_order_check(st,offerIndex,order_id)
     if not check['ok']: return check
     order=st['offers'][offerIndex];goods=catalog(cfg)
-    held=order_reservations(st,exclude=order['id'])
+    held=delivery_reservations(cfg,st,exclude=order['id'])
     for need in order['requirements']:
         if st['inventory'].get(need['goodId'],0)-held.get(need['goodId'],0)<need['quantity']:
             return dict(ok=False,why='Need unreserved '+goods[need['goodId']]['name'])
@@ -629,7 +862,7 @@ def payload(cfg,st,cls,session,behind=False):
                              timerH=t['timerH'],affordable=st['cash']>=quote['cost'],canExpand=check['ok'],why=check.get('why','')))
     orders=[]
     for order in st.get('offers') or []:
-        held=order_reservations(st,exclude=order['id'])
+        held=delivery_reservations(cfg,st,exclude=order['id'])
         requirements=[dict(n,name=goods[n['goodId']]['name'],owned=max(0,inventory.get(n['goodId'],0)-held.get(n['goodId'],0)),
                            buildingId=goods[n['goodId']]['buildingId']) for n in order['requirements']]
         missing=[n for n in requirements if n['owned']<n['quantity']]
@@ -649,6 +882,7 @@ def payload(cfg,st,cls,session,behind=False):
     newest=buildings[-1]
     return dict(modelVersion=4,tick=st['tick'],tickSeconds=g['tick'],behind=behind,cash=int(st['cash']),
                 rulesRevision=2,regularDeliveries=st.get('regularDeliveries',0),regularTarget=3,
+                customerContracts=customer_contract_payload(cfg,st),
                 customerUnitsSold=st['report'].get('unitsSold',0),customerUnitsNeeded=100,materialUnitValue=cfg['production']['materialCashValue'],
                 netWorth=net_worth(st),book=st['book'],taxPaid=st['taxPaid'],taxRate=0,
                 incomePerMinute=income,productionPerMinute=prod,revenuePerTick=jsround(income*g['tick']/60),

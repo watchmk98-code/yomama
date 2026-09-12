@@ -15,15 +15,13 @@ import json
 import sys
 import tempfile
 import time
-from http.server import ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import production_economy as E
 import game_api as A
-import server
+from preview_support import solo_seat, preview_handler, serve
 
 
 def simulated_town(cfg, days, visit_hours=2, policy='expansion'):
@@ -67,6 +65,7 @@ def main():
     parser.add_argument('--days', type=int, default=3)
     parser.add_argument('--visit-hours', type=int, default=2)
     parser.add_argument('--strategy', choices=('upgrades', 'expansion', 'deliveries', 'casual'), default='expansion')
+    parser.add_argument('--no-snapshot', action='store_true', help='do not rewrite previews/*-snapshot.json')
     args = parser.parse_args()
     if not 1 <= args.days <= 90 or not 1 <= args.visit_hours <= 168:
         parser.error('days must be 1–90 and visit-hours must be 1–168')
@@ -75,9 +74,9 @@ def main():
     label = 'NEW GAME PREVIEW' if args.fresh else 'DAY ' + str(days) + ' PREVIEW'
     st, world = simulated_town(cfg, days, args.visit_hours, args.strategy)
     with tempfile.TemporaryDirectory(prefix='yomama-production-preview-') as directory:
-        A.DB_PATH = Path(directory) / 'preview.db'
-        A.SOLO_NAME = label
-        A.init_db()
+        # A SOLO seat with AUTO_LOGIN on for this process only, and the login
+        # wall off on this port: see preview_support.py. Refuses the real game.db.
+        token = solo_seat(Path(directory) / 'preview.db', label)
         if days:
             with A.connect() as conn:
                 player = A._ensure_solo(conn)
@@ -91,32 +90,11 @@ def main():
         snapshot['preview'] = dict(days=days,visitHours=args.visit_hours,strategy=args.strategy,
                                    firstVisitMinutes=10,laterVisitMinutes=5,
                                    deliveriesCompleted=st['cStats']['done'])
-        (ROOT / 'previews' / ('fresh-snapshot.json' if args.fresh else 'day-' + str(days) + '-snapshot.json')).write_text(json.dumps(snapshot, indent=2) + '\n')
+        if not args.no_snapshot:
+            (ROOT / 'previews' / ('fresh-snapshot.json' if args.fresh else 'day-' + str(days) + '-snapshot.json')).write_text(json.dumps(snapshot, indent=2) + '\n')
 
-        class PreviewHandler(server.NewsProxyHandler):
-            def do_GET(self):
-                name = urlparse(self.path).path.lstrip('/')
-                if name in ('buildings.html', 'warehouse.html', 'marketplace.html', 'advanced-hq.html', 'license.html'):
-                    html = (ROOT / name).read_text().replace('<h1>BUILD</h1>', '<h1>BUILD <span style="font-size:15px;color:var(--muted)">/ ' + label + '</span></h1>')
-                    data = html.encode()
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'text/html; charset=utf-8')
-                    self.send_header('Content-Length', str(len(data)))
-                    self.end_headers()
-                    self.wfile.write(data)
-                else:
-                    super().do_GET()
-
-        server.SERVER_PORT = args.port
-        httpd = ThreadingHTTPServer(('127.0.0.1', args.port), PreviewHandler)
-        print(label + ': http://127.0.0.1:' + str(args.port) + '/buildings.html', flush=True)
         print('Separate temporary save; your real game is unchanged.', flush=True)
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            httpd.server_close()
+        serve(args.port, preview_handler(token, label))
 
 
 if __name__ == '__main__':

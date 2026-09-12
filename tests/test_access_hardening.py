@@ -102,3 +102,21 @@ def test_quiz_answer_key_is_not_served_but_the_economy_config_is(http):
     assert server.is_public_path("/config/economy.v4.json")
     assert http("GET", "/config/quiz.json")[0] == 404
     assert http("GET", "/config/economy.v4.json")[0] == 200
+
+
+def test_a_wrong_pin_says_so_and_never_invites_a_second_seat(db):
+    """A friend with a card mistypes the PIN: the answer must point at the PIN,
+    not suggest 'add an initial' - that is how a stray 'BANANA B' seat was born."""
+    c = opened(db)
+    A.join(dict(code=c["code"], name="BANANA", pin="2871"))
+    with pytest.raises(A.ApiError) as e:
+        A.join(dict(code=c["code"], name="banana", pin="2817"))
+    assert e.value.status == 409
+    assert "PIN" in e.value.message and "BANANA" in e.value.message
+    assert "initial" not in e.value.message and "BANANA B" not in e.value.message
+    assert A.join(dict(code=c["code"], name="BANANA", pin="2871"))["rejoined"]
+    # and a closed class cannot grow a second seat even from a new name
+    admin_do(db, admin.close_class, c["code"])
+    with pytest.raises(A.ApiError) as e:
+        A.join(dict(code=c["code"], name="BANANA B", pin="1111"))
+    assert e.value.status == 403

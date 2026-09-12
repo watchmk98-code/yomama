@@ -698,3 +698,87 @@
  .game-compact .game-order-controls>* {flex:1;min-width:0;}
  .game-compact .game-order-tier {font-size:12px;}
 }
+
+/* Recurring customers have their own Market container and a bounded roster. */
+.game-market-surface {display:flex;flex-direction:column;flex:1;min-height:0;gap:10px;}
+.game-market-income {display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-height:0;}
+.game-market-income.has-contracts {grid-template-columns:minmax(0,1fr) minmax(310px,.42fr);}
+.game-fitted .game-market-income {flex:1;min-height:0;}
+.game-market-income > .game-market-orders {min-width:0;margin:0;}
+.game-market-narrow .game-market-orders .game-order-grid {grid-template-columns:1fr;}
+.game-customer-contracts {display:flex;flex-direction:column;min-width:0;border-color:#456458;}
+.game-customer-contracts .game-panel-head {background:rgba(91,184,138,.06);}
+.game-customer-contracts .game-panel-head h2 {color:var(--green);}
+.game-contract-intro {flex:none;margin:0;padding:7px 10px;color:var(--muted);font-size:14px;line-height:1.15;}
+.game-contract-slots {display:flex;flex:none;gap:5px;padding:0 10px 7px;}
+.game-contract-slots button {flex:1;min-width:0;min-height:30px;padding:3px;font:inherit;font-size:15px;color:var(--muted);background:var(--bg);border:1px solid var(--border);cursor:pointer;}
+.game-contract-slots button[aria-pressed=true] {color:var(--green);border-color:var(--green);box-shadow:inset 0 -2px var(--green);}
+.game-contract-body {display:flex;flex-direction:column;justify-content:space-evenly;gap:8px;padding:0 10px 8px;flex:1;min-height:0;}
+.game-contract-summary,.game-contract-supply {min-width:0;}
+.game-contract-summary > label {display:block;font-size:14px;color:var(--muted);margin-bottom:4px;}
+.game-contract-summary > h3 {font-size:22px;font-weight:400;margin:0 0 4px;line-height:1.05;}
+.game-contract-summary > select {width:100%;min-width:0;min-height:34px;padding:4px 6px;font:inherit;font-size:17px;background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.game-contract-description {font-size:14px;line-height:1.1;color:var(--muted);margin:5px 0;}
+.game-contract-pay {display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 8px;margin-top:5px;}
+.game-contract-pay strong {font-size:23px;line-height:1;font-weight:400;color:var(--green);}
+.game-contract-pay > span {font-size:14px;color:var(--muted);}
+.game-contract-caption {font-size:13px;color:var(--muted);margin-bottom:3px;}
+.game-contract-goods .econ-good-line {min-height:28px;gap:8px;font-size:16px;}
+.game-contract-goods .econ-good-name {min-width:0;font-size:16px;gap:5px;}
+.game-contract-goods .econ-good-line > span:last-child {flex:none;}
+.econ-kid .game-contract-goods .econ-art-icon {width:24px;height:24px;flex-basis:24px;}
+.game-contract-controls {display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:7px;}
+.game-contract-controls .game-small-button {flex:1;min-width:0;min-height:32px;padding:3px 6px;font-size:16px;}
+.game-contract-controls .game-text-button {min-height:30px;padding:2px 5px;font-size:14px;}
+.econ-kid .game-contract-controls .k-btn {width:100%;min-height:34px;padding:4px 8px;font-size:18px;}
+.game-contract-help {font-size:13px;line-height:1.1;color:var(--muted);margin:5px 0 0;}
+.game-contract-order-choice {display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:7px;border-top:1px solid var(--line);}
+.game-contract-order-choice > span {flex:1;min-width:0;font-size:14px;line-height:1.1;color:var(--muted);}
+.game-contract-order-choice strong {color:var(--green);font-weight:400;}
+.game-contract-order-choice .game-small-button {flex:none;min-height:32px;padding:4px 6px;font-size:15px;}
+.game-contract-status {color:var(--green);font-size:16px;line-height:1.1;margin:8px 0 4px;}
+.game-contract-status.is-paused {color:var(--muted);}
+.game-contract-history {color:var(--muted);font-size:14px;}
+.game-contract-footer {flex:none;display:flex;justify-content:space-between;gap:6px;padding:5px 10px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);}
+.game-contract-footer > span:first-child {color:var(--green);}
+.game-fitted:not(.game-compact) .game-market-surface.has-contracts {display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,.42fr);grid-template-rows:minmax(0,1fr) auto auto;gap:10px 12px;}
+.game-fitted:not(.game-compact) .game-market-surface.has-contracts .game-market-income {display:contents;}
+.game-fitted:not(.game-compact) .game-market-surface.has-contracts .game-market-orders {grid-column:1;grid-row:1;}
+.game-fitted:not(.game-compact) .game-market-surface.has-contracts .game-business-picker {grid-column:1;grid-row:2;}
+.game-fitted:not(.game-compact) .game-market-surface.has-contracts .game-market-tools {grid-column:1;grid-row:3;}
+.game-fitted:not(.game-compact) .game-market-surface.has-contracts .game-customer-contracts {grid-column:2;grid-row:1/span 3;}
+.game-compact .game-market-surface {display:contents;}
+.game-compact .game-market-income {display:contents;}
+.game-compact .game-customer-contracts:not(.game-view-hidden) {flex:1;}
+.game-compact .game-contract-body {gap:12px;padding:8px 12px;}
+.game-compact .game-contract-intro {padding:9px 12px;font-size:15px;}
+.game-compact .game-contract-slots {padding-inline:12px;}
+.game-compact .game-contract-summary > h3 {font-size:27px;}
+.game-compact .game-contract-pay strong {font-size:29px;}
+.game-compact .game-contract-goods .econ-good-line {min-height:34px;font-size:18px;}
+.game-compact .game-contract-goods .econ-good-name {font-size:18px;}
+@media(max-height:650px) and (min-width:650px){
+ .game-compact .game-customer-contracts {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;column-gap:12px;}
+ .game-compact .game-customer-contracts .game-panel-head {grid-column:1;grid-row:1;}
+ .game-compact .game-contract-intro {grid-column:2;grid-row:1/span 2;padding:4px 10px 4px 0;font-size:12px;align-self:center;}
+ .game-compact .game-contract-slots {grid-column:1;grid-row:2;padding:2px 10px 4px;}
+ .game-compact .game-contract-slots button {min-height:25px;font-size:14px;}
+ .game-compact .game-contract-body {grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center;padding:0 10px 3px;}
+ .game-compact .game-contract-footer {grid-column:1/-1;grid-row:4;padding-block:3px;font-size:12px;}
+ .game-compact .game-contract-summary > label {font-size:12px;margin:0 0 2px;}
+ .game-compact .game-contract-summary > select {min-height:28px;padding:2px 4px;font-size:16px;}
+ .game-compact .game-contract-summary > h3 {font-size:22px;}
+ .game-compact .game-contract-pay {margin-top:3px;}
+ .game-compact .game-contract-pay strong {font-size:23px;}
+ .game-compact .game-contract-pay > span,.game-compact .game-contract-history {font-size:12px;}
+ .game-compact .game-contract-description,.game-compact .game-contract-help {font-size:12px;line-height:1;margin-block:3px;}
+ .game-compact .game-contract-status {font-size:14px;margin:4px 0;}
+ .game-compact .game-contract-caption {font-size:12px;margin:0;}
+ .game-compact .game-contract-goods .econ-good-line {min-height:22px;font-size:15px;}
+ .game-compact .game-contract-goods .econ-good-name {font-size:15px;}
+ .game-compact .game-contract-controls {margin-top:3px;}
+ .game-compact .game-contract-order-choice {margin-top:4px;padding-top:3px;gap:6px;}
+ .game-compact .game-contract-order-choice > span {font-size:12px;}
+ .game-compact .game-contract-order-choice .game-small-button {min-height:27px;padding:2px 4px;font-size:14px;}
+ .game-compact .game-contract-controls .k-btn,.game-compact .game-contract-controls .game-small-button,.game-compact .game-contract-controls .game-text-button {min-height:27px;font-size:15px;padding-block:2px;}
+}

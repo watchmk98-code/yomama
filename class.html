@@ -6,7 +6,7 @@
   <title>YOMAMA INVESTMENTS — CLASS CONSOLE</title>
   <meta name="description" content="Open a class, project the code, watch the roster." />
   <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="./styles.css?v=20260421-2" />
+  <link rel="stylesheet" href="./styles.css?v=20260912-live2" />
   <style>
     .cc-wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
     .cc-h1{ color:var(--amber); font-size:26px; letter-spacing:.08em; margin:0 0 2px; }
@@ -80,8 +80,8 @@
       <p class="cc-sub" style="margin:14px 0 0">
         Classes are opened by the administrator, who gives you two codes: a class code
         for the students and this teacher code for you. Students go to join.html with
-        the class code, a name and a 4-digit PIN — names have to be unique in a class,
-        so a second Alex is asked to add an initial.
+        the class code, a name and a 4-digit PIN. A name is one seat: anyone who
+        has the name and PIN gets into it, from any device; a wrong PIN is refused.
       </p>
       <div class="cc-msg info" id="cc-start-msg" role="status" aria-live="polite"></div>
     </section>
@@ -135,7 +135,7 @@
   </div>
 
   <section class="panel" id="econ-teacher" aria-label="Live class economy"></section>
-  <script src="./teacher-econ.js?v=20260912-production4"></script>
+  <script src="./teacher-econ.js?v=20260912-live2"></script>
   <script src="./yomama-net.js?v=1"></script>
   <script>
     (function () {

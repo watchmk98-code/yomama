@@ -40,6 +40,9 @@
   var tickTimer = null;
   var busy = false;
   var pendingRerolls = [];
+  var customerSlot = 0;
+  var customerChoices = {};
+  var customerSwitchId = null;
 
   // ------------------------------------------------------------- session --
   try {
@@ -296,7 +299,7 @@
   }
 
   function resourceBar(s) {
-    if(productionModel(s) && !document.getElementById('econ-building'))return '<div class="game-wallet"><span>Cash <strong>'+ym(s.cash)+'</strong></span><span>Materials <strong>'+units(s.materials)+'</strong></span></div>';
+    if(productionModel(s))return '<div class="game-wallet"><span>Cash <strong>'+ym(s.cash)+'</strong></span>'+(document.getElementById('econ-building')?'<span title="Used to open new businesses">Materials <strong>'+units(s.materials)+'</strong></span>':'')+'</div>';
     var values = [['Cash', ym(s.cash)], [productionModel(s) ? 'Sales / min' : 'Production / ' + s.tickSeconds + ' sec', ym(productionModel(s) ? s.incomePerMinute : s.revenuePerTick)], ['Storage', percent(s.warehouseFillPercent / 100)], ['Business value', ym(s.netWorth)]];
     return '<div class="game-resources">' + values.map(function (v) { return '<div><span>' + v[0] + '</span><strong>' + v[1] + '</strong></div>'; }).join('') + '</div>';
   }
@@ -366,7 +369,7 @@
 
   function renderBuilding(el, s) {
     var b=selectedBuilding(s);
-    el.innerHTML=notice(s)+'<div class="game-layout">'+roster(s)+'<div class="game-center">'+site(b,s)+stockPanel(b,s)+'</div><div class="game-actions">'+(productionModel(s)?operationsPanel(b,s):upgradePanel(b,s,false)+upgradePanel(b,s,true))+expansionPanel(s)+'</div></div><div class="game-build-bottom">'+gameFooter(s)+breakfastStrip(s)+'</div>'+statusLine();
+    el.innerHTML=notice(s)+'<div class="game-layout">'+roster(s)+'<div class="game-center">'+site(b,s)+(productionModel(s)?'':stockPanel(b,s))+'</div><div class="game-actions">'+(productionModel(s)?operationsPanel(b,s):upgradePanel(b,s,false)+upgradePanel(b,s,true))+expansionPanel(s)+'</div></div><div class="game-build-bottom">'+(productionModel(s)?'':gameFooter(s))+breakfastStrip(s)+'</div>'+statusLine();
   }
 
   var breakfastGoods = {
@@ -422,7 +425,7 @@
   function renderAuto(el,s) {
     var b=selectedBuilding(s);
     if (productionModel(s)) {
-      el.innerHTML=notice(s)+businessPicker(s,b)+'<div class="game-purpose-layout"><div class="game-purpose-main">'+recipePanel(b,s)+'</div><div class="game-purpose-side"><section class="game-panel">'+panelHead('Production',esc(s.paused?'Paused':b.status || 'Working'))+'<div class="game-panel-body">'+line('Output',units(b.productionPerMinute)+' / min')+'</div>'+upgradeRows(b,['production'])+'</section></div></div>'+statusLine();
+      el.innerHTML=notice(s)+businessPicker(s,b)+'<div class="game-purpose-layout game-recipes-only"><div class="game-purpose-main">'+recipePanel(b,s)+focusMarkup(b)+'</div></div>'+statusLine();
       return;
     }
     el.innerHTML=notice(s)+'<div class="game-layout">'+roster(s)+'<div class="game-center">'+site(b,s)+'<section class="game-panel">'+panelHead('Your production team','')+'<div class="game-panel-body">'+goodsStrip(b,s)+line('Current output',ym(b.revenuePerTick)+' / '+s.tickSeconds+' sec')+line('Auto Control',esc(b.autoLabel))+'<p class="game-hint">Boost this building while your other buildings keep working.</p></div></section></div><div class="game-actions">'+upgradePanel(b,s,true)+upgradePanel(b,s,false)+'</div></div>'+gameFooter(s)+statusLine();
@@ -433,19 +436,36 @@
     var working=status==='Working', group=(s.families || {})[b.family];
     return '<section class="game-panel game-site">' + panelHead(b.name,'<span class="'+(working?'k-good':'k-money')+'">'+esc(status)+'</span>') +
       '<div class="game-site-stage">'+art({buildingId:b.id,buildingName:b.name,paused:s.paused,artLevel:b.artLevel})+'<div><span class="game-eyebrow">'+esc(group ? group.name : 'Your business')+(b.artLevel>=3?' · Improved '+b.artLevel:'')+'</span>'+
-      '<strong class="game-output">'+ym(b.incomePerMinute)+'<small> / min</small></strong><div class="game-rate-pair"><span>Make <b>'+units(b.productionPerMinute)+'</b> / min</span><span>Customers <b>'+units(b.customerCapacityPerMinute == null ? b.salesPerMinute : b.customerCapacityPerMinute)+'</b> / min</span></div></div></div>'+
-      focusMarkup(b)+'<div class="game-site-footer"><span>'+ (b.regularBonus?'Breakfast regulars · +20% customers':b.recipe && b.recipe.inputs.length ? esc(b.recipe.inputs.map(function(i){return i.name;}).join(' + '))+' → '+esc(b.recipe.output.name) : 'Works offline · ' + units(s.offlineHours || 12) + 'h') +'</span>'+((b.hasRecipes || b.recipe && b.recipe.inputs.length) && document.getElementById('econ-building')?processingControl(b):'')+(!(b.artLevel>=3 && (b.id==='farm'||b.id==='roastery'))?'<button class="game-text-button" type="button" data-build-art aria-pressed="'+buildArtEnabled+'">Animation '+(buildArtEnabled?'on':'off')+'</button>':'')+'</div></section>';
+      '<strong class="game-output">'+ym(b.incomePerMinute)+'<small> / min</small></strong><span class="game-eyebrow">Shop income · last minute</span></div></div>'+
+      productionLoop(b,s)+nextAction(b,s)+'<div class="game-site-footer"><span>'+ (b.regularBonus?'Breakfast regulars · +20% customers':'Works offline · up to ' + units(s.offlineHours || 12) + 'h') +'</span>'+(!(b.artLevel>=3 && (b.id==='farm'||b.id==='roastery'))?'<button class="game-text-button" type="button" data-build-art aria-pressed="'+buildArtEnabled+'">Animation '+(buildArtEnabled?'on':'off')+'</button>':'')+'</div></section>';
+  }
+
+  function productionLoop(b,s) {
+    var good=(b.goods || s.board.filter(function(g){return g.slot===b.slot;}))[0];
+    return '<div class="game-production-loop" aria-label="How this business earns money"><div>'+(good?goodIcon(b,good,false):'')+'<strong>Make goods</strong><small>'+units(b.productionPerMinute)+' / min</small></div><span class="game-flow-arrow" aria-hidden="true">→</span><div><span class="game-flow-shop" aria-hidden="true">'+assetIcon('ui/customers.svg','')+'</span><strong>Serve customers</strong><small>Up to '+units(b.customerCapacityPerMinute == null ? b.salesPerMinute : b.customerCapacityPerMinute)+' / min</small></div><span class="game-flow-arrow" aria-hidden="true">→</span><div><span class="game-flow-coin" aria-hidden="true">'+assetIcon('ui/coin.svg','')+'</span><strong>Earn cash</strong><small>'+(s.paused?'Class paused':b.reserve?'Shop sales paused':'Sales are automatic')+'</small></div></div>';
+  }
+
+  function nextAction(b,s) {
+    var text='Upgrade this business or open the next one.', href='', label='';
+    if(s.paused)text='Your business continues when your teacher resumes the class.';
+    else if(b.reserve){text='Shop sales are paused while you hold goods.';href='./warehouse.html';label='Manage stock';}
+    else if(b.status==='Processing paused' || /^Waiting for /.test(b.status || '')){text=b.status==='Processing paused'?'Recipes are paused. Other goods still produce.':b.status+'. Check the recipe ingredients.';href='./advanced-hq.html';label='View recipes';}
+    else if(b.status==='Storage full'){if(b.clearableQuantity>0){text='Storage is full. Sell surplus to free up space.';href='./warehouse.html';label='Manage stock';}else text='Storage is full with saved goods. Upgrade Storage for more room.';}
+    else if(b.status==='Goods ready'){text='Put your extra goods toward delivery rewards.';href='./marketplace.html';label='View orders';}
+    else if(b.status==='More customers needed')text='Goods are piling up. Upgrade Customers to sell faster.';
+    else if(!s.paused && b.upgrades && b.upgrades.production && b.upgrades.production.canBuy)text='Ready to grow? Upgrade Production to make more goods.';
+    return '<div class="game-next-action"><span>'+esc(text)+'</span>'+(href?'<a class="game-text-button" href="'+href+'">'+label+' →</a>':'')+'</div>';
   }
 
   function focusMarkup(b) {
     if(!(b.focusOptions||[]).length)return '';
     if(!b.focusUnlocked)return '<div class="game-specialty game-hint">Production level 3 unlocks a specialty</div>';
     var choice=b.focusOptions.find(function(o){return o.id===b.focus;}) || b.focusOptions[0];
-    return '<div class="game-specialty"><label>Specialty <select data-business-focus="'+b.slot+'" aria-label="Business specialty">'+b.focusOptions.map(function(o){return '<option value="'+o.id+'"'+(choice.id===o.id?' selected':'')+'>'+esc(o.name)+'</option>';}).join('')+'</select></label><small>'+esc(choice.effect)+' · Switch freely</small></div>';
+    return '<div class="game-specialty"><label>Specialty <select id="game-business-focus" data-business-focus="'+b.slot+'" aria-label="Business specialty">'+b.focusOptions.map(function(o){return '<option value="'+o.id+'"'+(choice.id===o.id?' selected':'')+'>'+esc(o.name)+'</option>';}).join('')+'</select></label><small>'+esc(choice.effect)+' · Switch freely</small></div>';
   }
 
   function processingControl(b) {
-    return '<button type="button" class="game-text-button game-processing" data-econ-action="processing:'+b.slot+':'+(b.processing===false)+'" aria-pressed="'+(b.processing!==false)+'" title="Turn recipes on or off. Other goods keep producing.">Processing '+(b.processing===false?'off':'on')+'</button>';
+    return '<button type="button" class="game-text-button game-processing" data-econ-action="processing:'+b.slot+':'+(b.processing===false)+'" aria-pressed="'+(b.processing!==false)+'" title="Other goods keep producing.">'+(b.processing===false?'Resume recipes':'Pause recipes')+'</button>';
   }
 
   function inventoryPanel(b, s) {
@@ -468,7 +488,8 @@
       var u=(b.upgrades || {})[kind];
       if(!u) return '';
       var done=u.cost===null;
-      return '<div class="game-operation"><div><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong><span>'+esc(done?'Complete':u.effect.replace(' base ', ' ')+(u.unlocksSpecialty?' · Specialty':''))+'</span>'+(u.consequence&&!done?'<small class="game-upgrade-impact '+(u.incomeDelta>0?'k-good':'')+'" title="Sustainable capacity estimate; current stock and committed deliveries can delay the change.">'+esc(u.consequence)+'</small>':'')+'</div><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(u.cost)))+'" title="'+esc(u.why || u.consequence || u.effect)+'">'+(done?'MAX':ym(u.cost)+' ↑')+'</button></div>';
+      var reasonId='game-upgrade-reason-'+b.slot+'-'+kind;
+      return '<div class="game-operation"><div><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong><span>'+esc(done?'Complete':u.effect.replace(' base ', ' ')+(u.unlocksSpecialty?' · Specialty':''))+'</span>'+(u.consequence&&!done?'<small class="game-upgrade-impact '+(u.incomeDelta>0?'k-good':'')+'" title="Sustainable capacity estimate; current stock and committed deliveries can delay the change.">'+esc(u.consequence)+'</small>':'')+'</div><div class="game-upgrade-buy"><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(u.cost)))+'"'+(!u.canBuy&&!done?' aria-describedby="'+reasonId+'"':'')+' title="'+esc(u.why || u.consequence || u.effect)+'">'+(done?'MAX':ym(u.cost)+' ↑')+'</button>'+(!u.canBuy&&!done?'<small id="'+reasonId+'" class="game-upgrade-reason">'+esc(u.why || 'Keep earning to upgrade')+'</small>':'')+'</div></div>';
     }).join('')+'</div>';
   }
 
@@ -505,25 +526,76 @@
   function ordersMarkup(s) {
     return '<div class="game-card-grid game-order-grid" data-keep-scroll="orders">'+orderOffers(s).map(function(o,i){
       var relationship=o.customer==='breakfast';
-      var note=relationship ? ((s.regularDeliveries||0)>=3?'Regulars earned · +20% roastery customers':(s.regularDeliveries||0)+'/3 visits → +20% roastery customers') : o.materials?'Materials save '+ym(s.materialUnitValue||15)+' each on construction':'Extra cash for your next investment';
+      var note=relationship ? ((s.regularDeliveries||0)>=3?'Regulars earned · +20% roastery customers':(s.regularDeliveries||0)+'/3 visits → +20% roastery customers') : o.materials?'Materials reduce new-business costs':'';
       var rarity=['standard','large','rare','jackpot'].includes(o.rarity)?o.rarity:'standard';
       var label=o.rarityLabel || 'Standard';
-      return '<section class="k-card game-order" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+missedOrderMarkup(i)+'<h3>'+esc(o.name)+'<small class="game-order-tier">'+esc(label)+'</small></h3><p class="game-order-purpose">'+esc(note)+'</p><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-goods">'+o.requirements.map(function(g){
+      return '<section class="k-card game-order" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+missedOrderMarkup(i)+'<h3>'+esc(o.name)+'<small class="game-order-tier">'+esc(label)+'</small></h3>'+(note?'<p class="game-order-purpose">'+esc(note)+'</p>':'')+'<div class="game-order-caption">Have / need</div><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-goods">'+o.requirements.map(function(g){
         var building=s.buildings.find(function(b){return b.id===g.buildingId;}) || {id:g.buildingId};
         return '<div class="econ-good-line"><span class="econ-good-name">'+goodIcon(building,g,false)+esc(g.name)+'</span><span class="'+(g.owned>=g.quantity?'k-good':'k-money')+'">'+units(g.owned)+' / '+units(g.quantity)+'</span></div>';
-      }).join('')+'</div></div><div class="game-order-reward"><span title="Paid after you deliver all requested goods">'+ym(o.reward)+'</span>'+(o.rewardPercent?'<small>'+mult(o.rewardPercent/100)+'× retail</small>':'')+(o.materials?'<span>+'+materialAmount(o.materials)+'</span>':'')+'</div><div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,'Deliver','',!o.canFulfill)+(s.rulesRevision>=2?'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'" title="Save only this order’s quantities. Other goods keep selling. Recipes cannot consume committed stock.">'+(o.committed?'Release goods':'Save for this order')+'</button>':'')+'</div><button class="game-text-button" type="button" data-econ-action="replace:'+i+':'+esc(o.id)+'" title="Free reroll · Standard 65%, Large 25%, Rare 8%, Jackpot 2% · Rewards require delivery">New order ↻ <small>Free</small></button></section>';
+      }).join('')+'</div></div><div class="game-order-reward"><span title="Paid after you deliver all requested goods">'+ym(o.reward)+'</span>'+(o.rewardPercent?'<small>'+mult(o.rewardPercent/100)+'× retail</small>':'')+(o.materials?'<span>+'+materialAmount(o.materials)+'</span>':'')+'</div><div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,'Deliver',o.canFulfill?'Ready':o.why || 'Waiting for goods',!o.canFulfill)+(s.rulesRevision>=2?'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'" title="Save only this order’s quantities. Other goods keep selling. Recipes cannot consume committed stock.">'+(o.committed?'Release goods':'Save for this order')+'</button>':'')+'</div><button class="game-text-button" type="button" data-econ-action="replace:'+i+':'+esc(o.id)+'" title="Free reroll · Standard 65%, Large 25%, Rare 8%, Jackpot 2% · Rewards require delivery">New order ↻ <small>Free</small></button></section>';
     }).join('')+'</div>';
   }
 
+  function customerAction(action, slot, customerId, contractId) {
+    return 'customer:'+action+':'+slot+':'+encodeURIComponent(customerId || '')+':'+encodeURIComponent(contractId || '');
+  }
+
+  function customerRequirements(s, requirements, active) {
+    return '<div class="game-contract-goods">'+requirements.map(function(g){
+      var building=s.buildings.find(function(item){return item.id===g.buildingId;}) || {id:g.buildingId};
+      var held=Number(g.reserved || 0), ready=active && held>=g.quantity;
+      return '<div class="econ-good-line game-customer-requirement"><span class="econ-good-name">'+goodIcon(building,g,false)+'<span>'+esc(g.name)+'</span></span><span class="'+(ready?'k-good':'')+'" title="'+(active?'Saved for this customer’s next shipment':'Required for every shipment')+'">'+(active?units(held)+' / ':'')+units(g.quantity)+'</span></div>';
+    }).join('')+'</div>';
+  }
+
+  function customerOrderChoice(current) {
+    if(!current.largerOrder && !current.largerOffer)return '';
+    var offer=current.largerOffer;
+    var terms=offer?(offer.requirements || []).map(function(g){return units(g.quantity)+' '+esc(g.name);}).join(' + ')+' → <strong>'+ym(offer.reward)+'</strong> · same interval':'Return to the original goods and pay.';
+    return '<div class="game-contract-order-choice"><span>'+terms+'</span><button id="game-customer-size" class="game-small-button" type="button" data-econ-action="'+customerAction(current.largerOrder?'downgrade':'upgrade',current.slot,'',current.id)+'" title="Changing order size restarts the next shipment timer.">'+(current.largerOrder?'Use smaller order':'Take larger order')+'</button></div>';
+  }
+
+  function customerContractsMarkup(s) {
+    var contracts=s.customerContracts;
+    if(!contracts)return '';
+    var active=contracts.active || [], customers=contracts.customers || [], slots=Number(contracts.slots || 2);
+    customerSlot=Math.max(0,Math.min(customerSlot,slots-1));
+    var current=active.find(function(item){return item.slot===customerSlot;});
+    var switching=!!current && current.id===customerSwitchId;
+    var choosing=!current || switching;
+    var slotMarkup=Array.from({length:slots},function(_,index){
+      var contract=active.find(function(item){return item.slot===index;});
+      return '<button id="game-customer-slot-'+index+'" type="button" data-customer-slot="'+index+'" aria-pressed="'+(index===customerSlot)+'" aria-label="Slot '+(index+1)+': '+esc(contract?contract.name+', '+(contract.paused?'paused':'active'):'open')+'">'+(index+1)+' · '+(contract?(contract.paused?'Paused':'Active'):'Open')+'</button>';
+    }).join('');
+    var content='';
+    if(choosing){
+      var taken=active.map(function(item){return item.customerId;});
+      var eligible=customers.filter(function(item){return item.available && taken.indexOf(item.id)<0;});
+      var choice=eligible.find(function(item){return item.id===customerChoices[customerSlot];}) || eligible[0];
+      if(choice)customerChoices[customerSlot]=choice.id;
+      var options=customers.map(function(item){
+        var unavailable=!item.available || taken.indexOf(item.id)>=0;
+        return '<option value="'+esc(item.id)+'"'+(unavailable?' disabled':'')+(choice && item.id===choice.id?' selected':'')+'>'+esc(item.name)+(taken.indexOf(item.id)>=0?' · Already signed':!item.available?' · '+esc(item.unlockText || 'Grow your town to unlock'):'')+'</option>';
+      }).join('');
+      content='<div class="game-contract-summary"><label for="game-customer-choice">'+(switching?'Replace '+esc(current.name):'Choose a regular customer')+'</label><select id="game-customer-choice"'+(!choice?' disabled':'')+'>'+(!choice?'<option>No customers available</option>':'')+options+'</select>'+(choice?'<p class="game-contract-description">'+esc(choice.description)+'</p><div class="game-contract-pay"><strong>'+ym(choice.reward)+'</strong><span>per shipment · every '+duration(choice.intervalSeconds)+'</span></div>':'<p class="game-contract-description">New businesses bring new customers.</p>')+'</div><div class="game-contract-supply">'+(choice?'<div class="game-contract-caption">Goods per shipment</div>'+customerRequirements(s,choice.requirements || [],false):'')+'<div class="game-contract-controls">'+bigButton(customerAction(switching?'switch':'accept',customerSlot,choice && choice.id,current && current.id),switching?'Switch customer':'Sign customer','',!choice)+(switching?'<button id="game-customer-cancel" class="game-text-button" type="button" data-customer-cancel>Keep current customer</button>':'')+'</div><p class="game-contract-help">'+(switching?'Switching frees held goods and starts a new shipment timer.':'First shipment after the full interval. Recipes and saved orders get goods first.')+'</p></div>';
+    }else{
+      var status=current.paused?'Paused · goods released':current.status==='waiting'?'Waiting for goods · no penalty':'Next shipment in <span data-econ-countdown="'+Math.max(0,current.nextDeliverySeconds || 0)+'">'+duration(current.nextDeliverySeconds)+'</span>';
+      content='<div class="game-contract-summary"><h3>'+esc(current.name)+'</h3><div class="game-contract-pay"><strong>'+ym(current.reward)+'</strong><span>per shipment · every '+duration(current.intervalSeconds)+'</span></div><p class="game-contract-status'+(current.paused?' is-paused':'')+'">'+status+'</p><span class="game-contract-history">'+units(current.deliveries)+' shipments · '+ym(current.earned)+' earned</span></div><div class="game-contract-supply"><div class="game-contract-caption">Saved / needed for next shipment</div>'+customerRequirements(s,current.requirements || [],true)+'<div class="game-contract-controls"><button id="game-customer-toggle" class="game-small-button" type="button" data-econ-action="'+customerAction(current.paused?'resume':'pause',customerSlot,'',current.id)+'">'+(current.paused?'Resume':'Pause')+'</button><button id="game-customer-switch" class="game-small-button" type="button" data-customer-switch="'+esc(current.id)+'">Switch</button><button id="game-customer-release" class="game-text-button" type="button" data-econ-action="'+customerAction('release',customerSlot,'',current.id)+'">Release</button></div>'+(customerOrderChoice(current) || '<p class="game-contract-help">'+(current.paused?'Resume starts a new shipment timer.':'Ships automatically when ready, including while you’re away.')+'</p>')+'</div>';
+    }
+    var next=contracts.nextUnlock;
+    return '<section class="game-panel game-customer-contracts" aria-label="Customer contracts">'+panelHead('Regular customers',active.length+' / '+slots+' signed')+'<p class="game-contract-intro">Repeat deliveries, sent automatically. Short of goods? Customers wait.</p><div class="game-contract-slots" role="group" aria-label="Customer slots">'+slotMarkup+'</div><div class="game-contract-body">'+content+'</div><div class="game-contract-footer"><span>'+ym(contracts.earned)+' earned</span><span>'+(next?'Slot '+next.slots+' at '+next.buildings+' businesses':'All '+slots+' slots unlocked')+'</span></div></section>';
+  }
+
   function renderProductionInventory(el,s,b,market) {
-    var goods=b.goods || s.board.filter(function(g){return g.slot===b.slot;});
     if(market){
-      var canSell=b.clearableQuantity===undefined?goods.some(function(g){return g.quantity>(g.reserved || 0);}):b.clearableQuantity>0;
-      el.innerHTML=notice(s)+'<section class="game-market-orders" aria-label="Delivery orders">'+ordersMarkup(s)+'</section>'+businessPicker(s,b)+'<div class="game-market-tools"><section class="game-panel">'+panelHead('Customers',ym(b.incomePerMinute)+' / min')+upgradeRows(b,['sales'])+'<div class="game-customer-prices">'+goods.map(function(g){return '<span title="'+esc(g.name)+'">'+goodIcon(b,g,true)+ym(g.unitPrice)+'</span>';}).join('')+'</div></section><section class="game-panel">'+panelHead('Sell surplus',units(b.clearableQuantity || 0)+' goods')+'<div class="game-surplus-sale"><span>'+(s.clearStockPercent || 60)+'% price · '+(b.reserve?'Includes manually held stock':'Keeps recipe and order supplies')+'</span>'+bigButton('sell:'+b.slot,'Sell · '+ym(b.clearStockValue || 0),'',!canSell,' k-btn--alt')+'</div></section></div>'+statusLine();
+      el.innerHTML=notice(s)+'<div class="game-market-surface'+(s.customerContracts?' has-contracts':'')+'"><div class="game-market-income'+(s.customerContracts?' has-contracts':'')+'"><section class="game-market-orders" aria-label="Delivery orders">'+panelHead('Delivery orders','One-time rewards')+ordersMarkup(s)+'</section>'+customerContractsMarkup(s)+'</div></div>'+statusLine();
       return;
     }
+    var goods=b.goods || s.board.filter(function(g){return g.slot===b.slot;});
+    var canSell=b.clearableQuantity===undefined?goods.some(function(g){return g.quantity>(g.reserved || 0);}):b.clearableQuantity>0;
     var fill=b.capacity>0?b.stored/b.capacity*100:0;
-    el.innerHTML=notice(s)+businessPicker(s,b)+'<div class="game-purpose-layout"><section class="game-panel game-inventory-table">'+panelHead('Inventory',units(b.stored)+' / '+units(b.capacity))+'<div class="game-stock-progress">'+bar(fill,fill>=100?'k-bar-fill--full':'')+'</div><div class="game-inventory-head"><span>Item</span><span>In stock</span><span>Saved</span></div><div class="game-inventory-rows" data-keep-scroll="inventory">'+goods.map(function(g){return '<div class="game-inventory-row"><span class="game-inventory-good">'+goodIcon(b,g,false)+'<span><strong>'+esc(g.name)+'</strong>'+bar(g.capacity?g.quantity/g.capacity*100:0)+'</span></span><span>'+units(g.quantity)+(g.capacity?'<small> / '+units(g.capacity)+'</small>':'')+'</span><span>'+units(g.reserved || 0)+'</span></div>';}).join('')+'</div></section><div class="game-purpose-side"><section class="game-panel">'+panelHead('Storage','')+upgradeRows(b,['storage'])+'</section><section class="game-panel">'+panelHead('Manual sales pause','')+'<div class="game-panel-body"><button type="button" class="game-small-button game-reserve'+(b.reserve?' is-active':'')+'" data-econ-action="reserve:'+b.slot+':'+(!b.reserve)+'" aria-pressed="'+!!b.reserve+'">'+(b.reserve?'✓ Holding goods':'Hold goods')+'</button><p class="game-hint">'+(b.reserve?'Customer sales paused. Recipes can use ingredients.':'For deliveries, use Save for this order in Market. Manual hold pauses all sales here.')+'</p></div></section></div></div>'+statusLine();
+    var surplus='<section class="game-panel">'+panelHead('Sell surplus',units(b.clearableQuantity || 0)+' goods')+'<div class="game-surplus-sale"><span>'+(s.clearStockPercent || 60)+'% of retail price · '+(b.reserve?'Includes manually held goods':'Keeps recipe and order supplies')+'</span>'+bigButton('sell:'+b.slot,'Sell surplus · '+ym(b.clearStockValue || 0),'',!canSell,' k-btn--alt')+(!canSell?why('No surplus yet. Goods needed for recipes and orders stay saved.'):'')+'</div></section>';
+    el.innerHTML=notice(s)+businessPicker(s,b)+'<div class="game-purpose-layout"><section class="game-panel game-inventory-table">'+panelHead('Stock',units(b.stored)+' / '+units(b.capacity)+' capacity')+'<div class="game-stock-progress">'+bar(fill,fill>=100?'k-bar-fill--full':'')+'</div><div class="game-inventory-head"><span>Item</span><span>In stock</span><span>Saved</span></div><div class="game-inventory-rows" data-keep-scroll="inventory">'+goods.map(function(g){return '<div class="game-inventory-row"><span class="game-inventory-good">'+goodIcon(b,g,false)+'<span><strong>'+esc(g.name)+'</strong>'+bar(g.capacity?g.quantity/g.capacity*100:0)+'</span></span><span>'+units(g.quantity)+(g.capacity?'<small> / '+units(g.capacity)+'</small>':'')+'</span><span>'+units(g.reserved || 0)+'</span></div>';}).join('')+'</div><p class="game-hint game-inventory-explainer">Saved goods are held for recipes, deliveries, or paused shop sales.</p></section><div class="game-purpose-side"><section class="game-panel">'+panelHead('Shop sales',b.reserve?'Paused':'Automatic')+'<div class="game-panel-body"><button type="button" class="game-small-button game-reserve'+(b.reserve?' is-active':'')+'" data-econ-action="reserve:'+b.slot+':'+(!b.reserve)+'" aria-pressed="'+!!b.reserve+'">'+(b.reserve?'Resume shop sales':'Hold goods')+'</button><p class="game-hint">'+(b.reserve?'Goods stay here instead of selling to walk-in customers. Recipes can still use them.':'Hold goods to stop walk-in sales for this business. Use Market to save for a specific order.')+'</p></div></section>'+surplus+'</div></div>'+statusLine();
   }
 
   function businessPicker(s,b){
@@ -559,7 +631,7 @@
 
   // The dashboard stays in the terminal style of the rest of index.html.
   function renderDashboard(el, s) {
-    var board = s.leaderboard || [];
+    var board = Array.isArray(s.leaderboard) ? s.leaderboard : [];
     function rows(pairs) {
       return '<div class="data-table-wrap"><table class="data-table"><tbody>' +
         pairs.map(function (p) {
@@ -575,14 +647,14 @@
         ['Buildings owned', s.buildingsOwned + ' of ' + s.tierCount],
         ['Licence', s.gateOpen ? 'open' : 'locked', s.gateOpen ? 'up' : 'muted'],
       ]) +
-      '<div class="hdr">CLASS LEADERBOARD</div>' +
+      (s.classCompetition === true ? '<div class="hdr">CLASS LEADERBOARD</div>' +
       '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
       '<th>#</th><th>STUDENT</th><th>NET WORTH</th></tr></thead><tbody>' +
       board.map(function (row) {
         return '<tr' + (row.you ? ' class="amber"' : '') + '><td>' + row.rank + '</td><td>' +
           esc(row.name) + (row.you ? ' (you)' : '') + '</td><td>' + ym(row.net_worth) + '</td></tr>';
       }).join('') +
-      '</tbody></table></div>' +
+      '</tbody></table></div>' : '') +
       '<div class="bld-action-row"><a class="bld-btn" href="./buildings.html">OPEN TOWN ↗</a></div>';
   }
 
@@ -601,6 +673,8 @@
   }
 
   function renderOffline(message) {
+    snapshot = null;
+    clearCompetition();
     mounted().forEach(function (screen) {
       document.getElementById(screen[0]).innerHTML =
         '<div class="k-card"><h3 class="k-card-title">Not in a class</h3>' +
@@ -686,10 +760,11 @@
       });
     }
     if(focusId==='game-expansion-choice'){var expansionChoice=document.getElementById(focusId);if(expansionChoice)expansionChoice.focus({preventScroll:true});}
-    if(focusId==='game-business-choice'){var businessChoice=document.getElementById(focusId);if(businessChoice)businessChoice.focus({preventScroll:true});}
+    if(focusId==='game-business-choice' || focusId==='game-business-focus'){var businessChoice=document.getElementById(focusId);if(businessChoice)businessChoice.focus({preventScroll:true});}
     var openBreakfast=document.querySelector('#game-breakfast[open]');
     if(openBreakfast && !openBreakfast.contains(document.activeElement))openBreakfast.querySelector('[data-close-breakfast]').focus({preventScroll:true});
     if(window.YomamaFit)window.YomamaFit.render();
+    if(focusId && /^(game-customer-|game-tab-)/.test(focusId)){var customerControl=document.getElementById(focusId);if(customerControl && !customerControl.disabled)customerControl.focus({preventScroll:true});}
     renderCashChip(snapshot);
     var stats=document.getElementById('buildings-side-stats');
     if(stats) stats.innerHTML=line('Buildings owned',snapshot.buildingsOwned)+line('Net worth',ym(snapshot.netWorth))+line('Revenue / day',ym(snapshot.revenuePerDay));
@@ -735,11 +810,26 @@
 
   }
 
+  function clearCompetition() {
+    if (snapshot) {
+      snapshot.classCompetition = false;
+      snapshot.leaderboard = [];
+      var dashboard = document.getElementById('econ-dashboard');
+      if (dashboard) renderDashboard(dashboard, snapshot);
+    }
+    window.dispatchEvent(new CustomEvent('yomama:econ', {
+      detail: snapshot || { classCompetition: false, gateOpen: false }
+    }));
+  }
+
   function refresh() {
     if (busy || document.visibilityState === 'hidden') return Promise.resolve();
     return fetchState().then(apply).catch(function (err) {
       if (err && err.status === 401) renderOffline('This class session has expired. Join again to keep playing.');
-      else setStatus('Connection lost. We will try again shortly.', 'error');
+      else {
+        clearCompetition();
+        setStatus('Connection lost. We will try again shortly.', 'error');
+      }
     });
   }
 
@@ -752,7 +842,11 @@
     var path = '/' + name;
     var body = {};
     var skippedReady = false;
-    if (name.indexOf('breakfast:') === 0) {
+    if (name.indexOf('customer:') === 0) {
+      var customerBits=name.split(':');path='/customers';body={action:customerBits[1],slot:Number(customerBits[2])};
+      if(customerBits[3])body.customerId=decodeURIComponent(customerBits[3]);
+      if(customerBits[4])body.contractId=decodeURIComponent(customerBits[4]);
+    } else if (name.indexOf('breakfast:') === 0) {
       var eventBits=name.split(':');path='/event/breakfast';body={action:eventBits[1]};
       if(body.action==='deliver')body.orderId=eventBits[2];
       else if(body.action==='cancel')body.jobId=Number(eventBits[2]);
@@ -791,9 +885,12 @@
       busy = false;
       var receipt = payload.receipt;
       if(skippedReady)reactToMissedOrder(body.offerIndex);
+      if(name.indexOf('customer:')===0)customerSwitchId=null;
       apply(payload);
+      if(name.indexOf('customer:')===0){var nextCustomerControl=document.getElementById(body.action==='release'?'game-customer-choice':body.action==='upgrade' || body.action==='downgrade'?'game-customer-size':'game-customer-toggle');if(nextCustomerControl)nextCustomerControl.focus({preventScroll:true});}
       if (productionModel(payload)) {
-        if (receipt && receipt.kind === 'breakfast') setStatus(receipt.message,'success');
+        if (name.indexOf('customer:')===0) setStatus(receipt && receipt.message || ({accept:'Customer signed · automatic shipments start after the first interval',switch:'Customer switched · a new shipment timer has started',pause:'Customer paused · held goods released',resume:'Customer resumed · a new shipment timer has started',release:'Customer released · slot and goods available',upgrade:'Larger order accepted · a new shipment timer has started',downgrade:'Smaller order restored · a new shipment timer has started'}[body.action]),'success');
+        else if (receipt && receipt.kind === 'breakfast') setStatus(receipt.message,'success');
         else if (receipt && receipt.kind === 'sell') setStatus('Stock sold · '+ym(receipt.net == null ? receipt.gross : receipt.net),'success');
         else if (name.indexOf('upgrade:')===0) setStatus(receipt && receipt.consequence || 'Upgrade complete','success');
         else if (name.indexOf('commit:')===0) setStatus(body.committed?'Saving this order’s goods · surplus keeps selling':'Goods released to customers and recipes','success');
@@ -833,6 +930,10 @@
     }).catch(function (err) {
       busy = false;
       pendingRerolls=[];
+      if (err && err.status === 401) {
+        renderOffline('This class session has expired. Join again to keep playing.');
+        return;
+      }
       setStatus((err && err.message) || 'The server said no.', 'error');
       refresh();
     });
@@ -854,6 +955,11 @@
   },true);
 
   document.addEventListener('click', function (event) {
+    var customerSlotButton=event.target.closest('[data-customer-slot]');
+    if(customerSlotButton){customerSlot=Number(customerSlotButton.dataset.customerSlot);customerSwitchId=null;render();return;}
+    var customerSwitch=event.target.closest('[data-customer-switch]');
+    if(customerSwitch){customerSwitchId=customerSwitch.dataset.customerSwitch;render();var chooser=document.getElementById('game-customer-choice');if(chooser)chooser.focus({preventScroll:true});return;}
+    if(event.target.closest('[data-customer-cancel]')){customerSwitchId=null;render();var switchControl=document.getElementById('game-customer-switch');if(switchControl)switchControl.focus({preventScroll:true});return;}
     var breakfastDialog=document.getElementById('game-breakfast');
     if(breakfastDialog && event.target.closest('[data-game-breakfast]')){breakfastDialog.showModal();return;}
     if(breakfastDialog && event.target.closest('[data-close-breakfast]')){breakfastDialog.close();return;}
@@ -885,6 +991,7 @@
   });
 
   document.addEventListener('change', function(event){
+    if(event.target.id==='game-customer-choice'){customerChoices[customerSlot]=event.target.value;render();return;}
     if(event.target.matches('[data-business-focus]'))act('focus:'+event.target.dataset.businessFocus+':'+event.target.value);
     if(event.target.id==='game-business-choice'){selectedSlot=Number(event.target.value);render();document.getElementById('game-business-choice').focus({preventScroll:true});}
     if(event.target.id==='game-expansion-choice'){selectedFrontier=Number(event.target.value);render();document.getElementById('game-expansion-choice').focus();}
@@ -924,7 +1031,7 @@
     var dialog=document.getElementById('econ-overnight');
     if(!dialog){dialog=document.createElement('dialog');dialog.id='econ-overnight';dialog.className='econ-kid';document.body.appendChild(dialog);}
     if (snapshot && productionModel(snapshot)) {
-      dialog.innerHTML='<h2>Welcome back</h2>'+line('Earned',ym(r.retailEarned),'k-good')+line('Goods made',units(r.unitsProduced))+(r.builds?line('Businesses opened',r.builds):'')+(r.offlineTicksSkipped>0?'<p class="game-hint">'+units(snapshot.offlineHours || 12)+'h offline limit reached.</p>':'')+'<button class="k-btn" data-overnight-close>Continue</button>';
+      dialog.innerHTML='<h2>Welcome back</h2>'+line('Retail sales',ym(r.retailEarned),'k-good')+(r.customerEarned || r.customerDeliveries?line('Customer contracts',ym(r.customerEarned),'k-good')+line('Customer shipments',units(r.customerDeliveries)):'')+line('Goods made',units(r.unitsProduced))+(r.builds?line('Businesses opened',r.builds):'')+(r.offlineTicksSkipped>0?'<p class="game-hint">'+units(snapshot.offlineHours || 12)+'h offline limit reached.</p>':'')+'<button class="k-btn" data-overnight-close>Continue</button>';
     } else {
       dialog.innerHTML='<h2>OVERNIGHT REPORT</h2>'+line('Goods produced',ym(r.produced))+line('Overflow goods sold',ym(r.overflowSold))+
         line('Overflow discount cost',ym(r.overflowCost))+line('Buildings completed',r.builds)+line('Market events',r.events)+
@@ -948,6 +1055,7 @@
         return;
       }
       return fetchState().then(apply).catch(function (error) {
+        clearCompetition();
         var localPreview = window.location.protocol === 'file:' ||
           (['localhost', '127.0.0.1', '[::1]'].indexOf(window.location.hostname) >= 0 && window.location.port !== '3000');
         var missingApi = localPreview && (window.location.protocol === 'file:' || [404, 405, 501].indexOf(error && error.status) >= 0);

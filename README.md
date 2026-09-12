@@ -39,7 +39,7 @@ The current building game uses real goods, automatic customers, recipes, three u
 - `index.html` - main portfolio terminal/dashboard
 - `flow.html` - analyst/character selection
 - `analysis.html` - analysis view with character profiles and fundamentals
-- `memos.html` - memo/leaderboard experience
+- `memos.html` - class standings with actual classmates, portraits, and daily/weekly/monthly gains
 - `buildings.html` - owned businesses, production/customer/storage upgrades, and expansion
 - `warehouse.html` - actual product inventory, shelf capacity, and reservations
 - `marketplace.html` - automatic customer sales and optional stock clearance

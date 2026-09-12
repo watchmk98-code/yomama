@@ -3980,6 +3980,16 @@ textarea{
   overflow:hidden;
 }
 
+.memos-access{
+  padding:24px 16px;
+  color:var(--amber);
+}
+
+.memos-access .pill{
+  display:inline-block;
+  margin:8px 8px 0 0;
+}
+
 .memos-leaderboard-shell{
   width:100%;
   margin:0;

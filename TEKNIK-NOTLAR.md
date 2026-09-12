@@ -1,3 +1,8 @@
+> **Durum (2026-09-12):** Bu belgeden sonra çok şey değişti: ekonomi v4'e geçti (`ECONOMY_README.md`),
+> sınıflar artık `class.html`'den değil geliştiricinin `admin.py` komutuyla açılıyor, hiçbir sayfa
+> oturum açmadan sunulmuyor ve sunucu Render'da çalışıyor (`DEPLOY.md`). Önce `AGENTS.md`'yi okuyun;
+> aşağıdaki v1 ekonomisi ve `class.html` anlatımı tarihseldir.
+
 # Teknik Notlar
 
 İşe başlayan geliştirici için. `HANDOVER.md` işin ne olduğunu anlatır; bu dosya

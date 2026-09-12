@@ -1,3 +1,9 @@
+> **Status (2026-09-12):** this file describes the early static prototype and is kept for history.
+> The economy now runs on the Python server, no page is served before signing in, and classes
+> are opened by the developer from the command line. Read `AGENTS.md` first. The design-language
+> sections below still hold; the technical ones (localStorage economy, `collect.html`,
+> `marketplace.js`, `produce.js`, `config/economy.v0.1.json`) do not.
+
 # YOMAMA INVESTMENTS - Detailed Project Context
 
 ## 1. Project Identity

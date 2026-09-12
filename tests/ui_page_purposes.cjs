@@ -13,7 +13,7 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  const response=await fetch(base+'/api/game/econ/state');assert(response.ok);
  const s=await response.json();assert.equal(s.modelVersion,4);
  s.cash=100000;s.breakfastEvent={status:'new',reward:5};s.gateOpen=false;s.checklist.quiz=false;
- s.buildings.forEach(b=>Object.values(b.upgrades).forEach(u=>{u.canBuy=true;u.cost=100;u.why='';}));
+ s.buildings.forEach(b=>Object.values(b.upgrades).forEach(u=>{u.canBuy=true;u.cost=100;u.why='';u.level=Math.min(u.level,8);}));
  s.contracts.offers.forEach(o=>{o.canFulfill=true;o.why='';o.requirements.forEach(g=>g.owned=g.quantity);});
  const quiz=JSON.parse(fs.readFileSync('config/quiz.json','utf8'));
  let serial=0;
@@ -29,6 +29,7 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
    if(endpoint==='upgrade'){b.upgrades[data.kind].level++;s.receipt={kind:'upgrade'};}
    if(endpoint==='reserve')b.reserve=data.reserve;
    if(endpoint==='processing')b.processing=data.enabled;
+   if(endpoint==='focus')b.focus=data.focus;
    if(endpoint==='orders/commit')s.contracts.offers[data.offerIndex].committed=data.committed;
    if(endpoint==='orders/fulfill'||endpoint==='orders/replace'){
     assert.equal(data.orderId,s.contracts.offers[data.offerIndex].id);
@@ -40,15 +41,25 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
   }
   return route.fulfill({json:s});
  });
- const pages={buildings:['expand','reserve','sell','processing','upgrade:production','upgrade:sales','upgrade:storage'],warehouse:['reserve','upgrade:storage'],marketplace:['fulfill','replace','commit','sell','upgrade:sales'],'advanced-hq':['processing','upgrade:production'],license:[]};
+ const pages={buildings:['expand','upgrade:production','upgrade:sales','upgrade:storage'],warehouse:['reserve','sell'],marketplace:['fulfill','replace','commit','customer'],'advanced-hq':['processing'],license:['quiz']};
+ const owners=new Map();
  async function go(file){await page.goto(base+'/'+file+'.html');await page.locator('.game-wallet,.game-resources').waitFor();if(await page.locator('#econ-overnight[open]').count())await page.locator('[data-overnight-close]').click();}
  async function act(action){const before=calls.length;await page.locator('[data-econ-action="'+action+'"]').click();await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'));assert.equal(calls.length,before+1);}
  for(const [file,allowed] of Object.entries(pages)){
   await go(file);
   const actions=await page.locator('.game-workspace [data-econ-action]').evaluateAll(es=>es.map(e=>e.dataset.econAction));
-  for(const action of actions){const parts=action.split(':');const family=parts[0]==='upgrade'?'upgrade:'+parts[2]:parts[0];assert(allowed.includes(family),file+' contains misplaced '+action);}
+  for(const action of actions){
+   const parts=action.split(':');const family=parts[0]==='upgrade'?'upgrade:'+parts[2]:parts[0];
+   assert(allowed.includes(family),file+' contains misplaced '+action);
+   assert(!owners.has(family)||owners.get(family)===file,family+' is repeated across screens');owners.set(family,file);
+  }
+  assert.equal(await page.locator('[data-business-focus]').count(),file==='advanced-hq'&&s.buildings.at(-1).focusUnlocked?1:0,file+' has misplaced or missing specialty selection');
+  for(const [selector,owner] of Object.entries({'.game-specialty':'advanced-hq','.game-recipe':'advanced-hq','.game-inventory-table':'warehouse','.game-order-grid':'marketplace','.game-customer-contracts':'marketplace'}))if(file!==owner)assert.equal(await page.locator(selector).count(),0,file+' repeats '+selector);
+  assert.equal(await page.locator('.game-stock').count(),0,file+' repeats the old stock panel');
+  if(file==='marketplace')assert.equal(await page.locator('#game-business-choice').count(),0,'Orders and customers belong to the whole town');
   assert.equal(await page.locator('[data-game-deliveries]').count(),0);
  }
+ for(const [file,families] of Object.entries(pages))for(const family of families.filter(f=>f!=='quiz'))assert.equal(owners.get(family),file,'Missing '+family+' on '+file);
  await go('buildings');assert.equal(await page.locator('#econ-building [data-econ-action^="reserve:"]').count(),0);
  const next=s.frontier[s.frontier.length-1];await page.selectOption('#game-expansion-choice',String(next.tier));
  assert.equal(await page.locator('.game-next-art').getAttribute('data-preview-business'),next.id);
@@ -56,14 +67,25 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  await page.evaluate(()=>window.YomamaEcon.refresh());assert.equal(await page.locator('.game-next-art').getAttribute('data-preview-business'),next.id);
  while(await page.locator('.game-pager[data-page="Buildings"] button:first-child:not(:disabled)').count())await page.locator('.game-pager[data-page="Buildings"] button:first-child').click();
  await page.locator('[data-select-building="2"]').click();
+ assert.equal(await page.locator('[data-business-focus],.game-specialty').count(),0,'Build repeats the Operations specialty control');
  await page.locator('[data-game-breakfast]').click();assert(await page.locator('#game-breakfast').evaluate(e=>e.open));await page.keyboard.press('Escape');assert(await page.locator('[data-game-breakfast]').evaluate(e=>e===document.activeElement));
- for(const [file,kind] of [['warehouse','storage'],['marketplace','sales'],['advanced-hq','production']]){
-  await go(file);assert.equal(await page.locator('#game-business-choice').inputValue(),'2');const level=s.buildings[2].upgrades[kind].level;await act('upgrade:2:'+kind);assert.equal(s.buildings[2].upgrades[kind].level,level+1);
+ for(const kind of ['production','sales','storage']){
+  const level=s.buildings[2].upgrades[kind].level;await act('upgrade:2:'+kind);assert.equal(s.buildings[2].upgrades[kind].level,level+1);
  }
+ s.buildings[2].upgrades.production.canBuy=false;s.buildings[2].upgrades.production.why='Need 100 YM';await page.evaluate(()=>window.YomamaEcon.refresh());
+ const blocked=page.locator('[data-econ-action="upgrade:2:production"]');assert(await blocked.isDisabled());assert.equal(await blocked.getAttribute('title'),'Need 100 YM');
+ const blocker=page.locator('#'+await blocked.getAttribute('aria-describedby'));assert(await blocker.isVisible());assert.equal(await blocker.textContent(),'Need 100 YM');
+ const beforeBlocked=calls.length;await blocked.evaluate(e=>e.click());assert.equal(calls.length,beforeBlocked,'Disabled upgrades must not send purchases');
+ await go('advanced-hq');assert.equal(await page.locator('#game-business-choice').inputValue(),'2');
  await act('processing:2:'+String(s.buildings[2].processing===false));
- await go('warehouse');await act('reserve:2:'+String(!s.buildings[2].reserve));
- await go('marketplace');await act('fulfill:0:'+s.contracts.offers[0].id);await act('replace:1:'+s.contracts.offers[1].id);
+ const focus=s.buildings[2].focusOptions.find(o=>o.id!==s.buildings[2].focus).id;const beforeFocus=calls.length;
+ const specialty=page.locator('[data-business-focus="2"]');await specialty.focus();await specialty.selectOption(focus);await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'));assert.equal(calls.length,beforeFocus+1);assert.equal(s.buildings[2].focus,focus);
+ assert(await specialty.evaluate(e=>e===document.activeElement),'Specialty loses keyboard focus after changing');
+ await page.evaluate(()=>window.YomamaEcon.refresh());assert.equal(await specialty.inputValue(),focus);assert(await specialty.evaluate(e=>e===document.activeElement),'Polling loses specialty keyboard focus');
+ await go('warehouse');assert.equal(await page.locator('#game-business-choice').inputValue(),'2');await act('reserve:2:'+String(!s.buildings[2].reserve));
  s.buildings[2].clearableQuantity=10;s.buildings[2].clearStockValue=100;await page.evaluate(()=>window.YomamaEcon.refresh());await act('sell:2');
+ await go('marketplace');await act('fulfill:0:'+s.contracts.offers[0].id);await act('replace:1:'+s.contracts.offers[1].id);await act('commit:0:'+s.contracts.offers[0].id);
+ await go('warehouse');assert.equal(await page.locator('#game-business-choice').inputValue(),'2');
  await page.selectOption('#game-business-choice','0');await page.evaluate(()=>window.YomamaEcon.refresh());assert.equal(await page.locator('#game-business-choice').inputValue(),'0');
  await go('advanced-hq');assert.equal(await page.locator('.game-processing').count(),0);assert(await page.getByText('No ingredients needed').count());
  await go('license');assert.equal(await page.locator('.game-invest').count(),0);
@@ -83,10 +105,21 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  }
  s.gateOpen=false;s.checklist.quiz=false;
  await go('license');assert.equal(await page.locator('.game-view-tabs [role=tab]').count(),2);
+ for(const [file,labels] of Object.entries({buildings:['Building','Upgrades','Expand'],warehouse:['Stock','Manage'],marketplace:['Orders','Contracts'],'advanced-hq':[]})){
+  await go(file);assert.deepEqual(await page.locator('.game-view-tabs [role=tab]').allTextContents(),labels,file+' repeats an obsolete panel');
+  if(!labels.length)continue;
+  await page.locator('.game-view-tabs [role=tab]').first().focus();
+  for(const [key,index] of [['End',labels.length-1],['ArrowRight',0],['ArrowLeft',labels.length-1],['Home',0]]){
+   await page.keyboard.press(key);
+   const active=page.locator('.game-view-tabs [role=tab]').nth(index);assert.equal(await active.getAttribute('aria-selected'),'true');assert(await active.evaluate(e=>e===document.activeElement));
+   const panel=page.locator('#'+await active.getAttribute('aria-controls'));assert(await panel.isVisible());assert.equal(await panel.getAttribute('role'),'tabpanel');assert.equal(await panel.getAttribute('aria-labelledby'),await active.getAttribute('id'));
+  }
+ }
  s.buildings=s.buildings.slice(0,1);s.buildingsOwned=1;s.board=s.board.filter(g=>g.slot===0);
  for(const file of ['buildings','warehouse','marketplace','advanced-hq']){
   await go(file);assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)),'starter '+file+' overflow');
   if(file==='buildings')assert.equal(await page.locator('[data-select-building]').count(),1);
+  else if(file==='marketplace')assert.equal(await page.locator('#game-business-choice').count(),0);
   else assert.equal(await page.locator('#game-business-choice').inputValue(),'0');
  }
  assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'passed',actions:calls.length,sizes},null,2));
