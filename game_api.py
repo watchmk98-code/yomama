@@ -29,6 +29,7 @@ from pathlib import Path
 import production_economy as economy
 import breakfast_event
 import access
+import autopilot
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "game.db"
@@ -1082,7 +1083,7 @@ def reset_class(code: str) -> dict:
     return {"code": code, "players": len(players), "version": cfg.get("version")}
 
 
-def advance_class_clock(code: str, seconds: float) -> dict:
+def advance_class_clock(code: str, seconds: float, play: bool = False) -> dict:
     """Move a class forward in game time as if every student had kept playing.
 
     The class clock jumps ahead by `seconds` and every town is replayed
@@ -1094,6 +1095,11 @@ def advance_class_clock(code: str, seconds: float) -> dict:
     The jump is taken in slices no longer than the offline allowance, each
     in its own transaction: a running server waits for one slice at most,
     and a student's request between two slices is an ordinary visit.
+
+    With `play`, a stand-in (autopilot.py) visits every town at the start
+    of each slice and plays it the way a student would - ships orders,
+    takes on regulars, buys businesses and upgrades - so the town grows,
+    not only its cash. Every town gets its own stable personality.
     """
     seconds = float(seconds)
     if not math.isfinite(seconds) or seconds <= 0:
@@ -1111,7 +1117,8 @@ def advance_class_clock(code: str, seconds: float) -> dict:
         worth_before = {p["id"]: int(p["econ_nw"]) for p in
                         conn.execute("SELECT id, econ_nw FROM players WHERE code=?", (code,))}
     slice_seconds = max(float(cfg["global"]["tick"]),
-                        min(6.0, float(cfg["runtime"].get("offlineHours", 12))) * 3600.0)
+                        min(4.0 if play else 6.0, float(cfg["runtime"].get("offlineHours", 12))) * 3600.0)
+    played = {}
     done = 0.0
     while done < seconds:
         step = min(slice_seconds, seconds - done)
@@ -1123,8 +1130,19 @@ def advance_class_clock(code: str, seconds: float) -> dict:
             # replay pays every tick of it.
             for p in conn.execute("SELECT * FROM players WHERE code=? ORDER BY id", (code,)):
                 st = _load_state(p, cfg, s)
+                changed = False
+                if play:
+                    visit = autopilot.visit(cfg, st, autopilot.seat_seed(cfg, p["id"]), here)
+                    tally = played.setdefault(p["id"], dict(visits=0, orders=0, customers=0, builds=0, upgrades=0, focus=0))
+                    if not visit["skipped"]:
+                        tally["visits"] += 1
+                        for key in ("orders", "customers", "builds", "upgrades", "focus"):
+                            tally[key] += visit[key]
+                        changed = True
                 if int(st.get("lastActiveTick", 0)) < here:
                     st["lastActiveTick"] = here
+                    changed = True
+                if changed:
                     _save_state(conn, p["id"], cfg, st)
             conn.execute("UPDATE sessions SET clock_accum=clock_accum+? WHERE code=?", (step, code))
             s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
@@ -1133,12 +1151,17 @@ def advance_class_clock(code: str, seconds: float) -> dict:
     with _db_lock, connect() as conn:
         s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
         after = int(s["econ_tick"])
-        players = [dict(name=p["name"], before=worth_before.get(p["id"], 0), after=int(p["econ_nw"]))
-                   for p in conn.execute("SELECT id, name, econ_nw FROM players WHERE code=? ORDER BY name", (code,))]
+        players = []
+        for p in conn.execute("SELECT * FROM players WHERE code=? ORDER BY name", (code,)):
+            st = _load_state(p, cfg, s)
+            players.append(dict(name=p["name"], before=worth_before.get(p["id"], 0), after=int(p["econ_nw"]),
+                                buildings=len(st["b"]) + len(st.get("queue") or []) + (1 if st.get("build") else 0),
+                                regulars=len(st.get("customerContracts", {}).get("active", [])),
+                                played=played.get(p["id"])))
         _log(conn, code, None, "admin_advance_clock",
-             {"seconds": seconds, "tick_before": before, "tick_after": after, "players": len(players)})
+             {"seconds": seconds, "tick_before": before, "tick_after": after, "players": len(players), "play": bool(play)})
     return {"code": code, "label": s["label"], "seconds": seconds, "tick_before": before, "tick_after": after,
-            "days": round((after - before) / economy.ticks_per_day(cfg), 2), "players": players}
+            "days": round((after - before) / economy.ticks_per_day(cfg), 2), "play": bool(play), "players": players}
 
 
 def ensure_class(code, teacher_code, label="", class_size=30) -> dict:

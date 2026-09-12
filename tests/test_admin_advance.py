@@ -122,3 +122,58 @@ def test_advance_class_clock_refuses_nonsense(db):
     for bad in (0, -5, float("nan"), float("inf")):
         with pytest.raises(A.ApiError):
             A.advance_class_clock(c["code"], bad)
+
+
+def town(token):
+    with A.connect() as conn:
+        row = conn.execute("SELECT econ FROM players WHERE token=?", (token,)).fetchone()
+    return json.loads(row["econ"])
+
+
+def test_without_play_nobody_buys_anything(db):
+    c = opened(db)
+    t = seats(c["code"], "ALICE", "BOB")
+    assert admin.main(["--db", str(db), "advance", c["code"], "--days", "2", "--yes"]) == 0
+    for token in t.values():
+        st = town(token)
+        assert len(st["b"]) == 1 and st["b"][0]["lv"] == 1 and not st["queue"] and st["build"] is None
+        assert st["customerContracts"]["active"] == []
+
+
+def test_play_makes_every_town_grow_and_differ(db, capsys):
+    c = opened(db, label="9-B")
+    t = seats(c["code"], "ALICE", "BOB", "CARA", "DAN", "EVE")
+    assert admin.main(["--db", str(db), "--json", "advance", c["code"], "--days", "3", "--play", "--yes"]) == 0
+    out = json.loads(capsys.readouterr().out)[0]
+    assert out["play"] is True
+    shapes = set()
+    for name, token in t.items():
+        st = town(token)
+        levels = sum(b["lv"] + b["sales"] + b["storage"] for b in st["b"])
+        assert len(st["b"]) >= 2, name                                  # bought businesses
+        assert levels > 3 * len(st["b"]), name                          # and upgrades
+        assert st["report"]["offlineTicksSkipped"] == 0 if "report" in st else True
+        assert not st["checklist"].get("quiz"), name                    # the quiz is never taken for anyone
+        assert st["cash"] >= 0 and st["book"] > 0
+        shapes.add((len(st["b"]), levels, len(st["customerContracts"]["active"])))
+        row = next(p for p in out["players"] if p["name"] == name)
+        assert row["played"]["visits"] > 0 and row["played"]["builds"] + row["played"]["upgrades"] > 0
+        assert row["buildings"] >= 2
+    assert len(shapes) > 1                                              # personalities differ
+    assert all(report(tok)["offlineTicksSkipped"] == 0 for tok in t.values())
+    # the seats are untouched and the next visit still shows the time away
+    assert A.join(dict(code=c["code"], name="ALICE", pin="1234"))["token"] == t["ALICE"]
+    assert A.econ_login({"token": t["ALICE"]})["overnightReport"] is not None
+
+
+def test_the_stand_in_is_deterministic_per_seat():
+    cfg = economy.load_config()
+    a = economy.new_state(cfg, 0, seed=5); a["cash"] = 20000
+    b = economy.new_state(cfg, 0, seed=5); b["cash"] = 20000
+    import autopilot
+    for when in (0, 960, 1920):
+        ra = autopilot.visit(cfg, a, 42, when)
+        rb = autopilot.visit(cfg, b, 42, when)
+        assert ra == rb
+    assert a == b
+    assert len(a["b"]) + len(a["queue"]) + bool(a["build"]) > 1 or sum(x["lv"] for x in a["b"]) > 1

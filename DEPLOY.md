@@ -101,6 +101,25 @@ is no way back, so the command does nothing without `--yes`. Run it
 between sessions: a big jump takes a little while, and a student who is
 playing during it would see the days pass in front of them.
 
+That alone only replays the passive economy: nobody buys anything, so the
+towns end up with a pile of cash and the same buildings. Add `--play` and
+a stand-in visits every town a few times a day and plays it the way a
+student would - ships delivery orders, takes on regular customers, picks
+a specialty, buys the next business and upgrades - so the towns grow.
+Each seat gets its own stable personality (some build wide, some upgrade
+deep, some keep money back, some skip visits), so towns differ. The
+stand-in only does what a student could do from the pages and never
+takes the quiz for anyone.
+
+    python3 admin.py --db /data/game.db advance YSNRD F2XHJ --days 4 --random-hours 24 --play --yes
+
+Already jumped without `--play`? Either let the stand-in spend the pile
+on top (`advance CODE --days 1 --play --yes`: the town keeps everything
+it has, ends a day further on with businesses and upgrades bought), or
+start that class over and replay it properly (`reset CODE --yes`, then
+the `--play` command above). Four played days from a fresh town end with
+eight or nine businesses and a few million YM.
+
 ## 7. Updating the code
 
 `render.yaml` turns auto-deploy off: a service with a disk restarts on every

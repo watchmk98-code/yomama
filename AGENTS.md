@@ -7,7 +7,7 @@ Two agents work in this tree at the same time:
   `econ-kids.css`, `game-fit.js`, `app.js`, the `*.html` pages, `config/`,
   `previews/`, the economy tests).
 - **Claude Code** owns accounts, access control, hosting and provisioning
-  (`access.py`, `admin.py`, `run_server.py`, `render.yaml`, `account.js`,
+  (`access.py`, `admin.py`, `autopilot.py`, `run_server.py`, `render.yaml`, `account.js`,
   `DEPLOY.md`, `previews/preview_support.py`, `tests/test_access_*.py`,
   `tests/test_admin*.py`, `tests/test_page_gate.py`, `tests/test_contract.py`,
   `tests/ui_account.cjs`, this file) - and, since 2026-09-12, **the LEAD page**
@@ -179,7 +179,10 @@ Playwright is installed one directory above the project (`../node_modules`);
   `python3 admin.py advance CODE --days 4 --yes` (`game_api.advance_class_clock`)
   bumps `sessions.clock_accum` and replays every town through the span in
   slices, marking everyone present so the offline allowance never skips
-  production. Same seats, same tokens; not reversible.
+  production. Same seats, same tokens; not reversible. With `--play`,
+  `autopilot.py` (Claude Code's file) visits every town at the start of
+  each slice and buys businesses, upgrades, regulars and specialties
+  through the engine's own functions, with a stable per-seat personality.
 - Old saves in a class that keeps its snapshot go through
   `production_economy.migrate_state` on load. A new state field needs a
   default there, not only in `new_state`.

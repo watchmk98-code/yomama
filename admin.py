@@ -17,6 +17,7 @@
     python3 admin.py reset --all --yes
     python3 admin.py advance KRT39 --days 4 --yes                    # the class jumps 4 days ahead in game time; every town simulated
     python3 admin.py advance --all --days 4 --random-hours 24 --yes  # ...plus a random 0-24 h, drawn separately per class
+    python3 admin.py advance KRT39 --days 4 --play --yes             # ...and a stand-in plays each town meanwhile: builds, upgrades, regulars
 
 Classes are created here and nowhere else: no page and no endpoint can do it.
 `open` prints two codes. Students type the class code into join.html with a
@@ -287,7 +288,7 @@ def reset_classes(db_path, codes, yes) -> list:
     return out
 
 
-def advance_classes(db_path, codes, days=0.0, hours=0.0, random_hours=0.0, yes=False) -> list:
+def advance_classes(db_path, codes, days=0.0, hours=0.0, random_hours=0.0, yes=False, play=False) -> list:
     """Move classes ahead in game time; every town is replayed as if present.
 
     Nothing is wiped and nobody is signed out. The random part is drawn
@@ -307,7 +308,7 @@ def advance_classes(db_path, codes, days=0.0, hours=0.0, random_hours=0.0, yes=F
     for code in codes:
         seconds = int(base + (rng.uniform(0, spread) if spread else 0))
         try:
-            out.append(G.advance_class_clock(code, seconds))
+            out.append(G.advance_class_clock(code, seconds, play=play))
         except G.ApiError as exc:
             raise AdminError(f"{code}: {exc.message}")
     return out
@@ -340,10 +341,16 @@ def span(seconds: float) -> str:
 def print_advance(rows: list) -> None:
     for r in rows:
         label = f" ({r['label']})" if r.get("label") else ""
+        how = "played by the stand-in" if r.get("play") else "simulated"
         print(f"class {r['code']}{label}: {span(r['seconds'])} ahead, tick {r['tick_before']:,} -> "
-              f"{r['tick_after']:,} ({r['days']} game days); {len(r['players'])} towns simulated")
+              f"{r['tick_after']:,} ({r['days']} game days); {len(r['players'])} towns {how}")
         for p in r["players"]:
-            print(f"  {p['name']:24} {p['before']:>10,} -> {p['after']:>10,}")
+            extra = ""
+            if p.get("played"):
+                g = p["played"]
+                extra = (f"   {p['buildings']} businesses, {p['regulars']} regulars; {g['visits']} visits: "
+                         f"{g['builds']} built, {g['upgrades']} upgrades, {g['orders']} orders, {g['customers']} regulars taken")
+            print(f"  {p['name']:24} {p['before']:>10,} -> {p['after']:>10,}{extra}")
 
 
 def print_open(d: dict) -> None:
@@ -418,6 +425,8 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--hours", type=float, default=0.0, help="game hours to jump (adds to --days)")
     v.add_argument("--random-hours", type=float, default=0.0, dest="random_hours",
                    help="add a random 0..N hours on top, drawn separately per class")
+    v.add_argument("--play", action="store_true",
+                   help="a stand-in plays each town meanwhile: ships orders, takes regulars, buys businesses and upgrades")
     v.add_argument("--yes", action="store_true", help="confirm; without it nothing happens")
     return p
 
@@ -465,7 +474,7 @@ def run(conn, args) -> object:
             codes = [norm_code(c) for c in args.codes if norm_code(c)]
         if not codes:
             raise AdminError("say which classes to advance, or --all")
-        out = advance_classes(args.db_path, codes, args.days, args.hours, args.random_hours, args.yes)
+        out = advance_classes(args.db_path, codes, args.days, args.hours, args.random_hours, args.yes, args.play)
         if not args.json:
             print_advance(out)
     else:
