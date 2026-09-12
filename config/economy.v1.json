@@ -1,0 +1,399 @@
+{
+  "global": {
+    "tick": 15,
+    "growth": 1.085,
+    "gradLv": 20,
+    "refund": 0.9,
+    "a1Cost": 4,
+    "a1Mult": 2,
+    "a2Cost": 16,
+    "a2Mult": 2,
+    "whHours": 8,
+    "overflowDisc": 0.1,
+    "bandMin": 0.9,
+    "bandMax": 1.1,
+    "theta": 0.05,
+    "seed": 7,
+    "gateTier": 6,
+    "queueDepth": 2,
+    "autoContinue": 1,
+    "catchupMult": 1.05,
+    "catchupHours": 1,
+    "catchupAbsenceH": 24,
+    "rubberK": 0,
+    "sideGoodSigmaBonus": 0.005
+  },
+  "milestones": [
+    {
+      "lv": 25,
+      "mult": 1.5
+    },
+    {
+      "lv": 50,
+      "mult": 1.5
+    }
+  ],
+  "tax": [
+    {
+      "above": 13000,
+      "rate": 0.2
+    },
+    {
+      "above": 67000,
+      "rate": 0.4
+    },
+    {
+      "above": 333000,
+      "rate": 0.6
+    }
+  ],
+  "tiers": [
+    {
+      "id": "farm",
+      "name": "Greenfield Farm",
+      "baseCost": 333,
+      "rev": 1,
+      "timerH": 18,
+      "sigma": 0.01,
+      "goods": [
+        {
+          "name": "Tomatoes",
+          "weight": 55
+        },
+        {
+          "name": "Eggs",
+          "weight": 30
+        },
+        {
+          "name": "Honey",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "fish_stall",
+      "name": "Harbor Fish Stall",
+      "baseCost": 648,
+      "rev": 2,
+      "timerH": 18,
+      "sigma": 0.0114,
+      "goods": [
+        {
+          "name": "Fresh Catch",
+          "weight": 55
+        },
+        {
+          "name": "Oysters",
+          "weight": 30
+        },
+        {
+          "name": "Smoked Fish",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "roastery",
+      "name": "Copper Kettle Roastery",
+      "baseCost": 1260,
+      "rev": 3,
+      "timerH": 18,
+      "sigma": 0.0129,
+      "goods": [
+        {
+          "name": "Roasted Beans",
+          "weight": 55
+        },
+        {
+          "name": "Espresso Shots",
+          "weight": 30
+        },
+        {
+          "name": "Pastries",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "garage",
+      "name": "Tinker's Garage",
+      "baseCost": 2450,
+      "rev": 5,
+      "timerH": 18,
+      "sigma": 0.0143,
+      "goods": [
+        {
+          "name": "Repairs",
+          "weight": 55
+        },
+        {
+          "name": "Spare Parts",
+          "weight": 30
+        },
+        {
+          "name": "Custom Mods",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "workshop",
+      "name": "Ironworks Shop",
+      "baseCost": 4766,
+      "rev": 8,
+      "timerH": 18,
+      "sigma": 0.0157,
+      "goods": [
+        {
+          "name": "Steel Brackets",
+          "weight": 55
+        },
+        {
+          "name": "Welded Frames",
+          "weight": 30
+        },
+        {
+          "name": "Machined Bolts",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "solar_coop",
+      "name": "Rooftop Solar Co-op",
+      "baseCost": 9269,
+      "rev": 14,
+      "timerH": 18,
+      "sigma": 0.0171,
+      "goods": [
+        {
+          "name": "Daytime kWh",
+          "weight": 55
+        },
+        {
+          "name": "Battery Storage",
+          "weight": 30
+        },
+        {
+          "name": "Carbon Credits",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "cannery",
+      "name": "Meridian Cannery",
+      "baseCost": 18029,
+      "rev": 24,
+      "timerH": 18,
+      "sigma": 0.0186,
+      "goods": [
+        {
+          "name": "Canned Goods",
+          "weight": 55
+        },
+        {
+          "name": "Sauces",
+          "weight": 30
+        },
+        {
+          "name": "Preserves",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "machine_works",
+      "name": "Bluecollar Machine Works",
+      "baseCost": 35066,
+      "rev": 41,
+      "timerH": 18,
+      "sigma": 0.02,
+      "goods": [
+        {
+          "name": "CNC Parts",
+          "weight": 55
+        },
+        {
+          "name": "Tooling",
+          "weight": 30
+        },
+        {
+          "name": "Prototypes",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "turbine_field",
+      "name": "Windward Turbine Field",
+      "baseCost": 68203,
+      "rev": 70,
+      "timerH": 18,
+      "sigma": 0.0214,
+      "goods": [
+        {
+          "name": "Wind kWh",
+          "weight": 55
+        },
+        {
+          "name": "Capacity Contracts",
+          "weight": 30
+        },
+        {
+          "name": "Green Certificates",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "generator",
+      "name": "North Grid Plant",
+      "baseCost": 132654,
+      "rev": 119,
+      "timerH": 18,
+      "sigma": 0.0229,
+      "goods": [
+        {
+          "name": "Baseload Power",
+          "weight": 55
+        },
+        {
+          "name": "Peak Power",
+          "weight": 30
+        },
+        {
+          "name": "Steam Heat",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "relay_station",
+      "name": "Signal Relay Station",
+      "baseCost": 258012,
+      "rev": 202,
+      "timerH": 18,
+      "sigma": 0.0243,
+      "goods": [
+        {
+          "name": "Bandwidth",
+          "weight": 55
+        },
+        {
+          "name": "SMS Traffic",
+          "weight": 30
+        },
+        {
+          "name": "Tower Leases",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "freight_terminal",
+      "name": "Atlas Freight Terminal",
+      "baseCost": 501834,
+      "rev": 343,
+      "timerH": 18,
+      "sigma": 0.0257,
+      "goods": [
+        {
+          "name": "Container Slots",
+          "weight": 55
+        },
+        {
+          "name": "Cold Storage",
+          "weight": 30
+        },
+        {
+          "name": "Last-Mile Delivery",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "data_center",
+      "name": "Node-7 Data Hub",
+      "baseCost": 976067,
+      "rev": 583,
+      "timerH": 18,
+      "sigma": 0.0271,
+      "goods": [
+        {
+          "name": "Compute Hours",
+          "weight": 55
+        },
+        {
+          "name": "Cloud Storage",
+          "weight": 30
+        },
+        {
+          "name": "API Calls",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "solar_array",
+      "name": "Helios Solar Array",
+      "baseCost": 1898450,
+      "rev": 990,
+      "timerH": 18,
+      "sigma": 0.0286,
+      "goods": [
+        {
+          "name": "Utility kWh",
+          "weight": 55
+        },
+        {
+          "name": "Reserve Capacity",
+          "weight": 30
+        },
+        {
+          "name": "Renewable Credits",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "uplink_center",
+      "name": "Orbital Uplink Center",
+      "baseCost": 3692485,
+      "rev": 1684,
+      "timerH": 18,
+      "sigma": 0.03,
+      "goods": [
+        {
+          "name": "Satellite Bandwidth",
+          "weight": 55
+        },
+        {
+          "name": "Ground Time",
+          "weight": 30
+        },
+        {
+          "name": "Telemetry",
+          "weight": 15
+        }
+      ]
+    }
+  ],
+  "currency": {
+    "code": "YM",
+    "name": "YM (placeholder)",
+    "decimals": 0
+  },
+  "gate": {
+    "tier": 6,
+    "goodSalesNeeded": 10,
+    "goodSalePrice": 1.03,
+    "levelNeeded": 25,
+    "checklist": [
+      "Reach level 25 on any building",
+      "Buy one Auto Control upgrade",
+      "Make 10 sales at price >= 1.03",
+      "Pass the 5-question quiz"
+    ]
+  }
+}

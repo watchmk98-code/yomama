@@ -1,0 +1,2581 @@
+{
+  "modelVersion": 4,
+  "tick": 17280,
+  "tickSeconds": 15,
+  "behind": false,
+  "cash": 1112835,
+  "rulesRevision": 2,
+  "regularDeliveries": 2,
+  "regularTarget": 3,
+  "customerUnitsSold": 305361,
+  "customerUnitsNeeded": 100,
+  "materialUnitValue": 15,
+  "netWorth": 3668052,
+  "book": 2486305,
+  "taxPaid": 0,
+  "taxRate": 0,
+  "incomePerMinute": 1348,
+  "productionPerMinute": 124.25,
+  "revenuePerTick": 337,
+  "revenuePerDay": 1941120,
+  "materials": 0,
+  "buildings": [
+    {
+      "slot": 0,
+      "tier": 0,
+      "id": "farm",
+      "name": "Greenfield Farm",
+      "family": "F",
+      "lv": 12,
+      "maxed": true,
+      "auto": 11,
+      "autoLabel": "Customers 11",
+      "revenuePerTick": 13,
+      "productionPerMinute": 26.25,
+      "salesPerMinute": 17.75,
+      "customerCapacityPerMinute": 20.47,
+      "incomePerMinute": 50,
+      "potentialIncomePerMinute": 55.0,
+      "status": "More customers needed",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": false,
+      "upgrades": {
+        "production": {
+          "level": 12,
+          "cost": null,
+          "canBuy": false,
+          "why": "Fully upgraded",
+          "effect": "400% base speed"
+        },
+        "sales": {
+          "level": 11,
+          "cost": 2561,
+          "canBuy": true,
+          "why": "",
+          "effect": "485% base customers",
+          "incomeDelta": 0.0,
+          "consequence": "Supply limits sales",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 21,
+          "canBuy": true,
+          "why": "",
+          "effect": "270 items",
+          "incomeDelta": 0.0,
+          "consequence": "+90 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 7,
+      "capacity": 180,
+      "storedValue": 30,
+      "goods": [
+        {
+          "goodId": "farm_tomatoes",
+          "name": "Tomatoes",
+          "slot": 0,
+          "tier": 0,
+          "buildingId": "farm",
+          "tierName": "Greenfield Farm",
+          "family": "F",
+          "quantity": 3,
+          "stored": 3,
+          "unitPrice": 2,
+          "value": 6,
+          "price": 1,
+          "reserved": 2,
+          "capacity": 60,
+          "productionPerMinute": 15.0,
+          "salesPerMinute": 11.0,
+          "customerCapacityPerMinute": 11.7,
+          "inputs": []
+        },
+        {
+          "goodId": "farm_eggs",
+          "name": "Eggs",
+          "slot": 0,
+          "tier": 0,
+          "buildingId": "farm",
+          "tierName": "Greenfield Farm",
+          "family": "F",
+          "quantity": 2,
+          "stored": 2,
+          "unitPrice": 4,
+          "value": 8,
+          "price": 1,
+          "reserved": 2,
+          "capacity": 60,
+          "productionPerMinute": 7.5,
+          "salesPerMinute": 5.25,
+          "customerCapacityPerMinute": 5.85,
+          "inputs": []
+        },
+        {
+          "goodId": "farm_honey",
+          "name": "Honey",
+          "slot": 0,
+          "tier": 0,
+          "buildingId": "farm",
+          "tierName": "Greenfield Farm",
+          "family": "F",
+          "quantity": 2,
+          "stored": 2,
+          "unitPrice": 8,
+          "value": 16,
+          "price": 1,
+          "reserved": 2,
+          "capacity": 60,
+          "productionPerMinute": 3.75,
+          "salesPerMinute": 1.5,
+          "customerCapacityPerMinute": 2.92,
+          "inputs": []
+        }
+      ],
+      "recipe": null,
+      "recipes": [],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": null,
+      "levelPayback": null,
+      "autoCost": 2561,
+      "autoPayback": null,
+      "clearableQuantity": 1,
+      "clearStockValue": 1,
+      "artLevel": 6,
+      "focus": "balanced",
+      "focusUnlocked": true,
+      "focusOptions": [
+        {
+          "id": "balanced",
+          "name": "Mixed farm",
+          "effect": "Standard output"
+        },
+        {
+          "id": "supply",
+          "name": "Bakery supplier",
+          "effect": "Eggs/honey +25% base speed; tomatoes \u221225%"
+        }
+      ],
+      "regularBonus": 0
+    },
+    {
+      "slot": 1,
+      "tier": 1,
+      "id": "fish_stall",
+      "name": "Harbor Fish Stall",
+      "family": "F",
+      "lv": 11,
+      "maxed": false,
+      "auto": 12,
+      "autoLabel": "Customers 12",
+      "revenuePerTick": 27,
+      "productionPerMinute": 24.5,
+      "salesPerMinute": 15.96,
+      "customerCapacityPerMinute": 22.06,
+      "incomePerMinute": 106,
+      "potentialIncomePerMinute": 88.85,
+      "status": "Goods ready",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 11,
+          "cost": 3842,
+          "canBuy": true,
+          "why": "",
+          "effect": "375% base speed",
+          "incomeDelta": 2.25,
+          "consequence": "Town sales +2.25 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 12,
+          "cost": null,
+          "canBuy": false,
+          "why": "Fully upgraded",
+          "effect": "520% base customers"
+        },
+        "storage": {
+          "level": 1,
+          "cost": 31,
+          "canBuy": true,
+          "why": "",
+          "effect": "315 items",
+          "incomeDelta": 0.0,
+          "consequence": "+105 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 141,
+      "capacity": 210,
+      "storedValue": 1110,
+      "goods": [
+        {
+          "goodId": "fish_stall_fresh_catch",
+          "name": "Fresh Catch",
+          "slot": 1,
+          "tier": 1,
+          "buildingId": "fish_stall",
+          "tierName": "Harbor Fish Stall",
+          "family": "F",
+          "quantity": 4,
+          "stored": 4,
+          "unitPrice": 3,
+          "value": 12,
+          "price": 1,
+          "reserved": 4,
+          "capacity": 70,
+          "productionPerMinute": 14.0,
+          "salesPerMinute": 6.5,
+          "customerCapacityPerMinute": 12.61,
+          "inputs": []
+        },
+        {
+          "goodId": "fish_stall_oysters",
+          "name": "Oysters",
+          "slot": 1,
+          "tier": 1,
+          "buildingId": "fish_stall",
+          "tierName": "Harbor Fish Stall",
+          "family": "F",
+          "quantity": 68,
+          "stored": 68,
+          "unitPrice": 6,
+          "value": 408,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 70,
+          "productionPerMinute": 7.0,
+          "salesPerMinute": 6.3,
+          "customerCapacityPerMinute": 6.3,
+          "inputs": []
+        },
+        {
+          "goodId": "fish_stall_smoked_fish",
+          "name": "Smoked Fish",
+          "slot": 1,
+          "tier": 1,
+          "buildingId": "fish_stall",
+          "tierName": "Harbor Fish Stall",
+          "family": "F",
+          "quantity": 69,
+          "stored": 69,
+          "unitPrice": 10,
+          "value": 690,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 70,
+          "productionPerMinute": 3.5,
+          "salesPerMinute": 3.15,
+          "customerCapacityPerMinute": 3.15,
+          "inputs": [
+            {
+              "goodId": "fish_stall_fresh_catch",
+              "quantity": 1,
+              "name": "Fresh Catch",
+              "owned": 4,
+              "buildingId": "fish_stall"
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "fish_stall_fresh_catch",
+            "quantity": 1,
+            "name": "Fresh Catch",
+            "owned": 4,
+            "buildingId": "fish_stall"
+          }
+        ],
+        "output": {
+          "goodId": "fish_stall_smoked_fish",
+          "name": "Smoked Fish",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "fish_stall_fresh_catch",
+              "quantity": 1,
+              "name": "Fresh Catch",
+              "owned": 4,
+              "buildingId": "fish_stall"
+            }
+          ],
+          "output": {
+            "goodId": "fish_stall_smoked_fish",
+            "name": "Smoked Fish",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 3842,
+      "levelPayback": null,
+      "autoCost": null,
+      "autoPayback": null,
+      "clearableQuantity": 137,
+      "clearStockValue": 658,
+      "artLevel": 6,
+      "focus": "balanced",
+      "focusUnlocked": true,
+      "focusOptions": [],
+      "regularBonus": 0
+    },
+    {
+      "slot": 2,
+      "tier": 2,
+      "id": "roastery",
+      "name": "Copper Kettle Roastery",
+      "family": "F",
+      "lv": 6,
+      "maxed": false,
+      "auto": 8,
+      "autoLabel": "Customers 8",
+      "revenuePerTick": 24,
+      "productionPerMinute": 15.75,
+      "salesPerMinute": 11.23,
+      "customerCapacityPerMinute": 15.7,
+      "incomePerMinute": 95,
+      "potentialIncomePerMinute": 98.75,
+      "status": "Storage full",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 6,
+          "cost": 1431,
+          "canBuy": true,
+          "why": "",
+          "effect": "250% base speed",
+          "incomeDelta": -0.5,
+          "consequence": "Town sales -0.5 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 8,
+          "cost": 3439,
+          "canBuy": true,
+          "why": "",
+          "effect": "380% base customers",
+          "incomeDelta": 0.25,
+          "consequence": "Town sales +0.25 YM/min",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 104,
+          "canBuy": true,
+          "why": "",
+          "effect": "360 items",
+          "incomeDelta": 0.0,
+          "consequence": "+120 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 161,
+      "capacity": 240,
+      "storedValue": 2163,
+      "goods": [
+        {
+          "goodId": "roastery_roasted_beans",
+          "name": "Roasted Beans",
+          "slot": 2,
+          "tier": 2,
+          "buildingId": "roastery",
+          "tierName": "Copper Kettle Roastery",
+          "family": "F",
+          "quantity": 2,
+          "stored": 2,
+          "unitPrice": 5,
+          "value": 10,
+          "price": 1,
+          "reserved": 2,
+          "capacity": 80,
+          "productionPerMinute": 9.0,
+          "salesPerMinute": 4.5,
+          "customerCapacityPerMinute": 8.97,
+          "inputs": []
+        },
+        {
+          "goodId": "roastery_espresso_shots",
+          "name": "Espresso Shots",
+          "slot": 2,
+          "tier": 2,
+          "buildingId": "roastery",
+          "tierName": "Copper Kettle Roastery",
+          "family": "F",
+          "quantity": 79,
+          "stored": 79,
+          "unitPrice": 7,
+          "value": 553,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 80,
+          "productionPerMinute": 4.5,
+          "salesPerMinute": 4.49,
+          "customerCapacityPerMinute": 4.49,
+          "inputs": [
+            {
+              "goodId": "roastery_roasted_beans",
+              "quantity": 1,
+              "name": "Roasted Beans",
+              "owned": 2,
+              "buildingId": "roastery"
+            }
+          ]
+        },
+        {
+          "goodId": "roastery_pastries",
+          "name": "Pastries",
+          "slot": 2,
+          "tier": 2,
+          "buildingId": "roastery",
+          "tierName": "Copper Kettle Roastery",
+          "family": "F",
+          "quantity": 80,
+          "stored": 80,
+          "unitPrice": 20,
+          "value": 1600,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 80,
+          "productionPerMinute": 2.25,
+          "salesPerMinute": 2.24,
+          "customerCapacityPerMinute": 2.24,
+          "inputs": [
+            {
+              "goodId": "farm_eggs",
+              "quantity": 1,
+              "name": "Eggs",
+              "owned": 2,
+              "buildingId": "farm"
+            },
+            {
+              "goodId": "farm_honey",
+              "quantity": 1,
+              "name": "Honey",
+              "owned": 2,
+              "buildingId": "farm"
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "farm_eggs",
+            "quantity": 1,
+            "name": "Eggs",
+            "owned": 2,
+            "buildingId": "farm"
+          },
+          {
+            "goodId": "farm_honey",
+            "quantity": 1,
+            "name": "Honey",
+            "owned": 2,
+            "buildingId": "farm"
+          }
+        ],
+        "output": {
+          "goodId": "roastery_pastries",
+          "name": "Pastries",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "roastery_roasted_beans",
+              "quantity": 1,
+              "name": "Roasted Beans",
+              "owned": 2,
+              "buildingId": "roastery"
+            }
+          ],
+          "output": {
+            "goodId": "roastery_espresso_shots",
+            "name": "Espresso Shots",
+            "quantity": 1
+          },
+          "available": true
+        },
+        {
+          "inputs": [
+            {
+              "goodId": "farm_eggs",
+              "quantity": 1,
+              "name": "Eggs",
+              "owned": 2,
+              "buildingId": "farm"
+            },
+            {
+              "goodId": "farm_honey",
+              "quantity": 1,
+              "name": "Honey",
+              "owned": 2,
+              "buildingId": "farm"
+            }
+          ],
+          "output": {
+            "goodId": "roastery_pastries",
+            "name": "Pastries",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 1431,
+      "levelPayback": null,
+      "autoCost": 3439,
+      "autoPayback": null,
+      "clearableQuantity": 159,
+      "clearStockValue": 1291,
+      "artLevel": 6,
+      "focus": "balanced",
+      "focusUnlocked": true,
+      "focusOptions": [
+        {
+          "id": "balanced",
+          "name": "Mixed caf\u00e9",
+          "effect": "Standard output"
+        },
+        {
+          "id": "coffee",
+          "name": "Coffee counter",
+          "effect": "Espresso +50% base speed; pastries \u221225%"
+        },
+        {
+          "id": "pastry",
+          "name": "Bakehouse",
+          "effect": "Pastries +50% base speed; espresso \u221225%"
+        }
+      ],
+      "regularBonus": 0
+    },
+    {
+      "slot": 3,
+      "tier": 3,
+      "id": "garage",
+      "name": "Tinker's Garage",
+      "family": "I",
+      "lv": 6,
+      "maxed": false,
+      "auto": 7,
+      "autoLabel": "Customers 7",
+      "revenuePerTick": 37,
+      "productionPerMinute": 15.75,
+      "salesPerMinute": 11.33,
+      "customerCapacityPerMinute": 14.11,
+      "incomePerMinute": 148,
+      "potentialIncomePerMinute": 127.84,
+      "status": "Storage full",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 6,
+          "cost": 5815,
+          "canBuy": true,
+          "why": "",
+          "effect": "250% base speed",
+          "incomeDelta": 3.0,
+          "consequence": "Town sales +3 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 7,
+          "cost": 9014,
+          "canBuy": true,
+          "why": "",
+          "effect": "345% base customers",
+          "incomeDelta": 12.74,
+          "consequence": "Town sales +12.74 YM/min",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 423,
+          "canBuy": true,
+          "why": "",
+          "effect": "405 items",
+          "incomeDelta": 0.0,
+          "consequence": "+135 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 181,
+      "capacity": 270,
+      "storedValue": 2900,
+      "goods": [
+        {
+          "goodId": "garage_repairs",
+          "name": "Repairs",
+          "slot": 3,
+          "tier": 3,
+          "buildingId": "garage",
+          "tierName": "Tinker's Garage",
+          "family": "I",
+          "quantity": 88,
+          "stored": 88,
+          "unitPrice": 8,
+          "value": 704,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 90,
+          "productionPerMinute": 9.0,
+          "salesPerMinute": 8.06,
+          "customerCapacityPerMinute": 8.06,
+          "inputs": []
+        },
+        {
+          "goodId": "garage_spare_parts",
+          "name": "Spare Parts",
+          "slot": 3,
+          "tier": 3,
+          "buildingId": "garage",
+          "tierName": "Tinker's Garage",
+          "family": "I",
+          "quantity": 3,
+          "stored": 3,
+          "unitPrice": 12,
+          "value": 36,
+          "price": 1,
+          "reserved": 3,
+          "capacity": 90,
+          "productionPerMinute": 4.5,
+          "salesPerMinute": 1.25,
+          "customerCapacityPerMinute": 4.03,
+          "inputs": []
+        },
+        {
+          "goodId": "garage_custom_mods",
+          "name": "Custom Mods",
+          "slot": 3,
+          "tier": 3,
+          "buildingId": "garage",
+          "tierName": "Tinker's Garage",
+          "family": "I",
+          "quantity": 90,
+          "stored": 90,
+          "unitPrice": 24,
+          "value": 2160,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 90,
+          "productionPerMinute": 2.25,
+          "salesPerMinute": 2.02,
+          "customerCapacityPerMinute": 2.02,
+          "inputs": [
+            {
+              "goodId": "garage_spare_parts",
+              "quantity": 1,
+              "name": "Spare Parts",
+              "owned": 3,
+              "buildingId": "garage"
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "garage_spare_parts",
+            "quantity": 1,
+            "name": "Spare Parts",
+            "owned": 3,
+            "buildingId": "garage"
+          }
+        ],
+        "output": {
+          "goodId": "garage_custom_mods",
+          "name": "Custom Mods",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "garage_spare_parts",
+              "quantity": 1,
+              "name": "Spare Parts",
+              "owned": 3,
+              "buildingId": "garage"
+            }
+          ],
+          "output": {
+            "goodId": "garage_custom_mods",
+            "name": "Custom Mods",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 5815,
+      "levelPayback": null,
+      "autoCost": 9014,
+      "autoPayback": null,
+      "clearableQuantity": 178,
+      "clearStockValue": 1718,
+      "artLevel": 6,
+      "focus": "balanced",
+      "focusUnlocked": true,
+      "focusOptions": [],
+      "regularBonus": 0
+    },
+    {
+      "slot": 4,
+      "tier": 4,
+      "id": "workshop",
+      "name": "Ironworks Shop",
+      "family": "I",
+      "lv": 4,
+      "maxed": false,
+      "auto": 5,
+      "autoLabel": "Customers 5",
+      "revenuePerTick": 41,
+      "productionPerMinute": 12.25,
+      "salesPerMinute": 6.43,
+      "customerCapacityPerMinute": 10.92,
+      "incomePerMinute": 164,
+      "potentialIncomePerMinute": 136.44,
+      "status": "More customers needed",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 4,
+          "cost": 7075,
+          "canBuy": true,
+          "why": "",
+          "effect": "200% base speed",
+          "incomeDelta": 9.0,
+          "consequence": "Town sales +9 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 5,
+          "cost": 10967,
+          "canBuy": true,
+          "why": "",
+          "effect": "275% base customers",
+          "incomeDelta": 14.06,
+          "consequence": "Town sales +14.06 YM/min",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 1235,
+          "canBuy": true,
+          "why": "",
+          "effect": "450 items",
+          "incomeDelta": 0.0,
+          "consequence": "+150 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 204,
+      "capacity": 300,
+      "storedValue": 5418,
+      "goods": [
+        {
+          "goodId": "workshop_steel_brackets",
+          "name": "Steel Brackets",
+          "slot": 4,
+          "tier": 4,
+          "buildingId": "workshop",
+          "tierName": "Ironworks Shop",
+          "family": "I",
+          "quantity": 6,
+          "stored": 6,
+          "unitPrice": 12,
+          "value": 72,
+          "price": 1,
+          "reserved": 6,
+          "capacity": 100,
+          "productionPerMinute": 7.0,
+          "salesPerMinute": 1.75,
+          "customerCapacityPerMinute": 6.24,
+          "inputs": []
+        },
+        {
+          "goodId": "workshop_welded_frames",
+          "name": "Welded Frames",
+          "slot": 4,
+          "tier": 4,
+          "buildingId": "workshop",
+          "tierName": "Ironworks Shop",
+          "family": "I",
+          "quantity": 99,
+          "stored": 99,
+          "unitPrice": 20,
+          "value": 1980,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 100,
+          "productionPerMinute": 3.5,
+          "salesPerMinute": 3.12,
+          "customerCapacityPerMinute": 3.12,
+          "inputs": []
+        },
+        {
+          "goodId": "workshop_machined_bolts",
+          "name": "Machined Bolts",
+          "slot": 4,
+          "tier": 4,
+          "buildingId": "workshop",
+          "tierName": "Ironworks Shop",
+          "family": "I",
+          "quantity": 99,
+          "stored": 99,
+          "unitPrice": 34,
+          "value": 3366,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 100,
+          "productionPerMinute": 1.75,
+          "salesPerMinute": 1.56,
+          "customerCapacityPerMinute": 1.56,
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1,
+              "name": "Steel Brackets",
+              "owned": 6,
+              "buildingId": "workshop"
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "workshop_steel_brackets",
+            "quantity": 1,
+            "name": "Steel Brackets",
+            "owned": 6,
+            "buildingId": "workshop"
+          }
+        ],
+        "output": {
+          "goodId": "workshop_machined_bolts",
+          "name": "Machined Bolts",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1,
+              "name": "Steel Brackets",
+              "owned": 6,
+              "buildingId": "workshop"
+            }
+          ],
+          "output": {
+            "goodId": "workshop_machined_bolts",
+            "name": "Machined Bolts",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 7075,
+      "levelPayback": null,
+      "autoCost": 10967,
+      "autoPayback": null,
+      "clearableQuantity": 198,
+      "clearStockValue": 3207,
+      "artLevel": 3,
+      "focus": "balanced",
+      "focusUnlocked": true,
+      "focusOptions": [],
+      "regularBonus": 0
+    },
+    {
+      "slot": 5,
+      "tier": 5,
+      "id": "solar_coop",
+      "name": "Rooftop Solar Co-op",
+      "family": "E",
+      "lv": 2,
+      "maxed": false,
+      "auto": 4,
+      "autoLabel": "Customers 4",
+      "revenuePerTick": 48,
+      "productionPerMinute": 8.75,
+      "salesPerMinute": 7.75,
+      "customerCapacityPerMinute": 9.33,
+      "incomePerMinute": 191,
+      "potentialIncomePerMinute": 198.25,
+      "status": "More customers needed",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 2,
+          "cost": 7750,
+          "canBuy": true,
+          "why": "",
+          "effect": "150% base speed",
+          "incomeDelta": 20.33,
+          "consequence": "Town sales +20.33 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 4,
+          "cost": 18619,
+          "canBuy": true,
+          "why": "",
+          "effect": "240% base customers",
+          "incomeDelta": 0.0,
+          "consequence": "Supply limits sales",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 3250,
+          "canBuy": true,
+          "why": "",
+          "effect": "495 items",
+          "incomeDelta": 0.0,
+          "consequence": "+165 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 43,
+      "capacity": 330,
+      "storedValue": 1881,
+      "goods": [
+        {
+          "goodId": "solar_coop_daytime_kwh",
+          "name": "Daytime kWh",
+          "slot": 5,
+          "tier": 5,
+          "buildingId": "solar_coop",
+          "tierName": "Rooftop Solar Co-op",
+          "family": "E",
+          "quantity": 2,
+          "stored": 2,
+          "unitPrice": 18,
+          "value": 36,
+          "price": 1,
+          "reserved": 2,
+          "capacity": 110,
+          "productionPerMinute": 5.0,
+          "salesPerMinute": 4.0,
+          "customerCapacityPerMinute": 5.33,
+          "inputs": []
+        },
+        {
+          "goodId": "solar_coop_battery_storage",
+          "name": "Battery Storage",
+          "slot": 5,
+          "tier": 5,
+          "buildingId": "solar_coop",
+          "tierName": "Rooftop Solar Co-op",
+          "family": "E",
+          "quantity": 0,
+          "stored": 0,
+          "unitPrice": 28,
+          "value": 0,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 110,
+          "productionPerMinute": 2.5,
+          "salesPerMinute": 2.5,
+          "customerCapacityPerMinute": 2.67,
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1,
+              "name": "Steel Brackets",
+              "owned": 6,
+              "buildingId": "workshop"
+            }
+          ]
+        },
+        {
+          "goodId": "solar_coop_carbon_credits",
+          "name": "Carbon Credits",
+          "slot": 5,
+          "tier": 5,
+          "buildingId": "solar_coop",
+          "tierName": "Rooftop Solar Co-op",
+          "family": "E",
+          "quantity": 41,
+          "stored": 41,
+          "unitPrice": 45,
+          "value": 1845,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 110,
+          "productionPerMinute": 1.25,
+          "salesPerMinute": 1.25,
+          "customerCapacityPerMinute": 1.33,
+          "inputs": []
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "workshop_steel_brackets",
+            "quantity": 1,
+            "name": "Steel Brackets",
+            "owned": 6,
+            "buildingId": "workshop"
+          }
+        ],
+        "output": {
+          "goodId": "solar_coop_battery_storage",
+          "name": "Battery Storage",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1,
+              "name": "Steel Brackets",
+              "owned": 6,
+              "buildingId": "workshop"
+            }
+          ],
+          "output": {
+            "goodId": "solar_coop_battery_storage",
+            "name": "Battery Storage",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 7750,
+      "levelPayback": null,
+      "autoCost": 18619,
+      "autoPayback": null,
+      "clearableQuantity": 41,
+      "clearStockValue": 1107,
+      "artLevel": 3,
+      "focus": "balanced",
+      "focusUnlocked": false,
+      "focusOptions": [],
+      "regularBonus": 0
+    },
+    {
+      "slot": 6,
+      "tier": 6,
+      "id": "cannery",
+      "name": "Meridian Cannery",
+      "family": "F",
+      "lv": 1,
+      "maxed": false,
+      "auto": 2,
+      "autoLabel": "Customers 2",
+      "revenuePerTick": 31,
+      "productionPerMinute": 7.0,
+      "salesPerMinute": 6.14,
+      "customerCapacityPerMinute": 6.14,
+      "incomePerMinute": 125,
+      "potentialIncomePerMinute": 149.17,
+      "status": "Storage full",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 1,
+          "cost": 11000,
+          "canBuy": true,
+          "why": "",
+          "effect": "125% base speed",
+          "incomeDelta": -5.0,
+          "consequence": "Town sales -5 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 2,
+          "cost": 17050,
+          "canBuy": true,
+          "why": "",
+          "effect": "170% base customers",
+          "incomeDelta": 20.83,
+          "consequence": "Town sales +20.83 YM/min",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 7150,
+          "canBuy": true,
+          "why": "",
+          "effect": "540 items",
+          "incomeDelta": 0.0,
+          "consequence": "+180 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 359,
+      "capacity": 360,
+      "storedValue": 8975,
+      "goods": [
+        {
+          "goodId": "cannery_canned_goods",
+          "name": "Canned Goods",
+          "slot": 6,
+          "tier": 6,
+          "buildingId": "cannery",
+          "tierName": "Meridian Cannery",
+          "family": "F",
+          "quantity": 119,
+          "stored": 119,
+          "unitPrice": 25,
+          "value": 2975,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 120,
+          "productionPerMinute": 4.0,
+          "salesPerMinute": 3.51,
+          "customerCapacityPerMinute": 3.51,
+          "inputs": [
+            {
+              "goodId": "fish_stall_fresh_catch",
+              "quantity": 1,
+              "name": "Fresh Catch",
+              "owned": 4,
+              "buildingId": "fish_stall"
+            },
+            {
+              "goodId": "farm_tomatoes",
+              "quantity": 1,
+              "name": "Tomatoes",
+              "owned": 3,
+              "buildingId": "farm"
+            }
+          ]
+        },
+        {
+          "goodId": "cannery_sauces",
+          "name": "Sauces",
+          "slot": 6,
+          "tier": 6,
+          "buildingId": "cannery",
+          "tierName": "Meridian Cannery",
+          "family": "F",
+          "quantity": 120,
+          "stored": 120,
+          "unitPrice": 20,
+          "value": 2400,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 120,
+          "productionPerMinute": 2.0,
+          "salesPerMinute": 1.75,
+          "customerCapacityPerMinute": 1.75,
+          "inputs": []
+        },
+        {
+          "goodId": "cannery_preserves",
+          "name": "Preserves",
+          "slot": 6,
+          "tier": 6,
+          "buildingId": "cannery",
+          "tierName": "Meridian Cannery",
+          "family": "F",
+          "quantity": 120,
+          "stored": 120,
+          "unitPrice": 30,
+          "value": 3600,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 120,
+          "productionPerMinute": 1.0,
+          "salesPerMinute": 0.88,
+          "customerCapacityPerMinute": 0.88,
+          "inputs": []
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "fish_stall_fresh_catch",
+            "quantity": 1,
+            "name": "Fresh Catch",
+            "owned": 4,
+            "buildingId": "fish_stall"
+          },
+          {
+            "goodId": "farm_tomatoes",
+            "quantity": 1,
+            "name": "Tomatoes",
+            "owned": 3,
+            "buildingId": "farm"
+          }
+        ],
+        "output": {
+          "goodId": "cannery_canned_goods",
+          "name": "Canned Goods",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "fish_stall_fresh_catch",
+              "quantity": 1,
+              "name": "Fresh Catch",
+              "owned": 4,
+              "buildingId": "fish_stall"
+            },
+            {
+              "goodId": "farm_tomatoes",
+              "quantity": 1,
+              "name": "Tomatoes",
+              "owned": 3,
+              "buildingId": "farm"
+            }
+          ],
+          "output": {
+            "goodId": "cannery_canned_goods",
+            "name": "Canned Goods",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 11000,
+      "levelPayback": null,
+      "autoCost": 17050,
+      "autoPayback": null,
+      "clearableQuantity": 359,
+      "clearStockValue": 5385,
+      "artLevel": 1,
+      "focus": "balanced",
+      "focusUnlocked": false,
+      "focusOptions": [],
+      "regularBonus": 0
+    },
+    {
+      "slot": 7,
+      "tier": 7,
+      "id": "machine_works",
+      "name": "Bluecollar Machine Works",
+      "family": "I",
+      "lv": 1,
+      "maxed": false,
+      "auto": 2,
+      "autoLabel": "Customers 2",
+      "revenuePerTick": 67,
+      "productionPerMinute": 7.0,
+      "salesPerMinute": 6.14,
+      "customerCapacityPerMinute": 6.14,
+      "incomePerMinute": 269,
+      "potentialIncomePerMinute": 236.05,
+      "status": "Storage full",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 1,
+          "cost": 22000,
+          "canBuy": true,
+          "why": "",
+          "effect": "125% base speed",
+          "incomeDelta": -6.0,
+          "consequence": "Town sales -6 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 2,
+          "cost": 34100,
+          "canBuy": true,
+          "why": "",
+          "effect": "170% base customers",
+          "incomeDelta": 32.95,
+          "consequence": "Town sales +32.95 YM/min",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 14300,
+          "canBuy": true,
+          "why": "",
+          "effect": "585 items",
+          "incomeDelta": 0.0,
+          "consequence": "+195 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 389,
+      "capacity": 390,
+      "storedValue": 17780,
+      "goods": [
+        {
+          "goodId": "machine_works_cnc_parts",
+          "name": "CNC Parts",
+          "slot": 7,
+          "tier": 7,
+          "buildingId": "machine_works",
+          "tierName": "Bluecollar Machine Works",
+          "family": "I",
+          "quantity": 129,
+          "stored": 129,
+          "unitPrice": 30,
+          "value": 3870,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 130,
+          "productionPerMinute": 4.0,
+          "salesPerMinute": 3.51,
+          "customerCapacityPerMinute": 3.51,
+          "inputs": []
+        },
+        {
+          "goodId": "machine_works_tooling",
+          "name": "Tooling",
+          "slot": 7,
+          "tier": 7,
+          "buildingId": "machine_works",
+          "tierName": "Bluecollar Machine Works",
+          "family": "I",
+          "quantity": 130,
+          "stored": 130,
+          "unitPrice": 42,
+          "value": 5460,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 130,
+          "productionPerMinute": 2.0,
+          "salesPerMinute": 1.75,
+          "customerCapacityPerMinute": 1.75,
+          "inputs": []
+        },
+        {
+          "goodId": "machine_works_prototypes",
+          "name": "Prototypes",
+          "slot": 7,
+          "tier": 7,
+          "buildingId": "machine_works",
+          "tierName": "Bluecollar Machine Works",
+          "family": "I",
+          "quantity": 130,
+          "stored": 130,
+          "unitPrice": 65,
+          "value": 8450,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 130,
+          "productionPerMinute": 1.0,
+          "salesPerMinute": 0.88,
+          "customerCapacityPerMinute": 0.88,
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1,
+              "name": "Steel Brackets",
+              "owned": 6,
+              "buildingId": "workshop"
+            },
+            {
+              "goodId": "garage_spare_parts",
+              "quantity": 1,
+              "name": "Spare Parts",
+              "owned": 3,
+              "buildingId": "garage"
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "workshop_steel_brackets",
+            "quantity": 1,
+            "name": "Steel Brackets",
+            "owned": 6,
+            "buildingId": "workshop"
+          },
+          {
+            "goodId": "garage_spare_parts",
+            "quantity": 1,
+            "name": "Spare Parts",
+            "owned": 3,
+            "buildingId": "garage"
+          }
+        ],
+        "output": {
+          "goodId": "machine_works_prototypes",
+          "name": "Prototypes",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1,
+              "name": "Steel Brackets",
+              "owned": 6,
+              "buildingId": "workshop"
+            },
+            {
+              "goodId": "garage_spare_parts",
+              "quantity": 1,
+              "name": "Spare Parts",
+              "owned": 3,
+              "buildingId": "garage"
+            }
+          ],
+          "output": {
+            "goodId": "machine_works_prototypes",
+            "name": "Prototypes",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 22000,
+      "levelPayback": null,
+      "autoCost": 34100,
+      "autoPayback": null,
+      "clearableQuantity": 389,
+      "clearStockValue": 10668,
+      "artLevel": 1,
+      "focus": "balanced",
+      "focusUnlocked": false,
+      "focusOptions": [],
+      "regularBonus": 0
+    },
+    {
+      "slot": 8,
+      "tier": 8,
+      "id": "turbine_field",
+      "name": "Windward Turbine Field",
+      "family": "E",
+      "lv": 1,
+      "maxed": false,
+      "auto": 1,
+      "autoLabel": "Customers 1",
+      "revenuePerTick": 50,
+      "productionPerMinute": 7.0,
+      "salesPerMinute": 4.55,
+      "customerCapacityPerMinute": 4.55,
+      "incomePerMinute": 200,
+      "potentialIncomePerMinute": 263.25,
+      "status": "Storage full",
+      "reserve": false,
+      "processing": true,
+      "hasRecipes": true,
+      "upgrades": {
+        "production": {
+          "level": 1,
+          "cost": 45000,
+          "canBuy": true,
+          "why": "",
+          "effect": "125% base speed",
+          "incomeDelta": -4.5,
+          "consequence": "Town sales -4.5 YM/min",
+          "unlocksSpecialty": false
+        },
+        "sales": {
+          "level": 1,
+          "cost": 45000,
+          "canBuy": true,
+          "why": "",
+          "effect": "135% base customers",
+          "incomeDelta": 92.14,
+          "consequence": "Town sales +92.14 YM/min",
+          "unlocksSpecialty": false
+        },
+        "storage": {
+          "level": 1,
+          "cost": 29250,
+          "canBuy": true,
+          "why": "",
+          "effect": "630 items",
+          "incomeDelta": 0.0,
+          "consequence": "+210 spaces \u00b7 sales unchanged",
+          "unlocksSpecialty": false
+        }
+      },
+      "stored": 419,
+      "capacity": 420,
+      "storedValue": 28655,
+      "goods": [
+        {
+          "goodId": "turbine_field_wind_kwh",
+          "name": "Wind kWh",
+          "slot": 8,
+          "tier": 8,
+          "buildingId": "turbine_field",
+          "tierName": "Windward Turbine Field",
+          "family": "E",
+          "quantity": 139,
+          "stored": 139,
+          "unitPrice": 45,
+          "value": 6255,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 140,
+          "productionPerMinute": 4.0,
+          "salesPerMinute": 2.6,
+          "customerCapacityPerMinute": 2.6,
+          "inputs": []
+        },
+        {
+          "goodId": "turbine_field_capacity_contracts",
+          "name": "Capacity Contracts",
+          "slot": 8,
+          "tier": 8,
+          "buildingId": "turbine_field",
+          "tierName": "Windward Turbine Field",
+          "family": "E",
+          "quantity": 140,
+          "stored": 140,
+          "unitPrice": 65,
+          "value": 9100,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 140,
+          "productionPerMinute": 2.0,
+          "salesPerMinute": 1.3,
+          "customerCapacityPerMinute": 1.3,
+          "inputs": []
+        },
+        {
+          "goodId": "turbine_field_green_certificates",
+          "name": "Green Certificates",
+          "slot": 8,
+          "tier": 8,
+          "buildingId": "turbine_field",
+          "tierName": "Windward Turbine Field",
+          "family": "E",
+          "quantity": 140,
+          "stored": 140,
+          "unitPrice": 95,
+          "value": 13300,
+          "price": 1,
+          "reserved": 0,
+          "capacity": 140,
+          "productionPerMinute": 1.0,
+          "salesPerMinute": 0.65,
+          "customerCapacityPerMinute": 0.65,
+          "inputs": [
+            {
+              "goodId": "solar_coop_daytime_kwh",
+              "quantity": 1,
+              "name": "Daytime kWh",
+              "owned": 2,
+              "buildingId": "solar_coop"
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "inputs": [
+          {
+            "goodId": "solar_coop_daytime_kwh",
+            "quantity": 1,
+            "name": "Daytime kWh",
+            "owned": 2,
+            "buildingId": "solar_coop"
+          }
+        ],
+        "output": {
+          "goodId": "turbine_field_green_certificates",
+          "name": "Green Certificates",
+          "quantity": 1
+        },
+        "available": true
+      },
+      "recipes": [
+        {
+          "inputs": [
+            {
+              "goodId": "solar_coop_daytime_kwh",
+              "quantity": 1,
+              "name": "Daytime kWh",
+              "owned": 2,
+              "buildingId": "solar_coop"
+            }
+          ],
+          "output": {
+            "goodId": "turbine_field_green_certificates",
+            "name": "Green Certificates",
+            "quantity": 1
+          },
+          "available": true
+        }
+      ],
+      "price": 1,
+      "priceTrend": "flat",
+      "setBadges": [],
+      "levelCost": 45000,
+      "levelPayback": null,
+      "autoCost": 45000,
+      "autoPayback": null,
+      "clearableQuantity": 419,
+      "clearStockValue": 17193,
+      "artLevel": 1,
+      "focus": "balanced",
+      "focusUnlocked": false,
+      "focusOptions": [],
+      "regularBonus": 0
+    }
+  ],
+  "buildingsOwned": 9,
+  "frontier": [
+    {
+      "baseCost": 2600000,
+      "cost": 2990000,
+      "materialUnitValue": 15,
+      "materialCost": 26000,
+      "materialsCost": 26000,
+      "materialsUsed": 0,
+      "materialsMissing": 26000,
+      "tier": 9,
+      "id": "generator",
+      "name": "North Grid Plant",
+      "family": "E",
+      "baseRevenue": 146.25,
+      "productionPerMinute": 7.0,
+      "timerH": 2.5,
+      "affordable": false,
+      "canExpand": false,
+      "why": "Need 1877165 YM more"
+    },
+    {
+      "baseCost": 5000000,
+      "cost": 5750000,
+      "materialUnitValue": 15,
+      "materialCost": 50000,
+      "materialsCost": 50000,
+      "materialsUsed": 0,
+      "materialsMissing": 50000,
+      "tier": 10,
+      "id": "relay_station",
+      "name": "Signal Relay Station",
+      "family": "E",
+      "baseRevenue": 210.0,
+      "productionPerMinute": 7.0,
+      "timerH": 3,
+      "affordable": false,
+      "canExpand": false,
+      "why": "Need 4637165 YM more"
+    },
+    {
+      "baseCost": 9000000,
+      "cost": 10350000,
+      "materialUnitValue": 15,
+      "materialCost": 90000,
+      "materialsCost": 90000,
+      "materialsUsed": 0,
+      "materialsMissing": 90000,
+      "tier": 11,
+      "id": "freight_terminal",
+      "name": "Atlas Freight Terminal",
+      "family": "I",
+      "baseRevenue": 297.5,
+      "productionPerMinute": 7.0,
+      "timerH": 3.5,
+      "affordable": false,
+      "canExpand": false,
+      "why": "Need 9237165 YM more"
+    }
+  ],
+  "build": null,
+  "queue": [],
+  "queueDepth": 2,
+  "warehouseCap": 2700,
+  "warehouseStored": 1904,
+  "warehouseValue": 68912,
+  "warehouseFillPercent": 70.5,
+  "overflowing": false,
+  "overflowDisc": 0.4,
+  "clearStockPercent": 60,
+  "contracts": {
+    "offers": [
+      {
+        "id": "order-7-14",
+        "name": "Quick cash",
+        "requirements": [
+          {
+            "goodId": "farm_honey",
+            "quantity": 4,
+            "name": "Honey",
+            "owned": 2,
+            "buildingId": "farm"
+          },
+          {
+            "goodId": "farm_eggs",
+            "quantity": 6,
+            "name": "Eggs",
+            "owned": 2,
+            "buildingId": "farm"
+          },
+          {
+            "goodId": "fish_stall_smoked_fish",
+            "quantity": 4,
+            "name": "Smoked Fish",
+            "owned": 69,
+            "buildingId": "fish_stall"
+          },
+          {
+            "goodId": "farm_tomatoes",
+            "quantity": 12,
+            "name": "Tomatoes",
+            "owned": 3,
+            "buildingId": "farm"
+          }
+        ],
+        "reward": 263,
+        "materials": 0,
+        "customer": null,
+        "committed": false,
+        "rarity": "rare",
+        "rarityLabel": "Rare order",
+        "rewardPercent": 219,
+        "retailValue": 120,
+        "canFulfill": false,
+        "why": "Need 2 Honey",
+        "target": 26,
+        "delivered": 11,
+        "penalty": 0,
+        "remainingSec": null,
+        "progressPercent": 42.3,
+        "building": "Quick cash",
+        "replaceRemainingSec": 0
+      },
+      {
+        "id": "order-7-13",
+        "name": "Building supplies",
+        "requirements": [
+          {
+            "goodId": "fish_stall_oysters",
+            "quantity": 8,
+            "name": "Oysters",
+            "owned": 68,
+            "buildingId": "fish_stall"
+          },
+          {
+            "goodId": "farm_eggs",
+            "quantity": 8,
+            "name": "Eggs",
+            "owned": 2,
+            "buildingId": "farm"
+          }
+        ],
+        "reward": 88,
+        "materials": 1,
+        "customer": null,
+        "committed": false,
+        "rarity": "standard",
+        "rarityLabel": "Standard",
+        "rewardPercent": 110,
+        "retailValue": 80,
+        "canFulfill": false,
+        "why": "Need 6 Eggs",
+        "target": 16,
+        "delivered": 10,
+        "penalty": 0,
+        "remainingSec": null,
+        "progressPercent": 62.5,
+        "building": "Building supplies",
+        "replaceRemainingSec": 0
+      },
+      {
+        "id": "order-7-9",
+        "name": "Breakfast regulars",
+        "requirements": [
+          {
+            "goodId": "farm_eggs",
+            "quantity": 16,
+            "name": "Eggs",
+            "owned": 2,
+            "buildingId": "farm"
+          },
+          {
+            "goodId": "farm_honey",
+            "quantity": 8,
+            "name": "Honey",
+            "owned": 2,
+            "buildingId": "farm"
+          }
+        ],
+        "reward": 147,
+        "materials": 0,
+        "customer": "breakfast",
+        "committed": false,
+        "rarity": "standard",
+        "rarityLabel": "Standard",
+        "rewardPercent": 115,
+        "retailValue": 128,
+        "canFulfill": false,
+        "why": "Need 14 Eggs",
+        "target": 24,
+        "delivered": 4,
+        "penalty": 0,
+        "remainingSec": null,
+        "progressPercent": 16.7,
+        "building": "Breakfast regulars",
+        "replaceRemainingSec": 0
+      }
+    ],
+    "active": []
+  },
+  "board": [
+    {
+      "goodId": "farm_tomatoes",
+      "name": "Tomatoes",
+      "slot": 0,
+      "tier": 0,
+      "buildingId": "farm",
+      "tierName": "Greenfield Farm",
+      "family": "F",
+      "quantity": 3,
+      "stored": 3,
+      "unitPrice": 2,
+      "value": 6,
+      "price": 1,
+      "reserved": 2,
+      "capacity": 60,
+      "productionPerMinute": 15.0,
+      "salesPerMinute": 11.0,
+      "customerCapacityPerMinute": 11.7,
+      "inputs": []
+    },
+    {
+      "goodId": "farm_eggs",
+      "name": "Eggs",
+      "slot": 0,
+      "tier": 0,
+      "buildingId": "farm",
+      "tierName": "Greenfield Farm",
+      "family": "F",
+      "quantity": 2,
+      "stored": 2,
+      "unitPrice": 4,
+      "value": 8,
+      "price": 1,
+      "reserved": 2,
+      "capacity": 60,
+      "productionPerMinute": 7.5,
+      "salesPerMinute": 5.25,
+      "customerCapacityPerMinute": 5.85,
+      "inputs": []
+    },
+    {
+      "goodId": "farm_honey",
+      "name": "Honey",
+      "slot": 0,
+      "tier": 0,
+      "buildingId": "farm",
+      "tierName": "Greenfield Farm",
+      "family": "F",
+      "quantity": 2,
+      "stored": 2,
+      "unitPrice": 8,
+      "value": 16,
+      "price": 1,
+      "reserved": 2,
+      "capacity": 60,
+      "productionPerMinute": 3.75,
+      "salesPerMinute": 1.5,
+      "customerCapacityPerMinute": 2.92,
+      "inputs": []
+    },
+    {
+      "goodId": "fish_stall_fresh_catch",
+      "name": "Fresh Catch",
+      "slot": 1,
+      "tier": 1,
+      "buildingId": "fish_stall",
+      "tierName": "Harbor Fish Stall",
+      "family": "F",
+      "quantity": 4,
+      "stored": 4,
+      "unitPrice": 3,
+      "value": 12,
+      "price": 1,
+      "reserved": 4,
+      "capacity": 70,
+      "productionPerMinute": 14.0,
+      "salesPerMinute": 6.5,
+      "customerCapacityPerMinute": 12.61,
+      "inputs": []
+    },
+    {
+      "goodId": "fish_stall_oysters",
+      "name": "Oysters",
+      "slot": 1,
+      "tier": 1,
+      "buildingId": "fish_stall",
+      "tierName": "Harbor Fish Stall",
+      "family": "F",
+      "quantity": 68,
+      "stored": 68,
+      "unitPrice": 6,
+      "value": 408,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 70,
+      "productionPerMinute": 7.0,
+      "salesPerMinute": 6.3,
+      "customerCapacityPerMinute": 6.3,
+      "inputs": []
+    },
+    {
+      "goodId": "fish_stall_smoked_fish",
+      "name": "Smoked Fish",
+      "slot": 1,
+      "tier": 1,
+      "buildingId": "fish_stall",
+      "tierName": "Harbor Fish Stall",
+      "family": "F",
+      "quantity": 69,
+      "stored": 69,
+      "unitPrice": 10,
+      "value": 690,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 70,
+      "productionPerMinute": 3.5,
+      "salesPerMinute": 3.15,
+      "customerCapacityPerMinute": 3.15,
+      "inputs": [
+        {
+          "goodId": "fish_stall_fresh_catch",
+          "quantity": 1,
+          "name": "Fresh Catch",
+          "owned": 4,
+          "buildingId": "fish_stall"
+        }
+      ]
+    },
+    {
+      "goodId": "roastery_roasted_beans",
+      "name": "Roasted Beans",
+      "slot": 2,
+      "tier": 2,
+      "buildingId": "roastery",
+      "tierName": "Copper Kettle Roastery",
+      "family": "F",
+      "quantity": 2,
+      "stored": 2,
+      "unitPrice": 5,
+      "value": 10,
+      "price": 1,
+      "reserved": 2,
+      "capacity": 80,
+      "productionPerMinute": 9.0,
+      "salesPerMinute": 4.5,
+      "customerCapacityPerMinute": 8.97,
+      "inputs": []
+    },
+    {
+      "goodId": "roastery_espresso_shots",
+      "name": "Espresso Shots",
+      "slot": 2,
+      "tier": 2,
+      "buildingId": "roastery",
+      "tierName": "Copper Kettle Roastery",
+      "family": "F",
+      "quantity": 79,
+      "stored": 79,
+      "unitPrice": 7,
+      "value": 553,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 80,
+      "productionPerMinute": 4.5,
+      "salesPerMinute": 4.49,
+      "customerCapacityPerMinute": 4.49,
+      "inputs": [
+        {
+          "goodId": "roastery_roasted_beans",
+          "quantity": 1,
+          "name": "Roasted Beans",
+          "owned": 2,
+          "buildingId": "roastery"
+        }
+      ]
+    },
+    {
+      "goodId": "roastery_pastries",
+      "name": "Pastries",
+      "slot": 2,
+      "tier": 2,
+      "buildingId": "roastery",
+      "tierName": "Copper Kettle Roastery",
+      "family": "F",
+      "quantity": 80,
+      "stored": 80,
+      "unitPrice": 20,
+      "value": 1600,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 80,
+      "productionPerMinute": 2.25,
+      "salesPerMinute": 2.24,
+      "customerCapacityPerMinute": 2.24,
+      "inputs": [
+        {
+          "goodId": "farm_eggs",
+          "quantity": 1,
+          "name": "Eggs",
+          "owned": 2,
+          "buildingId": "farm"
+        },
+        {
+          "goodId": "farm_honey",
+          "quantity": 1,
+          "name": "Honey",
+          "owned": 2,
+          "buildingId": "farm"
+        }
+      ]
+    },
+    {
+      "goodId": "garage_repairs",
+      "name": "Repairs",
+      "slot": 3,
+      "tier": 3,
+      "buildingId": "garage",
+      "tierName": "Tinker's Garage",
+      "family": "I",
+      "quantity": 88,
+      "stored": 88,
+      "unitPrice": 8,
+      "value": 704,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 90,
+      "productionPerMinute": 9.0,
+      "salesPerMinute": 8.06,
+      "customerCapacityPerMinute": 8.06,
+      "inputs": []
+    },
+    {
+      "goodId": "garage_spare_parts",
+      "name": "Spare Parts",
+      "slot": 3,
+      "tier": 3,
+      "buildingId": "garage",
+      "tierName": "Tinker's Garage",
+      "family": "I",
+      "quantity": 3,
+      "stored": 3,
+      "unitPrice": 12,
+      "value": 36,
+      "price": 1,
+      "reserved": 3,
+      "capacity": 90,
+      "productionPerMinute": 4.5,
+      "salesPerMinute": 1.25,
+      "customerCapacityPerMinute": 4.03,
+      "inputs": []
+    },
+    {
+      "goodId": "garage_custom_mods",
+      "name": "Custom Mods",
+      "slot": 3,
+      "tier": 3,
+      "buildingId": "garage",
+      "tierName": "Tinker's Garage",
+      "family": "I",
+      "quantity": 90,
+      "stored": 90,
+      "unitPrice": 24,
+      "value": 2160,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 90,
+      "productionPerMinute": 2.25,
+      "salesPerMinute": 2.02,
+      "customerCapacityPerMinute": 2.02,
+      "inputs": [
+        {
+          "goodId": "garage_spare_parts",
+          "quantity": 1,
+          "name": "Spare Parts",
+          "owned": 3,
+          "buildingId": "garage"
+        }
+      ]
+    },
+    {
+      "goodId": "workshop_steel_brackets",
+      "name": "Steel Brackets",
+      "slot": 4,
+      "tier": 4,
+      "buildingId": "workshop",
+      "tierName": "Ironworks Shop",
+      "family": "I",
+      "quantity": 6,
+      "stored": 6,
+      "unitPrice": 12,
+      "value": 72,
+      "price": 1,
+      "reserved": 6,
+      "capacity": 100,
+      "productionPerMinute": 7.0,
+      "salesPerMinute": 1.75,
+      "customerCapacityPerMinute": 6.24,
+      "inputs": []
+    },
+    {
+      "goodId": "workshop_welded_frames",
+      "name": "Welded Frames",
+      "slot": 4,
+      "tier": 4,
+      "buildingId": "workshop",
+      "tierName": "Ironworks Shop",
+      "family": "I",
+      "quantity": 99,
+      "stored": 99,
+      "unitPrice": 20,
+      "value": 1980,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 100,
+      "productionPerMinute": 3.5,
+      "salesPerMinute": 3.12,
+      "customerCapacityPerMinute": 3.12,
+      "inputs": []
+    },
+    {
+      "goodId": "workshop_machined_bolts",
+      "name": "Machined Bolts",
+      "slot": 4,
+      "tier": 4,
+      "buildingId": "workshop",
+      "tierName": "Ironworks Shop",
+      "family": "I",
+      "quantity": 99,
+      "stored": 99,
+      "unitPrice": 34,
+      "value": 3366,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 100,
+      "productionPerMinute": 1.75,
+      "salesPerMinute": 1.56,
+      "customerCapacityPerMinute": 1.56,
+      "inputs": [
+        {
+          "goodId": "workshop_steel_brackets",
+          "quantity": 1,
+          "name": "Steel Brackets",
+          "owned": 6,
+          "buildingId": "workshop"
+        }
+      ]
+    },
+    {
+      "goodId": "solar_coop_daytime_kwh",
+      "name": "Daytime kWh",
+      "slot": 5,
+      "tier": 5,
+      "buildingId": "solar_coop",
+      "tierName": "Rooftop Solar Co-op",
+      "family": "E",
+      "quantity": 2,
+      "stored": 2,
+      "unitPrice": 18,
+      "value": 36,
+      "price": 1,
+      "reserved": 2,
+      "capacity": 110,
+      "productionPerMinute": 5.0,
+      "salesPerMinute": 4.0,
+      "customerCapacityPerMinute": 5.33,
+      "inputs": []
+    },
+    {
+      "goodId": "solar_coop_battery_storage",
+      "name": "Battery Storage",
+      "slot": 5,
+      "tier": 5,
+      "buildingId": "solar_coop",
+      "tierName": "Rooftop Solar Co-op",
+      "family": "E",
+      "quantity": 0,
+      "stored": 0,
+      "unitPrice": 28,
+      "value": 0,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 110,
+      "productionPerMinute": 2.5,
+      "salesPerMinute": 2.5,
+      "customerCapacityPerMinute": 2.67,
+      "inputs": [
+        {
+          "goodId": "workshop_steel_brackets",
+          "quantity": 1,
+          "name": "Steel Brackets",
+          "owned": 6,
+          "buildingId": "workshop"
+        }
+      ]
+    },
+    {
+      "goodId": "solar_coop_carbon_credits",
+      "name": "Carbon Credits",
+      "slot": 5,
+      "tier": 5,
+      "buildingId": "solar_coop",
+      "tierName": "Rooftop Solar Co-op",
+      "family": "E",
+      "quantity": 41,
+      "stored": 41,
+      "unitPrice": 45,
+      "value": 1845,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 110,
+      "productionPerMinute": 1.25,
+      "salesPerMinute": 1.25,
+      "customerCapacityPerMinute": 1.33,
+      "inputs": []
+    },
+    {
+      "goodId": "cannery_canned_goods",
+      "name": "Canned Goods",
+      "slot": 6,
+      "tier": 6,
+      "buildingId": "cannery",
+      "tierName": "Meridian Cannery",
+      "family": "F",
+      "quantity": 119,
+      "stored": 119,
+      "unitPrice": 25,
+      "value": 2975,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 120,
+      "productionPerMinute": 4.0,
+      "salesPerMinute": 3.51,
+      "customerCapacityPerMinute": 3.51,
+      "inputs": [
+        {
+          "goodId": "fish_stall_fresh_catch",
+          "quantity": 1,
+          "name": "Fresh Catch",
+          "owned": 4,
+          "buildingId": "fish_stall"
+        },
+        {
+          "goodId": "farm_tomatoes",
+          "quantity": 1,
+          "name": "Tomatoes",
+          "owned": 3,
+          "buildingId": "farm"
+        }
+      ]
+    },
+    {
+      "goodId": "cannery_sauces",
+      "name": "Sauces",
+      "slot": 6,
+      "tier": 6,
+      "buildingId": "cannery",
+      "tierName": "Meridian Cannery",
+      "family": "F",
+      "quantity": 120,
+      "stored": 120,
+      "unitPrice": 20,
+      "value": 2400,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 120,
+      "productionPerMinute": 2.0,
+      "salesPerMinute": 1.75,
+      "customerCapacityPerMinute": 1.75,
+      "inputs": []
+    },
+    {
+      "goodId": "cannery_preserves",
+      "name": "Preserves",
+      "slot": 6,
+      "tier": 6,
+      "buildingId": "cannery",
+      "tierName": "Meridian Cannery",
+      "family": "F",
+      "quantity": 120,
+      "stored": 120,
+      "unitPrice": 30,
+      "value": 3600,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 120,
+      "productionPerMinute": 1.0,
+      "salesPerMinute": 0.88,
+      "customerCapacityPerMinute": 0.88,
+      "inputs": []
+    },
+    {
+      "goodId": "machine_works_cnc_parts",
+      "name": "CNC Parts",
+      "slot": 7,
+      "tier": 7,
+      "buildingId": "machine_works",
+      "tierName": "Bluecollar Machine Works",
+      "family": "I",
+      "quantity": 129,
+      "stored": 129,
+      "unitPrice": 30,
+      "value": 3870,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 130,
+      "productionPerMinute": 4.0,
+      "salesPerMinute": 3.51,
+      "customerCapacityPerMinute": 3.51,
+      "inputs": []
+    },
+    {
+      "goodId": "machine_works_tooling",
+      "name": "Tooling",
+      "slot": 7,
+      "tier": 7,
+      "buildingId": "machine_works",
+      "tierName": "Bluecollar Machine Works",
+      "family": "I",
+      "quantity": 130,
+      "stored": 130,
+      "unitPrice": 42,
+      "value": 5460,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 130,
+      "productionPerMinute": 2.0,
+      "salesPerMinute": 1.75,
+      "customerCapacityPerMinute": 1.75,
+      "inputs": []
+    },
+    {
+      "goodId": "machine_works_prototypes",
+      "name": "Prototypes",
+      "slot": 7,
+      "tier": 7,
+      "buildingId": "machine_works",
+      "tierName": "Bluecollar Machine Works",
+      "family": "I",
+      "quantity": 130,
+      "stored": 130,
+      "unitPrice": 65,
+      "value": 8450,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 130,
+      "productionPerMinute": 1.0,
+      "salesPerMinute": 0.88,
+      "customerCapacityPerMinute": 0.88,
+      "inputs": [
+        {
+          "goodId": "workshop_steel_brackets",
+          "quantity": 1,
+          "name": "Steel Brackets",
+          "owned": 6,
+          "buildingId": "workshop"
+        },
+        {
+          "goodId": "garage_spare_parts",
+          "quantity": 1,
+          "name": "Spare Parts",
+          "owned": 3,
+          "buildingId": "garage"
+        }
+      ]
+    },
+    {
+      "goodId": "turbine_field_wind_kwh",
+      "name": "Wind kWh",
+      "slot": 8,
+      "tier": 8,
+      "buildingId": "turbine_field",
+      "tierName": "Windward Turbine Field",
+      "family": "E",
+      "quantity": 139,
+      "stored": 139,
+      "unitPrice": 45,
+      "value": 6255,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 140,
+      "productionPerMinute": 4.0,
+      "salesPerMinute": 2.6,
+      "customerCapacityPerMinute": 2.6,
+      "inputs": []
+    },
+    {
+      "goodId": "turbine_field_capacity_contracts",
+      "name": "Capacity Contracts",
+      "slot": 8,
+      "tier": 8,
+      "buildingId": "turbine_field",
+      "tierName": "Windward Turbine Field",
+      "family": "E",
+      "quantity": 140,
+      "stored": 140,
+      "unitPrice": 65,
+      "value": 9100,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 140,
+      "productionPerMinute": 2.0,
+      "salesPerMinute": 1.3,
+      "customerCapacityPerMinute": 1.3,
+      "inputs": []
+    },
+    {
+      "goodId": "turbine_field_green_certificates",
+      "name": "Green Certificates",
+      "slot": 8,
+      "tier": 8,
+      "buildingId": "turbine_field",
+      "tierName": "Windward Turbine Field",
+      "family": "E",
+      "quantity": 140,
+      "stored": 140,
+      "unitPrice": 95,
+      "value": 13300,
+      "price": 1,
+      "reserved": 0,
+      "capacity": 140,
+      "productionPerMinute": 1.0,
+      "salesPerMinute": 0.65,
+      "customerCapacityPerMinute": 0.65,
+      "inputs": [
+        {
+          "goodId": "solar_coop_daytime_kwh",
+          "quantity": 1,
+          "name": "Daytime kWh",
+          "owned": 2,
+          "buildingId": "solar_coop"
+        }
+      ]
+    }
+  ],
+  "rumour": null,
+  "activeEvents": [],
+  "checklist": {
+    "lv25": true,
+    "auto": true,
+    "goodSales": 12,
+    "quiz": false
+  },
+  "checklistText": [
+    "Production level 3",
+    "Upgrade customers",
+    "Complete 3 deliveries",
+    "Pass the quiz"
+  ],
+  "goodSalesNeeded": 3,
+  "goodSalePrice": 1,
+  "gateTier": 3,
+  "gateOpen": false,
+  "keepPercent": null,
+  "welcomeBackActive": false,
+  "currency": {
+    "code": "YM",
+    "name": "YM (placeholder)",
+    "decimals": 0
+  },
+  "paused": false,
+  "families": {
+    "F": {
+      "name": "Food",
+      "bandMin": 0.9,
+      "bandMax": 1.1,
+      "premium": 1,
+      "depth": 5
+    },
+    "I": {
+      "name": "Industry",
+      "bandMin": 0.8,
+      "bandMax": 1.25,
+      "premium": 1.05,
+      "depth": 2
+    },
+    "E": {
+      "name": "Energy/Tech",
+      "bandMin": 0.7,
+      "bandMax": 1.4,
+      "premium": 1.1,
+      "depth": 1
+    }
+  },
+  "tickerLines": [],
+  "contractSlots": 3,
+  "premiumSalePct": 0,
+  "maxLevel": 12,
+  "gradLevel": 1,
+  "offlineHours": 12,
+  "nextGoal": "Open North Grid Plant",
+  "tier": 8,
+  "tierCount": 15,
+  "buildingName": "Windward Turbine Field",
+  "buildingId": "turbine_field",
+  "level": 1,
+  "auto": 1,
+  "autoLabel": "Customers 1",
+  "preview": {
+    "days": 3,
+    "visitHours": 2,
+    "strategy": "expansion",
+    "firstVisitMinutes": 10,
+    "laterVisitMinutes": 5,
+    "deliveriesCompleted": 12
+  }
+}

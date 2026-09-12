@@ -1,0 +1,192 @@
+/* Business HQ: use the Dash tokens, black surfaces and one-pixel amber rules. */
+body.build-page { overflow: auto; }
+.build-page .shell { height: auto; min-height: 100vh; }
+.build-page *, .build-page *::before, .build-page *::after { box-sizing: border-box; }
+.build-page .hero { flex: none; }
+.build-page .banner-frame { height: 64px; min-height: 0; }
+.build-page .topline { min-height: 32px; padding-block: 4px; }
+.build-page .tabs { padding: 5px 8px; }
+.build-page .tab { min-height: 36px; padding: 5px 8px; }
+.build-page .buildings-workspace { display: block; overflow: visible; padding: 8px; }
+.build-page .econ-kid { --k-card: var(--bg); --k-card-2: var(--bg); --k-line: var(--border); --k-ink: var(--text); --k-dim: var(--muted); --k-gold: var(--amber); --k-green: var(--green); --k-red: var(--red); --k-blue: var(--amber); font-family: var(--font-terminal); font-size: 18px; line-height: 1.2; letter-spacing: .3px; }
+.build-command-head { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; min-height: 38px; }
+.build-command-head h1 { color: var(--amber); font-size: 24px; font-weight: 400; margin: 0; }
+.build-command-head h1 span { color: var(--muted); font-size: 18px; }
+.build-loop { margin-left: auto; color: var(--muted); font-size: 16px; }
+.build-loop b { color: var(--amber); font-weight: 400; padding: 0 8px; }
+.build-small-btn { border: 1px solid var(--border); background: var(--bg); color: var(--amber); padding: 6px 12px; min-height: 36px; cursor: pointer; font-family: var(--font-terminal); font-size: 18px; }
+.build-resources { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); margin-bottom: 8px; }
+.build-metric { padding: 8px 14px; border-right: 1px solid var(--line); display: grid; gap: 2px; }
+.build-metric:last-child { border-right: 0; }
+.build-metric > span, .build-eyebrow { font-size: 15px; color: var(--muted); letter-spacing: .7px; }
+.build-metric strong { color: var(--amber); font-size: 30px; font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
+.build-metric small { color: var(--muted); font-size: 15px; }
+.build-management { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 8px; }
+.build-operations, .build-upgrades { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.build-panel { border: 1px solid var(--border); background: var(--bg); min-width: 0; }
+.build-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 12px; border-bottom: 1px solid var(--line); }
+.build-panel-head h2, .build-panel-head h3 { margin: 0; color: var(--amber); font-size: 20px; font-weight: 400; }
+.build-panel-head h3 > span { color: var(--muted); margin-right: 8px; }
+.build-panel-head > span { font-size: 15px; color: var(--muted); text-align: right; }
+.build-panel-head > .k-good { color: var(--green); }
+.build-panel-head > .k-money { color: var(--amber); }
+.build-site { flex: 1; display: flex; flex-direction: column; }
+.build-site-stage { min-height: 148px; display: flex; align-items: center; justify-content: center; gap: 32px; padding: 12px; flex: 1; }
+.build-page .k-art { width: 136px; height: 136px; flex: 0 0 136px; border: 1px solid var(--line); border-radius: 0; background: var(--bg); }
+.build-page .k-art--missing::before { content: 'YOUR SITE'; font-family: var(--font-terminal); }
+.build-page .k-art--missing::after { font-family: var(--font-terminal); color: var(--amber); }
+.build-level { font-size: 34px; color: var(--amber); line-height: 1.1; }
+.build-site-info p { margin: 6px 0 12px; color: var(--text); }
+.build-flow { color: var(--green); font-size: 15px; }
+.build-site-foot { display: flex; gap: 16px; justify-content: space-between; padding: 7px 12px; border-top: 1px solid var(--line); font-size: 16px; color: var(--muted); }
+.build-site-foot b { font-weight: 400; color: var(--text); }
+.build-stock-cap { display: flex; align-items: center; gap: 12px; padding: 8px 12px; color: var(--muted); font-size: 16px; }
+.build-stock-cap .k-bar { flex: 1; }
+.build-goods { padding: 0 12px; }
+.build-goods table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.build-goods th { color: var(--muted); font-weight: 400; font-size: 14px; text-align: left; padding: 3px 6px; border-bottom: 1px solid var(--line); }
+.build-goods td { font-size: 17px; padding: 3px 6px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.build-goods th:first-child { width: 27%; }
+.build-goods th:last-child { width: 29%; }
+.build-goods tr:last-child td { border-bottom: 0; }
+.build-page .build-goods .k-btn { min-height: 36px; font-size: 17px; padding: 4px; }
+.build-caption { margin: 6px 12px 8px; color: var(--muted); font-size: 15px; }
+.build-upgrade > p, .build-expansion > p { margin: 8px 12px; color: var(--muted); font-size: 17px; }
+.build-action-row { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); align-items: center; gap: 12px; padding: 0 12px; }
+.build-action-row > span { color: var(--muted); font-size: 16px; }
+.build-action-row b { display: block; color: var(--text); font-weight: 400; font-size: 18px; }
+.build-hint { color: var(--muted); font-size: 15px; padding: 6px 12px 8px; min-height: 30px; }
+.build-next { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 12px 4px; }
+.build-next strong { font-size: 22px; font-weight: 400; color: var(--text); }
+.build-next > span { color: var(--muted); font-size: 16px; }
+.build-savings { padding: 0 12px 8px; color: var(--muted); font-size: 15px; }
+.build-savings .k-bar { margin-top: 4px; }
+.build-page .build-expansion > .k-btn { margin: 0 12px; width: calc(100% - 24px); }
+.build-construction { border-top: 1px solid var(--line); color: var(--amber); padding: 6px 12px; font-size: 16px; display: flex; justify-content: space-between; }
+.build-construction b { font-weight: 400; }
+.build-page .k-btn { min-height: 44px; border: 1px solid var(--amber); border-radius: 0; background: var(--amber); color: var(--bg); font-size: 20px; font-weight: 400; padding: 6px 10px; line-height: 1.1; }
+.build-page .k-btn small { font-size: 16px; opacity: 1; font-weight: 400; }
+.build-page .k-btn--alt, .build-page .k-btn--ghost { background: var(--bg); color: var(--amber); }
+.build-page .k-btn:disabled { background: var(--bg); border-color: var(--line); color: var(--muted); }
+.build-page .k-btn:hover:not(:disabled), .build-small-btn:hover { box-shadow: inset 0 0 0 1px var(--amber); filter: none; }
+.build-page button:focus-visible, .build-page a:focus-visible, .build-page input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.build-page .k-bar { background: var(--bg); border: 1px solid var(--line); border-radius: 0; height: 8px; }
+.build-page .k-status, .build-page .k-banner { border-width: 1px; border-radius: 0; background: var(--bg); color: var(--amber); padding: 8px 12px; font-size: 17px; margin: 8px 0; min-height: 0; }
+.build-page .k-status--good { color: var(--green); }
+.build-page .k-status--bad { color: var(--red); }
+.build-goal-strip { display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); margin-top: 8px; padding: 4px 12px; font-size: 17px; }
+.build-goal-strip > button { margin-left: auto; }
+.build-goal-dots { display: flex; gap: 4px; }
+.build-goal-dots i { width: 16px; height: 8px; border: 1px solid var(--border); }
+.build-goal-dots .is-done { background: var(--green); border-color: var(--green); }
+/* Licence is an in-page overlay; all surfaces inherit the same Dash design. */
+.build-page dialog { width: min(1000px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 16px; background: var(--bg); color: var(--text); border: 1px solid var(--amber); }
+.build-page dialog::backdrop { background: rgba(0,0,0,.85); }
+.build-dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
+.build-dialog-head h2 { color: var(--amber); margin: 0; font-size: 24px; font-weight: 400; }
+.build-page .k-card, .build-page .k-hero, .build-page .k-badge, .build-page .k-check, .build-page .k-box, .build-page .k-opt { border: 1px solid var(--border); border-radius: 0; background: var(--bg); }
+.build-page .k-hero { padding: 12px; gap: 16px; margin-bottom: 12px; }
+.build-page .k-hero .k-art { width: 88px; height: 88px; flex-basis: 88px; }
+.build-page .k-hero-info { min-width: 0; }
+.build-page .k-title, .build-page .k-big, .build-page .k-card-title { font-family: var(--font-terminal); color: var(--amber); font-weight: 400; }
+.build-page .k-title { font-size: 28px; }
+.build-page .k-big { font-size: 32px; margin-top: 6px; }
+.build-page .k-cards { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.build-page .k-card { padding: 12px; gap: 8px; }
+.build-page .k-note, .build-page .k-check-text span { font-size: 17px; }
+.build-page .k-check { padding: 8px; gap: 8px; }
+.build-page .k-box { width: 26px; height: 26px; flex-basis: 26px; color: var(--green); }
+.build-page .k-check--done .k-box { border-color: var(--green); }
+.build-page .k-badge--on { color: var(--green); }
+.build-page .k-card--locked { opacity: 1; }
+.build-page .k-opt { min-height: 44px; padding: 6px 8px; }
+@media (min-width: 1100px) and (max-height: 800px) {
+  .build-page .banner-frame { height: 48px; }
+  .build-metric { padding-block: 6px; }
+  .build-site-stage { min-height: 120px; }
+  .build-panel-head { padding-block: 5px; }
+  .build-upgrade > p { margin-block: 5px; }
+  .build-hint { padding-block: 4px; min-height: 24px; }
+}
+@media (max-width: 900px) {
+  .build-loop { display: none; }
+  .build-command-head > button { margin-left: auto; }
+  .build-management { grid-template-columns: minmax(0, 1fr); }
+  .build-site-stage { min-height: 132px; }
+  .build-resources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .build-metric:nth-child(2) { border-right: 0; }
+  .build-metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .build-page .k-cards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .build-page .topline .left-meta, .build-page .ticker-container { display: none; }
+  .build-page .topline { display: flex; justify-content: flex-end; }
+  .build-page .banner-frame { height: 52px; }
+  .build-page .tabs { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .build-page .tab { min-height: 36px; }
+  .build-command-head h1 span { display: none; }
+  .build-site-stage { gap: 16px; }
+  .build-page .k-art { width: 100px; height: 100px; flex-basis: 100px; }
+  .build-site-foot { flex-wrap: wrap; gap: 4px; }
+  .build-goal-strip { flex-wrap: wrap; gap: 8px; }
+  .build-goal-strip > .build-eyebrow { display: none; }
+  .build-goods { padding-inline: 6px; }
+  .build-goods td { font-size: 15px; padding-inline: 3px; }
+  .build-page .build-goods .k-btn { min-height: 44px; font-size: 16px; }
+  .build-page .build-small-btn { min-height: 44px; }
+}
+/* Keep the daily management loop within a typical laptop viewport. */
+@media (min-width: 901px) {
+  .build-upgrades { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+  .build-upgrade { display: flex; flex-direction: column; }
+  .build-expansion { grid-column: 1 / -1; }
+  .build-action-row { grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: auto; }
+  .build-action-row b { display: inline; }
+  .build-panel-head { padding: 5px 10px; }
+  .build-panel-head h2, .build-panel-head h3 { font-size: 18px; }
+  .build-panel-head h3 > span { margin-right: 4px; }
+  .build-panel-head > span { font-size: 14px; }
+  .build-upgrade .build-panel-head { flex-wrap: wrap; gap: 2px 8px; }
+  .build-page .build-site .k-art { width: 100px; height: 100px; flex-basis: 100px; }
+  .build-site-stage { min-height: 116px; padding: 8px; }
+  .build-site-foot { padding-block: 5px; }
+  .build-stock-cap { padding-block: 5px; }
+  .build-page .build-goods .k-btn { min-height: 32px; }
+  .build-caption { margin-block: 4px; }
+}
+@media (min-width: 1100px) and (max-height: 800px) {
+  .build-page .banner-frame { height: 40px; }
+  .build-metric { gap: 0; padding-block: 4px; }
+  .build-metric strong { font-size: 27px; }
+  .build-command-head { min-height: 34px; margin-bottom: 6px; }
+  .build-goal-strip { padding-block: 2px; }
+  .build-upgrade .build-panel-head { padding-block: 4px; }
+  .build-panel-head { line-height: 1.1; }
+}
+.build-page .shell { overflow-x: clip; }
+.build-upgrades > .k-status { grid-column: 1 / -1; margin: 0; align-self: start; }
+.build-page dialog .build-dialog-head { position: sticky; top: -16px; padding-block: 8px; background: var(--bg); z-index: 1; }
+/* Supplied eight-frame strips. Scope motion to building art only. */
+.build-page .k-art--animated { display: block; }
+.build-page .k-art--animated > img { display: block; width: 800%; max-width: none; height: 100%; object-fit: fill; image-rendering: pixelated; }
+.build-page.motion-paused .k-art--animated > img { animation: build-art-frames .96s steps(8, end) infinite !important; }
+.build-page.motion-paused .k-art--paused > img { animation-play-state: paused !important; }
+@keyframes build-art-frames { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+.build-site-controls { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.build-art-toggle { color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 3px 6px; min-height: 28px; font-size: 14px; cursor: pointer; }
+.build-art-toggle[aria-pressed="true"] { color: var(--amber); border-color: var(--amber); }
+@media (prefers-reduced-motion: reduce) {
+  .build-page.motion-paused .k-art--animated > img { animation: none !important; transform: none; }
+  .build-art-toggle { display: none; }
+}
+@media (max-width: 520px) {
+  .build-site-controls { gap: 6px; }
+  .build-art-toggle { min-height: 44px; }
+}
+/* Keep explanations out of the main loop; show only decision-critical notes. */
+.build-hint:empty { display: none; }
+.build-upgrade .build-action-row { padding-block: 10px; }
+.build-reset-note { color: var(--muted); font-size: 14px; margin: 4px 12px 8px; }
+.build-page .build-site .k-art { width: 136px; height: 136px; flex-basis: 136px; }
+@media (max-width: 520px) { .build-page .build-site .k-art { width: 112px; height: 112px; flex-basis: 112px; } }
+.build-page .k-art--animated > img { position: absolute; left: 0; top: 0; }

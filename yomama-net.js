@@ -192,26 +192,13 @@
       });
     },
 
-    /** Sell produced goods into (or buy back from) the shared market. */
-    tradeProduct: function (productId, side, qty) {
-      return request('POST', '/product', withToken({ product_id: productId, side: side, qty: qty }))
-        .then(function (r) { setCachedCash(r.cash); return r; });
-    },
+    // The Part 1 economy is not here: econ.js talks to /api/game/econ/* and the
+    // server owns every YM. What is left below is the class session, the Part 2
+    // equity desk and the small display-state blob.
 
     tradeEquity: function (symbol, side, shares) {
       return request('POST', '/equity', withToken({ symbol: symbol, side: side, shares: shares }))
         .then(function (r) { setCachedCash(r.cash); return r; });
-    },
-
-    /** Pay the cash half of a build/upgrade. Server is the authority. */
-    spend: function (amount, reason) {
-      return request('POST', '/spend', withToken({ amount: amount, reason: reason || 'build' }))
-        .then(function (r) { setCachedCash(r.cash); return r; });
-    },
-
-    /** Register goods just produced so they reach the shared marketplace. */
-    deposit: function (productId, qty) {
-      return request('POST', '/produce', withToken({ product_id: productId, qty: qty }));
     },
 
     /**

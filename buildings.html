@@ -4,11 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>YOMAMA INVESTMENTS — BUILDINGS</title>
-  <meta name="description" content="Bloomberg-like terminal landing page." />
+  <meta name="description" content="Build, learn, and grow your business in the YoMama classroom game." />
   <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="./styles.css?v=20260421-2" />
+  <link rel="stylesheet" href="./econ-kids.css?v=20260912-order-rolls" />
 </head>
-<body class="motion-paused">
+<body class="motion-paused game-page game-build-page">
   <div class="scanlines" aria-hidden="true"></div>
 
   <div class="shell">
@@ -23,7 +24,6 @@
         </div>
         <div class="right-meta">
           <span class="amber" id="clock">5:04 PM</span>
-          <button class="pill save-progress-btn" id="save-progress-btn" type="button" aria-label="Save progress">SAVE PROGRESS</button>
           <button class="pill" type="button">LOG OUT</button>
         </div>
       </div>
@@ -38,7 +38,7 @@
 
       <nav class="tabs" aria-label="Primary navigation">
         <a class="tab" href="./index.html">DASH</a>
-        <a class="tab active" href="./collect.html" aria-current="page">BUILD</a>
+        <a class="tab active" href="./buildings.html" aria-current="page">GAME</a>
         <a class="tab" href="./flow.html">ANALYSTS</a>
         <a class="tab" href="./memos.html">LEAD</a>
         <a class="tab" href="./analysis.html">NEWS</a>
@@ -49,43 +49,19 @@
       </nav>
     </header>
 
-    <main class="buildings-workspace" aria-label="Buildings simulator workspace">
-      <section class="panel buildings-main-panel" aria-label="Buildings simulator">
-        <div class="buildings-main-head">
-          <div class="hdr">BUILD YOUR BASE</div>
-          <div class="muted">Upgrade buildings, collect resources, get stronger.</div>
-          <div class="buildings-quick-links" aria-label="Buildings quick access">
-            <a class="buildings-quick-link" href="./collect.html">COLLECT</a>
-            <a class="buildings-quick-link" href="./warehouse.html">WAREHOUSE</a>
-            <a class="buildings-quick-link" href="./produce.html">PRODUCE</a>
-            <a class="buildings-quick-link" href="./advanced-hq.html">ADVANCED HQ</a>
-            <a class="buildings-quick-link" href="./marketplace.html">MARKETPLACE</a>
-            <a class="buildings-quick-link" href="./focus-tree.html">FOCUS TREE</a>
-          </div>
-        </div>
-        <div id="buildings-lab-root" class="buildings-lab-root" aria-live="polite">
-          <div class="muted">Loading simulator...</div>
-        </div>
-      </section>
-
-      <aside class="buildings-side-panel" aria-label="Validation and stats widgets">
-        <section class="panel buildings-mini-panel" aria-label="Validation feed">
-          <div class="hdr">GAME MESSAGES</div>
-          <div id="buildings-lab-log" class="buildings-lab-log">
-            <div class="muted">No messages yet.</div>
-          </div>
-        </section>
-
-        <section class="panel buildings-mini-panel" aria-label="Stats and trait">
-          <div class="hdr">STATS + SKILL</div>
-          <div id="buildings-side-stats" class="buildings-side-stats">
-            <div class="muted">Loading stats...</div>
-          </div>
-        </section>
-
-      </aside>
+    <main class="game-workspace" aria-label="Build management">
+      <div class="game-page-head"><h1>BUILD</h1><nav class="game-nav" aria-label="Business navigation"><a href="./buildings.html" aria-current="page">Build</a><a href="./warehouse.html">Warehouse</a><a href="./marketplace.html">Market</a><a href="./advanced-hq.html">Operations</a><a href="./license.html">Licence</a></nav></div>
+      <div id="game-hud" class="econ-kid"></div>
+      <div id="econ-building" class="econ-kid"><p class="game-loading" role="status">Opening your business…</p></div>
     </main>
   </div>
+
+
+  <dialog id="game-breakfast" aria-labelledby="game-breakfast-title">
+    <div class="game-dialog-head"><h2 id="game-breakfast-title">Breakfast Club</h2><button type="button" class="game-small-button" data-close-breakfast>Close ×</button></div>
+    <div id="game-breakfast-content" class="econ-kid"></div>
+    <p class="k-status" data-econ-status role="status" aria-live="polite"></p>
+  </dialog>
 
   <svg style="display: none;">
     <symbol viewBox="0 0 44 44" width="44px" height="44px" id="circle" fill="none" stroke="currentColor">
@@ -95,6 +71,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
   <script src="./buildings-nav.js"></script>
-  <script src="./app.js?v=20260423-2"></script>
+  <script src="./app.js?v=20260912-1"></script>
+  <script src="./econ.js?v=20260912-spam-reaction"></script>
+  <script src="./econ-nav.js?v=3"></script>
+  <script src="./game-fit.js?v=20260912-order-rolls"></script>
 </body>
 </html>

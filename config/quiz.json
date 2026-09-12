@@ -1,0 +1,60 @@
+{
+  "passMark": 4,
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "Your bakery is waiting for eggs. What helps?",
+      "options": [
+        "A faster bakery",
+        "More egg production",
+        "More bakery storage",
+        "A larger sign"
+      ],
+      "answer": 1
+    },
+    {
+      "id": "q2",
+      "prompt": "What happens when a product shelf is full?",
+      "options": [
+        "Goods disappear",
+        "You lose money",
+        "That product waits for space",
+        "Your building is removed"
+      ],
+      "answer": 2
+    },
+    {
+      "id": "q3",
+      "prompt": "Why save goods for a delivery?",
+      "options": [
+        "To earn its cash and materials",
+        "To produce faster forever",
+        "To stop every business",
+        "To avoid losing your buildings"
+      ],
+      "answer": 0
+    },
+    {
+      "id": "q4",
+      "prompt": "What does a customer upgrade improve?",
+      "options": [
+        "Ingredient production",
+        "How much customers can buy",
+        "The delivery reward",
+        "Every building at once"
+      ],
+      "answer": 1
+    },
+    {
+      "id": "q5",
+      "prompt": "What happens to your old businesses when you expand?",
+      "options": [
+        "They are sold",
+        "Their upgrades reset",
+        "They stop earning",
+        "You keep them working"
+      ],
+      "answer": 3
+    }
+  ]
+}

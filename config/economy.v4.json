@@ -1,0 +1,879 @@
+{
+  "global": {
+    "tick": 15,
+    "growth": 1.55,
+    "gradLv": 1,
+    "a1Cost": 4,
+    "a1Mult": 2,
+    "a2Cost": 16,
+    "a2Mult": 2,
+    "a2NeedsNextTier": 0,
+    "maxLevel": 12,
+    "whHours": 8,
+    "overflowDisc": 0.4,
+    "bandMin": 0.9,
+    "bandMax": 1.1,
+    "theta": 0.05,
+    "seed": 7,
+    "gateTier": 3,
+    "queueDepth": 2,
+    "autoContinue": 0,
+    "catchupMult": 1,
+    "catchupHours": 1,
+    "catchupAbsenceH": 24,
+    "rubberK": 0,
+    "frontier": 3
+  },
+  "fun": {
+    "setBonus": 0,
+    "setFamilyPct": 25,
+    "setRowPct": 15,
+    "events": 0,
+    "eventEveryH": 5,
+    "eventMagUp": 1.4,
+    "eventMagDown": 0.7,
+    "rumourLeadMin": 45,
+    "rumourTruth": 0.7,
+    "eventHoldMin": 60,
+    "botsReact": 1,
+    "contracts": 1,
+    "contractSlots": 3,
+    "contractRewardPct": 40,
+    "contractPenaltyPct": 0,
+    "contractTargetH": 6,
+    "contractWindowH": 36,
+    "pressure": 0,
+    "pressureHalfLifeMin": 60,
+    "premiumSalePct": 0,
+    "eventFirstH": 2,
+    "eventUpChance": 0.5,
+    "eventMagBase": 0.6,
+    "eventMagSpread": 0.4,
+    "eventIntervalBase": 0.7,
+    "eventIntervalSpread": 0.6,
+    "eventRampMin": 5,
+    "eventDecayMin": 30,
+    "setSize": 3,
+    "contractOffers": 3,
+    "contractTargetBase": 0.6,
+    "contractTargetSpread": 0.8,
+    "contractRewardBase": 0.7,
+    "contractRewardSpread": 0.6,
+    "contractOutputTicksPerHour": 240,
+    "pressureCap": 0.3,
+    "priceMin": 0.4,
+    "priceMax": 2
+  },
+  "milestones": [],
+  "tax": [],
+  "tiers": [
+    {
+      "id": "farm",
+      "name": "Greenfield Farm",
+      "family": "F",
+      "row": 0,
+      "baseCost": 100,
+      "rev": 1,
+      "timerH": 0,
+      "sigma": 0.01,
+      "goods": [
+        {
+          "name": "Tomatoes",
+          "weight": 55,
+          "id": "farm_tomatoes",
+          "unitPrice": 2,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Eggs",
+          "weight": 30,
+          "id": "farm_eggs",
+          "unitPrice": 4,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Honey",
+          "weight": 15,
+          "id": "farm_honey",
+          "unitPrice": 8,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": []
+        }
+      ],
+      "upgradeBase": 32,
+      "materialCost": 0,
+      "capacity": 180
+    },
+    {
+      "id": "fish_stall",
+      "name": "Harbor Fish Stall",
+      "family": "F",
+      "row": 0,
+      "baseCost": 110,
+      "rev": 1,
+      "timerH": 0.016666666666666666,
+      "sigma": 0.0114,
+      "goods": [
+        {
+          "name": "Fresh Catch",
+          "weight": 55,
+          "id": "fish_stall_fresh_catch",
+          "unitPrice": 3,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Oysters",
+          "weight": 30,
+          "id": "fish_stall_oysters",
+          "unitPrice": 6,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Smoked Fish",
+          "weight": 15,
+          "id": "fish_stall_smoked_fish",
+          "unitPrice": 10,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "fish_stall_fresh_catch",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 48,
+      "materialCost": 1,
+      "capacity": 210
+    },
+    {
+      "id": "roastery",
+      "name": "Copper Kettle Roastery",
+      "family": "F",
+      "row": 0,
+      "baseCost": 650,
+      "rev": 1,
+      "timerH": 0.05,
+      "sigma": 0.0129,
+      "goods": [
+        {
+          "name": "Roasted Beans",
+          "weight": 55,
+          "id": "roastery_roasted_beans",
+          "unitPrice": 5,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Espresso Shots",
+          "weight": 30,
+          "id": "roastery_espresso_shots",
+          "unitPrice": 7,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "roastery_roasted_beans",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "name": "Pastries",
+          "weight": 15,
+          "id": "roastery_pastries",
+          "unitPrice": 20,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "farm_eggs",
+              "quantity": 1
+            },
+            {
+              "goodId": "farm_honey",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 160,
+      "materialCost": 3,
+      "capacity": 240
+    },
+    {
+      "id": "garage",
+      "name": "Tinker's Garage",
+      "family": "I",
+      "row": 1,
+      "baseCost": 6000,
+      "rev": 1,
+      "timerH": 0.16666666666666666,
+      "sigma": 0.0143,
+      "goods": [
+        {
+          "name": "Repairs",
+          "weight": 55,
+          "id": "garage_repairs",
+          "unitPrice": 8,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Spare Parts",
+          "weight": 30,
+          "id": "garage_spare_parts",
+          "unitPrice": 12,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Custom Mods",
+          "weight": 15,
+          "id": "garage_custom_mods",
+          "unitPrice": 24,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "garage_spare_parts",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 650,
+      "materialCost": 8,
+      "capacity": 270
+    },
+    {
+      "id": "workshop",
+      "name": "Ironworks Shop",
+      "family": "I",
+      "row": 1,
+      "baseCost": 24000,
+      "rev": 1,
+      "timerH": 0.3333333333333333,
+      "sigma": 0.0157,
+      "goods": [
+        {
+          "name": "Steel Brackets",
+          "weight": 55,
+          "id": "workshop_steel_brackets",
+          "unitPrice": 12,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Welded Frames",
+          "weight": 30,
+          "id": "workshop_welded_frames",
+          "unitPrice": 20,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Machined Bolts",
+          "weight": 15,
+          "id": "workshop_machined_bolts",
+          "unitPrice": 34,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 1900,
+      "materialCost": 15,
+      "capacity": 300
+    },
+    {
+      "id": "solar_coop",
+      "name": "Rooftop Solar Co-op",
+      "family": "E",
+      "row": 1,
+      "baseCost": 90000,
+      "rev": 1,
+      "timerH": 0.5,
+      "sigma": 0.0171,
+      "goods": [
+        {
+          "name": "Daytime kWh",
+          "weight": 55,
+          "id": "solar_coop_daytime_kwh",
+          "unitPrice": 18,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Battery Storage",
+          "weight": 30,
+          "id": "solar_coop_battery_storage",
+          "unitPrice": 28,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "name": "Carbon Credits",
+          "weight": 15,
+          "id": "solar_coop_carbon_credits",
+          "unitPrice": 45,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": []
+        }
+      ],
+      "upgradeBase": 5000,
+      "materialCost": 25,
+      "capacity": 330
+    },
+    {
+      "id": "cannery",
+      "name": "Meridian Cannery",
+      "family": "F",
+      "row": 2,
+      "baseCost": 210000,
+      "rev": 1,
+      "timerH": 1,
+      "sigma": 0.0186,
+      "goods": [
+        {
+          "name": "Canned Goods",
+          "weight": 55,
+          "id": "cannery_canned_goods",
+          "unitPrice": 25,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "fish_stall_fresh_catch",
+              "quantity": 1
+            },
+            {
+              "goodId": "farm_tomatoes",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "name": "Sauces",
+          "weight": 30,
+          "id": "cannery_sauces",
+          "unitPrice": 20,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Preserves",
+          "weight": 15,
+          "id": "cannery_preserves",
+          "unitPrice": 30,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": []
+        }
+      ],
+      "upgradeBase": 11000,
+      "materialCost": 40,
+      "capacity": 360
+    },
+    {
+      "id": "machine_works",
+      "name": "Bluecollar Machine Works",
+      "family": "I",
+      "row": 2,
+      "baseCost": 500000,
+      "rev": 1,
+      "timerH": 1.5,
+      "sigma": 0.02,
+      "goods": [
+        {
+          "name": "CNC Parts",
+          "weight": 55,
+          "id": "machine_works_cnc_parts",
+          "unitPrice": 30,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Tooling",
+          "weight": 30,
+          "id": "machine_works_tooling",
+          "unitPrice": 42,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Prototypes",
+          "weight": 15,
+          "id": "machine_works_prototypes",
+          "unitPrice": 65,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "workshop_steel_brackets",
+              "quantity": 1
+            },
+            {
+              "goodId": "garage_spare_parts",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 22000,
+      "materialCost": 60,
+      "capacity": 390
+    },
+    {
+      "id": "turbine_field",
+      "name": "Windward Turbine Field",
+      "family": "E",
+      "row": 2,
+      "baseCost": 1200000,
+      "rev": 1,
+      "timerH": 2,
+      "sigma": 0.0214,
+      "goods": [
+        {
+          "name": "Wind kWh",
+          "weight": 55,
+          "id": "turbine_field_wind_kwh",
+          "unitPrice": 45,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Capacity Contracts",
+          "weight": 30,
+          "id": "turbine_field_capacity_contracts",
+          "unitPrice": 65,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Green Certificates",
+          "weight": 15,
+          "id": "turbine_field_green_certificates",
+          "unitPrice": 95,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "solar_coop_daytime_kwh",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 45000,
+      "materialCost": 85,
+      "capacity": 420
+    },
+    {
+      "id": "generator",
+      "name": "North Grid Plant",
+      "family": "E",
+      "row": 3,
+      "baseCost": 2600000,
+      "rev": 1,
+      "timerH": 2.5,
+      "sigma": 0.0229,
+      "goods": [
+        {
+          "name": "Baseload Power",
+          "weight": 55,
+          "id": "generator_baseload_power",
+          "unitPrice": 65,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Peak Power",
+          "weight": 30,
+          "id": "generator_peak_power",
+          "unitPrice": 95,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Steam Heat",
+          "weight": 15,
+          "id": "generator_steam_heat",
+          "unitPrice": 135,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "solar_coop_daytime_kwh",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 90000,
+      "materialCost": 115,
+      "capacity": 450
+    },
+    {
+      "id": "relay_station",
+      "name": "Signal Relay Station",
+      "family": "E",
+      "row": 3,
+      "baseCost": 5000000,
+      "rev": 1,
+      "timerH": 3,
+      "sigma": 0.0243,
+      "goods": [
+        {
+          "name": "Bandwidth",
+          "weight": 55,
+          "id": "relay_station_bandwidth",
+          "unitPrice": 95,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "SMS Traffic",
+          "weight": 30,
+          "id": "relay_station_sms_traffic",
+          "unitPrice": 135,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Tower Leases",
+          "weight": 15,
+          "id": "relay_station_tower_leases",
+          "unitPrice": 190,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "generator_baseload_power",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 160000,
+      "materialCost": 150,
+      "capacity": 480
+    },
+    {
+      "id": "freight_terminal",
+      "name": "Atlas Freight Terminal",
+      "family": "I",
+      "row": 3,
+      "baseCost": 9000000,
+      "rev": 1,
+      "timerH": 3.5,
+      "sigma": 0.0257,
+      "goods": [
+        {
+          "name": "Container Slots",
+          "weight": 55,
+          "id": "freight_terminal_container_slots",
+          "unitPrice": 135,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Cold Storage",
+          "weight": 30,
+          "id": "freight_terminal_cold_storage",
+          "unitPrice": 190,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Last-Mile Delivery",
+          "weight": 15,
+          "id": "freight_terminal_last_mile_delivery",
+          "unitPrice": 270,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "garage_spare_parts",
+              "quantity": 1
+            },
+            {
+              "goodId": "relay_station_bandwidth",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 270000,
+      "materialCost": 190,
+      "capacity": 510
+    },
+    {
+      "id": "data_center",
+      "name": "Node-7 Data Hub",
+      "family": "E",
+      "row": 4,
+      "baseCost": 15000000,
+      "rev": 1,
+      "timerH": 4,
+      "sigma": 0.0271,
+      "goods": [
+        {
+          "name": "Compute Hours",
+          "weight": 55,
+          "id": "data_center_compute_hours",
+          "unitPrice": 190,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Cloud Storage",
+          "weight": 30,
+          "id": "data_center_cloud_storage",
+          "unitPrice": 270,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "API Calls",
+          "weight": 15,
+          "id": "data_center_api_calls",
+          "unitPrice": 380,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "relay_station_bandwidth",
+              "quantity": 1
+            },
+            {
+              "goodId": "generator_baseload_power",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 450000,
+      "materialCost": 235,
+      "capacity": 540
+    },
+    {
+      "id": "solar_array",
+      "name": "Helios Solar Array",
+      "family": "E",
+      "row": 4,
+      "baseCost": 24000000,
+      "rev": 1,
+      "timerH": 4.5,
+      "sigma": 0.0286,
+      "goods": [
+        {
+          "name": "Utility kWh",
+          "weight": 55,
+          "id": "solar_array_utility_kwh",
+          "unitPrice": 270,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Reserve Capacity",
+          "weight": 30,
+          "id": "solar_array_reserve_capacity",
+          "unitPrice": 380,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Renewable Credits",
+          "weight": 15,
+          "id": "solar_array_renewable_credits",
+          "unitPrice": 540,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "turbine_field_wind_kwh",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 700000,
+      "materialCost": 285,
+      "capacity": 570
+    },
+    {
+      "id": "uplink_center",
+      "name": "Orbital Uplink Center",
+      "family": "E",
+      "row": 4,
+      "baseCost": 36000000,
+      "rev": 1,
+      "timerH": 5,
+      "sigma": 0.03,
+      "goods": [
+        {
+          "name": "Satellite Bandwidth",
+          "weight": 55,
+          "id": "uplink_center_satellite_bandwidth",
+          "unitPrice": 380,
+          "cycleTicks": 1,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Ground Time",
+          "weight": 30,
+          "id": "uplink_center_ground_time",
+          "unitPrice": 540,
+          "cycleTicks": 2,
+          "quantity": 1,
+          "inputs": []
+        },
+        {
+          "name": "Telemetry",
+          "weight": 15,
+          "id": "uplink_center_telemetry",
+          "unitPrice": 760,
+          "cycleTicks": 4,
+          "quantity": 1,
+          "inputs": [
+            {
+              "goodId": "data_center_compute_hours",
+              "quantity": 1
+            },
+            {
+              "goodId": "relay_station_bandwidth",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "upgradeBase": 1000000,
+      "materialCost": 340,
+      "capacity": 600
+    }
+  ],
+  "families": {
+    "F": {
+      "name": "Food",
+      "bandMin": 0.9,
+      "bandMax": 1.1,
+      "premium": 1,
+      "depth": 5
+    },
+    "I": {
+      "name": "Industry",
+      "bandMin": 0.8,
+      "bandMax": 1.25,
+      "premium": 1.05,
+      "depth": 2
+    },
+    "E": {
+      "name": "Energy/Tech",
+      "bandMin": 0.7,
+      "bandMax": 1.4,
+      "premium": 1.1,
+      "depth": 1
+    }
+  },
+  "currency": {
+    "code": "YM",
+    "name": "YM (placeholder)",
+    "decimals": 0
+  },
+  "model": "v4: real goods, customer demand, short production chains and deliveries",
+  "gate": {
+    "minBuildings": 3,
+    "goodSalesNeeded": 3,
+    "goodSalePrice": 1,
+    "checklist": [
+      "Production level 3",
+      "Upgrade customers",
+      "Complete 3 deliveries",
+      "Pass the quiz"
+    ],
+    "levelNeeded": 3
+  },
+  "runtime": {
+    "maxCatchupDays": 0.5,
+    "purchaseGuard": 800,
+    "familyProgressWeight": 0.02,
+    "overnightAbsenceH": 2,
+    "tickerLimit": 20,
+    "offlineHours": 12
+  },
+  "version": 4,
+  "modelVersion": 4,
+  "production": {
+    "workScale": 100,
+    "speedPerLevel": 25,
+    "customerPerLevel": 35,
+    "customerBasePercent": 65,
+    "storagePerLevel": 0.5,
+    "clearStockPercent": 60,
+    "materialCashValue": 15,
+    "maxLevel": 12,
+    "chainBufferBatches": 2,
+    "upgradeGrowth": 1.55,
+    "materialPremiumPercent": 15,
+    "orderMinutes": [
+      1.5,
+      4,
+      8
+    ],
+    "orderRewardPercent": [
+      125,
+      135,
+      110
+    ],
+    "orderMaterials": [
+      0,
+      1,
+      3
+    ]
+  }
+}

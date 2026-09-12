@@ -1,0 +1,501 @@
+{
+  "global": {
+    "tick": 15,
+    "growth": 1.085,
+    "gradLv": 20,
+    "a1Cost": 4,
+    "a1Mult": 2,
+    "a2Cost": 16,
+    "a2Mult": 2,
+    "a2NeedsNextTier": 0,
+    "maxLevel": 50,
+    "whHours": 8,
+    "overflowDisc": 0.1,
+    "bandMin": 0.9,
+    "bandMax": 1.1,
+    "theta": 0.05,
+    "seed": 7,
+    "gateTier": 6,
+    "queueDepth": 2,
+    "autoContinue": 1,
+    "catchupMult": 1.05,
+    "catchupHours": 1,
+    "catchupAbsenceH": 24,
+    "rubberK": 0,
+    "frontier": 3
+  },
+  "fun": {
+    "setBonus": 1,
+    "setFamilyPct": 25,
+    "setRowPct": 15,
+    "events": 1,
+    "eventEveryH": 5,
+    "eventMagUp": 1.4,
+    "eventMagDown": 0.7,
+    "rumourLeadMin": 45,
+    "rumourTruth": 0.7,
+    "eventHoldMin": 60,
+    "botsReact": 1,
+    "contracts": 1,
+    "contractSlots": 1,
+    "contractRewardPct": 40,
+    "contractPenaltyPct": 20,
+    "contractTargetH": 6,
+    "contractWindowH": 36,
+    "pressure": 1,
+    "pressureHalfLifeMin": 60,
+    "premiumSalePct": 5,
+    "eventFirstH": 2,
+    "eventUpChance": 0.5,
+    "eventMagBase": 0.6,
+    "eventMagSpread": 0.4,
+    "eventIntervalBase": 0.7,
+    "eventIntervalSpread": 0.6,
+    "eventRampMin": 5,
+    "eventDecayMin": 30,
+    "setSize": 3,
+    "contractOffers": 3,
+    "contractTargetBase": 0.6,
+    "contractTargetSpread": 0.8,
+    "contractRewardBase": 0.7,
+    "contractRewardSpread": 0.6,
+    "contractOutputTicksPerHour": 240,
+    "pressureCap": 0.3,
+    "priceMin": 0.4,
+    "priceMax": 2
+  },
+  "milestones": [
+    {
+      "lv": 25,
+      "mult": 1.5
+    },
+    {
+      "lv": 50,
+      "mult": 1.5
+    }
+  ],
+  "tax": [
+    {
+      "above": 13000,
+      "rate": 0.2
+    },
+    {
+      "above": 67000,
+      "rate": 0.4
+    },
+    {
+      "above": 333000,
+      "rate": 0.6
+    }
+  ],
+  "tiers": [
+    {
+      "id": "farm",
+      "name": "Greenfield Farm",
+      "family": "F",
+      "row": 0,
+      "baseCost": 333,
+      "rev": 1,
+      "timerH": 18,
+      "sigma": 0.01,
+      "goods": [
+        {
+          "name": "Tomatoes",
+          "weight": 55
+        },
+        {
+          "name": "Eggs",
+          "weight": 30
+        },
+        {
+          "name": "Honey",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "fish_stall",
+      "name": "Harbor Fish Stall",
+      "family": "F",
+      "row": 0,
+      "baseCost": 648,
+      "rev": 2,
+      "timerH": 18,
+      "sigma": 0.0114,
+      "goods": [
+        {
+          "name": "Fresh Catch",
+          "weight": 55
+        },
+        {
+          "name": "Oysters",
+          "weight": 30
+        },
+        {
+          "name": "Smoked Fish",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "roastery",
+      "name": "Copper Kettle Roastery",
+      "family": "F",
+      "row": 0,
+      "baseCost": 1260,
+      "rev": 3,
+      "timerH": 18,
+      "sigma": 0.0129,
+      "goods": [
+        {
+          "name": "Roasted Beans",
+          "weight": 55
+        },
+        {
+          "name": "Espresso Shots",
+          "weight": 30
+        },
+        {
+          "name": "Pastries",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "garage",
+      "name": "Tinker's Garage",
+      "family": "I",
+      "row": 1,
+      "baseCost": 2450,
+      "rev": 5,
+      "timerH": 18,
+      "sigma": 0.0143,
+      "goods": [
+        {
+          "name": "Repairs",
+          "weight": 55
+        },
+        {
+          "name": "Spare Parts",
+          "weight": 30
+        },
+        {
+          "name": "Custom Mods",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "workshop",
+      "name": "Ironworks Shop",
+      "family": "I",
+      "row": 1,
+      "baseCost": 4766,
+      "rev": 9,
+      "timerH": 18,
+      "sigma": 0.0157,
+      "goods": [
+        {
+          "name": "Steel Brackets",
+          "weight": 55
+        },
+        {
+          "name": "Welded Frames",
+          "weight": 30
+        },
+        {
+          "name": "Machined Bolts",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "solar_coop",
+      "name": "Rooftop Solar Co-op",
+      "family": "E",
+      "row": 1,
+      "baseCost": 9269,
+      "rev": 16,
+      "timerH": 18,
+      "sigma": 0.0171,
+      "goods": [
+        {
+          "name": "Daytime kWh",
+          "weight": 55
+        },
+        {
+          "name": "Battery Storage",
+          "weight": 30
+        },
+        {
+          "name": "Carbon Credits",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "cannery",
+      "name": "Meridian Cannery",
+      "family": "F",
+      "row": 2,
+      "baseCost": 18029,
+      "rev": 24,
+      "timerH": 18,
+      "sigma": 0.0186,
+      "goods": [
+        {
+          "name": "Canned Goods",
+          "weight": 55
+        },
+        {
+          "name": "Sauces",
+          "weight": 30
+        },
+        {
+          "name": "Preserves",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "machine_works",
+      "name": "Bluecollar Machine Works",
+      "family": "I",
+      "row": 2,
+      "baseCost": 35066,
+      "rev": 43,
+      "timerH": 18,
+      "sigma": 0.02,
+      "goods": [
+        {
+          "name": "CNC Parts",
+          "weight": 55
+        },
+        {
+          "name": "Tooling",
+          "weight": 30
+        },
+        {
+          "name": "Prototypes",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "turbine_field",
+      "name": "Windward Turbine Field",
+      "family": "E",
+      "row": 2,
+      "baseCost": 68203,
+      "rev": 77,
+      "timerH": 18,
+      "sigma": 0.0214,
+      "goods": [
+        {
+          "name": "Wind kWh",
+          "weight": 55
+        },
+        {
+          "name": "Capacity Contracts",
+          "weight": 30
+        },
+        {
+          "name": "Green Certificates",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "generator",
+      "name": "North Grid Plant",
+      "family": "E",
+      "row": 3,
+      "baseCost": 132654,
+      "rev": 130,
+      "timerH": 18,
+      "sigma": 0.0229,
+      "goods": [
+        {
+          "name": "Baseload Power",
+          "weight": 55
+        },
+        {
+          "name": "Peak Power",
+          "weight": 30
+        },
+        {
+          "name": "Steam Heat",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "relay_station",
+      "name": "Signal Relay Station",
+      "family": "E",
+      "row": 3,
+      "baseCost": 258012,
+      "rev": 222,
+      "timerH": 18,
+      "sigma": 0.0243,
+      "goods": [
+        {
+          "name": "Bandwidth",
+          "weight": 55
+        },
+        {
+          "name": "SMS Traffic",
+          "weight": 30
+        },
+        {
+          "name": "Tower Leases",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "freight_terminal",
+      "name": "Atlas Freight Terminal",
+      "family": "I",
+      "row": 3,
+      "baseCost": 501834,
+      "rev": 360,
+      "timerH": 18,
+      "sigma": 0.0257,
+      "goods": [
+        {
+          "name": "Container Slots",
+          "weight": 55
+        },
+        {
+          "name": "Cold Storage",
+          "weight": 30
+        },
+        {
+          "name": "Last-Mile Delivery",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "data_center",
+      "name": "Node-7 Data Hub",
+      "family": "E",
+      "row": 4,
+      "baseCost": 976067,
+      "rev": 641,
+      "timerH": 18,
+      "sigma": 0.0271,
+      "goods": [
+        {
+          "name": "Compute Hours",
+          "weight": 55
+        },
+        {
+          "name": "Cloud Storage",
+          "weight": 30
+        },
+        {
+          "name": "API Calls",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "solar_array",
+      "name": "Helios Solar Array",
+      "family": "E",
+      "row": 4,
+      "baseCost": 1898450,
+      "rev": 1090,
+      "timerH": 18,
+      "sigma": 0.0286,
+      "goods": [
+        {
+          "name": "Utility kWh",
+          "weight": 55
+        },
+        {
+          "name": "Reserve Capacity",
+          "weight": 30
+        },
+        {
+          "name": "Renewable Credits",
+          "weight": 15
+        }
+      ]
+    },
+    {
+      "id": "uplink_center",
+      "name": "Orbital Uplink Center",
+      "family": "E",
+      "row": 4,
+      "baseCost": 3692485,
+      "rev": 1852,
+      "timerH": 18,
+      "sigma": 0.03,
+      "goods": [
+        {
+          "name": "Satellite Bandwidth",
+          "weight": 55
+        },
+        {
+          "name": "Ground Time",
+          "weight": 30
+        },
+        {
+          "name": "Telemetry",
+          "weight": 15
+        }
+      ]
+    }
+  ],
+  "families": {
+    "F": {
+      "name": "Food",
+      "bandMin": 0.9,
+      "bandMax": 1.1,
+      "premium": 1,
+      "depth": 5
+    },
+    "I": {
+      "name": "Industry",
+      "bandMin": 0.8,
+      "bandMax": 1.25,
+      "premium": 1.05,
+      "depth": 2
+    },
+    "E": {
+      "name": "Energy/Tech",
+      "bandMin": 0.7,
+      "bandMax": 1.4,
+      "premium": 1.1,
+      "depth": 1
+    }
+  },
+  "currency": {
+    "code": "YM",
+    "name": "YM (placeholder)",
+    "decimals": 0
+  },
+  "model": "v3: hoarding + fun layer (families, frontier-3 branching, set bonuses, events+rumours, contracts, sell pressure, premium sale)",
+  "gate": {
+    "minBuildings": 6,
+    "goodSalesNeeded": 10,
+    "goodSalePrice": 1.03,
+    "checklist": [
+      "Reach level 25 on any building",
+      "Buy one Auto Control upgrade",
+      "Make 10 sales at price >= 1.03",
+      "Pass the 5-question quiz"
+    ],
+    "levelNeeded": 25
+  },
+  "runtime": {
+    "maxCatchupDays": 30,
+    "purchaseGuard": 800,
+    "familyProgressWeight": 0.02,
+    "overnightAbsenceH": 2,
+    "tickerLimit": 20
+  }
+}

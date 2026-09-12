@@ -3,109 +3,141 @@
 İşe başlayan geliştirici için. `HANDOVER.md` işin ne olduğunu anlatır; bu dosya
 kodun içinde sizi yanıltacak yerleri anlatır.
 
-Buradaki üç konunun ortak özelliği: **yanlış yaparsanız hata mesajı almazsınız.**
+Buradaki konuların ortak özelliği: **yanlış yaparsanız hata mesajı almazsınız.**
+
+Ekonominin nasıl çalıştığı ayrı bir dosyada: `ECONOMY_README.md`.
 
 ---
 
-## 1. Ekonomi sayıları hesaplandı, elle yazılmadı
+## 1. Ekonomi sunucuda ve tek bir config dosyasından geliyor
 
-`config/economy.v0.1.json` içindeki nakit fiyatlar şu formülden üretildi:
-
-> Bir yükseltmenin fiyatı = kazandırdığı günlük gelir × 40 gün
-
-Sonucu: her bina kendini aynı sürede geri ödüyor, dört bina da dönem boyunca
-yaklaşık eşit sayıda yükseltiliyor, üs 91. gün civarında tamamlanıyor.
-
-Birbirine bağlı üç girdi var:
-
-| Girdi | Değiştirirseniz |
+| Dosya | Rolü |
 |---|---|
-| Bina üretim miktarları | Kaynaklar israf olmaya başlar; bazı binalar anlamsızlaşır |
-| Ürün satış fiyatları | Kaynakların değeri değişir; bir bina ölü hale gelebilir |
-| Üretim döngü süreleri | Gelir doğru orantılı değişir, tüm fiyatların kayması gerekir |
+| `config/economy.v1.json` | Bütün sayılar. Binalar, maliyetler, vergi dilimleri, süreler. |
+| `economy.py` | Kurallar. Referans motorun satır satır Python çevirisi. |
+| `engine/economy-engine.reference.js` | Referans motor. Yuvarlama ve işlem sırasında son söz bunundur. |
+| `game_api.py` | Saklama, sınıf saati, uç noktalar. Kendi başına hiçbir kural içermez. |
+| `econ.js` | Tarayıcı. Niyet gönderir, geleni gösterir, para hesaplamaz. |
 
-Örnek: Hydro Lettuce fiyatı 11,88'den 21,18'e çıkarıldı. Sebep, gıdanın birim
-değerinin 0,04 dolarda kalması ve çiftliğin yükseltilmesinin hiçbir kazanç
-sağlamamasıydı. Tek bir ürün fiyatı, bir binanın işe yarayıp yaramamasını
-belirliyor.
+**Kural:** hiçbir ekonomi sayısı `.py` veya `.js` içine yazılmaz. Yeni bina
+eklemek ya da vergi dilimini değiştirmek sadece config düzenlemesidir.
 
-**Denge değiştirecekseniz:** beş reçete üzerinden hangi kaynağın ne kadar
-değerli olduğunu yeniden hesaplayın, sonra fiyatları o değerden türetin.
-Sezgiyle sayı oynatmayın.
+**Sınıf başlarken config'in kopyasını alır** (`sessions.econ_config`). Dosyayı
+sonradan değiştirmek yalnızca yeni sınıfları etkiler, devam eden sınıfı asla.
+Bu bilinçli: kuralları ortasında değişen bir dönem adil değerlendirilemez.
 
-**Doğrulama yöntemi:** config üzerinden 91 günlük oyunu simüle edin. Üs 85-91.
-gün civarında bitiyorsa ve dört bina da yaklaşık eşit yükseltilmişse denge
-korunmuştur.
-
----
-
-## 2. Cihazlar arası kayıt senkronizasyonu
-
-Oyuncunun binaları ve kaynakları tarayıcıda tutulur, sunucuya tek parça
-gönderilir (`/api/game/buildings`). `yomama-net.js` içindeki bu mekanizmaya
-dokunacaksanız, aşağıdaki dördü de **daha önce gerçekten bozuldu**:
-
-**a) Sunucudan veri gelmeden sunucuya veri göndermeyin.**
-Yeni açılan ikinci bir cihaz, boş başlangıç durumunu gerçek kaydın üzerine
-yazar. `pushBuildings` bu yüzden senkron tamamlanana kadar hiçbir şey
-göndermez.
-
-**b) Gelen kaydı uygulamak için sayfayı yenilemeyin.**
-`location.reload()` işe yaramıyor: `app.js` kendi başlatmasını tamamlayıp
-bellekteki eski veriyi yeni gelenin üzerine yazıyor, sayfa yenilenince eski
-veri okunuyor. Doğrusu: sayfa `await YomamaNet.ready()` beklemeli.
-
-**c) `getPlayerSave()` sonucu bellekte tutuyor.**
-Sunucudan yeni kayıt geldiğinde `playerSaveState` temizlenmezse, gelen veri
-localStorage'a yazılır ama hiç okunmaz. Ekranda hiçbir şey değişmez, hata da
-vermez.
-
-**d) Zaman damgası "veri ne zaman değişti" olmalı, "ne zaman gönderdim"
-değil.**
-Aksi halde eski bir cihazda oyunu açmak bile o cihazı daha yeni gösterir ve
-diğer cihazdaki gerçek ilerlemeyi sessizce siler.
-
-**Bilinen açık:** `produce.js` kaynaklarını `ready()` beklemeden okuyor. Normal
-akışta sorun çıkmıyor (girişten sonra önce `collect.html` açılıyor ve senkron
-orada tamamlanıyor), ama temiz bir tarayıcıda doğrudan `produce.html`
-açılırsa kısa süre eski veri görünebilir.
+Eski `config/economy.v0.1.json` silindi. Sayıları geçersiz; hiçbir yerden
+okunmamalı.
 
 ---
 
-## 3. Sunucu otoritesi
+## 2. Tik döngüsü: 15 saniye, tek tek oynatılır
 
-Puanlamaya giren her şey sunucuda tutulur ve orada hesaplanır: para, ürün
-envanteri, hisse pozisyonları, pazar fiyatları, sıralama.
+Tik 0, öğretmenin sınıfı açtığı andır. Sınıf duraklatılınca sınıf saati de
+durur, yani duraklatma gerçekten her öğrencinin üretimini dondurur.
+
+Oyuncunun durumu, en son hesaplandığı tikle birlikte saklanır. İstek geldiğinde
+şimdiye kadar **tik tik** oynatılır.
+
+**Kapalı form kısayolu yazmayın.** Her tikte tam sayıya yuvarlama var; ekonomi
+tam olarak o yuvarlamadır. Bir günü oynatmak ~40 ms sürüyor, otuz kişilik bir
+sınıfın sabah aynı anda girmesi toplam ~1 saniye.
+
+İstek başına en fazla 30 gün oynatılır (`MAX_CATCHUP_DAYS`). Daha uzun süre
+girmemiş oyuncu sonraki isteklerde yetişir; bu sırada cevapta `behind: true`
+döner.
+
+**Fiyatlar** sınıf başına tek akıştır, sınıf tohumundan üretilir: bütün
+öğrenciler aynı piyasayı görür ve dönem birebir tekrar oynatılabilir. Akışlar
+günlük bloklar hâlinde, ihtiyaç oldukça üretilir (`economy.PriceBook`).
+
+**Bir tik kayma var ve kasıtlı:** `state.tick` anındaki çarpan, akışın
+`tick - 1` indeksidir. Önce saat ilerler, sonra ticaret az önce terk edilen
+tikin fiyatından yapılır.
+
+---
+
+## 3. JS motorunu Python'a çevirirken dikkat edilenler
+
+Hepsi sessizce yanlış sonuç üretir:
+
+- **`Math.round` ≠ Python `round()`.** JavaScript yarımları yukarı yuvarlar,
+  Python çifte yuvarlar (`round(2.5) == 2`). Her yerde `economy.jsround`
+  kullanılır.
+- **JSON'dan dönen anahtarlar metindir.** `pend` ve `unlock` sözlüklerinde
+  anahtarlar `"0"`, `"1"` şeklindedir. `int` ile `str` karıştırmak, dolu bir
+  deponun boş görünmesi demektir.
+- **Fiyatlar float32.** Referans `Float32Array` kullanıyor; Python tarafında
+  `array('f')`. float64 saklamak satış tutarlarını kaydırır.
+- **RNG bit düzeyinde aynı.** xorshift32, 32 bitlik maskelerle.
+- **`autoContinue` açık olduğu için `bot_buy` sunucuda.** Görev tanımı onu
+  testlerde tutmayı söylüyordu, ama `_finish_build` onu çağırıyor: sunucuda
+  olmasaydı referans motorla arası açılırdı. Yalnızca oyuncu yokken biten
+  inşaatta çalışır.
+
+Doğrulama: `python3 tests/run_tests.py` (kurulum gerektirmez).
+
+---
+
+## 4. Sunucu otoritesi
+
+Puanlamaya giren her şey sunucuda tutulur ve orada hesaplanır: para, depo,
+üretim, fiyatlar, vergi, sıralama.
 
 Sebep basit: tarayıcıdaki hiçbir değere güvenilemez. Oyuncu geliştirici
 araçlarını açıp parasını değiştirebilir.
 
-Tarayıcıda tutulanlar: bina seviyeleri, inşaat süreleri, kaynaklar. Bunlar
-puanlamaya doğrudan girmediği için kabul edilmiş bir risk.
+Prototipteki açık kapandı: üretim artık tarayıcıda hesaplanmıyor, saatlik
+depozito sınırına da gerek kalmadı.
 
 **Yeni özellik eklerken:** sıralamayı etkiliyorsa sunucuda hesaplayın.
 
-**Bilinen açık:** üretim tarayıcıda hesaplanıyor. `/api/game/produce` saatlik
-bir üst sınır koyuyor (400 birim + saatte 120) ama bu sınırın içinde şişirme
-mümkün. Tam çözüm üretimin sunucuya taşınması.
+---
+
+## 5. Cihazlar arası kayıt (artık sadece görünüm verisi)
+
+Ekonomi sunucuda olduğu için para açısından bu mekanizma devre dışı. Ama
+karakter seçimi gibi görünüm verileri hâlâ `yomama-net.js` üzerinden tek parça
+gidiyor. Oraya dokunacaksanız aşağıdaki dördü **daha önce gerçekten bozuldu**:
+
+**a) Sunucudan veri gelmeden sunucuya veri göndermeyin.** Yeni açılan ikinci bir
+cihaz, boş başlangıç durumunu gerçek kaydın üzerine yazar.
+
+**b) Gelen kaydı uygulamak için sayfayı yenilemeyin.** Doğrusu:
+`await YomamaNet.ready()` beklemek.
+
+**c) `getPlayerSave()` sonucu bellekte tutuyor.** Sunucudan yeni kayıt
+geldiğinde temizlenmezse ekranda hiçbir şey değişmez, hata da vermez.
+
+**d) Zaman damgası "veri ne zaman değişti" olmalı**, "ne zaman gönderdim"
+değil.
 
 ---
 
-## Dosya düzeni
+## 6. Dosya düzeni
 
 | Dosya | Rolü |
 |---|---|
 | `server.py` | Statik dosya sunumu, dış servis proxy'leri, API yönlendirme |
-| `game_api.py` | Sunucu tarafı oyun mantığı. SQLite (`game.db`). |
-| `yomama-net.js` | Oyun API'siyle konuşan **tek** dosya |
-| `app.js` | Bina/ekonomi simülasyonu, arayüzün çoğu (335KB, elle yazılmış) |
-| `marketplace.js`, `produce.js` | Sayfaya özel mantık |
-| `config/economy.v0.1.json` | Tüm ekonomi ayarları |
+| `game_api.py` | Sunucu tarafı oyun mantığı, SQLite (`game.db`) |
+| `economy.py` | Ekonomi motoru (Part 1) |
+| `config/economy.v1.json` | Bütün ekonomi sayıları |
+| `config/quiz.json` | Lisans sınavı — **sorular şu an yer tutucu** |
+| `econ.js` | Ekonomi ekranlarının tamamı |
+| `yomama-net.js` | Oturum, Part 2 hisse işlemleri, görünüm blobu |
+| `app.js` | Arayüzün geri kalanı: şerit, saat, haber masası, memo, karakter |
+| `tests/` | Ekonomi testleri ve altın dosyalar |
 
-Sunucu veya oturum yoksa her sayfa eski localStorage davranışına düşer, oyun
-çalışmaya devam eder.
+Oyun sayfaları: `/buildings.html`, `/warehouse.html`, `/marketplace.html`,
+`/advanced-hq.html`, `/license.html`. `/collect.html`, `/produce.html` ve
+`/focus-tree.html` emekliye ayrıldı: dosyalar duruyor ama menüde yoklar.
 
-## Güvenlik
+Sunucu veya oturum yoksa ekonomi ekranları "bir sınıfa katıl" der; oyunun geri
+kalanı çalışmaya devam eder.
+
+---
+
+## 7. Güvenlik
 
 `server.py` içinde statik dosya **izin listesi** var. Bu liste olmadan sunucu,
 `game.db` (oyuncu isimleri, oturum anahtarları, öğretmen anahtarı), `.git/`
@@ -114,11 +146,16 @@ klasörü ve yedek arşivleri dahil klasördeki her şeyi isteyen herkese veriyo
 Bilinçli olarak izin listesi: yasak listesi olsaydı klasöre eklenen her yeni
 dosya otomatik yayına çıkardı.
 
-## Test
+---
 
-Otomatik test yok. Doğrulama, Playwright ile gerçek tarayıcı sürülerek yapıldı:
-giriş akışları, cihazlar arası kayıt, alım-satım döngüsü, 30 kişilik yük
-altında fiyat hareketi, dosya izin listesi.
+## 8. Test
 
-En çok ihtiyaç duyulan: kayıt senkronizasyonu için regresyon testi. Yukarıdaki
-dört kuralı koruyan hiçbir test şu an mevcut değil.
+Ekonominin testi var ve kurulum gerektirmez:
+
+```bash
+python3 tests/run_tests.py
+```
+
+Arayüz tarafında otomatik test yok; doğrulama Playwright ile gerçek tarayıcı
+sürülerek yapıldı. En çok ihtiyaç duyulan: giriş akışı ve ekonomi ekranları için
+tarayıcı testi.

@@ -39,28 +39,31 @@ Cevaplanması gereken sorular kodlamadan önce geliyor:
 
 **Bu, üç işin en kritik olanı.** Oyunun adını taşıyan kısım eksik.
 
-## 2. Bina ve ekonomi sistemi yeniden düşünülmeli
+## 2. Bina ve ekonomi sistemi (v1 ile değiştirildi)
 
-Somut durum: 4 üretim binası çalışıyor. 6 "gelişmiş bina"nın 4'ü hiçbir işe
-yaramıyor — oyuncu para veriyor, inşaatı bekliyor, bina ekranda duruyor, ama
-hiçbir etkisi yok.
+Bu madde büyük ölçüde kapandı. Prototipin ekonomisi — 4 üretim binası,
+reçeteler, kaynaklar, ortak sipariş defteri — tamamen kaldırıldı ve yerine
+**v1 ekonomisi** kuruldu:
 
-Ama asıl sorun bu değil. **Asıl soru şu: bu sistem 3 ay boyunca ilgi çekici
-mi?**
+- Aynı anda tek bina. Seviye atlatırsınız, Auto Control alırsınız, sonra bir üst
+  binaya **mezun olursunuz** (18 saatlik inşaat, 2 kişilik kuyruk).
+- 15 binalık merdiven, artan üretim ve artan maliyet.
+- Depo dolunca taşan mal kendiliğinden %10 iskontoyla satılır.
+- Gelir arttıkça dilimli vergi devreye girer.
+- Fiyatlar sınıf başına tek akıştır: herkes aynı çarpanı görür.
+- Dördüncü binaya gelen, seviye 25'e çıkan, Auto Control alan, 10 iyi satış
+  yapan ve sınavı geçen oyuncuya **yatırım lisansı** açılır — Part 2'nin kapısı.
 
-Şu an oyuncunun verdiği tek karar "hangi binayı yükselteyim". Ekonomi bu karar
-gerçekten anlamlı olsun diye hesaplanarak dengelendi — her bina kendini aynı
-sürede geri ödüyor. Ama tek çeşit karar, 3 ay boyunca tekrar ediyor.
+Bütün para sunucuda hesaplanıyor, bütün sayılar `config/economy.v1.json`
+içinde. Ayrıntı: `ECONOMY_README.md`, teknik tuzaklar: `TEKNIK-NOTLAR.md`.
 
-Beklentimiz, gelen kişinin şunu değerlendirmesi:
+Geriye kalan tasarım soruları:
 
-- Mevcut sistem üzerine mi inşa etmeli, yoksa bina mantığı baştan mı
-  kurgulanmalı?
-- 4 boş bina neyle doldurulmalı — yoksa silinip yerine başka bir mekanik mi
-  gelmeli?
-- Oyuncuyu 3 ay boyunca tutacak olan ne? Şu an cevabı yok.
-
-**Bu bir denge ayarı işi değil, tasarım işi.** Kod tarafı ikinci aşama.
+- Lisanstan sonra oyuncu 3 ay boyunca neyle meşgul olacak? Merdiven tek başına
+  yetmez; asıl cevap Part 2 (yatırım) olmalı.
+- `config/quiz.json` içindeki 5 soru **yer tutucu**. Gerçek sorular yazılmalı.
+- Sınıfın fiyatı birlikte hareket ettirmesi (prototipin en sağlam parçasıydı)
+  v1'de yok. Geri gelecekse bilinçli bir ekleme olarak gelmeli.
 
 ## 3. Gerçek bir grupla oynanabilir hale gelmeli
 
@@ -86,12 +89,14 @@ Bu üç alanın en net tanımlı ve en öngörülebilir olanı.
 Bunlar bitti ve test edildi, üzerine inşa edilebilir:
 
 - Oyuncu girişi: sınıf kodu + isim + PIN, cihaz değiştirince aynı hesaba dönüş
-- **Ortak pazar**: 30 kişi aynı deftere satıyor. Biri çok satınca fiyat
-  düşüyor, zamanla toparlanıyor. Oyunun en sağlam parçası bu.
-- Bina inşası, yükseltme, üretim, satış — ana döngü
-- **Cihazlar arası kayıt**: telefonda oyna, bilgisayarda devam et
-- Öğretmen kontrolleri: sınıfı durdur, piyasaya şok ver, oyuncu sıfırla
-- Canlı sıralama ve oyuncu listesi (`class.html`)
+- **v1 ekonomisi**: bina, seviye, Auto Control, mezuniyet, depo, vergi, lisans —
+  tamamı sunucuda, testleriyle birlikte
+- **Ortak fiyat akışı**: sınıftaki herkes aynı çarpanı görür, dönem birebir
+  tekrar oynatılabilir
+- **Cihazlar arası oyun**: durum sunucuda olduğu için telefonda oyna,
+  bilgisayarda devam et
+- Öğretmen kontrolleri: sınıfı durdur (ekonomi de durur), oyuncu sıfırla
+- Canlı sıralama, öğrenci başına lisans ilerlemesi (`class.html`)
 - Sunucu güvenliği
 
 # ÇALIŞTIRMA
@@ -103,15 +108,26 @@ python3 server.py 3000
 Kurulum yok, build yok, framework yok. Sadece Python 3.9.
 
 `/class.html` sınıf açar, `/join.html` oyuncu girişi, oyun sayfaları
-`/collect.html`, `/produce.html`, `/marketplace.html`.
+`/buildings.html`, `/warehouse.html`, `/marketplace.html`, `/advanced-hq.html`,
+`/license.html`.
+
+Ekonomi testleri (kurulum gerektirmez):
+
+```bash
+python3 tests/run_tests.py
+```
 
 # İŞE BAŞLAMADAN ÖNCE
 
-Kod tarafında bilinmesi gereken üç kritik konu var — özellikle **ekonomi
-sayılarını değiştirmeden önce** okunmalı. Ayrı dosyada: `TEKNIK-NOTLAR.md`
+İki dosya var, ikisi de kısa:
 
-Kısaca: ekonomi sayıları elle ayarlanmadı, hesaplandı. Tek bir sayıyı
-değiştirmek dengeyi bozar ve **hata mesajı vermez.**
+- `ECONOMY_README.md` — ekonomi nasıl çalışıyor, tik döngüsü, config nerede,
+  testler nasıl çalıştırılır.
+- `TEKNIK-NOTLAR.md` — kodun içinde sizi yanıltacak yerler.
+
+Kısaca: ekonomi sayılarının tamamı `config/economy.v1.json` içinde ve hiçbiri
+koda yazılmaz. Kuralları değiştirirken referans motor (`engine/`) ile testler
+son sözü söyler; testi kırmadan sayı oynatmak **hata mesajı vermez.**
 
 # TASARIMDA KORUNMASI GEREKENLER
 

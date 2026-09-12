@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>YOMAMA — CLASSROOM SIMULATION</title>
+<meta name="description" content="Offline balance simulation: thirty bot students playing the v4 production economy on the class clock." />
+<link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<style>
+@font-face{font-family:"VT323 Local";src:url("./assets/fonts/VT323-Regular.ttf") format("truetype");font-display:swap;}
+:root{
+  --bg:#000;
+  --panel:#000;
+  --amber:#ffb000;
+  --amber-dim:#b87d00;
+  --green:#00ff66;
+  --red:#ff4d4d;
+  --line:#4f3200;
+  --border:#7a4d00;
+  --ink:#e6e8eb;
+  --ink-muted:#9aa0a6;
+  --ink-faint:#6b7075;
+  /* Categorical series palette, validated for a black surface:
+     node scripts/validate_palette.js "#3987e5,#d95926,#199e70,#c98500" --mode dark --surface "#000000" */
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --font:"VT323 Local","VT323","Lucida Console","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:19px;line-height:1.25}
+body{padding:14px 16px 40px}
+a{color:var(--amber)}
+h1,h2,h3{margin:0;font-weight:400;letter-spacing:.08em}
+.muted{color:var(--ink-muted)}
+.faint{color:var(--ink-faint)}
+.amber{color:var(--amber)}
+.green{color:var(--green)}
+.red{color:var(--red)}
+.panel{border:1px solid var(--border);background:var(--panel);padding:10px 12px}
+.panel>h2{font-size:18px;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.panel>h2 small{color:var(--ink-faint);font-size:15px;letter-spacing:.04em}
+
+/* ---- header ---- */
+header.top{border:1px solid var(--border);padding:10px 12px;margin-bottom:12px}
+.title-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;justify-content:space-between}
+.title-row h1{font-size:28px;color:var(--amber)}
+.title-row p{margin:0;color:var(--ink-muted);font-size:16px;max-width:62ch}
+.clockbox{display:flex;gap:18px;align-items:baseline;white-space:nowrap}
+.clockbox .big{font-size:30px;color:var(--green)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+button,select{font-family:var(--font);font-size:17px;background:#000;color:var(--amber);border:1px solid var(--border);
+  padding:4px 12px;cursor:pointer;letter-spacing:.06em}
+button:hover,select:hover{border-color:var(--amber);color:#fff}
+button:disabled{color:var(--ink-faint);border-color:var(--line);cursor:default}
+button.primary{border-color:var(--amber);color:var(--green)}
+label.ctl{display:flex;gap:6px;align-items:center;color:var(--ink-muted);font-size:16px}
+.spacer{flex:1}
+
+/* ---- kpis ---- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:12px}
+.kpi{border:1px solid var(--border);padding:8px 10px}
+.kpi .k{display:block;color:var(--ink-muted);font-size:15px;letter-spacing:.08em}
+.kpi .v{display:block;font-size:27px;color:var(--amber);line-height:1.1}
+.kpi .s{display:block;color:var(--ink-faint);font-size:14px}
+
+/* ---- layout ---- */
+.grid{display:grid;grid-template-columns:minmax(520px,1.25fr) minmax(380px,1fr);gap:12px;align-items:start}
+/* min-width:0 keeps the wide standings table scrolling inside its own panel
+   instead of stretching the page. */
+.col{display:grid;gap:12px;min-width:0}
+.panel{min-width:0}
+@media (max-width:1080px){.grid{grid-template-columns:1fr}}
+@media (max-width:640px){
+  body{padding:10px}
+  .title-row h1{font-size:23px}
+  .clockbox .big{font-size:24px}
+  /* the share bar is decoration next to the number it repeats */
+  thead th:nth-child(5),tbody td:nth-child(5){display:none}
+}
+
+/* ---- table ---- */
+.tablewrap{max-height:560px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:17px}
+thead th{position:sticky;top:0;background:#000;color:var(--ink-muted);text-align:right;font-weight:400;
+  padding:4px 6px;border-bottom:1px solid var(--border);letter-spacing:.06em;font-size:15px;cursor:pointer;white-space:nowrap}
+thead th:first-child,thead th.l{text-align:left}
+thead th[aria-sort]{color:var(--amber)}
+tbody td{padding:3px 6px;text-align:right;border-bottom:1px solid #170f00;white-space:nowrap}
+tbody td.l{text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:#160e00}
+tbody tr.sel td{background:#241700}
+.dot{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:baseline}
+.bar{display:inline-block;position:relative;height:11px;width:100%;min-width:90px;background:#141414}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;display:block}
+.tag{font-size:14px;letter-spacing:.06em;color:var(--ink-muted)}
+.lic{color:var(--green)}
+.lic-no{color:var(--ink-faint)}
+
+/* ---- charts ---- */
+.chartbox{position:relative}
+canvas{display:block;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0 2px;font-size:15px;color:var(--ink-muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.tip{position:absolute;pointer-events:none;border:1px solid var(--amber);background:#000;padding:6px 8px;font-size:15px;
+  z-index:5;white-space:nowrap;display:none;line-height:1.35}
+.tip b{color:var(--amber);font-weight:400}
+
+/* ---- log + detail ---- */
+.log{max-height:190px;overflow:auto;font-size:16px}
+.log div{padding:1px 0;border-bottom:1px solid #140d00;color:var(--ink-muted)}
+.log time{color:var(--ink-faint);margin-right:8px}
+.detail dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0 0 8px;font-size:17px}
+.detail dt{color:var(--ink-muted)}
+.detail dd{margin:0;text-align:right}
+.rows{font-size:16px}
+.rows .row{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:2px 0;border-bottom:1px solid #140d00}
+.rows .row span:last-child{color:var(--amber)}
+.check{display:flex;flex-wrap:wrap;gap:10px;font-size:16px;margin-top:6px}
+.note{color:var(--ink-faint);font-size:15px;margin-top:10px;line-height:1.4;max-width:100ch}
+.err{border:1px solid var(--red);color:var(--red);padding:12px;margin-bottom:12px}
+.err code{color:var(--amber)}
+</style>
+</head>
+<body data-palette="#3987e5,#d95926,#199e70,#c98500">
+
+<header class="top">
+  <div class="title-row">
+    <div>
+      <h1>CLASSROOM SIMULATION</h1>
+      <p class="muted">Thirty bot students play the v4 production economy on one class clock. Every number comes
+        from <span class="amber">config/economy.v4.json</span> through a browser port of <span class="amber">production_economy.py</span>.</p>
+    </div>
+    <div class="clockbox">
+      <div><span class="muted" style="font-size:15px;display:block">CLASS CLOCK</span><span class="big" id="clock">Day 1 · 09:00</span></div>
+      <div><span class="muted" style="font-size:15px;display:block">STATE</span><span class="big amber" id="runstate">READY</span></div>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="play" class="primary" type="button">▶ RUN</button>
+    <button id="step" type="button">STEP 1 MIN</button>
+    <button id="finish" type="button">RUN TO END</button>
+    <label class="ctl">SPEED
+      <select id="speed">
+        <option value="60">1 min / sec</option>
+        <option value="600" selected>10 min / sec</option>
+        <option value="3600">1 hour / sec</option>
+        <option value="21600">6 hours / sec</option>
+      </select>
+    </label>
+    <label class="ctl">SCHEDULE
+      <select id="schedule">
+        <option value="lesson">One lesson, then overnight</option>
+        <option value="week" selected>School week — 5 lessons</option>
+        <option value="term">Three weeks — 15 lessons</option>
+      </select>
+    </label>
+    <label class="ctl">CLASS SEED <select id="seed"></select></label>
+    <span class="spacer"></span>
+    <button id="csv" type="button">EXPORT CSV</button>
+    <button id="reset" type="button">RESET</button>
+  </div>
+</header>
+
+<div id="boot" class="err" hidden>
+  <strong>Config not loaded.</strong> This page reads the live economy file, so it must be served by the project server:
+  <div style="margin-top:6px"><code>python3 server.py</code> → <code>http://127.0.0.1:3000/classroom-sim.html</code></div>
+  <div id="booterr" style="margin-top:6px" class="faint"></div>
+</div>
+
+<main id="app" hidden>
+
+<section class="kpis" id="kpis"></section>
+
+<div class="grid">
+  <div class="col">
+    <section class="panel">
+      <h2>CLASS STANDINGS <small id="standings-sub">click a student for their town</small></h2>
+      <div class="tablewrap">
+        <table id="board">
+          <thead><tr>
+            <th class="l" data-sort="rank">#</th>
+            <th class="l" data-sort="name">STUDENT</th>
+            <th class="l" data-sort="strategy">PLAYS LIKE</th>
+            <th data-sort="worth" aria-sort="descending">NET WORTH</th>
+            <th class="l">SHARE</th>
+            <th data-sort="cash">CASH</th>
+            <th data-sort="income">YM/MIN</th>
+            <th data-sort="buildings">BLD</th>
+            <th data-sort="deliveries">DEL</th>
+            <th data-sort="licence">LIC</th>
+          </tr></thead>
+          <tbody id="board-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel detail" id="detail">
+      <h2>TOWN DETAIL</h2>
+      <div id="detail-body" class="muted">Select a student above.</div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="panel">
+      <h2>NET WORTH OVER CLASS TIME <small>average per playing style</small></h2>
+      <div class="legend" id="legend"></div>
+      <div class="chartbox">
+        <canvas id="line" data-h="260" aria-label="Average net worth over class time for each playing style"></canvas>
+        <div class="tip" id="linetip"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>HOW FAR THE CLASS GOT <small>students by businesses owned</small></h2>
+      <div class="chartbox">
+        <canvas id="bars" data-h="190" aria-label="Number of students by businesses owned"></canvas>
+        <div class="tip" id="bartip"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>CLASS LOG</h2>
+      <div class="log" id="log"></div>
+    </section>
+  </div>
+</div>
+
+<p class="note" id="note"></p>
+</main>
+
+<script>
+'use strict';
+/* ==========================================================================
+   YoMama classroom simulation.
+
+   Runs the shipped v4 economy in the browser for thirty bot students on one
+   class clock. The engine below is a direct port of production_economy.py:
+   integer cash and goods, fixed-point work counters, the same rounding, the
+   same order of produce → retail → sync. No economy number is written here;
+   every constant is read from config/economy.v4.json at load, which is the
+   project rule (see TEKNIK-NOTLAR.md §1).
+
+   The bots are the transparent heuristics from tests/sim_production.py with a
+   classroom attendance schedule on top. They are a balance diagnostic, not
+   evidence about how real students behave or how much they enjoy the game.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- helpers */
+const $ = (id) => document.getElementById(id);
+const jsround = (x) => Math.floor(x + 0.5);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function ym(n) {
+  n = Math.round(n);
+  if (Math.abs(n) >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1e4) return (n / 1e3).toFixed(1) + 'k';
+  return n.toLocaleString('en-US');
+}
+
+/* ============================================================ ENGINE (v4) */
+let cfg = null, CAT = null, TICK = 0, TPH = 0, TPD = 0, ALLOWANCE = 0;
+
+function loadEngine(config) {
+  cfg = config;
+  CAT = {};
+  cfg.tiers.forEach((t, i) => t.goods.forEach((g) => { CAT[g.id] = Object.assign({}, g, { tier: i, buildingId: t.id }); }));
+  TICK = cfg.global.tick;
+  TPH = jsround(3600 / TICK);
+  TPD = jsround(86400 / TICK);
+  ALLOWANCE = Math.trunc(cfg.runtime.offlineHours * TPH);
+}
+
+const P = () => cfg.production;
+const prodMult = (b) => 100 + P().speedPerLevel * (b.lv - 1);
+const salesMult = (b) => P().customerBasePercent * (100 + P().customerPerLevel * (b.sales - 1));
+
+function building(tier) {
+  return { tier, lv: 1, sales: 1, storage: 1, reserve: false, processing: true };
+}
+
+function newState(seed) {
+  const st = {
+    cash: 0, b: [building(0)], tierOf: [0], pend: {}, book: cfg.tiers[0].baseCost,
+    build: null, queue: [], inventory: {}, productionWork: {}, salesWork: {}, materials: 0,
+    offers: null, orderSerial: 0, rngState: seed,
+    cStats: { accepted: 0, done: 0, failed: 0, net: 0 },
+    checklist: { lv25: false, auto: false, goodSales: 0, quiz: false },
+    tick: 0, lastActiveTick: 0, recentRetail: {}, productionBlocked: {}, unlock: { 0: 0 },
+    report: { produced: 0, unitsProduced: 0, retailEarned: 0, unitsSold: 0, overflowSold: 0, builds: 0, offlineTicksSkipped: 0 }
+  };
+  offerContracts(st);
+  return st;
+}
+
+function capacity(st, slot) {
+  const tier = cfg.tiers[st.tierOf[slot]];
+  return Math.floor(tier.capacity * (1 + P().storagePerLevel * (st.b[slot].storage - 1)));
+}
+
+function goodCapacity(st, slot, gid) {
+  const goods = cfg.tiers[st.tierOf[slot]].goods;
+  const total = capacity(st, slot);
+  const index = goods.findIndex((g) => g.id === gid);
+  return Math.floor(total / goods.length) + (index < total % goods.length ? 1 : 0);
+}
+
+function chainReservations(st) {
+  const protectedQty = {};
+  const batches = P().chainBufferBatches;
+  st.tierOf.forEach((ti, slot) => {
+    if (!st.b[slot].processing) return;
+    for (const good of cfg.tiers[ti].goods) {
+      for (const need of good.inputs || []) {
+        protectedQty[need.goodId] = (protectedQty[need.goodId] || 0) + need.quantity * batches;
+      }
+    }
+  });
+  return protectedQty;
+}
+
+function produce(st) {
+  const inv = st.inventory, pwork = st.productionWork;
+  let made = 0, value = 0;
+  st.productionBlocked = {};
+  // Dependency edges always point at an earlier tier, so tier order is enough.
+  const slots = st.b.map((_, i) => i).sort((a, b) => st.tierOf[a] - st.tierOf[b]);
+  for (const slot of slots) {
+    const b = st.b[slot], tier = cfg.tiers[st.tierOf[slot]];
+    for (const good of tier.goods) {
+      const needs = good.inputs || [];
+      if (needs.length && !b.processing) continue;
+      const gid = good.id, denom = good.cycleTicks * 100;
+      let work = (pwork[gid] || 0) + prodMult(b);
+      while (work >= denom) {
+        const shortage = needs.find((n) => (inv[n.goodId] || 0) < n.quantity);
+        if (shortage) { st.productionBlocked[gid] = { reason: 'ingredient', goodId: shortage.goodId }; work = denom; break; }
+        if ((inv[gid] || 0) + good.quantity > goodCapacity(st, slot, gid)) {
+          st.productionBlocked[gid] = { reason: 'storage' }; work = denom; break;
+        }
+        for (const n of needs) inv[n.goodId] -= n.quantity;
+        inv[gid] = (inv[gid] || 0) + good.quantity;
+        made += good.quantity; value += good.quantity * good.unitPrice; work -= denom;
+      }
+      pwork[gid] = work;
+    }
+  }
+  st.report.produced += value;
+  st.report.unitsProduced += made;
+}
+
+function retail(st) {
+  const inv = st.inventory, protectedQty = chainReservations(st);
+  let earned = 0, sold = 0;
+  const keep = Math.max(1, jsround(60 / TICK));
+  st.b.forEach((b, slot) => {
+    let slotIncome = 0;
+    for (const good of cfg.tiers[st.tierOf[slot]].goods) {
+      const gid = good.id, denom = good.cycleTicks * 10000;
+      // Idle demand is not banked: unsold customer work is capped per tick.
+      let work = (st.salesWork[gid] || 0) + salesMult(b);
+      if (b.reserve) { st.salesWork[gid] = 0; continue; }
+      const available = Math.max(0, (inv[gid] || 0) - (protectedQty[gid] || 0));
+      const take = Math.min(available, Math.floor(work / denom));
+      if (take) {
+        inv[gid] -= take;
+        const gross = take * good.unitPrice;
+        earned += gross; slotIncome += gross; sold += take; work -= take * denom;
+      }
+      st.salesWork[gid] = work % denom;
+    }
+    const history = (st.recentRetail[slot] = st.recentRetail[slot] || []);
+    history.push(slotIncome);
+    if (history.length > keep) history.splice(0, history.length - keep);
+  });
+  st.cash += earned;
+  st.report.retailEarned += earned;
+  st.report.unitsSold += sold;
+}
+
+function syncPools(st) {
+  st.pend = {};
+  st.tierOf.forEach((ti, i) => {
+    st.pend[i] = cfg.tiers[ti].goods.reduce((sum, g) => sum + (st.inventory[g.id] || 0) * g.unitPrice, 0);
+  });
+}
+
+function finishBuild(st, k) {
+  const ti = st.build.i;
+  st.b.push(building(ti));
+  st.tierOf.push(ti);
+  st.build = null;
+  st.unlock[st.b.length - 1] = k / TPD;
+  st.report.builds += 1;
+  if (st.queue.length) {
+    const next = st.queue.shift();
+    st.build = { i: next, t: k + Math.max(1, jsround(cfg.tiers[next].timerH * 3600 / TICK)) };
+  }
+  syncPools(st);
+}
+
+function playerTick(st, k) {
+  if (st.build !== null && k >= st.build.t) finishBuild(st, k);
+  produce(st); retail(st); syncPools(st);
+  st.tick = k + 1;
+}
+
+/* A town earns for at most `offlineHours` after its owner's last activity.
+   Skipped production is never replayed; paid construction keeps its wall time. */
+function advancePlayer(st, k) {
+  if (k < st.lastActiveTick + ALLOWANCE) { playerTick(st, k); return true; }
+  st.report.offlineTicksSkipped += 1;
+  st.recentRetail = {};
+  while (st.build && st.build.t <= k) finishBuild(st, st.build.t);
+  st.tick = k + 1;
+  return false;
+}
+
+function netWorth(st) {
+  return st.cash + Object.values(st.pend).reduce((a, b) => a + b, 0) + st.book;
+}
+
+function upgradeCost(st, slot, kind) {
+  const key = { production: 'lv', sales: 'sales', storage: 'storage' }[kind];
+  const level = st.b[slot][key];
+  if (level >= P().maxLevel) return null;
+  const base = cfg.tiers[st.tierOf[slot]].upgradeBase;
+  const factor = kind === 'storage' ? 0.65 : 1;
+  return Math.max(1, jsround(base * factor * Math.pow(P().upgradeGrowth, level - 1)));
+}
+
+function buyUpgrade(st, slot, kind) {
+  const cost = upgradeCost(st, slot, kind);
+  if (cost === null || st.cash < cost) return false;
+  const key = { production: 'lv', sales: 'sales', storage: 'storage' }[kind];
+  st.cash -= cost; st.book += cost; st.b[slot][key] += 1;
+  if (kind === 'production' && st.b[slot].lv >= cfg.gate.levelNeeded) st.checklist.lv25 = true;
+  if (kind === 'sales') st.checklist.auto = true;
+  return true;
+}
+
+function expandOptions(st) {
+  const taken = new Set(st.tierOf.concat(st.queue, st.build ? [st.build.i] : []));
+  const out = [];
+  for (let i = 0; i < cfg.tiers.length && out.length < cfg.global.frontier; i++) if (!taken.has(i)) out.push(i);
+  return out;
+}
+
+function expansionQuote(st, ti) {
+  const t = cfg.tiers[ti], required = t.materialCost;
+  const used = Math.min(st.materials, required), missing = required - used;
+  const substitute = Math.max(P().materialCashValue,
+    Math.ceil(t.baseCost * P().materialPremiumPercent / 100 / Math.max(1, required)));
+  return { cost: t.baseCost + missing * substitute, materialsUsed: used };
+}
+
+function canExpand(st, ti) {
+  if (st.queue.length + (st.build ? 1 : 0) >= cfg.global.queueDepth) return null;
+  if (!expandOptions(st).includes(ti)) return null;
+  const quote = expansionQuote(st, ti);
+  return st.cash >= quote.cost ? quote : null;
+}
+
+function expand(st, ti, k) {
+  const quote = canExpand(st, ti);
+  if (!quote) return false;
+  st.cash -= quote.cost; st.book += quote.cost; st.materials -= quote.materialsUsed;
+  if (st.build === null) st.build = { i: ti, t: k + Math.max(1, jsround(cfg.tiers[ti].timerH * 3600 / TICK)) };
+  else st.queue.push(ti);
+  return true;
+}
+
+function makeOrder(st, index) {
+  const owned = new Set(st.tierOf), eligible = [];
+  for (const ti of st.tierOf) {
+    for (const g of cfg.tiers[ti].goods) {
+      if ((g.inputs || []).every((n) => owned.has(CAT[n.goodId].tier))) eligible.push(g);
+    }
+  }
+  const serial = st.orderSerial++;
+  const offset = (serial + index * 3) % eligible.length;
+  const picks = [eligible[offset]];
+  if (index > 0 && eligible.length > 1) picks.push(eligible[(offset + Math.max(1, Math.floor(eligible.length / 2))) % eligible.length]);
+  const requirements = [];
+  let value = 0;
+  for (const good of picks) {
+    const qty = Math.max(2, Math.ceil(P().orderMinutes[index] * 60 / (good.cycleTicks * TICK)));
+    requirements.push({ goodId: good.id, quantity: qty });
+    value += qty * good.unitPrice;
+  }
+  return {
+    id: 'order-' + st.rngState + '-' + serial,
+    name: ['Quick delivery', 'Town delivery', 'Building supplies'][index],
+    requirements,
+    reward: jsround(value * P().orderRewardPercent[index] / 100),
+    materials: P().orderMaterials[index]
+  };
+}
+
+function offerContracts(st) {
+  if (!st.offers) st.offers = [0, 1, 2].map((i) => makeOrder(st, i));
+}
+
+function fulfillOrder(st, index) {
+  const order = st.offers[index];
+  for (const need of order.requirements) if ((st.inventory[need.goodId] || 0) < need.quantity) return false;
+  for (const need of order.requirements) st.inventory[need.goodId] -= need.quantity;
+  st.cash += order.reward;
+  st.materials += order.materials;
+  st.cStats.accepted += 1; st.cStats.done += 1;
+  const raw = order.requirements.reduce((s, n) => s + CAT[n.goodId].unitPrice * n.quantity, 0);
+  st.cStats.net += order.reward - raw;
+  st.checklist.goodSales = st.cStats.done;
+  st.offers[index] = makeOrder(st, index);
+  syncPools(st);
+  return true;
+}
+
+function gateOpen(st) {
+  const c = st.checklist;
+  return st.b.length >= cfg.global.gateTier && c.lv25 && c.auto && st.cStats.done >= cfg.gate.goodSalesNeeded && c.quiz;
+}
+
+/* Sustainable flow forecast — used by the bots to score upgrades, exactly as
+   the shipped screens use it. It credits no income. */
+function flowRates(st) {
+  const pool = {}, rates = {}, byTier = new Map();
+  st.tierOf.forEach((ti, i) => byTier.set(ti, i));
+  const tiers = [...byTier.keys()].sort((a, b) => a - b);
+  for (const ti of tiers) {
+    const b = st.b[byTier.get(ti)];
+    for (const g of cfg.tiers[ti].goods) {
+      let rate = prodMult(b) / 100 * 60 / (g.cycleTicks * TICK);
+      const needs = g.inputs || [];
+      if (needs.length && !b.processing) rate = 0;
+      for (const n of needs) rate = Math.min(rate, (pool[n.goodId] || 0) / n.quantity);
+      for (const n of needs) pool[n.goodId] = Math.max(0, (pool[n.goodId] || 0) - rate * n.quantity);
+      pool[g.id] = rate;
+      rates[g.id] = { production: rate, retail: 0 };
+    }
+  }
+  for (const [ti, slot] of byTier) {
+    const b = st.b[slot];
+    for (const g of cfg.tiers[ti].goods) {
+      const demand = salesMult(b) / 10000 * 60 / (g.cycleTicks * TICK);
+      rates[g.id].retail = b.reserve ? 0 : Math.min(pool[g.id], demand);
+    }
+  }
+  return rates;
+}
+
+function incomePerMin(st) {
+  // Actual cash from ordinary customers over the last four ticks, not a forecast.
+  let total = 0;
+  for (const slot in st.recentRetail) total += st.recentRetail[slot].reduce((a, b) => a + b, 0);
+  return total;
+}
+
+function storedValue(st) {
+  let v = 0;
+  for (const gid in st.inventory) v += st.inventory[gid] * CAT[gid].unitPrice;
+  return v;
+}
+
+/* ============================================================ BOT PLAYERS */
+const STRATEGIES = {
+  upgrades:   { label: 'Upgrader',  color: 'var(--s1)', hex: '#3987e5', blurb: 'buys the best value upgrade it can afford' },
+  expansion:  { label: 'Builder',   color: 'var(--s2)', hex: '#d95926', blurb: 'saves for the next business first' },
+  deliveries: { label: 'Deliverer', color: 'var(--s3)', hex: '#199e70', blurb: 'holds stock and works the delivery board' },
+  casual:     { label: 'Casual',    color: 'var(--s4)', hex: '#c98500', blurb: 'shows up rarely, expands when rich' }
+};
+
+const NAMES = ['Ada', 'Baran', 'Cem', 'Defne', 'Ela', 'Fatih', 'Gizem', 'Hakan', 'Irmak', 'Jonas',
+  'Kerem', 'Lale', 'Mira', 'Nil', 'Osman', 'Pelin', 'Quinn', 'Rüya', 'Selin', 'Tarık',
+  'Umut', 'Vera', 'Wren', 'Xeni', 'Yusuf', 'Zeynep', 'Arda', 'Bade', 'Ceren', 'Doruk'];
+
+function makeStudents(seed) {
+  const rnd = mulberry32(seed * 7919 + 13);
+  // A plausible mix rather than an even split: most classes have more casual
+  // players than dedicated optimisers.
+  const mix = [].concat(Array(8).fill('upgrades'), Array(7).fill('expansion'),
+                        Array(6).fill('deliveries'), Array(9).fill('casual'));
+  for (let i = mix.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [mix[i], mix[j]] = [mix[j], mix[i]]; }
+  return NAMES.map((name, i) => {
+    const strategy = mix[i];
+    const base = strategy === 'casual' ? 0.15 + rnd() * 0.35 : 0.35 + rnd() * 0.65;
+    return {
+      id: i, name, strategy,
+      engagement: base,                    // how often they act, and play at home
+      diligence: clamp(0.35 + rnd() * 0.8, 0, 1), // how reliably they notice a ready delivery
+      actEvery: Math.max(2, Math.round(20 - 16 * base)), // ticks between decisions while playing
+      quizTaken: false,
+      state: newState(seed * 100 + i + 1),
+      lastAct: -999,
+      homeCache: new Map(),
+      rnd: mulberry32(seed * 100003 + i * 31 + 7),
+      series: []
+    };
+  });
+}
+
+/* ---- attendance ------------------------------------------------------- */
+const LESSON_HOUR = 9, LESSON_MIN = 45;
+/* The class opens with the first lesson, so tick 0 is 09:00 on day 1 and no
+   town earns before anybody has joined. A run ends the morning after the last
+   lesson day, which leaves room for the full overnight earning allowance. */
+const START_SEC = LESSON_HOUR * 3600;
+const SCHEDULES = {
+  lesson: { days: 1, lessons: [0], home: false, label: 'one lesson' },
+  week:   { days: 5, lessons: [0, 1, 2, 3, 4], home: true, label: 'a school week' },
+  term:   { days: 19, lessons: [0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18], home: true, label: 'three school weeks' }
+};
+const absSec = (k) => START_SEC + k * TICK;
+
+function homeSession(student, sched, day) {
+  if (!sched.home || !sched.lessons.includes(day)) return null; // nobody is set homework on a day off
+  if (student.homeCache.has(day)) return student.homeCache.get(day);
+  const r = mulberry32(student.id * 7717 + day * 104729 + 3);
+  // Engaged students drop in after school; nobody plays all night.
+  const plays = r() < student.engagement * 0.75;
+  const session = plays ? { start: (17 + Math.floor(r() * 4)) * 3600 + Math.floor(r() * 3600),
+                            len: Math.round((4 + r() * 14 * student.engagement) * 60) } : null;
+  student.homeCache.set(day, session);
+  return session;
+}
+
+function isActive(student, sched, k) {
+  const sec = absSec(k), day = Math.floor(sec / 86400), tod = sec % 86400;
+  if (sched.lessons.includes(day)) {
+    const start = LESSON_HOUR * 3600;
+    if (tod >= start && tod < start + LESSON_MIN * 60) return true;
+  }
+  const home = homeSession(student, sched, day);
+  return !!(home && tod >= home.start && tod < home.start + home.len);
+}
+
+/* ---- decisions -------------------------------------------------------- */
+function nominalSales(st) {
+  const rates = flowRates(st);
+  let total = 0;
+  for (const gid in rates) total += rates[gid].retail * CAT[gid].unitPrice;
+  return total;
+}
+
+function upgradeCandidates(st) {
+  const out = [], before = nominalSales(st);
+  st.b.forEach((owned, slot) => {
+    for (const [kind, key] of [['production', 'lv'], ['sales', 'sales']]) {
+      const cost = upgradeCost(st, slot, kind);
+      if (cost === null) continue;
+      owned[key] += 1;
+      const delta = nominalSales(st) - before;
+      owned[key] -= 1;
+      if (delta > 0) out.push({ slot, kind, cost, score: delta / cost });
+    }
+  });
+  return out.sort((a, b) => b.score - a.score);
+}
+
+function storageNeeded(st) {
+  // A shelf that is full pauses that product; attentive players notice.
+  for (const gid in st.productionBlocked) {
+    if (st.productionBlocked[gid].reason !== 'storage') continue;
+    const slot = st.tierOf.indexOf(CAT[gid].tier);
+    if (slot >= 0 && upgradeCost(st, slot, 'storage') !== null) return slot;
+  }
+  return -1;
+}
+
+function act(student, k, log) {
+  const st = student.state, strategy = student.strategy;
+
+  // Deliveries first: they pay more than the shelf price, when noticed.
+  if (student.rnd() < student.diligence) {
+    st.offers.forEach((offer, index) => {
+      const ready = offer.requirements.every((n) => (st.inventory[n.goodId] || 0) >= n.quantity);
+      if (ready && fulfillOrder(st, index)) {
+        if (st.cStats.done === cfg.gate.goodSalesNeeded) log(k, student, 'finished the third delivery');
+      }
+    });
+  }
+
+  // Reserving stock only makes sense while chasing a specific delivery.
+  if (strategy === 'deliveries') {
+    const order = st.offers[1];
+    const missing = new Set(order.requirements
+      .filter((n) => (st.inventory[n.goodId] || 0) < n.quantity)
+      .map((n) => CAT[n.goodId].tier));
+    st.tierOf.forEach((ti, slot) => { st.b[slot].reserve = missing.has(ti); });
+  } else {
+    st.b.forEach((b) => { b.reserve = false; });
+  }
+
+  // The quiz is a reading task, not an economic one: keen students do it early.
+  if (!student.quizTaken && st.b.length >= 2 && student.rnd() < 0.12 + student.engagement * 0.3) {
+    student.quizTaken = true; st.checklist.quiz = true;
+  }
+
+  const wasOpen = student.licenceOpen;
+  student.licenceOpen = gateOpen(st);
+  if (!wasOpen && student.licenceOpen) log(k, student, 'opened the investment licence');
+
+  const frontier = expandOptions(st);
+  const target = frontier.length ? frontier[0] : null;
+
+  if ((strategy === 'expansion' || strategy === 'casual') && target !== null) {
+    if (expand(st, target, k)) { log(k, student, 'started building ' + cfg.tiers[target].name); return; }
+    if (!st.build) return; // still saving for it
+  }
+
+  const shelf = storageNeeded(st);
+  if (shelf >= 0 && student.engagement > 0.5 && buyUpgrade(st, shelf, 'storage')) return;
+
+  const candidates = upgradeCandidates(st);
+  const pick = candidates.find((c) => c.cost <= st.cash);
+  if (pick && buyUpgrade(st, pick.slot, pick.kind)) return;
+
+  if (target !== null && expand(st, target, k)) log(k, student, 'started building ' + cfg.tiers[target].name);
+}
+
+/* ================================================================ RUNTIME */
+const sim = {
+  students: [], sched: SCHEDULES.week, k: 0, endTick: 0, running: false, seed: 7,
+  sampleEvery: 0, samples: [], log: [], selected: 0, sortKey: 'worth', sortDir: -1, dirty: true
+};
+
+function logEvent(k, student, text) {
+  sim.log.unshift({ k, name: student.name, strategy: student.strategy, text });
+  if (sim.log.length > 300) sim.log.length = 300;
+}
+
+function resetSim() {
+  sim.running = false;
+  sim.k = 0;
+  sim.students = makeStudents(sim.seed);
+  sim.endTick = sim.sched.days * TPD;
+  // Keep roughly 400 chart samples whatever the run length.
+  sim.sampleEvery = Math.max(2, Math.round(sim.endTick / 400));
+  sim.samples = [];
+  sim.log = [];
+  sim.selected = 0;
+  sim.dirty = true;
+  sample();
+  render(true);
+}
+
+function sample() {
+  const sums = { upgrades: [0, 0], expansion: [0, 0], deliveries: [0, 0], casual: [0, 0] };
+  const worths = [];
+  for (const s of sim.students) {
+    const w = netWorth(s.state);
+    worths.push(w);
+    sums[s.strategy][0] += w;
+    sums[s.strategy][1] += 1;
+  }
+  worths.sort((a, b) => a - b);
+  sim.samples.push({
+    k: sim.k,
+    avg: {
+      upgrades: sums.upgrades[0] / sums.upgrades[1],
+      expansion: sums.expansion[0] / sums.expansion[1],
+      deliveries: sums.deliveries[0] / sums.deliveries[1],
+      casual: sums.casual[0] / sums.casual[1]
+    },
+    median: worths[Math.floor(worths.length / 2)]
+  });
+}
+
+function stepTicks(n) {
+  const sched = sim.sched;
+  for (let i = 0; i < n && sim.k < sim.endTick; i++) {
+    const k = sim.k;
+    for (const student of sim.students) {
+      const active = isActive(student, sched, k);
+      if (active) { student.state.lastActiveTick = k; student.lastLogin = k; }
+      advancePlayer(student.state, k);
+      if (active && k - student.lastAct >= student.actEvery) {
+        student.lastAct = k;
+        act(student, k, logEvent);
+      }
+    }
+    sim.k = k + 1;
+    if (sim.k % sim.sampleEvery === 0 || sim.k === sim.endTick) sample();
+  }
+  sim.dirty = true;
+  if (sim.k >= sim.endTick) sim.running = false;
+}
+
+let lastFrame = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.25, (now - lastFrame) / 1000 || 0);
+  lastFrame = now;
+  if (sim.running) {
+    const simSeconds = dt * Number($('speed').value);
+    let ticks = Math.max(1, Math.round(simSeconds / TICK));
+    const budgetEnd = performance.now() + 14; // keep the page responsive
+    while (ticks > 0 && sim.k < sim.endTick && performance.now() < budgetEnd) {
+      const chunk = Math.min(ticks, 60);
+      stepTicks(chunk);
+      ticks -= chunk;
+    }
+  }
+  if (sim.dirty && now - lastRender > 120) render();
+}
+
+/* =============================================================== RENDERING */
+let lastRender = 0;
+
+function clockText(k) {
+  const sec = absSec(k), day = Math.floor(sec / 86400) + 1, tod = sec % 86400;
+  const h = String(Math.floor(tod / 3600)).padStart(2, '0');
+  const m = String(Math.floor((tod % 3600) / 60)).padStart(2, '0');
+  return 'Day ' + day + ' · ' + h + ':' + m;
+}
+
+function render(force) {
+  lastRender = performance.now();
+  sim.dirty = false;
+  $('clock').textContent = clockText(sim.k);
+  $('runstate').textContent = sim.k >= sim.endTick ? 'FINISHED' : (sim.running ? 'RUNNING' : 'PAUSED');
+  $('runstate').className = 'big ' + (sim.k >= sim.endTick ? 'green' : sim.running ? 'green' : 'amber');
+  $('play').textContent = sim.running ? '❚❚ PAUSE' : '▶ RUN';
+  $('play').disabled = sim.k >= sim.endTick;
+  $('finish').disabled = sim.k >= sim.endTick;
+  $('step').disabled = sim.k >= sim.endTick;
+  renderKpis();
+  renderBoard();
+  renderDetail();
+  renderLine();
+  renderBars();
+  renderLog();
+  if (force) renderLegend();
+}
+
+function rows() {
+  return sim.students.map((s) => ({
+    s,
+    name: s.name,
+    strategy: s.strategy,
+    worth: netWorth(s.state),
+    cash: s.state.cash,
+    income: incomePerMin(s.state),
+    buildings: s.state.b.length,
+    deliveries: s.state.cStats.done,
+    licence: gateOpen(s.state) ? 1 : 0,
+    active: isActive(s, sim.sched, Math.max(0, sim.k - 1))
+  }));
+}
+
+function renderKpis() {
+  const r = rows();
+  const worths = r.map((x) => x.worth).sort((a, b) => a - b);
+  const total = worths.reduce((a, b) => a + b, 0);
+  const median = worths[Math.floor(worths.length / 2)];
+  const top = worths[worths.length - 1];
+  const bottom = worths[0];
+  const licences = r.filter((x) => x.licence).length;
+  const builds = r.reduce((a, x) => a + x.buildings, 0);
+  const deliveries = r.reduce((a, x) => a + x.deliveries, 0);
+  const playing = r.filter((x) => x.active).length;
+  const spread = median > 0 ? (top / median).toFixed(1) + '×' : '—';
+  const tiles = [
+    ['CLASS NET WORTH', ym(total), 'median ' + ym(median) + ' per town'],
+    ['TOP vs MEDIAN', spread, 'lowest town ' + ym(bottom)],
+    ['LICENCES OPEN', licences + '/30', cfg.global.gateTier + ' businesses + ' + cfg.gate.checklist.length + ' milestones'],
+    ['BUSINESSES BUILT', builds, (builds / 30).toFixed(1) + ' per student'],
+    ['DELIVERIES DONE', deliveries, 'reward ' + P().orderRewardPercent.join('/') + '% of value'],
+    ['PLAYING NOW', playing + '/30', sim.sched.label + ' · tick ' + TICK + 's']
+  ];
+  $('kpis').innerHTML = tiles.map((t) =>
+    '<div class="kpi"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + t[2] + '</span></div>'
+  ).join('');
+}
+
+function renderBoard() {
+  const r = rows();
+  const max = Math.max(1, ...r.map((x) => x.worth));
+  const key = sim.sortKey, dir = sim.sortDir;
+  const byWorth = [...r].sort((a, b) => b.worth - a.worth);
+  const rank = new Map(byWorth.map((x, i) => [x.s.id, i + 1]));
+  r.sort((a, b) => {
+    if (key === 'rank') return (rank.get(a.s.id) - rank.get(b.s.id)) * dir;
+    if (key === 'name' || key === 'strategy') return String(a[key]).localeCompare(String(b[key])) * dir;
+    return (a[key] - b[key]) * dir;
+  });
+  $('board-body').innerHTML = r.map((x) => {
+    const meta = STRATEGIES[x.strategy];
+    const pct = Math.max(1.5, x.worth / max * 100);
+    return '<tr data-id="' + x.s.id + '" class="' + (x.s.id === sim.selected ? 'sel' : '') + '">' +
+      '<td class="l faint">' + rank.get(x.s.id) + '</td>' +
+      '<td class="l">' + x.name + (x.active ? ' <span class="green" title="playing right now">•</span>' : '') + '</td>' +
+      '<td class="l tag"><span class="dot" style="background:' + meta.hex + '"></span>' + meta.label + '</td>' +
+      '<td class="amber">' + ym(x.worth) + '</td>' +
+      '<td><span class="bar"><i style="width:' + pct + '%;background:' + meta.hex + '"></i></span></td>' +
+      '<td>' + ym(x.cash) + '</td>' +
+      '<td>' + ym(x.income) + '</td>' +
+      '<td>' + x.buildings + '</td>' +
+      '<td>' + x.deliveries + '</td>' +
+      '<td class="' + (x.licence ? 'lic' : 'lic-no') + '">' + (x.licence ? 'YES' : '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderDetail() {
+  const student = sim.students[sim.selected];
+  const st = student.state;
+  const meta = STRATEGIES[student.strategy];
+  const c = st.checklist;
+  const checks = [
+    ['3 businesses', st.b.length >= cfg.global.gateTier],
+    ['Production level ' + cfg.gate.levelNeeded, c.lv25],
+    ['Customer upgrade', c.auto],
+    [cfg.gate.goodSalesNeeded + ' deliveries', st.cStats.done >= cfg.gate.goodSalesNeeded],
+    ['Quiz passed', c.quiz]
+  ];
+  const buildings = st.b.map((b, slot) => {
+    const t = cfg.tiers[st.tierOf[slot]];
+    const stock = t.goods.reduce((a, g) => a + (st.inventory[g.id] || 0), 0);
+    return '<div class="row"><span>' + t.name + (b.reserve ? ' <span class="tag">· holding</span>' : '') + '</span>' +
+      '<span class="muted">prod ' + b.lv + ' · cust ' + b.sales + ' · store ' + b.storage + '</span>' +
+      '<span>' + stock + '/' + capacity(st, slot) + '</span></div>';
+  }).join('');
+  const orders = st.offers.map((o) => {
+    const need = o.requirements.map((n) => {
+      const have = st.inventory[n.goodId] || 0;
+      const cls = have >= n.quantity ? 'green' : 'muted';
+      return '<span class="' + cls + '">' + have + '/' + n.quantity + ' ' + CAT[n.goodId].name + '</span>';
+    }).join(' · ');
+    return '<div class="row"><span>' + o.name + '</span><span class="muted">' + need + '</span><span>' + ym(o.reward) + ' YM</span></div>';
+  }).join('');
+  const building = st.build ? cfg.tiers[st.build.i].name + ' — ' +
+    Math.max(0, Math.ceil((st.build.t - sim.k) * TICK / 60)) + ' min left' : 'nothing under construction';
+
+  $('detail-body').innerHTML =
+    '<dl>' +
+    '<dt>' + student.name + '</dt><dd><span class="dot" style="background:' + meta.hex + '"></span>' + meta.label + ' — ' + meta.blurb + '</dd>' +
+    '<dt>Cash</dt><dd class="amber">' + ym(st.cash) + ' YM</dd>' +
+    '<dt>Stock value</dt><dd>' + ym(storedValue(st)) + ' YM · ' + Object.values(st.inventory).reduce((a, b) => a + b, 0) + ' items</dd>' +
+    '<dt>Net worth</dt><dd>' + ym(netWorth(st)) + ' YM</dd>' +
+    '<dt>Customer income</dt><dd>' + ym(incomePerMin(st)) + ' YM/min · earned ' + ym(st.report.retailEarned) + ' total</dd>' +
+    '<dt>Materials</dt><dd>' + st.materials + '</dd>' +
+    '<dt>Construction</dt><dd>' + building + '</dd>' +
+    '<dt>Offline ticks skipped</dt><dd>' + st.report.offlineTicksSkipped + ' <span class="faint">(past the ' + cfg.runtime.offlineHours + 'h cap)</span></dd>' +
+    '</dl>' +
+    '<div class="rows">' + buildings + '</div>' +
+    '<h3 style="font-size:16px;color:var(--ink-muted);margin:10px 0 2px">DELIVERY BOARD</h3>' +
+    '<div class="rows">' + orders + '</div>' +
+    '<div class="check">' + checks.map((x) =>
+      '<span class="' + (x[1] ? 'green' : 'faint') + '">' + (x[1] ? '✔' : '○') + ' ' + x[0] + '</span>').join('') + '</div>';
+}
+
+function renderLog() {
+  $('log').innerHTML = sim.log.slice(0, 60).map((e) =>
+    '<div><time>' + clockText(e.k) + '</time><span class="dot" style="background:' + STRATEGIES[e.strategy].hex + '"></span>' +
+    '<span class="amber">' + e.name + '</span> ' + e.text + '</div>').join('') ||
+    '<div class="faint">Nothing yet — press RUN.</div>';
+}
+
+function renderLegend() {
+  $('legend').innerHTML = Object.entries(STRATEGIES).map(([, m]) =>
+    '<span><i class="dot" style="background:' + m.hex + '"></i>' + m.label + '</span>').join('') +
+    '<span><i style="display:inline-block;width:14px;height:0;border-top:2px dashed var(--ink-faint)"></i> class median</span>';
+}
+
+/* ---- charts ----------------------------------------------------------- */
+function sizeCanvas(canvas) {
+  // The CSS height is kept in data-h: writing canvas.height also rewrites the
+  // height attribute, so reading it back would grow the canvas every frame.
+  const dpr = window.devicePixelRatio || 1;
+  const h = Number(canvas.dataset.h), w = canvas.clientWidth;
+  canvas.style.height = h + 'px';
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+
+function niceTicks(max) {
+  if (max <= 0) return [0, 1];
+  const step = Math.pow(10, Math.floor(Math.log10(max)));
+  const mult = max / step > 5 ? 2 : max / step > 2 ? 1 : 0.5;
+  const s = step * mult;
+  const out = [];
+  for (let v = 0; v <= max * 1.0001; v += s) out.push(v);
+  if (out[out.length - 1] < max) out.push(out[out.length - 1] + s);
+  return out;
+}
+
+let lineGeom = null;
+function renderLine() {
+  const canvas = $('line');
+  const { ctx, w, h } = sizeCanvas(canvas);
+  const pad = { l: 58, r: 74, t: 10, b: 22 };
+  const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
+  const data = sim.samples;
+  const keys = ['upgrades', 'expansion', 'deliveries', 'casual'];
+  let max = 0;
+  for (const p of data) for (const k of keys) max = Math.max(max, p.avg[k]);
+  const ticks = niceTicks(max || 1);
+  const top = ticks[ticks.length - 1];
+  const xEnd = Math.max(sim.endTick, 1);
+  const X = (k) => pad.l + (k / xEnd) * plotW;
+  const Y = (v) => pad.t + plotH - (v / top) * plotH;
+  lineGeom = { pad, plotW, plotH, xEnd, X, Y, top };
+
+  ctx.font = '14px ' + getComputedStyle(document.body).fontFamily;
+  ctx.textBaseline = 'middle';
+  // recessive grid
+  ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.fillStyle = '#6b7075'; ctx.textAlign = 'right';
+  for (const t of ticks) {
+    const y = Math.round(Y(t)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + plotW, y); ctx.stroke();
+    ctx.fillText(ym(t), pad.l - 8, y);
+  }
+  // day boundaries
+  ctx.textAlign = 'center';
+  const firstMidnight = (86400 - START_SEC) / TICK; // ticks from class open to the end of day 1
+  for (let d = 0; firstMidnight + (d - 1) * TPD <= xEnd; d++) {
+    const x = Math.round(X(Math.max(0, firstMidnight + (d - 1) * TPD))) + 0.5;
+    if (d > 0) { ctx.strokeStyle = '#161616'; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + plotH); ctx.stroke(); }
+    if (xEnd / TPD <= 8 || d % 5 === 0) ctx.fillText('D' + (d + 1), x + 10, h - 10);
+  }
+  if (data.length < 2) return;
+
+  // median, as a recessive dashed reference
+  ctx.save();
+  ctx.setLineDash([4, 4]); ctx.strokeStyle = '#6b7075'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  data.forEach((p, i) => { const x = X(p.k), y = Y(p.median); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke();
+  ctx.restore();
+
+  keys.forEach((key) => {
+    ctx.strokeStyle = STRATEGIES[key].hex; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    data.forEach((p, i) => { const x = X(p.k), y = Y(p.avg[key]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  });
+
+  // direct labels at the live end of each line, nudged apart
+  const last = data[data.length - 1];
+  const labels = keys.map((key) => ({ key, y: Y(last.avg[key]), text: STRATEGIES[key].label }))
+    .sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < 14) labels[i].y = labels[i - 1].y + 14;
+  ctx.textAlign = 'left';
+  for (const l of labels) {
+    ctx.fillStyle = STRATEGIES[l.key].hex;
+    ctx.fillRect(X(last.k) + 4, l.y - 1, 6, 2);
+    ctx.fillStyle = '#9aa0a6';
+    ctx.fillText(l.text, X(last.k) + 14, l.y);
+  }
+}
+
+function renderBars() {
+  const canvas = $('bars');
+  const { ctx, w, h } = sizeCanvas(canvas);
+  const buckets = [1, 2, 3, 4, 5];
+  const counts = buckets.map(() => 0);
+  const licences = buckets.map(() => 0);
+  for (const s of sim.students) {
+    const n = Math.min(5, s.state.b.length);
+    counts[n - 1] += 1;
+    if (gateOpen(s.state)) licences[n - 1] += 1;
+  }
+  const pad = { l: 96, r: 42, t: 6, b: 18 };
+  const plotW = w - pad.l - pad.r;
+  const rowH = (h - pad.t - pad.b) / buckets.length;
+  const max = Math.max(1, ...counts);
+  ctx.font = '15px ' + getComputedStyle(document.body).fontFamily;
+  ctx.textBaseline = 'middle';
+  barGeom = { pad, plotW, rowH, counts, licences, max };
+  buckets.forEach((b, i) => {
+    const y = pad.t + i * rowH;
+    const barH = Math.min(18, rowH - 6);
+    const cy = y + rowH / 2;
+    ctx.fillStyle = '#9aa0a6'; ctx.textAlign = 'right';
+    ctx.fillText(b === 5 ? '5 or more' : b + (b === 1 ? ' business' : ' businesses'), pad.l - 10, cy);
+    const width = counts[i] / max * plotW;
+    ctx.fillStyle = '#1d1d1d';
+    ctx.fillRect(pad.l, cy - barH / 2, plotW, barH);
+    if (counts[i]) {
+      ctx.fillStyle = '#3987e5';
+      roundRightRect(ctx, pad.l, cy - barH / 2, Math.max(6, width), barH, 4);
+      if (licences[i]) { // licence holders marked inside their own bar, with a 2px gap
+        ctx.fillStyle = '#199e70';
+        const lw = licences[i] / counts[i] * Math.max(6, width);
+        roundRightRect(ctx, pad.l, cy - barH / 2, Math.max(3, lw - 2), barH, 4);
+      }
+    }
+    ctx.fillStyle = '#e6e8eb'; ctx.textAlign = 'left';
+    ctx.fillText(String(counts[i]), pad.l + Math.max(6, width) + 8, cy);
+  });
+  ctx.fillStyle = '#6b7075'; ctx.textAlign = 'left';
+  ctx.fillText('bar = students · green part = licence open', pad.l, h - 8);
+}
+let barGeom = null;
+
+function roundRightRect(ctx, x, y, wid, hei, r) {
+  r = Math.min(r, hei / 2, wid);
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + wid - r, y);
+  ctx.quadraticCurveTo(x + wid, y, x + wid, y + r);
+  ctx.lineTo(x + wid, y + hei - r);
+  ctx.quadraticCurveTo(x + wid, y + hei, x + wid - r, y + hei);
+  ctx.lineTo(x, y + hei);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ---- hover layers ------------------------------------------------------ */
+function bindLineHover() {
+  const canvas = $('line'), tip = $('linetip');
+  canvas.addEventListener('mousemove', (e) => {
+    if (!lineGeom || sim.samples.length < 2) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const k = clamp((x - lineGeom.pad.l) / lineGeom.plotW, 0, 1) * lineGeom.xEnd;
+    let best = sim.samples[0];
+    for (const p of sim.samples) if (Math.abs(p.k - k) < Math.abs(best.k - k)) best = p;
+    tip.style.display = 'block';
+    tip.innerHTML = '<b>' + clockText(best.k) + '</b><br>' +
+      Object.keys(STRATEGIES).map((key) =>
+        '<span class="dot" style="background:' + STRATEGIES[key].hex + '"></span>' +
+        STRATEGIES[key].label + ' ' + ym(best.avg[key]) + ' YM').join('<br>') +
+      '<br><span class="faint">median ' + ym(best.median) + ' YM</span>';
+    const tw = tip.offsetWidth;
+    tip.style.left = clamp(lineGeom.X(best.k) + 12, 0, canvas.clientWidth - tw - 4) + 'px';
+    tip.style.top = '12px';
+    renderLine();
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#7a4d00'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(Math.round(lineGeom.X(best.k)) + 0.5, lineGeom.pad.t);
+    ctx.lineTo(Math.round(lineGeom.X(best.k)) + 0.5, lineGeom.pad.t + lineGeom.plotH);
+    ctx.stroke();
+    for (const key of Object.keys(STRATEGIES)) {
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.arc(lineGeom.X(best.k), lineGeom.Y(best.avg[key]), 5, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = STRATEGIES[key].hex; ctx.lineWidth = 2; ctx.stroke();
+    }
+  });
+  canvas.addEventListener('mouseleave', () => { tip.style.display = 'none'; sim.dirty = true; });
+}
+
+function bindBarHover() {
+  const canvas = $('bars'), tip = $('bartip');
+  canvas.addEventListener('mousemove', (e) => {
+    if (!barGeom) return;
+    const rect = canvas.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const i = Math.floor((y - barGeom.pad.t) / barGeom.rowH);
+    if (i < 0 || i > 4) { tip.style.display = 'none'; return; }
+    const names = sim.students.filter((s) => Math.min(5, s.state.b.length) === i + 1).map((s) => s.name);
+    tip.style.display = 'block';
+    tip.innerHTML = '<b>' + (i + 1 === 5 ? '5 or more businesses' : (i + 1) + (i ? ' businesses' : ' business')) + '</b><br>' +
+      barGeom.counts[i] + ' students · ' + barGeom.licences[i] + ' with a licence' +
+      (names.length ? '<br><span class="faint">' + names.join(', ') + '</span>' : '');
+    tip.style.left = clamp(e.clientX - rect.left + 12, 0, canvas.clientWidth - tip.offsetWidth - 4) + 'px';
+    tip.style.top = clamp(y - 10, 0, canvas.clientHeight - tip.offsetHeight) + 'px';
+  });
+  canvas.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+}
+
+/* ---------------------------------------------------------------- export */
+function exportCsv() {
+  const head = ['name', 'strategy', 'net_worth', 'cash', 'stock_value', 'income_per_min',
+    'buildings', 'production_levels', 'customer_levels', 'deliveries', 'materials', 'licence', 'offline_ticks'];
+  const lines = [head.join(',')];
+  for (const s of sim.students) {
+    const st = s.state;
+    lines.push([s.name, s.strategy, netWorth(st), st.cash, storedValue(st), incomePerMin(st),
+      st.b.length, st.b.map((b) => b.lv).join(' '), st.b.map((b) => b.sales).join(' '),
+      st.cStats.done, st.materials, gateOpen(st) ? 'yes' : 'no', st.report.offlineTicksSkipped].join(','));
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = ('classroom-sim-seed' + sim.seed + '-' + clockText(sim.k) + '.csv')
+    .replace(/ · /, '-').replace(/[ :]/g, '').toLowerCase();
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ------------------------------------------------------------------ wire */
+function bindControls() {
+  $('play').addEventListener('click', () => { sim.running = !sim.running; sim.dirty = true; });
+  $('step').addEventListener('click', () => { sim.running = false; stepTicks(jsround(60 / TICK)); render(); });
+  $('finish').addEventListener('click', () => {
+    sim.running = false;
+    const t0 = performance.now();
+    while (sim.k < sim.endTick && performance.now() - t0 < 20000) stepTicks(600);
+    render();
+  });
+  $('schedule').addEventListener('change', (e) => { sim.sched = SCHEDULES[e.target.value]; resetSim(); });
+  $('seed').addEventListener('change', (e) => { sim.seed = Number(e.target.value); resetSim(); });
+  $('reset').addEventListener('click', resetSim);
+  $('csv').addEventListener('click', exportCsv);
+  $('board-body').addEventListener('click', (e) => {
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+    sim.selected = Number(tr.dataset.id);
+    render();
+  });
+  document.querySelectorAll('th[data-sort]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      // Names and ranks read best ascending; money and counts best descending.
+      const initial = (key === 'name' || key === 'strategy' || key === 'rank') ? 1 : -1;
+      sim.sortDir = sim.sortKey === key ? -sim.sortDir : initial;
+      sim.sortKey = key;
+      document.querySelectorAll('th[data-sort]').forEach((o) => o.removeAttribute('aria-sort'));
+      th.setAttribute('aria-sort', sim.sortDir < 0 ? 'descending' : 'ascending');
+      render();
+    });
+  });
+  window.addEventListener('resize', () => { sim.dirty = true; });
+  bindLineHover();
+  bindBarHover();
+}
+
+async function boot() {
+  let config;
+  try {
+    const res = await fetch('./config/economy.v4.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    config = await res.json();
+  } catch (err) {
+    $('boot').hidden = false;
+    $('booterr').textContent = String(err);
+    return;
+  }
+  loadEngine(config);
+  $('app').hidden = false;
+  $('seed').innerHTML = [7, 11, 23, 42, 101].map((s) => '<option value="' + s + '">' + s + '</option>').join('');
+  $('note').innerHTML =
+    'Engine: config v' + cfg.version + ', ' + cfg.tiers.length + ' businesses, ' + TICK + 's tick, ' +
+    'production +' + P().speedPerLevel + '%/level, customers +' + P().customerPerLevel + '%/level, ' +
+    'upgrade growth ×' + P().upgradeGrowth + ', towns earn for at most ' + cfg.runtime.offlineHours + 'h after their owner’s last activity. ' +
+    'The thirty players are the four transparent heuristics from <span class="amber">tests/sim_production.py</span> ' +
+    '(plus attendance, a shelf-upgrade rule and a quiz delay), given different engagement and attention levels from the class seed. ' +
+    'They are a balance diagnostic: they show whether the numbers produce a reasonable spread and pace across a class, ' +
+    'not whether real students would enjoy it. Same seed and schedule replay identically.';
+  bindControls();
+  resetSim();
+  requestAnimationFrame(frame);
+}
+
+boot();
+</script>
+</body>
+</html>

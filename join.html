@@ -82,7 +82,7 @@
       if (net && net.isJoined()) {
         var s = net.session();
         foot.innerHTML = 'Signed in as <strong>' + s.name + '</strong> in class <strong>' + s.code +
-          '</strong>. <a href="./collect.html">Continue</a> &middot; <a href="#" id="join-leave">leave</a>';
+          '</strong>. <a href="./buildings.html">Continue</a> &middot; <a href="#" id="join-leave">leave</a>';
         var leave = document.getElementById('join-leave');
         if (leave) leave.addEventListener('click', function (e) {
           e.preventDefault(); net.leave(); window.location.reload();
@@ -108,7 +108,7 @@
           say(res.rejoined
             ? 'Welcome back, ' + res.name + '. Restoring your base...'
             : 'Joined class ' + res.code + '. Setting up your base...', 'ok');
-          window.setTimeout(function () { window.location.href = './collect.html'; }, 700);
+          window.setTimeout(function () { window.location.href = './buildings.html'; }, 700);
         }).catch(function (err) {
           btn.disabled = false;
           var m = (err && err.message) || 'Could not reach the server.';

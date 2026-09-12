@@ -1,0 +1,212 @@
+[
+  {
+    "family": "F",
+    "direction": "up",
+    "text": "TODO \u2014 Food: Demand rises after a busy weekend"
+  },
+  {
+    "family": "F",
+    "direction": "up",
+    "text": "TODO \u2014 Food: New orders fill the loading bay"
+  },
+  {
+    "family": "F",
+    "direction": "up",
+    "text": "TODO \u2014 Food: Buyers compete for limited stock"
+  },
+  {
+    "family": "F",
+    "direction": "up",
+    "text": "TODO \u2014 Food: Local exporters report strong demand"
+  },
+  {
+    "family": "F",
+    "direction": "up",
+    "text": "TODO \u2014 Food: A new customer places a major order"
+  },
+  {
+    "family": "F",
+    "direction": "up",
+    "text": "TODO \u2014 Food: Suppliers expect a busier season"
+  },
+  {
+    "family": "F",
+    "direction": "up",
+    "text": "TODO \u2014 Food: Delivery queues grow across the city"
+  },
+  {
+    "family": "F",
+    "direction": "down",
+    "text": "TODO \u2014 Food: Extra supply reaches the market"
+  },
+  {
+    "family": "F",
+    "direction": "down",
+    "text": "TODO \u2014 Food: Buyers delay their next orders"
+  },
+  {
+    "family": "F",
+    "direction": "down",
+    "text": "TODO \u2014 Food: A quiet week leaves stock on shelves"
+  },
+  {
+    "family": "F",
+    "direction": "down",
+    "text": "TODO \u2014 Food: New suppliers compete for customers"
+  },
+  {
+    "family": "F",
+    "direction": "down",
+    "text": "TODO \u2014 Food: Demand cools as inventories grow"
+  },
+  {
+    "family": "F",
+    "direction": "down",
+    "text": "TODO \u2014 Food: A shipment arrives ahead of schedule"
+  },
+  {
+    "family": "F",
+    "direction": "down",
+    "text": "TODO \u2014 Food: Customers look for cheaper alternatives"
+  },
+  {
+    "family": "I",
+    "direction": "up",
+    "text": "TODO \u2014 Industry: Demand rises after a busy weekend"
+  },
+  {
+    "family": "I",
+    "direction": "up",
+    "text": "TODO \u2014 Industry: New orders fill the loading bay"
+  },
+  {
+    "family": "I",
+    "direction": "up",
+    "text": "TODO \u2014 Industry: Buyers compete for limited stock"
+  },
+  {
+    "family": "I",
+    "direction": "up",
+    "text": "TODO \u2014 Industry: Local exporters report strong demand"
+  },
+  {
+    "family": "I",
+    "direction": "up",
+    "text": "TODO \u2014 Industry: A new customer places a major order"
+  },
+  {
+    "family": "I",
+    "direction": "up",
+    "text": "TODO \u2014 Industry: Suppliers expect a busier season"
+  },
+  {
+    "family": "I",
+    "direction": "up",
+    "text": "TODO \u2014 Industry: Delivery queues grow across the city"
+  },
+  {
+    "family": "I",
+    "direction": "down",
+    "text": "TODO \u2014 Industry: Extra supply reaches the market"
+  },
+  {
+    "family": "I",
+    "direction": "down",
+    "text": "TODO \u2014 Industry: Buyers delay their next orders"
+  },
+  {
+    "family": "I",
+    "direction": "down",
+    "text": "TODO \u2014 Industry: A quiet week leaves stock on shelves"
+  },
+  {
+    "family": "I",
+    "direction": "down",
+    "text": "TODO \u2014 Industry: New suppliers compete for customers"
+  },
+  {
+    "family": "I",
+    "direction": "down",
+    "text": "TODO \u2014 Industry: Demand cools as inventories grow"
+  },
+  {
+    "family": "I",
+    "direction": "down",
+    "text": "TODO \u2014 Industry: A shipment arrives ahead of schedule"
+  },
+  {
+    "family": "I",
+    "direction": "down",
+    "text": "TODO \u2014 Industry: Customers look for cheaper alternatives"
+  },
+  {
+    "family": "E",
+    "direction": "up",
+    "text": "TODO \u2014 Energy/Tech: Demand rises after a busy weekend"
+  },
+  {
+    "family": "E",
+    "direction": "up",
+    "text": "TODO \u2014 Energy/Tech: New orders fill the loading bay"
+  },
+  {
+    "family": "E",
+    "direction": "up",
+    "text": "TODO \u2014 Energy/Tech: Buyers compete for limited stock"
+  },
+  {
+    "family": "E",
+    "direction": "up",
+    "text": "TODO \u2014 Energy/Tech: Local exporters report strong demand"
+  },
+  {
+    "family": "E",
+    "direction": "up",
+    "text": "TODO \u2014 Energy/Tech: A new customer places a major order"
+  },
+  {
+    "family": "E",
+    "direction": "up",
+    "text": "TODO \u2014 Energy/Tech: Suppliers expect a busier season"
+  },
+  {
+    "family": "E",
+    "direction": "up",
+    "text": "TODO \u2014 Energy/Tech: Delivery queues grow across the city"
+  },
+  {
+    "family": "E",
+    "direction": "down",
+    "text": "TODO \u2014 Energy/Tech: Extra supply reaches the market"
+  },
+  {
+    "family": "E",
+    "direction": "down",
+    "text": "TODO \u2014 Energy/Tech: Buyers delay their next orders"
+  },
+  {
+    "family": "E",
+    "direction": "down",
+    "text": "TODO \u2014 Energy/Tech: A quiet week leaves stock on shelves"
+  },
+  {
+    "family": "E",
+    "direction": "down",
+    "text": "TODO \u2014 Energy/Tech: New suppliers compete for customers"
+  },
+  {
+    "family": "E",
+    "direction": "down",
+    "text": "TODO \u2014 Energy/Tech: Demand cools as inventories grow"
+  },
+  {
+    "family": "E",
+    "direction": "down",
+    "text": "TODO \u2014 Energy/Tech: A shipment arrives ahead of schedule"
+  },
+  {
+    "family": "E",
+    "direction": "down",
+    "text": "TODO \u2014 Energy/Tech: Customers look for cheaper alternatives"
+  }
+]

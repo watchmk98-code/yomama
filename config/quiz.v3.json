@@ -1,0 +1,61 @@
+{
+  "_TODO": "PLACEHOLDER QUESTIONS. Replace all five with the real Part 1 quiz before a class runs. Keep the shape: id, prompt, options, answer (0-based index).",
+  "passMark": 4,
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "TODO - Your warehouse is full. What happens to the goods produced after that?",
+      "options": [
+        "They are lost",
+        "They are sold automatically at a 10% discount",
+        "Production stops until you sell",
+        "They go to the next building"
+      ],
+      "answer": 1
+    },
+    {
+      "id": "q2",
+      "prompt": "TODO - The price multiplier reads 1.04. What does that mean?",
+      "options": [
+        "Your goods sell for 4% more than fair value",
+        "You pay 4% tax",
+        "Your building produces 4% faster",
+        "You own 4% of the market"
+      ],
+      "answer": 0
+    },
+    {
+      "id": "q3",
+      "prompt": "TODO - Why does the tax line grow as your income grows?",
+      "options": [
+        "Tax is a flat fee per sale",
+        "Tax is charged on the warehouse, not on income",
+        "Tax is in brackets: higher daily income is taxed at a higher rate",
+        "Tax is random"
+      ],
+      "answer": 2
+    },
+    {
+      "id": "q4",
+      "prompt": "TODO \u2014 What happens to your existing buildings when you expand?",
+      "options": [
+        "They are all sold",
+        "They stop producing",
+        "You keep them, and they keep producing",
+        "Their levels reset"
+      ],
+      "answer": 2
+    },
+    {
+      "id": "q5",
+      "prompt": "TODO - Every student in the class sees the same price multiplier. Why?",
+      "options": [
+        "Prices are one shared market feed for the whole class",
+        "Everyone's building produces the same good",
+        "The teacher sets the price by hand",
+        "Prices are copied from the student in first place"
+      ],
+      "answer": 0
+    }
+  ]
+}

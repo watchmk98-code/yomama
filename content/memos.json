@@ -1,0 +1,122 @@
+{
+  "farm": {
+    "login": "TODO \u2014 Greenfield Farm: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Greenfield Farm: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Greenfield Farm: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Greenfield Farm: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Greenfield Farm: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Greenfield Farm: Staff heard market chatter. It may be wrong."
+  },
+  "fish_stall": {
+    "login": "TODO \u2014 Harbor Fish Stall: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Harbor Fish Stall: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Harbor Fish Stall: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Harbor Fish Stall: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Harbor Fish Stall: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Harbor Fish Stall: Staff heard market chatter. It may be wrong."
+  },
+  "roastery": {
+    "login": "TODO \u2014 Copper Kettle Roastery: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Copper Kettle Roastery: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Copper Kettle Roastery: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Copper Kettle Roastery: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Copper Kettle Roastery: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Copper Kettle Roastery: Staff heard market chatter. It may be wrong."
+  },
+  "garage": {
+    "login": "TODO \u2014 Tinker's Garage: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Tinker's Garage: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Tinker's Garage: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Tinker's Garage: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Tinker's Garage: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Tinker's Garage: Staff heard market chatter. It may be wrong."
+  },
+  "workshop": {
+    "login": "TODO \u2014 Ironworks Shop: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Ironworks Shop: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Ironworks Shop: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Ironworks Shop: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Ironworks Shop: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Ironworks Shop: Staff heard market chatter. It may be wrong."
+  },
+  "solar_coop": {
+    "login": "TODO \u2014 Rooftop Solar Co-op: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Rooftop Solar Co-op: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Rooftop Solar Co-op: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Rooftop Solar Co-op: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Rooftop Solar Co-op: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Rooftop Solar Co-op: Staff heard market chatter. It may be wrong."
+  },
+  "cannery": {
+    "login": "TODO \u2014 Meridian Cannery: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Meridian Cannery: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Meridian Cannery: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Meridian Cannery: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Meridian Cannery: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Meridian Cannery: Staff heard market chatter. It may be wrong."
+  },
+  "machine_works": {
+    "login": "TODO \u2014 Bluecollar Machine Works: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Bluecollar Machine Works: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Bluecollar Machine Works: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Bluecollar Machine Works: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Bluecollar Machine Works: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Bluecollar Machine Works: Staff heard market chatter. It may be wrong."
+  },
+  "turbine_field": {
+    "login": "TODO \u2014 Windward Turbine Field: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Windward Turbine Field: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Windward Turbine Field: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Windward Turbine Field: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Windward Turbine Field: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Windward Turbine Field: Staff heard market chatter. It may be wrong."
+  },
+  "generator": {
+    "login": "TODO \u2014 North Grid Plant: Your team kept the goods moving.",
+    "level25": "TODO \u2014 North Grid Plant: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 North Grid Plant: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 North Grid Plant: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 North Grid Plant: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 North Grid Plant: Staff heard market chatter. It may be wrong."
+  },
+  "relay_station": {
+    "login": "TODO \u2014 Signal Relay Station: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Signal Relay Station: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Signal Relay Station: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Signal Relay Station: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Signal Relay Station: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Signal Relay Station: Staff heard market chatter. It may be wrong."
+  },
+  "freight_terminal": {
+    "login": "TODO \u2014 Atlas Freight Terminal: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Atlas Freight Terminal: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Atlas Freight Terminal: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Atlas Freight Terminal: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Atlas Freight Terminal: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Atlas Freight Terminal: Staff heard market chatter. It may be wrong."
+  },
+  "data_center": {
+    "login": "TODO \u2014 Node-7 Data Hub: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Node-7 Data Hub: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Node-7 Data Hub: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Node-7 Data Hub: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Node-7 Data Hub: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Node-7 Data Hub: Staff heard market chatter. It may be wrong."
+  },
+  "solar_array": {
+    "login": "TODO \u2014 Helios Solar Array: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Helios Solar Array: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Helios Solar Array: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Helios Solar Array: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Helios Solar Array: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Helios Solar Array: Staff heard market chatter. It may be wrong."
+  },
+  "uplink_center": {
+    "login": "TODO \u2014 Orbital Uplink Center: Your team kept the goods moving.",
+    "level25": "TODO \u2014 Orbital Uplink Center: That investment paid for a production milestone.",
+    "level50": "TODO \u2014 Orbital Uplink Center: Maximum level reached. The whole team is celebrating.",
+    "expand": "TODO \u2014 Orbital Uplink Center: Another building joins the collection.",
+    "contractOffer": "TODO \u2014 Orbital Uplink Center: A buyer has sent a delivery request.",
+    "rumour": "TODO \u2014 Orbital Uplink Center: Staff heard market chatter. It may be wrong."
+  }
+}

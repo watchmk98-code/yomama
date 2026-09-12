@@ -1,0 +1,1791 @@
+{
+  "modelVersion": 4,
+  "days": 7,
+  "seed": 7,
+  "configSHA256": "d323c4e863edd4259e3ad1b30e066f80babd80cad998a9dc426c4d8c42402337",
+  "engineSHA256": "c8b1f100032afc99f705ce4f7f6f5f506bcebe9a9dd11521278c3cb9fb56735a",
+  "assumptions": "First visit 10 minutes; then 5 minutes every 2 hours, casual every 12 hours. Upgrades use nominal sales improvement per price; expansion saves for earliest frontier; deliveries reserves missing goods for middle offer. No manual bulk sales, paid boosts or stock gifts.",
+  "results": [
+    {
+      "strategy": "upgrades",
+      "actions": {
+        "upgrades": 179,
+        "expansions": 9,
+        "deliveries": 4
+      },
+      "snapshots": {
+        "10min": {
+          "cash": 46,
+          "worth": 353,
+          "buildings": 1,
+          "materials": 0,
+          "deliveries": 1,
+          "automaticSales": 222,
+          "storedValue": 16,
+          "unitsStored": 3,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 2,
+              "sales": 4
+            }
+          ],
+          "construction": null
+        },
+        "60min": {
+          "cash": 1566,
+          "worth": 1857,
+          "buildings": 1,
+          "materials": 0,
+          "deliveries": 1,
+          "automaticSales": 1742,
+          "storedValue": 0,
+          "unitsStored": 0,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 2,
+              "sales": 4
+            }
+          ],
+          "construction": null
+        },
+        "day1": {
+          "cash": 90004,
+          "worth": 550979,
+          "buildings": 5,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 539396,
+          "storedValue": 11405,
+          "unitsStored": 733,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 11,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 7,
+              "sales": 7
+            }
+          ],
+          "construction": null
+        },
+        "day2": {
+          "cash": 169453,
+          "worth": 1959645,
+          "buildings": 7,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 1937615,
+          "storedValue": 21852,
+          "unitsStored": 1074,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "cannery",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day3": {
+          "cash": 1029319,
+          "worth": 4460569,
+          "buildings": 8,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 4430837,
+          "storedValue": 29554,
+          "unitsStored": 1216,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "cannery",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "machine_works",
+              "production": 5,
+              "sales": 7
+            }
+          ],
+          "construction": null
+        },
+        "day4": {
+          "cash": 518560,
+          "worth": 8209272,
+          "buildings": 9,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 8162094,
+          "storedValue": 47000,
+          "unitsStored": 1406,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "machine_works",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "turbine_field",
+              "production": 5,
+              "sales": 7
+            }
+          ],
+          "construction": null
+        },
+        "day5": {
+          "cash": 582294,
+          "worth": 12672340,
+          "buildings": 9,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 12637062,
+          "storedValue": 35100,
+          "unitsStored": 1115,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "machine_works",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "turbine_field",
+              "production": 7,
+              "sales": 10
+            }
+          ],
+          "construction": null
+        },
+        "day6": {
+          "cash": 1393892,
+          "worth": 17402090,
+          "buildings": 9,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 17363721,
+          "storedValue": 38191,
+          "unitsStored": 1183,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "machine_works",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "turbine_field",
+              "production": 9,
+              "sales": 11
+            }
+          ],
+          "construction": null
+        },
+        "day7": {
+          "cash": 546442,
+          "worth": 23000626,
+          "buildings": 10,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 22912256,
+          "storedValue": 88192,
+          "unitsStored": 1745,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "machine_works",
+              "production": 5,
+              "sales": 7
+            },
+            {
+              "id": "turbine_field",
+              "production": 9,
+              "sales": 11
+            },
+            {
+              "id": "generator",
+              "production": 6,
+              "sales": 7
+            }
+          ],
+          "construction": null
+        }
+      },
+      "firstSaleSec": 30,
+      "firstIncomeSec": 30,
+      "firstUpgradeSec": 150,
+      "firstDeliverySec": 495,
+      "unlocksMinutes": {
+        "farm": 0,
+        "fish_stall": 123.75,
+        "roastery": 126.75,
+        "garage": 610.75,
+        "workshop": 1220.5,
+        "solar_coop": 2310.25,
+        "cannery": 2820.25,
+        "machine_works": 3570.25,
+        "turbine_field": 4680.25,
+        "generator": 9270.25
+      },
+      "offlineSecondsSkipped": 0
+    },
+    {
+      "strategy": "expansion",
+      "actions": {
+        "upgrades": 104,
+        "expansions": 10,
+        "deliveries": 22
+      },
+      "snapshots": {
+        "10min": {
+          "cash": 72,
+          "worth": 387,
+          "buildings": 2,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 166,
+          "storedValue": 56,
+          "unitsStored": 11,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "fish_stall",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "60min": {
+          "cash": 2238,
+          "worth": 3137,
+          "buildings": 2,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 2332,
+          "storedValue": 640,
+          "unitsStored": 125,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "fish_stall",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day1": {
+          "cash": 169927,
+          "worth": 634280,
+          "buildings": 7,
+          "materials": 0,
+          "deliveries": 22,
+          "automaticSales": 604632,
+          "storedValue": 28936,
+          "unitsStored": 1377,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 11,
+              "sales": 10
+            },
+            {
+              "id": "fish_stall",
+              "production": 9,
+              "sales": 10
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 7
+            },
+            {
+              "id": "garage",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "workshop",
+              "production": 3,
+              "sales": 4
+            },
+            {
+              "id": "solar_coop",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "cannery",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day2": {
+          "cash": 840841,
+          "worth": 1937824,
+          "buildings": 8,
+          "materials": 0,
+          "deliveries": 22,
+          "automaticSales": 1896819,
+          "storedValue": 40293,
+          "unitsStored": 1485,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 11
+            },
+            {
+              "id": "fish_stall",
+              "production": 10,
+              "sales": 11
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "garage",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "workshop",
+              "production": 3,
+              "sales": 4
+            },
+            {
+              "id": "solar_coop",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "cannery",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "machine_works",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day3": {
+          "cash": 1149892,
+          "worth": 3747689,
+          "buildings": 9,
+          "materials": 0,
+          "deliveries": 22,
+          "automaticSales": 3679839,
+          "storedValue": 67138,
+          "unitsStored": 1866,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 11
+            },
+            {
+              "id": "fish_stall",
+              "production": 11,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 7
+            },
+            {
+              "id": "workshop",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "solar_coop",
+              "production": 3,
+              "sales": 5
+            },
+            {
+              "id": "cannery",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "machine_works",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "turbine_field",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day4": {
+          "cash": 179975,
+          "worth": 5826542,
+          "buildings": 9,
+          "materials": 0,
+          "deliveries": 22,
+          "automaticSales": 5758886,
+          "storedValue": 66944,
+          "unitsStored": 1862,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 11
+            },
+            {
+              "id": "fish_stall",
+              "production": 11,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 7,
+              "sales": 9
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "solar_coop",
+              "production": 3,
+              "sales": 5
+            },
+            {
+              "id": "cannery",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "machine_works",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "turbine_field",
+              "production": 1,
+              "sales": 2
+            }
+          ],
+          "construction": "generator"
+        },
+        "day5": {
+          "cash": 2997005,
+          "worth": 8862233,
+          "buildings": 10,
+          "materials": 0,
+          "deliveries": 22,
+          "automaticSales": 8759175,
+          "storedValue": 102346,
+          "unitsStored": 1957,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 11
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 7,
+              "sales": 9
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 6,
+              "sales": 7
+            },
+            {
+              "id": "solar_coop",
+              "production": 4,
+              "sales": 6
+            },
+            {
+              "id": "cannery",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "machine_works",
+              "production": 2,
+              "sales": 3
+            },
+            {
+              "id": "turbine_field",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "generator",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day6": {
+          "cash": 246093,
+          "worth": 11868893,
+          "buildings": 10,
+          "materials": 0,
+          "deliveries": 22,
+          "automaticSales": 11765813,
+          "storedValue": 102368,
+          "unitsStored": 1957,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 11
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 8,
+              "sales": 10
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 6,
+              "sales": 7
+            },
+            {
+              "id": "solar_coop",
+              "production": 4,
+              "sales": 6
+            },
+            {
+              "id": "cannery",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "machine_works",
+              "production": 2,
+              "sales": 3
+            },
+            {
+              "id": "turbine_field",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "generator",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": "relay_station"
+        },
+        "day7": {
+          "cash": 4152050,
+          "worth": 16048809,
+          "buildings": 11,
+          "materials": 0,
+          "deliveries": 22,
+          "automaticSales": 15925808,
+          "storedValue": 122289,
+          "unitsStored": 1713,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 11
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 8,
+              "sales": 10
+            },
+            {
+              "id": "garage",
+              "production": 7,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 7,
+              "sales": 7
+            },
+            {
+              "id": "solar_coop",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "cannery",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "machine_works",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "turbine_field",
+              "production": 1,
+              "sales": 3
+            },
+            {
+              "id": "generator",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "relay_station",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        }
+      },
+      "firstSaleSec": 30,
+      "firstIncomeSec": 30,
+      "firstDeliverySec": 225,
+      "firstUpgradeSec": 495,
+      "unlocksMinutes": {
+        "farm": 0,
+        "fish_stall": 8.75,
+        "roastery": 123.25,
+        "garage": 250.25,
+        "workshop": 380.25,
+        "solar_coop": 750.25,
+        "cannery": 1260.25,
+        "machine_works": 2130.25,
+        "turbine_field": 3600.25,
+        "generator": 5790.25,
+        "relay_station": 8700.25
+      },
+      "offlineSecondsSkipped": 0
+    },
+    {
+      "strategy": "deliveries",
+      "actions": {
+        "upgrades": 181,
+        "expansions": 8,
+        "deliveries": 900
+      },
+      "snapshots": {
+        "10min": {
+          "cash": 66,
+          "worth": 488,
+          "buildings": 2,
+          "materials": 0,
+          "deliveries": 13,
+          "automaticSales": 74,
+          "storedValue": 99,
+          "unitsStored": 26,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 1,
+              "sales": 1
+            },
+            {
+              "id": "fish_stall",
+              "production": 2,
+              "sales": 2
+            }
+          ],
+          "construction": null
+        },
+        "60min": {
+          "cash": 1553,
+          "worth": 3137,
+          "buildings": 2,
+          "materials": 0,
+          "deliveries": 13,
+          "automaticSales": 1561,
+          "storedValue": 1261,
+          "unitsStored": 247,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 1,
+              "sales": 1
+            },
+            {
+              "id": "fish_stall",
+              "production": 2,
+              "sales": 2
+            }
+          ],
+          "construction": null
+        },
+        "day1": {
+          "cash": 63056,
+          "worth": 337537,
+          "buildings": 4,
+          "materials": 66,
+          "deliveries": 182,
+          "automaticSales": 318102,
+          "storedValue": 6940,
+          "unitsStored": 657,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 10,
+              "sales": 11
+            }
+          ],
+          "construction": null
+        },
+        "day2": {
+          "cash": 142945,
+          "worth": 1434113,
+          "buildings": 6,
+          "materials": 115,
+          "deliveries": 303,
+          "automaticSales": 1383033,
+          "storedValue": 19371,
+          "unitsStored": 1177,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 11,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 11,
+              "sales": 11
+            },
+            {
+              "id": "solar_coop",
+              "production": 6,
+              "sales": 8
+            }
+          ],
+          "construction": null
+        },
+        "day3": {
+          "cash": 292813,
+          "worth": 3117089,
+          "buildings": 7,
+          "materials": 177,
+          "deliveries": 471,
+          "automaticSales": 3022673,
+          "storedValue": 29355,
+          "unitsStored": 1391,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 8,
+              "sales": 10
+            },
+            {
+              "id": "cannery",
+              "production": 6,
+              "sales": 8
+            }
+          ],
+          "construction": null
+        },
+        "day4": {
+          "cash": 273000,
+          "worth": 5444755,
+          "buildings": 7,
+          "materials": 233,
+          "deliveries": 563,
+          "automaticSales": 5335943,
+          "storedValue": 22469,
+          "unitsStored": 1106,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 8,
+              "sales": 11
+            }
+          ],
+          "construction": null
+        },
+        "day5": {
+          "cash": 753359,
+          "worth": 8480782,
+          "buildings": 8,
+          "materials": 245,
+          "deliveries": 679,
+          "automaticSales": 8330216,
+          "storedValue": 34370,
+          "unitsStored": 1672,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 9,
+              "sales": 11
+            },
+            {
+              "id": "machine_works",
+              "production": 7,
+              "sales": 9
+            }
+          ],
+          "construction": null
+        },
+        "day6": {
+          "cash": 313861,
+          "worth": 11934878,
+          "buildings": 8,
+          "materials": 296,
+          "deliveries": 778,
+          "automaticSales": 11759554,
+          "storedValue": 34044,
+          "unitsStored": 1505,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "machine_works",
+              "production": 9,
+              "sales": 11
+            }
+          ],
+          "construction": null
+        },
+        "day7": {
+          "cash": 970165,
+          "worth": 16185063,
+          "buildings": 9,
+          "materials": 280,
+          "deliveries": 900,
+          "automaticSales": 15936899,
+          "storedValue": 66566,
+          "unitsStored": 2126,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "garage",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "workshop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "solar_coop",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "cannery",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "machine_works",
+              "production": 9,
+              "sales": 11
+            },
+            {
+              "id": "turbine_field",
+              "production": 6,
+              "sales": 7
+            }
+          ],
+          "construction": null
+        }
+      },
+      "firstDeliverySec": 90,
+      "firstIncomeSec": 90,
+      "firstUpgradeSec": 450,
+      "firstSaleSec": 465,
+      "unlocksMinutes": {
+        "farm": 0,
+        "fish_stall": 7.0,
+        "roastery": 125.0,
+        "garage": 850.75,
+        "workshop": 1580.5,
+        "solar_coop": 2550.25,
+        "cannery": 3780.25,
+        "machine_works": 6210.25,
+        "turbine_field": 9120.25
+      },
+      "offlineSecondsSkipped": 0
+    },
+    {
+      "strategy": "casual",
+      "actions": {
+        "upgrades": 102,
+        "expansions": 9,
+        "deliveries": 25
+      },
+      "snapshots": {
+        "10min": {
+          "cash": 72,
+          "worth": 387,
+          "buildings": 2,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 166,
+          "storedValue": 56,
+          "unitsStored": 11,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "fish_stall",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "60min": {
+          "cash": 2238,
+          "worth": 3137,
+          "buildings": 2,
+          "materials": 0,
+          "deliveries": 4,
+          "automaticSales": 2332,
+          "storedValue": 640,
+          "unitsStored": 125,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "fish_stall",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day1": {
+          "cash": 155419,
+          "worth": 171765,
+          "buildings": 4,
+          "materials": 6,
+          "deliveries": 19,
+          "automaticSales": 163721,
+          "storedValue": 6829,
+          "unitsStored": 627,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 6,
+              "sales": 5
+            },
+            {
+              "id": "fish_stall",
+              "production": 4,
+              "sales": 5
+            },
+            {
+              "id": "roastery",
+              "production": 2,
+              "sales": 3
+            },
+            {
+              "id": "garage",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day2": {
+          "cash": 590626,
+          "worth": 1042088,
+          "buildings": 7,
+          "materials": 0,
+          "deliveries": 25,
+          "automaticSales": 1021733,
+          "storedValue": 18970,
+          "unitsStored": 879,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 10,
+              "sales": 9
+            },
+            {
+              "id": "fish_stall",
+              "production": 8,
+              "sales": 10
+            },
+            {
+              "id": "roastery",
+              "production": 4,
+              "sales": 6
+            },
+            {
+              "id": "garage",
+              "production": 4,
+              "sales": 6
+            },
+            {
+              "id": "workshop",
+              "production": 3,
+              "sales": 4
+            },
+            {
+              "id": "solar_coop",
+              "production": 1,
+              "sales": 3
+            },
+            {
+              "id": "cannery",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day3": {
+          "cash": 1358341,
+          "worth": 2420954,
+          "buildings": 8,
+          "materials": 0,
+          "deliveries": 25,
+          "automaticSales": 2383748,
+          "storedValue": 35821,
+          "unitsStored": 1275,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 11,
+              "sales": 10
+            },
+            {
+              "id": "fish_stall",
+              "production": 10,
+              "sales": 10
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 7
+            },
+            {
+              "id": "garage",
+              "production": 4,
+              "sales": 6
+            },
+            {
+              "id": "workshop",
+              "production": 3,
+              "sales": 4
+            },
+            {
+              "id": "solar_coop",
+              "production": 1,
+              "sales": 3
+            },
+            {
+              "id": "cannery",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "machine_works",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day4": {
+          "cash": 1541371,
+          "worth": 4167997,
+          "buildings": 9,
+          "materials": 0,
+          "deliveries": 25,
+          "automaticSales": 4102025,
+          "storedValue": 64587,
+          "unitsStored": 1717,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 10
+            },
+            {
+              "id": "fish_stall",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "solar_coop",
+              "production": 3,
+              "sales": 5
+            },
+            {
+              "id": "cannery",
+              "production": 2,
+              "sales": 3
+            },
+            {
+              "id": "machine_works",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "turbine_field",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day5": {
+          "cash": 3666899,
+          "worth": 6294052,
+          "buildings": 9,
+          "materials": 0,
+          "deliveries": 25,
+          "automaticSales": 6227553,
+          "storedValue": 65114,
+          "unitsStored": 1767,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 10
+            },
+            {
+              "id": "fish_stall",
+              "production": 10,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "solar_coop",
+              "production": 3,
+              "sales": 5
+            },
+            {
+              "id": "cannery",
+              "production": 2,
+              "sales": 3
+            },
+            {
+              "id": "machine_works",
+              "production": 1,
+              "sales": 2
+            },
+            {
+              "id": "turbine_field",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day6": {
+          "cash": 3443893,
+          "worth": 9660744,
+          "buildings": 10,
+          "materials": 0,
+          "deliveries": 25,
+          "automaticSales": 9593012,
+          "storedValue": 66347,
+          "unitsStored": 1373,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 10
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 7,
+              "sales": 8
+            },
+            {
+              "id": "solar_coop",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "cannery",
+              "production": 3,
+              "sales": 5
+            },
+            {
+              "id": "machine_works",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "turbine_field",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "generator",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        },
+        "day7": {
+          "cash": 6822391,
+          "worth": 13035783,
+          "buildings": 10,
+          "materials": 0,
+          "deliveries": 25,
+          "automaticSales": 12971510,
+          "storedValue": 62888,
+          "unitsStored": 1319,
+          "levels": [
+            {
+              "id": "farm",
+              "production": 12,
+              "sales": 10
+            },
+            {
+              "id": "fish_stall",
+              "production": 12,
+              "sales": 12
+            },
+            {
+              "id": "roastery",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "garage",
+              "production": 6,
+              "sales": 8
+            },
+            {
+              "id": "workshop",
+              "production": 7,
+              "sales": 8
+            },
+            {
+              "id": "solar_coop",
+              "production": 5,
+              "sales": 6
+            },
+            {
+              "id": "cannery",
+              "production": 3,
+              "sales": 5
+            },
+            {
+              "id": "machine_works",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "turbine_field",
+              "production": 2,
+              "sales": 4
+            },
+            {
+              "id": "generator",
+              "production": 1,
+              "sales": 1
+            }
+          ],
+          "construction": null
+        }
+      },
+      "firstSaleSec": 30,
+      "firstIncomeSec": 30,
+      "firstDeliverySec": 225,
+      "firstUpgradeSec": 495,
+      "unlocksMinutes": {
+        "farm": 0,
+        "fish_stall": 8.75,
+        "roastery": 723.25,
+        "garage": 733.25,
+        "workshop": 1460.25,
+        "solar_coop": 1490.25,
+        "cannery": 2220.25,
+        "machine_works": 2970.25,
+        "turbine_field": 5160.25,
+        "generator": 7350.25
+      },
+      "offlineSecondsSkipped": 0
+    }
+  ]
+}
