@@ -969,6 +969,22 @@ def load_buildings(query) -> dict:
             return {"buildings": {}}
 
 
+def token_may_browse(token) -> bool:
+    """server.py asks this before serving a page: the browser's cookie must be
+    the token of a seat that still exists, in a class that is still active."""
+    if not isinstance(token, str) or not token:
+        return False
+    with _db_lock, connect() as conn:
+        p = _player_by_token(conn, token)
+        if p is None:
+            return False
+        try:
+            _session_of(conn, p["code"])
+        except ApiError:
+            return False
+    return True
+
+
 # ----------------------------------------------------------------- teacher ---
 
 def teacher_login(body) -> dict:

@@ -317,6 +317,8 @@
               localStorage.setItem('yomama_session_v1',
                 JSON.stringify({ token: j.token, name: j.name, code: j.code }));
             } catch (e) {}
+            // the server serves pages by cookie; yomama-net.js keeps it in step
+            if (window.YomamaNet && window.YomamaNet.syncCookie) window.YomamaNet.syncCookie();
             showSeat(j.name);
             return d;
           }).catch(function (err) {

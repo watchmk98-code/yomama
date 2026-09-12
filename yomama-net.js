@@ -52,6 +52,18 @@
     try { window.localStorage.removeItem(key); } catch (_) {}
   }
 
+  // The server serves a page only to a browser whose cookie is the token of a
+  // live seat (server.py PUBLIC_PAGES). localStorage is what the pages read;
+  // the cookie is what the server reads. Keep the two in step.
+  var SESSION_COOKIE = 'yomama_session';
+  function setSessionCookie(token) {
+    try {
+      var secure = window.location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = SESSION_COOKIE + '=' + encodeURIComponent(token || '') +
+        '; Path=/; Max-Age=' + (token ? 30 * 86400 : 0) + '; SameSite=Lax' + secure;
+    } catch (_) {}
+  }
+
   function localEconomy() {
     var save = readJson(PLAYER_SAVE_KEY);
     return (save && save.economyV01 && typeof save.economyV01 === 'object') ? save.economyV01 : null;
@@ -91,6 +103,7 @@
     return null;
   }
   session = loadSession();
+  if (session && session.token) setSessionCookie(session.token);   // pages need the cookie, not just storage
 
   // ------------------------------------------------------------- transport
   function request(method, path, body) {
@@ -167,6 +180,7 @@
       return request('POST', '/join', { code: code, name: name, pin: pin }).then(function (data) {
         session = { token: data.token, name: data.name, code: data.code };
         writeJson(SESSION_KEY, session);
+        setSessionCookie(session.token);
         live = true;
         return data;
       });
@@ -175,6 +189,13 @@
     leave: function () {
       session = null; live = false; lastState = null;
       clearKey(SESSION_KEY); clearKey(CASH_MIRROR_KEY);
+      setSessionCookie('');
+    },
+
+    /** Re-read the stored seat and refresh the cookie; class.html seats itself outside join(). */
+    syncCookie: function () {
+      var s = readJson(SESSION_KEY);
+      if (s && s.token) { session = s; setSessionCookie(s.token); }
     },
 
     /** One round trip for everything a page needs. */

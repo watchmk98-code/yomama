@@ -10,7 +10,11 @@
      happens on its own, so a student who walks away is signed out before
      the next one sits down. Set window.YOMAMA_IDLE_MINUTES before this
      script loads to change it; 0 disables it.
-   - Logging out in one tab signs out every other tab of this browser. */
+   - Logging out in one tab signs out every other tab of this browser.
+   - The server only serves pages to a browser with a live seat cookie
+     (server.py PUBLIC_PAGES). This script is the belt to that: a page that
+     is open without a seat - a cached copy, a back-button restore - goes to
+     join.html as well. */
 (function () {
   'use strict';
   var SESSION_KEY = 'yomama_session_v1';
@@ -25,6 +29,14 @@
   function clearAll() {
     try { if (window.YomamaNet && window.YomamaNet.leave) window.YomamaNet.leave(); } catch (e) {}
     KEYS.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    try {   // the cookie the server reads; yomama-net.js clears it too when it is loaded
+      document.cookie = 'yomama_session=; Path=/; Max-Age=0; SameSite=Lax' +
+        (window.location.protocol === 'https:' ? '; Secure' : '');
+    } catch (e) {}
+  }
+  function toSignIn() {
+    var here = window.location.pathname + window.location.search;
+    window.location.replace(JOIN + '?next=' + encodeURIComponent(here));
   }
   function logout(reason) {
     clearAll();
@@ -80,6 +92,8 @@
     label(); armIdle();
   });
 
+  if (!signedIn()) { toSignIn(); return; }
+  window.addEventListener('pageshow', function (ev) { if (ev.persisted && !signedIn()) toSignIn(); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', label); else label();
   window.addEventListener('yomama:econ', label);     // econ.js redraws the header on updates
   armIdle();

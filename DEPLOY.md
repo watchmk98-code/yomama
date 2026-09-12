@@ -77,3 +77,8 @@ press **Manual Deploy** between classes.
   the socket.
 - `game.db`, `.git`, `*.py`, the quiz answer key under `config/` and every
   other non-page file are never served.
+- No page but the two login screens (`join.html`, `class.html`) is served to
+  a browser without the `yomama_session` cookie of a live seat in an active
+  class; everyone else gets a 302 to `join.html?next=<page>`. Assets stay
+  public. LOG OUT clears the cookie; a browser idle for twenty minutes is
+  signed out on its own.

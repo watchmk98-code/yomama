@@ -62,6 +62,9 @@ client-side economy. They are off the navigation but still on disk.
   Students join from `join.html` with the class code, a name and a 4-digit PIN;
   the teacher opens `class.html` with the teacher code. Without a class the
   economy screens say so.
+- Every page except `join.html` and `class.html` needs a signed-in seat: the
+  server sends anyone else to `join.html`, and back to the page they wanted
+  once they have signed in.
 - LOG OUT (top right of every page) signs the browser out so the next person
   can sign in; a browser idle for 20 minutes is signed out on its own.
 - Money, buildings and prices live on the server, not in the browser. Only

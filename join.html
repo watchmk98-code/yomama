@@ -76,6 +76,13 @@
       var foot = document.getElementById('join-foot');
       var net = window.YomamaNet;
 
+      // The server sends a browser without a seat here with ?next=<the page it
+      // wanted>. Only a path on this site is honoured, never another origin.
+      var next = (window.location.search.match(/[?&]next=([^&]*)/) || [])[1];
+      try { next = next ? decodeURIComponent(next) : ''; } catch (e) { next = ''; }
+      if (!/^\/[^\/\\]/.test(next) || /\/join\.html/.test(next)) next = '';
+      var afterJoin = next || './buildings.html';
+
       // account.js sends people here after LOG OUT or an idle sign-out.
       var why = (window.location.search.match(/[?&]signedout=([^&]*)/) || [])[1];
       if (why === 'idle') say('You were signed out after a while without activity. Sign in again to continue.', 'info');
@@ -94,6 +101,15 @@
         });
         codeEl.value = s.code;
         nameEl.value = s.name;
+        // Sent here for a page while already signed in (the cookie was missing,
+        // say): confirm the seat still exists, then go straight on.
+        if (next) {
+          say('Checking your seat...', 'info');
+          net.connect().then(function (live) {
+            if (live) window.location.replace(next);
+            else { foot.textContent = ''; say('Your seat is no longer valid. Sign in again.', 'err'); }
+          });
+        }
       }
 
       var pinEl = document.getElementById('join-pin');
@@ -113,7 +129,7 @@
           say(res.rejoined
             ? 'Welcome back, ' + res.name + '. Restoring your base...'
             : 'Joined class ' + res.code + '. Setting up your base...', 'ok');
-          window.setTimeout(function () { window.location.href = './buildings.html'; }, 700);
+          window.setTimeout(function () { window.location.href = afterJoin; }, 700);
         }).catch(function (err) {
           btn.disabled = false;
           var m = (err && err.message) || 'Could not reach the server.';

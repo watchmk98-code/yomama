@@ -13,7 +13,8 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, unquote, urlencode, urlparse
+from http.cookies import SimpleCookie
+from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 import game_api
@@ -168,6 +169,22 @@ PUBLIC_SUFFIXES = frozenset({
 })
 
 
+# A browser may load these two before signing in: the students' and the
+# teachers' login screens. Every other page needs the session cookie that
+# join.html sets, and the seat behind it must be live in an active class.
+# Assets (css, js, images) stay public: the login screens need them and they
+# hold nothing personal. The API has its own token checks.
+SESSION_COOKIE = "yomama_session"
+PUBLIC_PAGES = frozenset({"/join.html", "/class.html"})
+
+
+def needs_sign_in(url_path: str) -> bool:
+    path = unquote(url_path.split("?", 1)[0].split("#", 1)[0])
+    if path in ("", "/"):
+        path = "/index.html"
+    return path.lower().endswith(".html") and path.lower() not in PUBLIC_PAGES
+
+
 def is_public_path(url_path: str) -> bool:
     """True when this request may be served off disk."""
     path = unquote(url_path.split("?", 1)[0].split("#", 1)[0])
@@ -221,13 +238,39 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         if not is_public_path(parsed.path):
             self.send_error(404, "Not Found")
             return
+        if self.sent_to_sign_in(parsed):
+            return
         super().do_GET()
 
     def do_HEAD(self) -> None:
-        if not is_public_path(urlparse(self.path).path):
+        parsed = urlparse(self.path)
+        if not is_public_path(parsed.path):
             self.send_error(404, "Not Found")
             return
+        if self.sent_to_sign_in(parsed):
+            return
         super().do_HEAD()
+
+    def signed_in(self) -> bool:
+        cookie = SimpleCookie()
+        try:
+            cookie.load(self.headers.get("Cookie", ""))
+        except Exception:  # noqa: BLE001 - a malformed cookie is just "not signed in"
+            return False
+        morsel = cookie.get(SESSION_COOKIE)
+        return bool(morsel) and game_api.token_may_browse(morsel.value)
+
+    def sent_to_sign_in(self, parsed) -> bool:
+        """True when a redirect to the login screen was sent instead of the page."""
+        if not needs_sign_in(parsed.path) or self.signed_in():
+            return False
+        wanted = parsed.path + ("?" + parsed.query if parsed.query else "")
+        self.send_response(302)
+        self.send_header("Location", "/join.html?next=" + quote(wanted, safe=""))
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+        return True
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
