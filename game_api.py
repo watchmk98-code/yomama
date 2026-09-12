@@ -111,6 +111,12 @@ CREATE TABLE IF NOT EXISTS ledger (
     detail    TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ledger_code ON ledger(code, at);
+CREATE TABLE IF NOT EXISTS standings (
+    player_id INTEGER NOT NULL,
+    day       INTEGER NOT NULL,
+    net_worth INTEGER NOT NULL,
+    PRIMARY KEY (player_id, day)
+);
 """
 
 # Columns added after the first release. SQLite cannot express them in
@@ -239,8 +245,13 @@ def _load_state(player, cfg, session):
 def _save_state(conn, player_id, cfg, st):
     core={k:v for k,v in st.items() if k not in _META_KEYS}
     meta={k:v for k,v in st.items() if k in _META_KEYS}
+    nw=economy.net_worth(st)
     conn.execute('UPDATE players SET econ=?, econ_meta=?, econ_nw=? WHERE id=?',
-                 (json.dumps(core,separators=(',',':')),json.dumps(meta,separators=(',',':')),economy.net_worth(st),player_id))
+                 (json.dumps(core,separators=(',',':')),json.dumps(meta,separators=(',',':')),nw,player_id))
+    # The first save of each day fixes that day's opening figure; the LEAD page
+    # shows each seat's gain since today's, this week's and this month's.
+    conn.execute('INSERT OR IGNORE INTO standings(player_id, day, net_worth) VALUES (?,?,?)',
+                 (player_id,int(time.time()//86400),int(nw)))
 
 
 def _save_world(conn, session, cls):
@@ -336,8 +347,10 @@ def econ_payload(cfg, st, cls, session, behind=False):
     if cfg.get('version') == 4:
         result = economy.payload(cfg, st, cls, session, behind)
         result['breakfastEvent'] = breakfast_event.payload(st, cls['nextTick'] * cfg['global']['tick'])
-        return result
-    return _legacy_econ_payload(cfg, st, cls, session, behind)
+    else:
+        result = _legacy_econ_payload(cfg, st, cls, session, behind)
+    result['classCompetition'] = session['code'] != SOLO_CODE
+    return result
 
 
 def _legacy_econ_payload(cfg, st, cls, session, behind=False):
@@ -584,9 +597,32 @@ def _leaderboard(conn, code: str, me_id: int) -> list:
     Read from the cached column so one student's poll does not replay the whole
     class; each student's own figure is refreshed as they play.
     """
-    board = [{"name": r["name"], "net_worth": int(r["econ_nw"]), "you": r["id"] == me_id}
-             for r in conn.execute("SELECT id, name, econ_nw FROM players WHERE code=?", (code,))]
-    board.sort(key=lambda x: -x["net_worth"])
+    if code == SOLO_CODE:
+        return []
+    today = int(time.time() // 86400)
+    openings = {}
+    for r in conn.execute("SELECT s.player_id, s.day, s.net_worth FROM standings s"
+                          " JOIN players p ON p.id = s.player_id WHERE p.code=?", (code,)):
+        openings.setdefault(r["player_id"], {})[int(r["day"])] = int(r["net_worth"])
+
+    def baseline(pid, days, now_nw):
+        """The figure a period started from: the latest opening at or before the
+        period's first day, else the earliest one inside it, else now (no gain)."""
+        snaps = openings.get(pid, {})
+        start = today - days + 1
+        before = [d for d in snaps if d <= start]
+        if before:
+            return snaps[max(before)]
+        within = [d for d in snaps if d > start]
+        return snaps[min(within)] if within else now_nw
+
+    board = []
+    for r in conn.execute("SELECT id, name, econ_nw FROM players WHERE code=?", (code,)):
+        nw = int(r["econ_nw"])
+        board.append({"name": r["name"], "net_worth": nw, "you": r["id"] == me_id,
+                      "gain": {key: nw - baseline(r["id"], days, nw)
+                               for key, days in (("daily", 1), ("weekly", 7), ("monthly", 30))}})
+    board.sort(key=lambda x: (-x["net_worth"], x["name"]))
     for i, entry in enumerate(board):
         entry["rank"] = i + 1
     return board
@@ -615,7 +651,7 @@ def get_state(query) -> dict:
                        "net_worth": economy.net_worth(cfg, st),
                        "wallet_cash": round(float(p["cash"]), 2)},
             "session": {"code": p["code"], "minute": minute, "paused": bool(s["paused"]),
-                        "tick": st["tick"]},
+                        "tick": st["tick"], "classCompetition": p["code"] != SOLO_CODE},
             "econ": econ_payload(cfg, st, book, s, behind),
             "equities": [{"symbol": sym, "name": c["name"], "price": equity_price(sym, seed, minute)}
                          for sym, c in EQUITIES.items()],
@@ -1015,6 +1051,7 @@ def reset_class(code: str) -> dict:
         for p in players:
             st = economy.new_state(cfg, 0, seed=cfg["global"]["seed"] * 48611 + p["id"] * 7 + 5)
             conn.execute("UPDATE players SET cash=?, buildings='{}' WHERE id=?", (STARTING_CASH, p["id"]))
+            conn.execute("DELETE FROM standings WHERE player_id=?", (p["id"],))   # gains start over too
             _save_state(conn, p["id"], cfg, st)
             conn.execute("DELETE FROM positions WHERE player_id=?", (p["id"],))
         _log(conn, code, None, "admin_reset_class", {"players": len(players), "version": cfg.get("version")})
@@ -1116,6 +1153,7 @@ def teacher(body) -> dict:
             cfg = econ_config(s)
             st = economy.new_state(cfg, econ_tick_now(cfg, s))
             conn.execute("UPDATE players SET cash=?, buildings='{}' WHERE id=?", (STARTING_CASH, row['id']))
+            conn.execute("DELETE FROM standings WHERE player_id=?", (row['id'],))
             _save_state(conn,row['id'],cfg,st)
             conn.execute("DELETE FROM positions WHERE player_id=?", (row["id"],))
             _log(conn, code, row["id"], "reset_player", {"name": name})
