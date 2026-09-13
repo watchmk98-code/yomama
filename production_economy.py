@@ -11,6 +11,7 @@ import json
 import math
 from pathlib import Path
 from delivery_recipes import ORDER_RECIPES
+import business_activity
 import earnings
 import town_projects
 import economy as legacy
@@ -93,6 +94,7 @@ def new_state(cfg, start_tick=0, seed=1):
                           overflowSold=0,overflowCost=0,builds=0,offlineTicksSkipped=0))
     _customer_defaults(st)
     earnings.ensure(st)
+    business_activity.ensure(st)
     town_projects.default(cfg,st)
     offer_contracts(cfg,st,start_tick)
     return st
@@ -108,6 +110,7 @@ def migrate_state(cfg, st, tick=None):
     if not isinstance(st,State): st=State(st)
     st.setdefault('orderRecipeHistory',[[],[],[]])
     earnings.ensure(st)
+    business_activity.ensure(st)
     # Existing v4 towns gain an empty roster without resetting their economy.
     _customer_defaults(st)
     if st.get('modelVersion')==4:
@@ -143,6 +146,7 @@ def migrate_state(cfg, st, tick=None):
         if st.get('build'): st['build']['t']+=delta
         st['tick']=tick;st['lastActiveTick']=tick
     earnings.prune(cfg,st,clear=True)
+    business_activity.prune(cfg,st,clear=True)
     town_projects.migrate(cfg,st)
     offer_contracts(cfg,st,st.get('tick',0))
     return st
@@ -188,16 +192,45 @@ def town_income(cfg,st):
     return sum(r['retail']*goods[gid]['unitPrice'] for gid,r in rates.items())+regulars['incomePerMinute']
 
 
+def _upgrade_capacity(cfg,st,slot,kind):
+    """Installed capacity, before stock, ingredients or reservations limit it."""
+    if kind=='storage': return _capacity(cfg,st,slot)
+    b=st['b'][slot];goods=cfg['tiers'][st['tierOf'][slot]]['goods']
+    if kind=='production':
+        rate=sum(product_speed(cfg,st,b,good)/100*good['quantity']*60/
+                 (good['cycleTicks']*cfg['global']['tick']) for good in goods)
+    else:
+        rate=sum(customer_demand(cfg,st,b)/10000*60/
+                 (good['cycleTicks']*cfg['global']['tick']) for good in goods)
+    return round(rate,2)
+
+
 def upgrade_preview(cfg,st,slot,kind):
     after=copy.deepcopy(st);key={'production':'lv','sales':'sales','storage':'storage'}[kind]
     after['b'][slot][key]+=1
+    before_capacity=_upgrade_capacity(cfg,st,slot,kind)
+    after_capacity=_upgrade_capacity(cfg,after,slot,kind)
+    unit={'production':'goods/min','sales':'walk-ins/min','storage':'spaces'}[kind]
     delta=round(town_income(cfg,after)-town_income(cfg,st),2)
     if kind=='storage':
         message=f'+{_capacity(cfg,after,slot)-_capacity(cfg,st,slot)} spaces · income unchanged'
     elif delta!=0: message=f'Est. ongoing income {delta:+g} YM/min'
-    else: message='Income unchanged · more stock' if kind=='production' else 'Supply limits income'
+    else:
+        b=st['b'][slot];goods=cfg['tiers'][st['tierOf'][slot]]['goods']
+        if kind=='sales':
+            message=('Walk-in sales paused · release saved goods to use more customers' if b['reserve']
+                     else 'Supply limits income · produce more goods')
+        elif any(st['inventory'].get(good['id'],0)+good['quantity']>_good_capacity(cfg,st,slot,good['id']) for good in goods):
+            message='Some shelves are full · sell goods to use extra capacity'
+        elif not b.get('processing',True) and any(good.get('inputs') for good in goods):
+            message='Processing paused · resume recipes to use extra capacity'
+        elif any(st.get('productionBlocked',{}).get(good['id'],{}).get('reason')=='ingredient' for good in goods):
+            message='Ingredients limit output · supply the recipes'
+        else: message='Customer demand limits income · extra output goes to stock'
     unlocks=kind=='production' and after['b'][slot]['lv']==3 and bool(focus_options(cfg,after['b'][slot]))
-    return dict(incomeDelta=delta,consequence=message,unlocksSpecialty=unlocks)
+    return dict(incomeDelta=delta,consequence=message,unlocksSpecialty=unlocks,
+                capacityBefore=before_capacity,capacityAfter=after_capacity,capacityUnit=unit,
+                effect=f'{before_capacity:g} → {after_capacity:g} {unit}')
 
 
 def customer_demand(cfg, st, b):
@@ -262,8 +295,8 @@ def chain_reservations(cfg,st):
     return protected
 
 
-def _produce(cfg,st):
-    inv=st['inventory'];pwork=st['productionWork'];made=0;value=0
+def _produce(cfg,st,tick=None):
+    inv=st['inventory'];pwork=st['productionWork'];made=0;value=0;by_building={}
     held=order_reservations(st)
     st['productionBlocked']={}
     # Tier order is stable and dependency edges always point to an earlier good.
@@ -285,12 +318,14 @@ def _produce(cfg,st):
                 for n in needs: inv[n['goodId']]-=n['quantity']
                 inv[gid]=inv.get(gid,0)+good['quantity']
                 made+=good['quantity'];value+=good['quantity']*good['unitPrice'];work-=denom
+                by_building[slot]=by_building.get(slot,0)+good['quantity']
             pwork[gid]=work
     st['report']['produced']+=value;st['report']['unitsProduced']+=made
+    business_activity.record(cfg,st,'production',by_building,tick=tick)
 
 
 def _retail(cfg,st,tick=None):
-    inv=st['inventory'];protected=protected_stock(cfg,st);earned=sold=0;by_building={}
+    inv=st['inventory'];protected=protected_stock(cfg,st);earned=sold=0;by_building={};units_by_building={}
     for slot,b in enumerate(st['b']):
         slot_income=0
         for good in cfg['tiers'][st['tierOf'][slot]]['goods']:
@@ -304,6 +339,7 @@ def _retail(cfg,st,tick=None):
             if take:
                 inv[gid]-=take;gross=take*good['unitPrice']
                 earned+=gross;slot_income+=gross;sold+=take;work-=take*denom
+                units_by_building[slot]=units_by_building.get(slot,0)+take
             st['salesWork'][gid]=work%denom
         by_building[slot]=slot_income
         history=st.setdefault('recentRetail',{}).setdefault(str(slot),[])
@@ -312,12 +348,13 @@ def _retail(cfg,st,tick=None):
     st['cash']+=earned
     st['report']['retailEarned']+=earned;st['report']['unitsSold']+=sold
     earnings.record(cfg,st,'walkIns',earned,tick=tick,by_building=by_building)
+    business_activity.record(cfg,st,'walkIns',units_by_building,tick=tick)
 
 
 def player_tick(cfg,cls,st,k):
     if st.get('build') is not None and k>=st['build']['t']:
         finish_build(cfg,st,k)
-    _produce(cfg,st);_tick_customer_contracts(cfg,st,k+1);_retail(cfg,st,k+1);_sync_pools(cfg,st)
+    _produce(cfg,st,k+1);_tick_customer_contracts(cfg,st,k+1);_retail(cfg,st,k+1);_sync_pools(cfg,st)
     st['tick']=k+1
 
 
@@ -354,6 +391,7 @@ def advance_class(cfg,cls,players,start,target):
             st['report']['offlineTicksSkipped']+=skipped
             st['recentRetail']={}
             earnings.prune(cfg,st,tick=target,clear=True)
+            business_activity.prune(cfg,st,tick=target,clear=True)
             # Production beyond the absence cap is never paid or caught up.
             # Preserve the interval remaining at the cap for the next visit.
             for contract in st.get('customerContracts',{}).get('active',[]):
@@ -638,6 +676,7 @@ def _tick_customer_contracts(cfg,st,tick):
         for need in contract['requirements']: st['inventory'][need['goodId']]-=need['quantity']
         st['cash']+=contract['reward']
         earnings.record_goods(cfg,st,'regularBuyers',contract['reward'],contract['requirements'],tick=tick)
+        business_activity.record_regular_shipment(cfg,st,contract['requirements'],tick=tick)
         contract['deliveries']+=1;contract['earned']+=contract['reward']
         data['deliveries']+=1;data['earned']+=contract['reward']
         st['report']['customerEarned']+=contract['reward']
@@ -936,6 +975,7 @@ def payload(cfg,st,cls,session,behind=False):
     _sync_pools(cfg,st)
     g=cfg['global'];goods=catalog(cfg);rates,regular_flow=_flows(cfg,st);protected=protected_stock(cfg,st)
     receipts=earnings.payload(cfg,st)
+    activity=business_activity.payload(cfg,st)
     buildings=[];board=[];inventory=st['inventory']
     for slot,b in enumerate(st['b']):
         ti=st['tierOf'][slot];t=cfg['tiers'][ti];rows=[]
@@ -981,10 +1021,11 @@ def payload(cfg,st,cls,session,behind=False):
             if cost is not None: upgrades[kind].update(upgrade_preview(cfg,st,slot,kind))
         clear_qty=sum(max(0,inventory.get(x['id'],0)-protected.get(x['id'],0)) for x in t['goods'])
         clear_value=sum(max(0,inventory.get(x['id'],0)-protected.get(x['id'],0))*x['unitPrice'] for x in t['goods'])*cfg['production']['clearStockPercent']//100
-        item=dict(earnings=shop_receipts,slot=slot,tier=ti,id=t['id'],name=t['name'],family=t['family'],lv=b['lv'],
+        item=dict(earnings=shop_receipts,activity=activity['byBuilding'][str(slot)],slot=slot,tier=ti,id=t['id'],name=t['name'],family=t['family'],lv=b['lv'],
                   maxed=upgrades['production']['cost'] is None,auto=b['sales'],autoLabel='Customers '+str(b['sales']),
                   revenuePerTick=jsround(income*g['tick']/60),productionPerMinute=round(production,2),
-                  salesPerMinute=round(sales,2),customerCapacityPerMinute=round(sum(r['customerCapacityPerMinute'] for r in rows),2),incomePerMinute=round(income,2),potentialIncomePerMinute=round(potential_income,2),status=status,reserve=b['reserve'],
+                  productionCapacityPerMinute=_upgrade_capacity(cfg,st,slot,'production'),
+                  salesPerMinute=round(sales,2),customerCapacityPerMinute=_upgrade_capacity(cfg,st,slot,'sales'),incomePerMinute=round(income,2),potentialIncomePerMinute=round(potential_income,2),status=status,reserve=b['reserve'],
                   processing=b.get('processing',True),hasRecipes=bool(recipes),
                   upgrades=upgrades,stored=storage,capacity=cap,storedValue=st['pend'][str(slot)],goods=rows,
                   recipe=recipes[-1] if recipes else None,recipes=recipes,price=1,priceTrend='flat',setBadges=[],

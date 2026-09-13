@@ -18,8 +18,10 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
   }
   for(const [width,height] of [[1366,768],[1366,650],[1728,694],[1920,1080],[1024,768],[768,768],[390,844],[844,390]]){
    await page.setViewportSize({width,height});
-   for(const file of ['buildings','warehouse','marketplace','advanced-hq','license']){
-    await page.goto(base+'/'+file+'.html');await page.locator('.game-resources,.game-wallet').waitFor({state:'attached'});
+   for(const file of ['buildings','marketplace','advanced-hq','license']){
+    await page.goto(base+'/'+file+'.html');
+    try{await page.locator('.game-resources,.game-wallet').waitFor({state:'attached'});}
+    catch(error){throw new Error(file+' '+width+'x'+height+' did not load at '+page.url()+': '+(await page.locator('body').innerText()).slice(0,600)+'; '+error.message);}
     if(await page.locator('#econ-overnight[open]').count())await page.locator('[data-overnight-close]').click();
     const tabs=await page.locator('.game-view-tabs button').count();
     for(let i=0;i<Math.max(tabs,1);i++){

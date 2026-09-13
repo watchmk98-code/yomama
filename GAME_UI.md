@@ -7,9 +7,8 @@ section is Game; Build is its business-management screen.
 | Page | Purpose |
 | --- | --- |
 | Dash | Business overview and class standings |
-| Build | Selected business, goods, quick upgrades, construction, and events |
-| Warehouse | Inventory, capacity, and holding goods |
-| Market | Orders, customer prices/upgrades, and surplus sales |
+| Build | Selected business, stock, sales controls, upgrades, construction, and events |
+| Market | Orders, delivery reservations, and regular buyers |
 | Operations | Raw output, recipes, and production upgrades |
 | Licence | Milestones, quiz, and the separate practice portfolio |
 
@@ -20,7 +19,18 @@ list left, selected building and goods center, upgrades/construction right,
 and four stats above. Do not replace it with the town tile gallery. Build has
 quick management controls; the detailed pages retain their specialized layouts.
 
-General orders and their quantity-specific reservation controls belong to Market, not Build. Warehouse retains a manual sales pause.
+The selected business shows actual income, completed goods, and goods sold in
+the last 60 game seconds, plus current stock/capacity. Income and sales include
+walk-ins and regular buyers. Manual deliveries and clearance are one-off sales,
+outside these operating figures. BUILD refreshes every three seconds, highlights
+changed values briefly, and shows per-good stock, capacity, and saved quantities beneath the operating
+figures. Hold goods pauses walk-in sales; Resume shop sales reverses it. Sell
+surplus pays the displayed clearance value while protecting recipe and delivery
+supplies. Shipment details remain on Market. Class pauses freeze the clocks; reconnects
+resynchronize them with the server. Existing saves keep their progress and start
+recording goods activity on migration, with no reset or invented history.
+
+General orders and their quantity-specific reservation controls belong to Market, not Build. Build provides the manual sales pause alongside the selected business stock.
 There is no general Orders button or popup on Build. Breakfast Club is a
 separate event, accessed from the bottom container.
 
@@ -31,15 +41,17 @@ costs, ingredients, stock, timers and permissions remain server-owned.
 
 ## Screen fit
 
-`game-fit.js` makes the five management pages fill the available viewport.
+`game-fit.js` makes the four management pages fill the available viewport.
 Desktop panels stretch to the bottom. Buildings, recipes, inventories, orders,
 and milestones use explicit pagination when their content exceeds available
 room. Controls must not be clipped merely to hide scrollbars.
 
-Below 900px width or at most 650px height, view tabs switch between panels. A compact
+Below 1100px width or at most 650px height, view tabs switch between panels. A compact
 navigation select and business selector preserve access without long lists.
-Short landscape layouts reserve the Build summary/event for its Building view
-and use the other views for goods, upgrades and construction. Orders remain on
+Compact Build layouts offer Building, Stock, Upgrades, and Expand views. The
+Stock view includes both sales controls and preserves the selected business.
+Old warehouse.html links redirect to buildings.html#stock. Short landscape
+layouts reserve the Build summary/event for its Building view. Orders remain on
 Market. All panel/tab/page selections survive economy refreshes. Business
 selection also persists across navigation in the browser session.
 
@@ -76,6 +88,10 @@ cooking; enjoyment still needs human playtesting.
 
 ## Validation
 
+- `node tests/ui_business_live.cjs http://127.0.0.1:3094`: uses intercepted
+  snapshots to verify actual metrics, automatic updates, pauses, reconnects,
+  stock controls and panel fit at eight viewport sizes, for both
+  opening and full towns. No test action changes the running save.
 - `node tests/ui_page_purposes.cjs http://127.0.0.1:3003`: reads a representative
   snapshot, then intercepts economy calls inside the test browser. Verifies
   relocated controls, upgrades, holds, recipe processing, delivery IDs, surplus

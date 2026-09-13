@@ -41,7 +41,7 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
   }
   return route.fulfill({json:s});
  });
- const pages={buildings:['expand','upgrade:production','upgrade:sales','upgrade:storage'],warehouse:['reserve','sell'],marketplace:['fulfill','replace','commit','customer'],'advanced-hq':['processing'],license:['quiz']};
+ const pages={buildings:['expand','upgrade:production','upgrade:sales','upgrade:storage','reserve','sell'],marketplace:['fulfill','replace','commit','customer'],'advanced-hq':['processing'],license:['quiz']};
  const owners=new Map();
  async function go(file){await page.goto(base+'/'+file+'.html');await page.locator('.game-wallet,.game-resources').waitFor();if(await page.locator('#econ-overnight[open]').count())await page.locator('[data-overnight-close]').click();}
  async function act(action){const before=calls.length;await page.locator('[data-econ-action="'+action+'"]').click();await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'));assert.equal(calls.length,before+1);}
@@ -54,13 +54,15 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
    assert(!owners.has(family)||owners.get(family)===file,family+' is repeated across screens');owners.set(family,file);
   }
   assert.equal(await page.locator('[data-business-focus]').count(),file==='advanced-hq'&&s.buildings.at(-1).focusUnlocked?1:0,file+' has misplaced or missing specialty selection');
-  for(const [selector,owner] of Object.entries({'.game-specialty':'advanced-hq','.game-recipe':'advanced-hq','.game-inventory-table':'warehouse','.game-order-grid':'marketplace','.game-customer-contracts':'marketplace'}))if(file!==owner)assert.equal(await page.locator(selector).count(),0,file+' repeats '+selector);
+  for(const [selector,owner] of Object.entries({'.game-specialty':'advanced-hq','.game-recipe':'advanced-hq','.game-inventory-table':'buildings','.game-order-grid':'marketplace','.game-customer-contracts':'marketplace'}))if(file!==owner)assert.equal(await page.locator(selector).count(),0,file+' repeats '+selector);
   assert.equal(await page.locator('.game-stock').count(),0,file+' repeats the old stock panel');
   if(file==='marketplace')assert.equal(await page.locator('#game-business-choice').count(),0,'Orders and customers belong to the whole town');
   assert.equal(await page.locator('[data-game-deliveries]').count(),0);
+  assert.equal(await page.locator('.hero .tabs a').filter({hasText:/warehouse/i}).count(),0,file+' retains a Warehouse tab');
+  assert.equal(await page.locator('#game-section-menu option').filter({hasText:/warehouse/i}).count(),0,file+' retains Warehouse in compact navigation');
  }
  for(const [file,families] of Object.entries(pages))for(const family of families.filter(f=>f!=='quiz'))assert.equal(owners.get(family),file,'Missing '+family+' on '+file);
- await go('buildings');assert.equal(await page.locator('#econ-building [data-econ-action^="reserve:"]').count(),0);
+ await go('buildings');assert.equal(await page.locator('#econ-building [data-econ-action^="reserve:"]').count(),1);
  const next=s.frontier[s.frontier.length-1];await page.selectOption('#game-expansion-choice',String(next.tier));
  assert.equal(await page.locator('.game-next-art').getAttribute('data-preview-business'),next.id);
  assert((await page.locator('.game-next-art .k-art').evaluate(e=>getComputedStyle(e).filter)).includes('grayscale(1)'));
@@ -82,11 +84,40 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  const specialty=page.locator('[data-business-focus="2"]');await specialty.focus();await specialty.selectOption(focus);await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'));assert.equal(calls.length,beforeFocus+1);assert.equal(s.buildings[2].focus,focus);
  assert(await specialty.evaluate(e=>e===document.activeElement),'Specialty loses keyboard focus after changing');
  await page.evaluate(()=>window.YomamaEcon.refresh());assert.equal(await specialty.inputValue(),focus);assert(await specialty.evaluate(e=>e===document.activeElement),'Polling loses specialty keyboard focus');
- await go('warehouse');assert.equal(await page.locator('#game-business-choice').inputValue(),'2');await act('reserve:2:'+String(!s.buildings[2].reserve));
+ await go('buildings');
+ const stock=page.locator('.game-building-stock');
+ assert.equal(await page.locator('[data-select-building="2"]').getAttribute('aria-pressed'),'true','Build retains the business selected in Operations');
+ assert.equal(await page.locator('.game-site .game-building-stock').count(),1,'Stock uses the space below business metrics on desktop');
+ assert.equal(await page.locator('.game-business-shipment,.game-business-limit').count(),0,'Stock replaces shipment and status sections');
+ async function stockValues(b){
+  assert.deepEqual(await stock.locator('[data-stock-good]').evaluateAll(rows=>rows.map(row=>row.dataset.stockGood)),b.goods.map(g=>g.goodId),'Only selected-business goods appear');
+  if(!await page.evaluate(()=>document.body.classList.contains('game-compact')))assert.equal(await stock.locator('[data-stock-good]:visible').count(),b.goods.length,'Desktop shows every good in the business stock area');
+  for(const good of b.goods){
+   const row=stock.locator('[data-stock-good="'+good.goodId+'"]');
+   assert.equal((await row.locator('.game-inventory-good strong').textContent()).trim(),good.name);
+   assert.equal((await row.locator('[data-stock-count]').textContent()).replace(/\s+/g,' ').trim(),good.quantity+' / '+good.capacity,'Per-good stock and capacity');
+   assert.equal((await row.locator('[data-stock-saved]').textContent()).trim(),String(good.reserved||0),'Per-good reserved stock');
+  }
+ }
+ s.buildings[2].goods.forEach((g,index)=>{g.quantity=17+index;g.capacity=120+index;g.reserved=3+index;});
+ await page.evaluate(()=>window.YomamaEcon.refresh());await stockValues(s.buildings[2]);
+ s.buildings[2].goods[0].quantity=29;s.buildings[2].goods[0].reserved=8;
+ await page.evaluate(()=>window.YomamaEcon.refresh());await stockValues(s.buildings[2]);
+ s.buildings[2].reserve=false;await page.evaluate(()=>window.YomamaEcon.refresh());
+ await act('reserve:2:true');assert.equal(calls.at(-1).data.slot,2);assert.equal(s.buildings[2].reserve,true);
+ assert.equal(await stock.locator('[data-econ-action="reserve:2:false"]').getAttribute('aria-pressed'),'true');
+ await act('reserve:2:false');assert.equal(s.buildings[2].reserve,false);
  s.buildings[2].clearableQuantity=10;s.buildings[2].clearStockValue=100;await page.evaluate(()=>window.YomamaEcon.refresh());await act('sell:2');
+ assert.equal(calls.at(-1).data.slot,2);assert(await stock.locator('[data-econ-action="sell:2"]').isDisabled(),'No surplus disables selling');
+ const beforeEmpty=calls.length;await stock.locator('[data-econ-action="sell:2"]').evaluate(button=>button.click());
+ assert.equal(calls.length,beforeEmpty,'Disabled selling sends no request');
  await go('marketplace');await act('fulfill:0:'+s.contracts.offers[0].id);await act('replace:1:'+s.contracts.offers[1].id);await act('commit:0:'+s.contracts.offers[0].id);
- await go('warehouse');assert.equal(await page.locator('#game-business-choice').inputValue(),'2');
- await page.selectOption('#game-business-choice','0');await page.evaluate(()=>window.YomamaEcon.refresh());assert.equal(await page.locator('#game-business-choice').inputValue(),'0');
+ await go('warehouse');await page.waitForURL('**/buildings.html#stock');
+ assert.equal(await page.locator('[data-select-building="2"]').getAttribute('aria-pressed'),'true','Warehouse bookmarks retain the selected building');
+ while(await page.locator('.game-pager[data-page="Buildings"] button:first-child:not(:disabled)').count())await page.locator('.game-pager[data-page="Buildings"] button:first-child').click();
+ await page.locator('[data-select-building="0"]').click();await page.evaluate(()=>window.YomamaEcon.refresh());
+ assert.equal(await page.locator('[data-select-building="0"]').getAttribute('aria-pressed'),'true');
+ assert.deepEqual(await stock.locator('[data-stock-good]').evaluateAll(rows=>rows.map(row=>row.dataset.stockGood)),s.buildings[0].goods.map(g=>g.goodId),'Changing business replaces its individual goods');
  await go('advanced-hq');assert.equal(await page.locator('.game-processing').count(),0);assert(await page.getByText('No ingredients needed').count());
  await go('license');assert.equal(await page.locator('.game-invest').count(),0);
  for(let i=0;i<quiz.questions.length;i++){
@@ -105,7 +136,7 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  }
  s.gateOpen=false;s.checklist.quiz=false;
  await go('license');assert.equal(await page.locator('.game-view-tabs [role=tab]').count(),2);
- for(const [file,labels] of Object.entries({buildings:['Building','Upgrades','Expand'],warehouse:['Stock','Manage'],marketplace:['Orders','Contracts'],'advanced-hq':[]})){
+ for(const [file,labels] of Object.entries({buildings:['Building','Stock','Upgrades','Expand'],marketplace:['Orders','Contracts'],'advanced-hq':[]})){
   await go(file);assert.deepEqual(await page.locator('.game-view-tabs [role=tab]').allTextContents(),labels,file+' repeats an obsolete panel');
   if(!labels.length)continue;
   await page.locator('.game-view-tabs [role=tab]').first().focus();
@@ -115,8 +146,23 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
    const panel=page.locator('#'+await active.getAttribute('aria-controls'));assert(await panel.isVisible());assert.equal(await panel.getAttribute('role'),'tabpanel');assert.equal(await panel.getAttribute('aria-labelledby'),await active.getAttribute('id'));
   }
  }
+ await go('warehouse');await page.waitForURL('**/buildings.html#stock');
+ const stockTab=page.getByRole('tab',{name:'Stock',exact:true});
+ assert.equal(await stockTab.getAttribute('aria-selected'),'true','Warehouse bookmark opens compact Stock');
+ await page.locator('.game-fit-picker').selectOption('2');
+ await page.evaluate(()=>window.YomamaEcon.refresh());
+ assert.equal(await page.locator('.game-fit-picker').inputValue(),'2','Compact picker persists through polling');
+ assert.equal(await stockTab.getAttribute('aria-selected'),'true','Stock remains open after selection and polling');
+ await stockValues(s.buildings[2]);
+ await page.reload();await stock.waitFor();
+ assert.equal(await stockTab.getAttribute('aria-selected'),'true','Reload preserves the Stock destination');
+ assert.equal(await page.locator('.game-fit-picker').inputValue(),'2');
+ await page.setViewportSize({width:1366,height:768});await page.evaluate(()=>window.YomamaFit.render());
+ assert.equal(await page.locator('.game-site .game-building-stock').count(),1,'Stock returns below metrics on desktop resize');
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>window.YomamaFit.render());
+ assert.equal(await stockTab.getAttribute('aria-selected'),'true','Resize retains compact Stock selection');
  s.buildings=s.buildings.slice(0,1);s.buildingsOwned=1;s.board=s.board.filter(g=>g.slot===0);
- for(const file of ['buildings','warehouse','marketplace','advanced-hq']){
+ for(const file of ['buildings','marketplace','advanced-hq']){
   await go(file);assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)),'starter '+file+' overflow');
   if(file==='buildings')assert.equal(await page.locator('[data-select-building]').count(),1);
   else if(file==='marketplace')assert.equal(await page.locator('#game-business-choice').count(),0);

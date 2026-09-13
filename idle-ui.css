@@ -69,6 +69,84 @@
   .game-workspace .game-operation .game-small-button {min-width:80px;}
   .game-workspace .game-next-action {font-size:15px;flex-wrap:wrap;gap:3px;}
 }
+
+/* The selected business shows measured activity and its next useful action. */
+.game-page.game-build-page .game-site.game-business-live {display:flex;flex-direction:column;}
+.game-business-live > .game-panel-head,.game-business-live > .game-site-footer {flex:none;}
+.game-business-overview {display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);grid-template-rows:minmax(0,1fr);gap:12px;padding:12px;flex:1;min-height:0;}
+.game-page.game-build-page .game-business-live .game-site-stage {grid-column:1;grid-row:1;container-type:size;display:flex;align-items:center;justify-content:center;min-height:0;padding:0;gap:0;overflow:hidden;}
+.game-page.game-build-page .game-business-live .game-site-stage .k-art {width:min(100cqw,100cqh,260px);height:min(100cqw,100cqh,260px);flex:none;max-height:none;}
+.game-business-numbers {grid-column:2;grid-row:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
+.game-live-heading {display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;margin-bottom:8px;color:var(--muted);font-size:13px;line-height:1;text-transform:uppercase;letter-spacing:.4px;}
+.game-live-heading small {font:inherit;}
+[data-business-feed] {color:var(--green);}
+[data-business-feed]::before {content:'●';font-size:9px;vertical-align:1px;margin-right:4px;}
+[data-business-feed][data-state=paused],[data-business-feed][data-state=offline] {color:var(--muted);}
+.game-live-metrics {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;flex:1;min-height:0;margin:0;}
+.game-live-metrics > div {display:flex;flex-direction:column;justify-content:center;min-width:0;gap:5px;padding:8px 10px;border:1px solid var(--line);}
+.game-live-metrics dt {color:var(--muted);font-size:15px;line-height:1;}
+.game-live-metrics .game-live-value {font-size:clamp(23px,2.2vw,36px);line-height:1;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap;margin:0;color:var(--text);}
+.game-live-metrics .game-live-rate {margin:0;color:var(--muted);font-size:13px;line-height:1.1;font-variant-numeric:tabular-nums;}
+.game-live-metrics [data-business-metric=income] .game-live-value {color:var(--green);}
+.game-live-metrics [data-business-metric=stock] .game-live-value {color:var(--amber);font-size:clamp(20px,1.8vw,29px);}
+.game-page.motion-paused .game-live-value.is-updated,.game-page.motion-paused .game-live-rate.is-updated {animation:game-live-update .9s ease-out both !important;}
+@keyframes game-live-update {from {background:rgba(255,198,0,.22);} to {background:transparent;}}
+.game-business-shipment {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 12px;padding:9px 12px;border-top:1px solid var(--line);flex:none;min-width:0;}
+.game-business-shipment > div {min-width:0;}
+.game-live-caption {display:block;color:var(--muted);font-size:13px;line-height:1;margin-bottom:4px;}
+.game-business-shipment a {color:var(--text);font-size:18px;line-height:1.05;text-decoration:none;}
+.game-business-shipment a:hover,.game-business-limit a:hover {color:var(--amber);text-decoration:underline;}
+.game-business-shipment a:focus-visible,.game-business-limit a:focus-visible {outline:1px solid var(--amber);outline-offset:2px;}
+.game-live-shipment-clock {font-size:24px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;color:var(--amber);white-space:nowrap;}
+.game-business-shipment[data-shipment-ready=true] .game-live-shipment-clock {color:var(--green);}
+.game-live-shipment-clock[data-state=paused] {color:var(--muted);font-size:18px;}
+.game-live-needs {grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px 16px;}
+.game-live-need {display:flex;align-items:baseline;gap:6px;color:var(--muted);font-size:14px;line-height:1.15;}
+.game-live-need b {font-weight:400;color:var(--amber);white-space:nowrap;}
+.game-live-need.is-ready b {color:var(--green);}
+.game-business-shipment.is-empty strong {display:block;font-size:16px;font-weight:400;line-height:1.15;color:var(--muted);}
+.game-business-shipment.is-empty > a {font-size:15px;color:var(--amber);white-space:nowrap;}
+.game-business-limit {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;border-top:1px solid var(--line);flex:none;min-width:0;font-size:15px;line-height:1.15;}
+.game-business-limit > span {min-width:0;color:var(--amber);}
+.game-business-limit a {flex:none;white-space:nowrap;color:var(--text);font-size:14px;text-decoration:none;}
+@media(max-width:599px) and (min-height:651px){
+ .game-page.game-build-page #econ-building > .k-status:not(:empty) {position:static;transform:none;width:auto;max-width:none;flex:none;margin:0;box-shadow:none;}
+}
+@media(max-width:600px){
+ .game-business-overview {grid-template-columns:minmax(72px,.6fr) minmax(0,1.4fr);padding:8px;gap:8px;}
+ .game-live-heading {font-size:11px;gap:4px;margin-bottom:6px;letter-spacing:0;}
+ .game-live-metrics {gap:5px;}
+ .game-live-metrics > div {padding:7px 6px;gap:5px;}
+ .game-live-metrics dt {font-size:13px;}
+ .game-live-metrics .game-live-rate {font-size:12px;}
+ .game-live-metrics .game-live-value {font-size:23px;}
+ .game-live-metrics [data-business-metric=stock] .game-live-value {font-size:18px;}
+ .game-business-shipment {padding:8px;gap:6px 8px;}
+ .game-business-shipment a {font-size:17px;}
+ .game-business-limit {padding:7px 8px;font-size:14px;gap:6px;}
+ .game-business-limit a {font-size:13px;}
+}
+@media(max-height:650px) and (min-width:600px){
+ .game-business-overview {grid-template-columns:110px minmax(0,1fr);padding:4px 8px;gap:12px;}
+ .game-live-heading {font-size:11px;margin-bottom:3px;}
+ .game-live-metrics {grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:minmax(0,1fr);gap:6px;}
+ .game-live-metrics > div {padding:4px 7px;gap:3px;}
+ .game-live-metrics dt {font-size:12px;}
+ .game-live-metrics .game-live-rate {font-size:12px;}
+ .game-live-metrics .game-live-value {font-size:23px;}
+ .game-live-metrics [data-business-metric=stock] .game-live-value {font-size:21px;}
+ .game-business-shipment {grid-template-columns:minmax(180px,1fr) auto minmax(0,1.3fr);gap:8px;padding:4px 8px;}
+ .game-live-caption {font-size:11px;margin-bottom:2px;}
+ .game-business-shipment a {font-size:15px;}
+ .game-live-shipment-clock {font-size:20px;}
+ .game-live-needs {grid-column:3;gap:3px 10px;justify-content:flex-end;}
+ .game-live-need {font-size:12px;}
+ .game-business-limit {padding:4px 8px;font-size:13px;}
+ .game-business-limit a {font-size:12px;}
+}
+@media(prefers-reduced-motion:reduce){
+ .game-page.motion-paused .game-live-value.is-updated,.game-page.motion-paused .game-live-rate.is-updated {animation:none !important;}
+}
 @media(max-width:1100px) {
   .game-workspace .game-page-head {gap:8px;}
   .game-workspace .game-nav a {flex:1;padding-inline:8px;}

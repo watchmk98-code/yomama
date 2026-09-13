@@ -104,7 +104,7 @@ function expectedArt(id,level){
   assert.equal(await main.evaluate(img=>getComputedStyle(img).animationName),'none');
   assert.equal(await page.locator('[data-build-art]').isVisible(),false);
   await page.emulateMedia({reducedMotion:'no-preference'});
-  await page.goto(base+'/warehouse.html');await page.locator('.game-business-picker').waitFor();
+  await page.goto(base+'/advanced-hq.html');await page.locator('.game-business-picker').waitFor();
   const picker=page.locator('.game-business-picker .k-art img');
   await picker.evaluate(img=>img.decode());
   assert((await picker.getAttribute('src')).endsWith('-level-3_8f.png'));

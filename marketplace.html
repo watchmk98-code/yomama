@@ -9,8 +9,8 @@
   <link rel="preload" href="./assets/game-art/reactions/crying-face-pixel.png" as="image" type="image/png">
   <link rel="preload" href="./assets/game-art/reactions/dollar-sign-pixel.svg" as="image" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css?v=20260912-live2" />
-  <link rel="stylesheet" href="./econ-kids.css?v=20260913-purpose1" />
-  <link rel="stylesheet" href="./idle-ui.css?v=20260913-purpose1" />
+  <link rel="stylesheet" href="./econ-kids.css?v=20260913-game-shell" />
+  <link rel="stylesheet" href="./idle-ui.css?v=20260913-upgrade-feedback" />
 </head>
 <body class="motion-paused game-page">
   <div class="scanlines" aria-hidden="true"></div>
@@ -53,7 +53,8 @@
     </header>
 
     <main class="game-workspace" aria-label="Market management">
-      <div class="game-page-head"><h1>MARKET</h1><nav class="game-nav" aria-label="Business navigation"><a href="./buildings.html"><img src="./assets/buildings-icons/facility_contractor_office_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Build</span></a><a href="./warehouse.html"><img src="./assets/buildings-icons/facility_warehouse_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Warehouse</span></a><a href="./marketplace.html" aria-current="page"><img src="./assets/buildings-icons/facility_marketplace_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Market</span></a><a href="./advanced-hq.html"><img src="./assets/buildings-icons/facility_automation_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Operations</span></a><a href="./license.html"><img src="./assets/game-art/badges/licence_unlocked.png" alt="" width="28" height="28" aria-hidden="true"><span>Licence</span></a></nav><div id="game-hud" class="econ-kid"></div></div>
+      <div class="game-page-head"><h1>MARKET</h1><nav class="game-nav" aria-label="Business navigation"><a href="./buildings.html"><img src="./assets/buildings-icons/facility_contractor_office_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Build</span></a><a href="./marketplace.html" aria-current="page"><img src="./assets/buildings-icons/facility_marketplace_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Market</span></a><a href="./advanced-hq.html"><img src="./assets/buildings-icons/facility_automation_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Operations</span></a><a href="./license.html"><img src="./assets/game-art/badges/licence_unlocked.png" alt="" width="28" height="28" aria-hidden="true"><span>Licence</span></a></nav></div>
+      <div id="game-hud" class="econ-kid"></div>
       <div id="econ-market" class="econ-kid"><p class="game-loading" role="status">Opening your business…</p></div>
     </main>
   </div>
@@ -62,9 +63,9 @@
   <script src="./buildings-nav.js"></script>
   <script src="./yomama-net.js?v=1"></script>
   <script src="./app.js?v=20260912-1"></script>
-  <script src="./econ.js?v=20260913-purpose1"></script>
+  <script src="./econ.js?v=20260913-game-shell"></script>
   <script src="./account.js?v=1"></script>
   <script src="./econ-nav.js?v=3"></script>
-  <script src="./game-fit.js?v=20260913-purpose1"></script>
+  <script src="./game-fit.js?v=20260913-build-stock"></script>
 </body>
 </html>

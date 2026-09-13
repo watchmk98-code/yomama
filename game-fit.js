@@ -2,6 +2,8 @@
 (function(){
   'use strict';
   var tabs={}, pages={}, orderIds={}, resizing, lastSelected;
+  if(new URLSearchParams(location.search).has('customer'))tabs.Market=1;
+  if(location.hash==='#stock')tabs.Build=1;
   function compact(){return innerWidth<1100 || innerHeight<=650;}
   function choose(group,index){tabs[group]=index;render();}
   function sectionMenu(){
@@ -53,10 +55,12 @@
     if(!document.body.classList.contains('game-page'))return;
     var focusedId=document.activeElement && document.activeElement.id;
     document.body.classList.add('game-fitted');document.body.classList.toggle('game-compact',compact());sectionMenu();
-    var build=document.getElementById('econ-building'), market=document.getElementById('econ-market'), warehouse=document.getElementById('econ-warehouse'), ops=document.getElementById('econ-auto'), licence=document.getElementById('econ-license');
+    var build=document.getElementById('econ-building'), market=document.getElementById('econ-market'), ops=document.getElementById('econ-auto'), licence=document.getElementById('econ-license');
     if(build){
       build.querySelectorAll('.game-fit-controls').forEach(function(n){n.remove();});
-      tabset(build,'Build',[['Building',build.querySelector('.game-site')],['Upgrades',build.querySelector('.game-operations')],['Expand',build.querySelector('.game-expansion')]]);
+      var site=build.querySelector('.game-site'), stock=build.querySelector('.game-building-stock');
+      if(site && stock){if(compact())site.after(stock);else site.appendChild(stock);}
+      tabset(build,'Build',[['Building',site],['Stock',stock],['Upgrades',build.querySelector('.game-operations')],['Expand',build.querySelector('.game-expansion')]]);
       document.body.dataset.fitBuildView=String(tabs.Build||0);
       var picker=build.querySelector('.game-fit-picker');if(picker)picker.remove();
       if(compact() && window.YomamaEcon){var s=window.YomamaEcon.state();if(s && s.buildings.length>1){picker=document.createElement('select');picker.className='game-fit-picker';picker.setAttribute('aria-label','Selected building');s.buildings.forEach(function(b){var o=document.createElement('option');o.value=b.slot;o.textContent=b.name;o.selected=!!build.querySelector('[data-select-building="'+b.slot+'"][aria-pressed="true"]');picker.appendChild(o);});picker.onchange=function(){var b=build.querySelector('[data-select-building="'+picker.value+'"]');if(b)b.click();};build.insertBefore(picker,build.firstChild);}}
@@ -67,7 +71,6 @@
         build.prepend(controls);
       }
     }
-    if(warehouse)tabset(warehouse,'Warehouse',[['Stock',warehouse.querySelector('.game-inventory-table')],['Manage',warehouse.querySelector('.game-purpose-side')]]);
     if(market){
       var regulars=market.querySelector('.game-customer-contracts');
       tabset(market,'Market',[['Orders',market.querySelector('.game-market-orders')],['Contracts',regulars]]);
@@ -86,11 +89,12 @@
       paginate('[data-order-items="'+orderIndex+'"] .game-order-goods','Order '+(orderIndex+1)+' goods',28,1);
     }
     paginate('.game-purpose-main .game-recipe','Recipes',140,compact()?1:(innerWidth>1100?2:1));
-    paginate('.game-inventory-rows','Inventory',60,1);
+    paginate('.game-inventory-rows','Inventory',compact()?38:76,compact()?1:3);
     paginate('.game-checklist','Milestones',50,1);
     if(focusedId && focusedId.indexOf('game-tab-')===0){var focusedTab=document.getElementById(focusedId);if(focusedTab)focusedTab.focus({preventScroll:true});}
   }
   window.YomamaFit={render:render};
+  window.addEventListener('hashchange',function(){if(location.hash==='#stock'){tabs.Build=1;render();}});
   window.addEventListener('resize',function(){clearTimeout(resizing);resizing=setTimeout(render,100);});
   window.addEventListener('yomama:econ',render);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();

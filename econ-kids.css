@@ -9,14 +9,13 @@
 /* Each management screen has one action domain; common chrome stays quiet. */
 .game-wallet { display:flex; justify-content:flex-end; gap:24px; padding:7px 0 10px; font-size:16px; color:var(--muted); }
 .game-wallet strong { color:var(--amber); font-size:22px; font-weight:400; margin-left:8px; }
-.game-page .game-page-head {display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;}
-.game-page-head .game-nav {justify-self:center;}
+.game-page .game-page-head {display:flex;justify-content:space-between;gap:16px;align-items:center;}
+.game-page-head .game-nav {margin-left:auto;}
 .game-page-head .game-wallet {padding:0;gap:16px;white-space:nowrap;}
-.game-page.game-build-page .game-page-head {display:flex;justify-content:space-between;}
-.game-build-page .game-page-head .game-nav {width:auto;}
+.game-page .game-page-head .game-nav {width:auto;}
 @media(max-width:850px){
- .game-page.game-build-page .game-page-head {align-items:stretch;}
- .game-build-page .game-page-head .game-nav {width:100%;}
+ .game-page .game-page-head {align-items:stretch;}
+ .game-page .game-page-head .game-nav {width:100%;}
 }
 .game-town-layout {display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px;align-items:start;}
 .game-town-detail,.game-purpose-side,.game-purpose-main {display:grid;gap:12px;min-width:0;}
@@ -66,9 +65,6 @@
 .game-purpose-main .game-recipe-chain {border:1px solid var(--line);padding:10px;}
 .game-purpose-main .game-recipe-chain + .game-recipe-chain {margin:0;}
 @media(max-width:1100px){
- .game-page .game-page-head {grid-template-columns:1fr auto;}
- .game-page-head .game-nav {grid-column:1/-1;grid-row:2;justify-self:stretch;}
- .game-page-head #game-hud {grid-column:2;grid-row:1;}
  .game-town-layout {grid-template-columns:minmax(0,1fr) 310px;}
  .game-town-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
  .game-purpose-layout {grid-template-columns:minmax(0,1fr) 290px;}
@@ -342,7 +338,7 @@
 }
 @media (max-width:850px) {
  .game-page-head {align-items:flex-start;flex-direction:column;gap:8px}
- .game-nav {width:100%;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+ .game-nav {width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
  .game-nav a {padding:6px 4px;font-size:16px}
  .game-layout {grid-template-columns:minmax(0,1fr)}
  .game-roster-list {display:flex;max-height:none;overflow-x:auto;overflow-y:hidden}
@@ -550,10 +546,13 @@
 .game-compact .game-inventory-actions .k-btn {min-width:0;}
 .game-compact .game-licence-summary {padding:8px;}
 .game-compact .game-large-badge {width:48px;height:48px;flex-basis:48px;}
+.game-compact .game-quiz-question legend {font-size:19px;margin:4px 0;}
+.game-compact .k-opt {min-height:32px;margin:3px 0;padding:3px 8px;}
+.game-compact .game-license-layout .game-panel-body {gap:4px;padding:6px;}
 @media(max-height:650px){
  .game-compact .hero .topline,.game-compact .hero .banner-frame {display:none;}
  .game-compact .game-page-head {display:flex;flex-wrap:wrap;gap:4px;}
- .game-compact .game-page-head .game-nav {flex:1;grid-template-columns:repeat(5,minmax(0,1fr));}
+ .game-compact .game-page-head .game-nav {flex:1;grid-template-columns:repeat(4,minmax(0,1fr));}
  .game-compact .game-page-head .game-nav a {min-height:30px;padding:2px 5px;font-size:15px;}
  .game-compact .game-page-head h1 {font-size:18px;}
  .game-compact .game-page-head #game-hud {display:none;}
@@ -561,9 +560,6 @@
  .game-compact .game-site-stage {min-height:0;}
  .game-compact .game-panel-head {padding-block:3px;}
  .game-compact .game-licence-summary {display:none;}
- .game-compact .game-quiz-question legend {font-size:19px;margin:4px 0;}
- .game-compact .k-opt {min-height:32px;margin:3px 0;padding:3px 8px;}
- .game-compact .game-license-layout .game-panel-body {gap:4px;padding:6px;}
 }
 .game-next-art {display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1/span 8;}
 .econ-kid .game-next-art .k-art {width:84px;height:84px;flex-basis:84px;filter:grayscale(1);opacity:.55;}
@@ -575,7 +571,6 @@
 .game-fitted #game-goals::details-content {display:contents;}
 @media(max-height:650px){
  .game-compact .game-page-head .game-nav {width:auto;}
- .game-compact.game-build-page:not([data-fit-build-view="0"]) #game-hud,
  .game-compact.game-build-page:not([data-fit-build-view="0"]) .game-build-bottom {display:none;}
  .game-compact .game-quiz-question {display:grid;grid-template-columns:1fr 1fr;column-gap:8px;}
  .game-compact .game-quiz-question legend {grid-column:1/-1;}
@@ -712,11 +707,20 @@
 .game-order > .game-text-button {flex:none;min-height:30px;gap:8px;}
 .game-order > .game-text-button small {font-size:13px;color:var(--muted);}
 @media(max-height:650px) and (min-width:650px){
- .game-compact .game-order-items {grid-column:1;grid-row:2/span 3;}
+ .game-compact .econ-kid .game-order {gap:2px;padding:6px;}
+ .game-compact .game-town-project .game-order-context {display:flex;flex-wrap:wrap;align-content:center;gap:1px 8px;}
+ .game-compact .game-town-project .game-order-channel {display:none;}
+ .game-compact .game-town-project .game-order-purpose,
+ .game-compact .game-town-project .game-order-progress {font-size:12px;line-height:1.1;}
+ .game-compact .game-town-project .game-project-reward {font-size:12px;line-height:1.1;margin:0;}
+ .game-compact .game-order-items {grid-column:1;grid-row:2/span 3;min-height:0;}
  .game-compact .game-order-items .game-order-goods {grid-column:auto;grid-row:auto;align-self:stretch;}
+ .game-compact .game-order-items .econ-good-line {min-height:20px;}
+ .game-compact .game-order-items .econ-art-icon {width:20px;height:20px;flex-basis:20px;}
  .game-compact .game-order-controls {display:flex;flex-direction:row;}
  .game-compact .game-order-controls>* {flex:1;min-width:0;}
  .game-compact .game-order-tier {font-size:12px;}
+ .game-compact .game-order > .game-text-button {min-height:24px;}
 }
 
 /* Recurring customers have their own Market container and a bounded roster. */
@@ -877,3 +881,91 @@
 }
 
 .game-fitted:not(.game-compact) .game-actions {grid-template-rows:max-content minmax(0,1fr);}
+
+/* Town-wide figures stay beneath business navigation on every game page. */
+.game-page .game-build-metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 8px;background:var(--bg);border:1px solid var(--border);}
+.game-page .game-build-metrics > div {min-width:0;padding:7px 14px;gap:3px;border:0;border-right:1px solid var(--line);}
+.game-page .game-build-metrics > div:last-child {border-right:0;}
+.game-build-metrics dt {color:var(--muted);font-size:13px;line-height:1;text-transform:uppercase;letter-spacing:.7px;}
+.game-build-metrics dd {display:flex;align-items:baseline;gap:5px;margin:0;color:var(--text);font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.game-build-metrics dd small {color:var(--muted);font-size:13px;}
+.game-build-metrics [data-build-metric=cash] dd {color:var(--amber);}
+.game-build-metrics [data-build-metric=income] dd {color:var(--green);}
+@media(max-width:600px){
+ .game-page .game-build-metrics > div {padding:6px;gap:4px;}
+ .game-build-metrics dt {font-size:12px;letter-spacing:0;}
+ .game-build-metrics dd {font-size:22px;gap:3px;}
+ .game-build-metrics dd small {font-size:11px;}
+}
+@media(max-height:650px) and (min-width:600px){
+ .game-page .game-build-metrics {margin-bottom:4px;}
+ .game-page .game-build-metrics > div {display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 10px;}
+ .game-build-metrics dt {font-size:12px;letter-spacing:0;}
+ .game-build-metrics dd {font-size:22px;gap:3px;}
+ .game-build-metrics dd small {font-size:11px;}
+ .game-page.game-build-page.game-compact .game-opening-guide small {display:none;}
+ .game-page.game-build-page.game-compact .game-opening-guide .game-small-button {min-height:30px;padding-block:3px;}
+ .game-page.game-build-page.game-compact .game-site-footer .game-text-button {min-height:20px;padding-block:0;}
+}
+@media(max-width:599px) and (min-height:651px){
+ .game-page.game-build-page.game-compact .game-site-stage {min-height:108px;}
+}
+@media(min-width:600px) and (max-width:1099px) and (min-height:651px){
+ .game-page.game-build-page.game-compact .game-site {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-rows:auto minmax(0,1fr) auto auto auto;}
+ .game-page.game-build-page.game-compact .game-site > .game-panel-head {grid-column:1/-1;grid-row:1;}
+ .game-page.game-build-page.game-compact .game-site-stage {grid-column:1;grid-row:2;min-height:0;gap:10px;padding:6px;}
+ .game-page.game-build-page.game-compact .game-site .game-production-loop {grid-column:2;grid-row:2;margin:0;padding:6px;gap:4px;}
+ .game-page.game-build-page.game-compact .game-site .game-income-detail {grid-column:1/-1;grid-row:3;}
+ .game-page.game-build-page.game-compact .game-site .game-next-action {grid-column:1/-1;grid-row:4;}
+ .game-page.game-build-page.game-compact .game-site > .game-site-footer {grid-column:1/-1;grid-row:5;}
+ .game-page.game-build-page.game-compact .game-operation {padding-block:4px;}
+}
+
+/* Selected-business stock occupies the space beneath its operating figures. */
+.game-building-stock {display:flex;flex-direction:column;min-width:0;min-height:0;border-top:1px solid var(--border);}
+.game-business-live > .game-building-stock {flex:0 0 52%;}
+.game-stock-heading {display:flex;align-items:center;gap:10px;padding:6px 10px;flex:none;}
+.game-stock-heading h3 {margin:0;font-size:19px;font-weight:400;color:var(--amber);}
+.game-stock-heading > span {display:none;}
+.game-stock-heading small {margin-left:auto;font-size:13px;color:var(--muted);}
+.game-building-stock .game-inventory-head,.game-building-stock .game-inventory-row {grid-template-columns:minmax(0,1fr) 94px 44px;gap:8px;padding:4px 10px;}
+.game-building-stock .game-inventory-head {font-size:13px;flex:none;}
+.game-building-stock .game-inventory-row {min-height:38px;font-size:17px;}
+.game-building-stock .game-inventory-row small {font-size:13px;}
+.game-building-stock .game-inventory-good {min-width:0;gap:6px;}
+.game-building-stock .game-inventory-good > span {min-width:0;}
+.game-building-stock .game-inventory-good strong {font-size:16px;line-height:1.05;overflow-wrap:anywhere;}
+.econ-kid .game-building-stock .econ-good-icon {width:26px;height:26px;flex-basis:26px;}
+.game-building-stock .k-bar {height:4px;margin-top:3px;}
+.game-stock-controls {display:grid;grid-template-columns:1fr 1fr;gap:5px 8px;border-top:1px solid var(--line);padding:6px 10px;flex:none;}
+.game-stock-controls .game-small-button {font-size:16px;line-height:1.1;min-height:32px;padding:4px 6px;}
+.game-stock-controls .game-stock-sell {color:var(--amber);}
+.game-stock-controls .game-stock-sell:disabled {color:var(--muted);}
+.game-stock-controls .game-hint {grid-column:1/-1;margin:0;font-size:12px;line-height:1.1;}
+.game-compact .game-building-stock {flex:1;border:1px solid var(--border);}
+.game-compact .game-stock-heading > span {display:block;font-size:16px;min-width:0;}
+.game-compact .game-stock-heading small {text-align:right;}
+@media(max-height:650px) and (min-width:600px){
+ .game-compact .game-building-stock {display:grid;grid-template-columns:minmax(0,1fr) 235px;grid-template-rows:auto auto minmax(0,1fr) auto;}
+ .game-compact .game-building-stock .game-stock-heading {grid-column:1/-1;grid-row:1;padding-block:3px;}
+ .game-compact .game-building-stock .game-inventory-head {grid-column:1;grid-row:2;}
+ .game-compact .game-building-stock .game-inventory-rows {grid-column:1;grid-row:3;}
+ .game-compact .game-building-stock .game-stock-controls {grid-column:2;grid-row:2/span 3;grid-template-columns:1fr;align-content:center;border-top:0;border-left:1px solid var(--line);padding:4px 8px;}
+ .game-compact .game-building-stock > .game-pager {grid-column:1;grid-row:4;min-height:30px;}
+}
+@media(min-width:1100px) and (min-height:651px){
+ .game-business-live > .game-building-stock {flex:0 0 178px;}
+ .game-business-live .game-inventory-head {display:none;}
+ .game-business-live .game-inventory-rows {grid-template-columns:repeat(3,minmax(0,1fr));}
+ .game-business-live .game-inventory-row {grid-template-columns:1fr auto;align-content:center;gap:6px;padding:6px 10px;border-bottom:0;border-right:1px solid var(--line);}
+ .game-business-live .game-inventory-row:last-child {border-right:0;}
+ .game-business-live .game-inventory-good {grid-column:1/-1;}
+ .game-business-live [data-stock-count] {text-align:left!important;}
+ .game-business-live [data-stock-saved] {color:var(--muted);font-size:13px;}
+ .game-business-live [data-stock-saved]::after {content:' saved';}
+}
+@media(max-width:600px) and (min-height:651px){
+ .game-page.game-compact .game-fit-controls {flex-wrap:wrap;}
+ .game-page.game-compact .game-fit-controls .game-fit-picker {flex:1 0 100%;width:100%;max-width:100%;}
+ .game-page.game-compact .game-fit-controls .game-view-tabs {flex-basis:100%;}
+}

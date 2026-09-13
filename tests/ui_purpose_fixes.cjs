@@ -170,7 +170,7 @@ print(json.dumps(result))
    }
    async function go(file){
     await page.goto(base+'/'+file+'.html');
-    await page.locator('.game-wallet').waitFor();
+    await page.locator('.game-wallet,.game-resources').waitFor();
     if(await page.locator('#econ-overnight[open]').count())await page.locator('[data-overnight-close]').click();
     await settle();
    }
@@ -187,7 +187,7 @@ print(json.dumps(result))
      if(!dialog&&document.documentElement.scrollHeight>innerHeight+1)problems.push('Document vertical overflow');
      const scope=dialog||document.querySelector('.game-workspace');
      if(!scope)return ['Workspace missing'];
-     const selectors='button,select,a[href],.game-output,.game-eyebrow,.game-income-detail,.game-production-loop,.game-next-action,.game-opening-guide,.game-upgrade-reason,.game-upgrade-impact,.game-order-name,.game-order-tier,.game-project-reward,.econ-good-line';
+     const selectors='button,select,a[href],.game-output,.game-eyebrow,[data-business-metric],.game-business-shipment,.game-business-limit,.game-opening-guide,.game-upgrade-reason,.game-upgrade-impact,.game-order-name,.game-order-tier,.game-project-reward,.econ-good-line';
      for(const el of scope.querySelectorAll(selectors)){
       if(!visible(el))continue;
       const r=el.getBoundingClientRect();
@@ -307,9 +307,15 @@ print(json.dumps(result))
     assert.equal(b.incomePerMinute,b.earnings.operatingIncome);
     assert.equal(b.incomePerMinute,b.earnings.bySource.walkIns+b.earnings.bySource.regularBuyers);
     assert.equal((await page.locator('.game-site .game-output').textContent()).trim(),money(b.incomePerMinute));
-    assert.match(await page.locator('.game-site').textContent(),/Earned · last 60s/);
-    assert.deepEqual(await page.locator('.game-site .game-income-detail b').allTextContents(),[money(b.earnings.bySource.walkIns),money(b.earnings.bySource.regularBuyers)]);
-    assert.match(await page.locator('.game-site .game-income-detail small').textContent(),/Est\. ongoing income/);
+    const metric=name=>page.locator('.game-site [data-business-metric="'+name+'"] .game-live-value');
+    assert.equal(await page.locator('.game-site [data-business-metric]').count(),4);
+    assert.match(await page.locator('.game-site').textContent(),/last 60s/i);
+    assert.equal((await metric('produced').textContent()).trim(),String(b.productionCapacityPerMinute));
+    assert.equal((await metric('sold').textContent()).trim(),String(b.customerCapacityPerMinute));
+    assert.equal((await metric('stock').textContent()).trim(),b.stored.toLocaleString('en-US',{maximumFractionDigits:1})+' / '+b.capacity.toLocaleString('en-US',{maximumFractionDigits:1}));
+    assert.equal(await page.locator('.game-site .game-production-loop,.game-site .game-income-detail').count(),0,'Live business data replaces the tutorial and estimate');
+    assert.equal(await page.locator('.game-building-stock').count(),1);
+    assert.equal(await page.locator('.game-business-shipment').count(),0);
     observations.push({view:viewport.name,slot,actual:b.incomePerMinute,walkIns:b.earnings.bySource.walkIns,regularBuyers:b.earnings.bySource.regularBuyers,estimate:b.potentialIncomePerMinute});
    }
    assert(state.buildings[0].earnings.bySource.regularBuyers>0,'Actual settled regular payment is present');
