@@ -889,7 +889,7 @@
     "familyProgressWeight": 0.02,
     "overnightAbsenceH": 2,
     "tickerLimit": 20,
-    "offlineHours": 12
+    "offlineHours": 6
   },
   "version": 4,
   "modelVersion": 4,

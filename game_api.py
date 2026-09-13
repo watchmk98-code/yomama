@@ -209,6 +209,12 @@ def econ_config(session):
     if 'fun' not in cfg or (_startup_config.get('version') == 4 and cfg.get('version') != 4):
         cfg = copy.deepcopy(_startup_config)
     cfg['global']['seed'] = int(session['class_seed']) or cfg['global']['seed']
+    # The offline replay cap is a server setting, not a class rule: it bounds how
+    # much of an absence the first request of the day replays for the whole
+    # class in one go, so the value on disk wins over the one stamped at reset.
+    hours = (_startup_config.get('runtime') or {}).get('offlineHours')
+    if hours is not None:
+        cfg.setdefault('runtime', {})['offlineHours'] = hours
     return cfg
 
 
