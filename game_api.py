@@ -153,6 +153,7 @@ def connect() -> sqlite3.Connection:
 
 
 def init_db() -> None:
+    _settled.clear()
     with connect() as conn:
         conn.executescript(SCHEMA)
         for table, column, decl in MIGRATIONS:
@@ -202,6 +203,21 @@ _startup_config = economy.load_config()
 _book_cache = {}
 _class_locks = {}
 _META_KEYS = {'tick', 'rngState', 'report', 'reportBaseline', 'lastRank', 'reportTick', 'rumour'}
+
+# Zero-tick polls. Build pages poll every 3 s while a tick lasts 15 s, so most
+# requests find the class clock exactly where the last pass left it. The full
+# pass is then a no-op for every town - advance_class replays an empty tick
+# range, only re-syncs pools, and re-saves byte-identical rows - so a
+# read-only request may load and save the requesting town alone. The
+# invariant behind the shortcut: every players row of the class is what a full
+# pass THIS process committed at this tick under the stamped rules left there
+# (_settled), every seat already has today's standings opening (the first
+# save of a day writes it for everyone), and no migration branch of
+# _class_econ applies. Whatever breaks it - a tick, an action, a login, a new
+# or reset seat, re-stamped rules, a rolled-back pass, rows another process
+# wrote - clears or misses the marker, and the next request takes the full pass.
+FAST_POLL = True
+_settled = {}   # class code -> (econ_tick, config key) of the last full pass committed here
 
 
 def econ_config(session):
@@ -305,12 +321,7 @@ def _class_econ(conn, session):
     target=econ_tick_now(cfg,session)
     stop=target if cfg.get('version') == 4 else min(target,start+economy.jsround(cfg['runtime']['maxCatchupDays']*economy.ticks_per_day(cfg)))
     key=(session['code'],json.dumps(cfg,sort_keys=True))
-    book=_book_cache.setdefault(key,economy.PriceBook(cfg))
-    cls=economy.new_class(cfg,stop+economy.ticks_per_day(cfg),book)
-    cls['ev']+=json.loads(session['custom_events'])
-    cls['ev'].sort(key=lambda e:e['startTick'])
-    cls['pressure']=json.loads(session['pressure']) or [0.0]*len(cfg['tiers'])
-    cls['incomePerHour']=session['income_per_hour']
+    cls=_class_world(cfg,session,stop,key)
     economy.advance_class(cfg,cls,list(states.values()),start,stop)
     cls['k']=max(0,stop-1);cls['nextTick']=stop
     for player_id,st in states.items():
@@ -322,10 +333,50 @@ def _class_econ(conn, session):
             economy.offer_contracts(cfg,st,stop)
         _save_state(conn,player_id,cfg,st)
     _save_world(conn,session,cls)
+    _settled[session['code']]=(stop,key)
     return cfg,cls,states,stop<target
 
 
-def _player_econ(conn, player, session):
+def _class_world(cfg, session, stop, key):
+    """The shared context a pass runs in: price book, teacher events, pressure."""
+    cls=economy.new_class(cfg,stop+economy.ticks_per_day(cfg),_book_cache.setdefault(key,economy.PriceBook(cfg)))
+    cls['ev']+=json.loads(session['custom_events'])
+    cls['ev'].sort(key=lambda e:e['startTick'])
+    cls['pressure']=json.loads(session['pressure']) or [0.0]*len(cfg['tiers'])
+    cls['incomePerHour']=session['income_per_hour']
+    return cls
+
+
+def _fast_poll(conn, player, session):
+    """One town at zero ticks, or None when the class needs the full pass."""
+    cfg=econ_config(session)
+    old=json.loads(session['econ_config']) if session['econ_config'] else {}
+    stop=session['econ_tick']
+    if (not FAST_POLL or cfg.get('version')!=4 or old.get('version')!=4 or 'fun' not in old
+            or econ_tick_now(cfg,session)!=stop): return None
+    key=(session['code'],json.dumps(cfg,sort_keys=True))
+    if _settled.get(session['code'])!=(stop,key): return None
+    if conn.execute('SELECT COUNT(*) FROM players p WHERE p.code=? AND NOT EXISTS'
+                    ' (SELECT 1 FROM standings s WHERE s.player_id=p.id AND s.day=?)',
+                    (session['code'],int(time.time()//86400))).fetchone()[0]: return None
+    st=_load_state(player,cfg,session)
+    if st['tick']!=stop or st['offers'] is None: return None
+    cls=_class_world(cfg,session,stop,key)
+    cls['k']=max(0,stop-1);cls['nextTick']=stop
+    # Exactly what the full pass does to this town at zero ticks.
+    economy._sync_pools(cfg,st)
+    breakfast_event.advance(st,stop*cfg['global']['tick'])
+    economy.bind_sales(cfg,cls,st)
+    st['lastActiveTick']=st['tick']
+    _save_state(conn,player['id'],cfg,st)
+    return cfg,cls,st,False
+
+
+def _player_econ(conn, player, session, fast=False):
+    """This player's town at now. Only read-only polls may pass fast=True."""
+    if fast:
+        found=_fast_poll(conn,player,session)
+        if found is not None: return found
     cfg,cls,states,behind=_class_econ(conn,session)
     st=states[player['id']]
     if cfg.get('version') == 4 and not behind:
@@ -597,6 +648,7 @@ def join(body) -> dict:
              json.dumps(st, separators=(",", ":")), int(economy.net_worth(cfg, st))),
         )
         _log(conn, code, cur.lastrowid, "join", {"name": name})
+        _settled.pop(code, None)
     return {"token": token, "name": name, "code": code, "rejoined": False}
 
 
@@ -641,7 +693,7 @@ def get_state(query) -> dict:
     """Everything the dashboard needs in one round trip."""
     with _db_lock, connect() as conn:
         p, s = _auth(conn, query)
-        cfg, book, st, behind = _player_econ(conn, p, s)
+        cfg, book, st, behind = _player_econ(conn, p, s, fast=True)
         minute, seed = session_minute(s), int(s["seed"])
 
         positions = []
@@ -673,7 +725,7 @@ def econ_state(query) -> dict:
     """Advance to now and report. No login side effects."""
     with _db_lock, connect() as conn:
         p, s = _auth(conn, query)
-        cfg, book, st, behind = _player_econ(conn, p, s)
+        cfg, book, st, behind = _player_econ(conn, p, s, fast=True)
         payload = econ_payload(cfg, st, book, s, behind)
         payload["leaderboard"] = _leaderboard(conn, p["code"], p["id"])
         payload["name"] = p["name"]
@@ -700,6 +752,7 @@ def econ_login(body) -> dict:
             st['reportBaseline']=dict(st['report'],contractsDone=st['cStats']['done'],contractsFailed=st['cStats']['failed'])
             st['reportTick']=st['tick'];st['lastRank']=rank
         _save_state(conn, p["id"], cfg, st)
+        _settled.pop(p["code"], None)
         payload = econ_payload(cfg, st, book, s, behind)
         payload["leaderboard"] = _leaderboard(conn, p["code"], p["id"])
         payload["name"] = p["name"]
@@ -731,6 +784,7 @@ def _act(body, apply_fn) -> dict:
         if not result.get("ok"):
             raise ApiError(result.get("why", "not allowed"), details=result)
         _save_state(conn, p["id"], cfg, st)
+        _settled.pop(p["code"], None)
         _log(conn, p["code"], p["id"], "econ_" + result.get("kind", "action"),
              {k: v for k, v in result.items() if k not in ("ok", "kind")})
         payload = econ_payload(cfg, st, book, s, behind)
@@ -924,7 +978,7 @@ def econ_accept_contract(body):
 def econ_ticker(query):
     with _db_lock, connect() as conn:
         p,s=_auth(conn,query)
-        cfg,cls,st,behind=_player_econ(conn,p,s)
+        cfg,cls,st,behind=_player_econ(conn,p,s,fast=True)
         payload=econ_payload(cfg,st,cls,s,behind)
         lines=[dict(kind='event',**e) for e in _event_payload(cfg,cls,cls['k'],history=True)]
         if payload['rumour']: lines.append(dict(kind='rumour',**payload['rumour']))
@@ -954,6 +1008,7 @@ def econ_quiz(body) -> dict:
         if passed:
             st["checklist"]["quiz"] = True
         _save_state(conn, p["id"], cfg, st)
+        _settled.pop(p["code"], None)
         _log(conn, p["code"], p["id"], "quiz", {"score": score, "passed": passed})
         payload = econ_payload(cfg, st, book, s, behind)
         payload["quiz"] = {"score": score, "total": len(questions), "passed": passed,
@@ -1112,6 +1167,7 @@ def reset_class(code: str) -> dict:
         s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
         if s is None:
             raise ApiError("no class with that code", 404)
+        _settled.pop(code, None)
         conn.execute(
             "UPDATE sessions SET econ_config=?, class_seed=?, seed=?, paused=0, clock_base=?,"
             " clock_accum=0, started_at=?, econ_tick=0, pressure='[]', income_per_hour=1,"
@@ -1156,6 +1212,7 @@ def advance_class_clock(code: str, seconds: float, play: bool = False) -> dict:
         s = conn.execute("SELECT * FROM sessions WHERE code=?", (code,)).fetchone()
         if s is None:
             raise ApiError("no class with that code", 404)
+        _settled.pop(code, None)
         cfg = econ_config(s)
         # Everyone up to date under the ordinary rules first: an absence
         # before the jump stays an absence.
@@ -1272,6 +1329,7 @@ def ensure_seat(code, name, pin) -> dict:
             (code, name, secrets.token_urlsafe(24), time.time(), STARTING_CASH, pin,
              json.dumps(st, separators=(",", ":")), int(economy.net_worth(cfg, st))))
         _log(conn, code, cur.lastrowid, "admin_import_seat", {"name": name})
+        _settled.pop(code, None)
     return {"code": code, "name": name, "created": True}
 
 
@@ -1311,6 +1369,7 @@ def teacher(body) -> dict:
             _save_state(conn,row['id'],cfg,st)
             conn.execute("DELETE FROM positions WHERE player_id=?", (row["id"],))
             _log(conn, code, row["id"], "reset_player", {"name": name})
+            _settled.pop(code, None)
         elif action not in ("pause", "resume", "roster"):
             raise ApiError("unknown teacher action")
 
@@ -1434,7 +1493,12 @@ def _class_locked(fn):
             if isinstance(code,list): code=code[0] if code else SOLO_CODE
             if not isinstance(code,str): code=SOLO_CODE
         with _db_lock: lock=_class_locks.setdefault(code,threading.RLock())
-        with lock: return fn(data)
+        with lock:
+            try: return fn(data)
+            except BaseException:
+                # The transaction rolled back with the handler, any class pass
+                # inside it too: its rows are not settled after all.
+                _settled.pop(code,None);raise
     return wrapped
 
 

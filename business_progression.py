@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import copy
 
+import rules_tables
+
 
 # Each business teaches a concrete constraint before a two-stage recipe exercise.
 # The recipe exercise uses practice materials from partners, never locked stock.
@@ -97,6 +99,13 @@ def research_enabled(cfg):
 def ensure(cfg, st, migrating=False):
     if not enabled(cfg):
         return None
+    p = st.get('businessProgression')
+    # A record the normalization below has finished is complete: no code
+    # removes its keys, equipmentValue is written last, and connectedVersion
+    # marks the connected block done. Running the rest again changes nothing;
+    # skipping it matters because this is called ~130 times per player-tick.
+    if p is not None and 'equipmentValue' in p and (p.get('connectedVersion') == 1 or not connected_enabled(cfg)):
+        return p
     if 'businessProgression' not in st:
         owned = _owned(cfg, st) if migrating else set()
         st['businessProgression'] = dict(version=1, knowHow=0, prestige=0,
@@ -160,7 +169,21 @@ def _owned(cfg, st):
 
 
 def _catalog(cfg):
+    return rules_tables.derived(cfg, 'progression_catalog', _build_catalog)
+
+
+def _build_catalog(cfg):
     return {g['id']: dict(g, buildingId=t['id']) for t in cfg['tiers'] for g in t['goods']}
+
+
+def _signature_buildings(cfg):
+    """Signature (last-listed) product id -> business id. The first business
+    listing a product wins, as the scan this table replaces did."""
+    table = {}
+    for tier in cfg['tiers']:
+        if tier['goods']:
+            table.setdefault(tier['goods'][-1]['id'], tier['id'])
+    return table
 
 
 def _quest_specs(cfg):
@@ -186,15 +209,11 @@ def product_unlocked(cfg, st, gid):
     if not enabled(cfg):
         return True
     p = ensure(cfg, st)
-    for tier in cfg['tiers']:
-        if tier['goods'][-1]['id'] != gid:
-            continue
-        bid = tier['id']
-        if bid in ('farm', 'fish_stall', 'roastery') or bid in p['grandfathered']:
-            return True
-        return bool(p['quests'].get(bid + '-signature', {}).get('completed') or
-                    connected_enabled(cfg) and p['quests'].get(bid + '-plan', {}).get('completed'))
-    return True
+    bid = rules_tables.derived(cfg, 'signature_buildings', _signature_buildings).get(gid)
+    if bid is None or bid in ('farm', 'fish_stall', 'roastery') or bid in p['grandfathered']:
+        return True
+    return bool(p['quests'].get(bid + '-signature', {}).get('completed') or
+                connected_enabled(cfg) and p['quests'].get(bid + '-plan', {}).get('completed'))
 
 
 def speed_bonus(cfg, st, b, good):

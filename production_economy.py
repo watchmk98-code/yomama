@@ -15,6 +15,7 @@ import business_activity
 import business_operations
 import business_progression
 import earnings
+import rules_tables
 import town_projects
 import workforce
 import economy as legacy
@@ -77,6 +78,10 @@ def load_config(path=CONFIG_PATH):
 
 
 def catalog(cfg):
+    return rules_tables.derived(cfg,'catalog',_build_catalog)
+
+
+def _build_catalog(cfg):
     return {g['id']:dict(g, tier=i, buildingId=t['id'])
             for i,t in enumerate(cfg['tiers']) for g in t['goods']}
 
@@ -310,11 +315,20 @@ def order_reservations(st, exclude=None):
     return held
 
 
-def protected_stock(cfg, st):
-    protected = chain_reservations(cfg, st)
-    for gid, qty in order_reservations(st).items():
-        protected[gid] = protected.get(gid, 0) + qty
-    for gid, qty in _customer_reservations(cfg, st).items():
+def _held_stock(cfg,st):
+    """Recipe buffers plus committed orders: stock no regular or walk-in may take."""
+    held=chain_reservations(cfg,st)
+    for gid,qty in order_reservations(st).items(): held[gid]=held.get(gid,0)+qty
+    return held
+
+
+def protected_stock(cfg, st, held=None, plan=None):
+    """Stock walk-ins may not sell. A tick that already holds this moment's
+    _held_stock and _customer_stock_plan passes them in instead of redoing them."""
+    if held is None: held=_held_stock(cfg,st)
+    if plan is None: plan=_customer_stock_plan(cfg,st,held)
+    protected=dict(held)
+    for gid, qty in plan[0].items():
         protected[gid] = protected.get(gid, 0) + qty
     return protected
 
@@ -391,15 +405,18 @@ def _produce(cfg,st,tick=None):
     business_activity.record(cfg,st,'production',by_building,tick=tick)
 
 
-def _retail(cfg,st,tick=None):
-    inv=st['inventory'];protected=protected_stock(cfg,st);earned=sold=0;by_building={};units_by_building={}
+def _retail(cfg,st,tick=None,protected=None):
+    inv=st['inventory'];earned=sold=0;by_building={};units_by_building={}
+    if protected is None: protected=protected_stock(cfg,st)
     for slot,b in enumerate(st['b']):
         slot_income=0
+        # Demand and closure are per business; no sale below changes them.
+        demand=customer_demand(cfg,st,b);closed=b['reserve'] or business_operations.paused(cfg,b)
         for good in cfg['tiers'][st['tierOf'][slot]]['goods']:
             gid=good['id'];denom=good['cycleTicks']*10000
             # Idle demand cannot be banked then cashed in as unlimited customers.
-            work=st['salesWork'].get(gid,0)+customer_demand(cfg,st,b)
-            if b['reserve'] or business_operations.paused(cfg,b):
+            work=st['salesWork'].get(gid,0)+demand
+            if closed:
                 st['salesWork'][gid]=0;continue
             available=max(0,inv.get(gid,0)-protected.get(gid,0))
             take=min(available,int(work//denom))
@@ -424,7 +441,12 @@ def player_tick(cfg,cls,st,k):
     business_operations.ensure(cfg,st)
     if st.get('build') is not None and k>=st['build']['t']:
         finish_build(cfg,st,k)
-    _produce(cfg,st,k+1);_tick_customer_contracts(cfg,st,k+1);_retail(cfg,st,k+1);_sync_pools(cfg,st)
+    _produce(cfg,st,k+1)
+    # Recipe buffers, committed orders and paused businesses stay as they are
+    # while regulars ship and walk-ins buy, so both read them once.
+    held=_held_stock(cfg,st);paused_goods=_paused_goods(cfg,st)
+    plan=_tick_customer_contracts(cfg,st,k+1,held,paused_goods)
+    _retail(cfg,st,k+1,protected_stock(cfg,st,held,plan));_sync_pools(cfg,st)
     business_operations.advance_shifts(cfg,st)
     workforce.advance(cfg,st)
     st['tick']=k+1
@@ -454,6 +476,11 @@ def advance_class(cfg,cls,players,start,target):
     polling therefore cannot extend an absent player's earning allowance.
     Construction uses wall time; skipped production is never replayed later.
     """
+    with rules_tables.pinned(cfg):
+        _advance_class(cfg,cls,players,start,target)
+
+
+def _advance_class(cfg,cls,players,start,target):
     allowance=int(cfg['runtime']['offlineHours']*ticks_per_hour(cfg))
     for st in players:
         begin=max(start,st['tick']);stop=min(target,st.get('lastActiveTick',begin)+allowance)
@@ -660,28 +687,36 @@ def _customer_catalog(cfg,st):
     return customers
 
 
-def _customer_business_paused(cfg,st,contract):
-    if not business_operations.enabled(cfg): return False
-    paused_goods={good['id'] for slot,b in enumerate(st['b']) if business_operations.paused(cfg,b)
-                  for good in cfg['tiers'][st['tierOf'][slot]]['goods']}
+def _paused_goods(cfg,st):
+    """Products of paused businesses; their regulars wait."""
+    if not business_operations.enabled(cfg): return frozenset()
+    return {good['id'] for slot,b in enumerate(st['b']) if business_operations.paused(cfg,b)
+            for good in cfg['tiers'][st['tierOf'][slot]]['goods']}
+
+
+def _customer_business_paused(cfg,st,contract,paused_goods=None):
+    if paused_goods is None: paused_goods=_paused_goods(cfg,st)
     return any(need['goodId'] in paused_goods for need in contract['requirements'])
 
 
-def _customer_stock_plan(cfg,st):
+def _customer_stock_plan(cfg,st,held=None,paused_goods=None):
     """Reserve one shipment per regular, after manual orders and recipe buffers.
 
     Earlier slots have first claim, but reservations never exceed shelf space.
     These holds protect against sales only: recipes can use them, so a regular
     asking for an ingredient cannot deadlock a customer's finished product.
+    A tick that already holds this moment's _held_stock and _paused_goods
+    passes them in; they are read, never changed.
     """
     active=st.get('customerContracts',{}).get('active',[])
     if not active: return {},{}
-    goods=catalog(cfg);protected=chain_reservations(cfg,st)
-    for gid,qty in order_reservations(st).items(): protected[gid]=protected.get(gid,0)+qty
+    goods=catalog(cfg)
+    protected=_held_stock(cfg,st) if held is None else held
+    if paused_goods is None: paused_goods=_paused_goods(cfg,st)
     totals={};assigned={};by_tier={ti:i for i,ti in enumerate(st['tierOf'])}
     for contract in sorted(active,key=lambda c:c['slot']):
         stock={};assigned[contract['id']]=stock
-        if contract['paused'] or _customer_business_paused(cfg,st,contract): continue
+        if contract['paused'] or _customer_business_paused(cfg,st,contract,paused_goods): continue
         for need in contract['requirements']:
             gid=need['goodId'];slot=by_tier[goods[gid]['tier']]
             prior=protected.get(gid,0)+totals.get(gid,0)
@@ -764,11 +799,21 @@ def manage_customer_contract(cfg,st,slot,action,customer_id=None,contract_id=Non
     return dict(ok=True,kind='customer_contract',action=action,contractId=contract_id)
 
 
-def _tick_customer_contracts(cfg,st,tick):
+def _tick_customer_contracts(cfg,st,tick,held=None,paused_goods=None):
+    """Ship every due regular whose shipment is saved up. Returns the stock
+    plan still valid afterwards - None once a delivery changed the stock - so
+    the same tick's walk-in sales can reuse it instead of redoing it."""
     data=st.get('customerContracts',{})
-    for contract in sorted(data.get('active',[]),key=lambda c:c['slot']):
-        if contract['paused'] or _customer_business_paused(cfg,st,contract) or tick<contract['nextDeliveryTick']: continue
-        stock=_customer_stock_plan(cfg,st)[1].get(contract['id'],{})
+    active=sorted(data.get('active',[]),key=lambda c:c['slot'])
+    if not active: return None
+    if held is None: held=_held_stock(cfg,st)
+    if paused_goods is None: paused_goods=_paused_goods(cfg,st)
+    plan=None
+    for contract in active:
+        if contract['paused'] or _customer_business_paused(cfg,st,contract,paused_goods) or tick<contract['nextDeliveryTick']: continue
+        # A regular that is skipped changes nothing the plan reads; a delivery does.
+        if plan is None: plan=_customer_stock_plan(cfg,st,held,paused_goods)
+        stock=plan[1].get(contract['id'],{})
         if any(stock.get(n['goodId'],0)<n['quantity'] for n in contract['requirements']): continue
         # Debit every item together; shortages never receive partial payments.
         for need in contract['requirements']: st['inventory'][need['goodId']]-=need['quantity']
@@ -783,6 +828,8 @@ def _tick_customer_contracts(cfg,st,tick):
         data['history'][contract['customerId']]=dict(deliveries=contract['deliveries'],earned=contract['earned'])
         # A late shipment starts a new full interval; there is no missed backlog.
         contract['nextDeliveryTick']=tick+contract['intervalTicks']
+        plan=None
+    return plan
 
 
 def customer_contract_payload(cfg,st):
