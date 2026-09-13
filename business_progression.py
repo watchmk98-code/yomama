@@ -103,7 +103,8 @@ def ensure(cfg, st, migrating=False):
             quests={}, research=[], equipment={}, grandfathered=sorted(owned))
     p = st['businessProgression']
     for key, value in dict(version=1, knowHow=0, prestige=0, quests={}, research=[], equipment={}, grandfathered=[]).items():
-        p.setdefault(key, copy.deepcopy(value))
+        if key not in p:   # setdefault(..., deepcopy(...)) would deep-copy on every call; this runs ~90x per player-tick
+            p[key] = copy.deepcopy(value)
     if connected_enabled(cfg):
         p.setdefault('prestigeEarned', max(p['prestige'], sum(bool(q.get('completed')) for q in p['quests'].values())))
         p.setdefault('activity', dict(produced={}, sold={}, salesBySource={}))
