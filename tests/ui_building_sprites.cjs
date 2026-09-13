@@ -24,6 +24,9 @@ function expectedArt(id,level){
  const browser=await chromium.launch({headless:true});
  try{
   const page=await browser.newPage({viewport:{width:1366,height:768},reducedMotion:'no-preference'});
+  // Mocked state advances through explicit refreshes; background polls would
+  // replace image nodes during inspection and abort their uncached requests.
+  await page.addInitScript(()=>{window.setInterval=()=>0;});
   const errors=[],missingArt=[];page.on('pageerror',e=>errors.push(e.message));
   let failUpgrade=false,failBase=false;
   page.on('response',response=>{
@@ -41,7 +44,20 @@ function expectedArt(id,level){
   });
   await page.goto(base+'/buildings.html');await page.locator('.game-site').waitFor();
   const main=page.locator('.game-site .k-art img');
+  async function assertStaticArt(locator,label){
+   const motion=await locator.evaluate(img=>({
+    animationName:getComputedStyle(img).animationName,
+    transform:getComputedStyle(img).transform,
+    animations:img.getAnimations().length
+   }));
+   assert.deepEqual(motion,{animationName:'none',transform:'none',animations:0},label+' stays on its first frame without animations');
+   assert.equal(await page.locator('[data-build-art]').count(),0,'building motion cannot be enabled');
+  }
+  async function waitForBuildingArt(){
+   await page.waitForFunction(()=>Array.from(document.querySelectorAll('.k-art > img')).every(img=>img.complete&&img.naturalWidth>0));
+  }
   async function selectBuilding(slot){
+   await waitForBuildingArt();
    const target=page.locator('[data-select-building="'+slot+'"]');
    for(let attempt=0;attempt<tiers.length&&!await target.isVisible();attempt++){
     const first=Number(await page.locator('.game-roster-list [data-select-building]:visible').first().getAttribute('data-select-building'));
@@ -52,6 +68,7 @@ function expectedArt(id,level){
    }
    assert(await target.isVisible(),'building '+slot+' is visible through the roster pager');
    await target.click();
+   await waitForBuildingArt();
   }
   for(const level of [1,2,3,6]){
    s.buildings.forEach(b=>b.artLevel=level);await page.evaluate(()=>window.YomamaEcon.refresh());
@@ -64,51 +81,49 @@ function expectedArt(id,level){
     else if(expected.includes('/spritesheets/'))assert(await main.evaluate(img=>img.naturalWidth===img.naturalHeight*8),'eight horizontal square frames');
     const roster=page.locator('[data-select-building="'+slot+'"] .k-art img');
     assert.equal(await roster.getAttribute('src'),await main.getAttribute('src'));
-    assert.equal(await roster.evaluate(img=>getComputedStyle(img).animationName),'none');
+    await assertStaticArt(main,t.id+' level '+level+' main art');
+    await assertStaticArt(roster,t.id+' level '+level+' roster art');
    }
   }
   s.buildings.forEach(b=>b.artLevel=3);await page.evaluate(()=>window.YomamaEcon.refresh());
   await selectBuilding(0);
   await main.evaluate(img=>img.decode());
-  // Every step must expose exactly one square cell, including the second row.
-  const frames=await main.evaluate(img=>{
-   const animation=img.getAnimations()[0];animation.pause();
-   const size=img.parentElement.getBoundingClientRect(), result=[];
-   for(let i=0;i<8;i++){
-    animation.currentTime=i*120+60;
-    const matrix=new DOMMatrixReadOnly(getComputedStyle(img).transform);
-    result.push([Math.round(matrix.m41/size.width),Math.round(matrix.m42/size.height)]);
-   }
-   animation.play();return result;
+  // Retain the upgraded sheet while displaying exactly its first square cell.
+  const firstFrame=await main.evaluate(img=>{
+   const frame=img.parentElement.getBoundingClientRect(), sheet=img.getBoundingClientRect();
+   return [Math.round(sheet.width/frame.width),Math.round(sheet.height/frame.height),Math.round(sheet.left-frame.left),Math.round(sheet.top-frame.top)];
   });
-  assert.deepEqual(frames,[[0,0],[-1,0],[-2,0],[-3,0],[0,-1],[-1,-1],[-2,-1],[-3,-1]]);
+  assert.deepEqual(firstFrame,[4,2,0,0]);
+  await assertStaticArt(main,'upgraded grid art');
   await page.evaluate(()=>document.fonts.ready);
   await page.screenshot({animations:'disabled',fullPage:true,path:'previews/upgraded-building-sprites-desktop.png'});
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>document.body.classList.contains('game-compact'));
+  await assertStaticArt(main,'mobile art');
   await page.screenshot({animations:'disabled',fullPage:true,path:'previews/upgraded-building-sprites-mobile.png'});
   await page.setViewportSize({width:1366,height:768});
   await page.waitForFunction(()=>!document.body.classList.contains('game-compact'));
   await page.evaluate(()=>window.YomamaEcon.refresh());
-  await page.locator('[data-build-art]').click();
-  assert.equal(await main.evaluate(img=>getComputedStyle(img).animationPlayState),'paused');
-  const pausedTransform=await main.evaluate(img=>getComputedStyle(img).transform);
-  await page.waitForTimeout(160);
-  assert.equal(await main.evaluate(img=>getComputedStyle(img).transform),pausedTransform);
-  await page.locator('[data-build-art]').click();
-  assert.equal(await main.evaluate(img=>getComputedStyle(img).animationPlayState),'running');
+  await waitForBuildingArt();
+  await assertStaticArt(main,'refreshed art');
+  await page.reload();await main.waitFor();
+  await waitForBuildingArt();
+  await assertStaticArt(main,'reloaded art');
   s.paused=true;await page.evaluate(()=>window.YomamaEcon.refresh());
-  assert.equal(await main.evaluate(img=>getComputedStyle(img).animationPlayState),'paused');
+  await waitForBuildingArt();
+  await assertStaticArt(main,'paused game art');
   s.paused=false;await page.evaluate(()=>window.YomamaEcon.refresh());
+  await waitForBuildingArt();
+  await assertStaticArt(main,'resumed game art');
   await page.emulateMedia({reducedMotion:'reduce'});
-  assert.equal(await main.evaluate(img=>getComputedStyle(img).animationName),'none');
-  assert.equal(await page.locator('[data-build-art]').isVisible(),false);
+  await assertStaticArt(main,'reduced motion art');
   await page.emulateMedia({reducedMotion:'no-preference'});
+  await assertStaticArt(main,'normal motion art');
   await page.goto(base+'/advanced-hq.html');await page.locator('.game-business-picker').waitFor();
   const picker=page.locator('.game-business-picker .k-art img');
   await picker.evaluate(img=>img.decode());
   assert((await picker.getAttribute('src')).endsWith('-level-3_8f.png'));
-  assert.equal(await picker.evaluate(img=>getComputedStyle(img).animationPlayState),'paused');
+  await assertStaticArt(picker,'management picker art');
   assert.deepEqual(missingArt,[],'normal progression must never request missing building assets');
   // Missing sheets fall back to the original strip, then the retained static art.
   failUpgrade=true;await page.goto(base+'/buildings.html');
@@ -116,11 +131,12 @@ function expectedArt(id,level){
   await page.waitForFunction(()=>{const img=document.querySelector('.game-site .k-art img');return img&&img.src.endsWith('/spritesheets/farm_8f.png')&&img.complete&&img.naturalWidth>0;});
   assert((await main.getAttribute('src')).endsWith('/spritesheets/farm_8f.png'));
   assert.equal(await main.evaluate(img=>img.parentElement.classList.contains('k-art--grid')),false);
+  await assertStaticArt(main,'fallback strip art');
   failBase=true;await page.reload();
   await page.waitForFunction(()=>{const img=document.querySelector('.game-site .k-art img');return img&&img.src.endsWith('/upgrades/farm-level-3.png')&&img.complete&&img.naturalWidth>0;});
   assert((await main.getAttribute('src')).endsWith('/upgrades/farm-level-3.png'));
-  assert.equal(await main.evaluate(img=>getComputedStyle(img).animationName),'none');
+  await assertStaticArt(main,'fallback still art');
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({result:'passed',buildingLevelChecks:60,upgradedSheets:20,frames:8,pause:true,reducedMotion:true,fallbacks:2,screenshots:2}));
+  console.log(JSON.stringify({result:'passed',buildingLevelChecks:60,upgradedSheets:20,permanentlyStatic:true,refresh:true,reload:true,pause:true,reducedMotion:true,fallbacks:2,screenshots:2}));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

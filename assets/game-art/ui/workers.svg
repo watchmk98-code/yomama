@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <title>Worker wearing a hard hat</title>
+  <path fill="#111111" d="M12 2h8v2h4v2h2v6h2v4h-2v4h-2v3h-2v1h4v2h3v5H3v-5h3v-2h4v-1H8v-3H6v-4H4v-4h2V6h2V4h4z"/>
+  <path fill="#2876c1" d="M10 24h12v2h4v3H6v-3h4z"/>
+  <path fill="#56b8f0" d="M10 24h4v5H6v-3h4zM18 24h4v2h2v3h-6z"/>
+  <path fill="#b1e9ff" d="M10 24h2v3H8v-1h2zM20 24h2v2h-2z"/>
+  <path fill="#173960" d="M12 26h8v3h-8z"/>
+  <path fill="#d89154" d="M12 21h8v4h-2v2h-4v-2h-2zM8 15h16v4H8z"/>
+  <path fill="#f4bc7c" d="M10 14h12v6h-2v2h-8v-2h-2z"/>
+  <path fill="#ffdda6" d="M10 14h3v5h-3zM13 14h7v1h-7z"/>
+  <path fill="#111111" d="M11 16h2v2h-2zM19 16h2v2h-2zM13 19h1v1h4v-1h1v2h-6z"/>
+  <path fill="#c67b15" d="M10 6h12v2h2v4h2v2H6v-2h2V8h2z"/>
+  <path fill="#ffb000" d="M10 6h12v6H8V8h2zM6 12h18v2H6z"/>
+  <path fill="#ffe7a0" d="M10 6h4v2h-4zM8 8h2v3H8zM15 4h2v8h-2z"/>
+  <path fill="#ffda63" d="M6 12h9v1H6z"/>
+</svg>

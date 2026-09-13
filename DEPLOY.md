@@ -76,7 +76,7 @@ When the economy has changed and everyone should start over:
 
 1. Deploy the new code first (Manual Deploy), so the rules on disk are the
    rules the server runs.
-2. In the Shell: `python3 admin.py --db /data/game.db reset YSNRD --yes`
+2. In the Shell: `python3 admin.py --db /data/game.db reset CODE --yes`
    (or `reset --all --yes`).
 
 Cash, buildings, goods, positions and the class clock start over under the
@@ -88,7 +88,7 @@ nothing happens.
 
 To show what a few days of play look like without waiting for them:
 
-    python3 admin.py --db /data/game.db advance YSNRD F2XHJ --days 4 --random-hours 24 --yes
+    python3 admin.py --db /data/game.db advance CODE1 CODE2 --days 4 --random-hours 24 --yes
 
 Each class named moves 4 days ahead in game time, plus a random 0-24 hours
 drawn separately per class, and every town in it is replayed as if its
@@ -111,7 +111,7 @@ deep, some keep money back, some skip visits), so towns differ. The
 stand-in only does what a student could do from the pages and never
 takes the quiz for anyone.
 
-    python3 admin.py --db /data/game.db advance YSNRD F2XHJ --days 4 --random-hours 24 --play --yes
+    python3 admin.py --db /data/game.db advance CODE1 CODE2 --days 4 --random-hours 24 --play --yes
 
 Already jumped without `--play`? Either let the stand-in spend the pile
 on top (`advance CODE --days 1 --play --yes`: the town keeps everything
@@ -119,6 +119,22 @@ it has, ends a day further on with businesses and upgrades bought), or
 start that class over and replay it properly (`reset CODE --yes`, then
 the `--play` command above). Four played days from a fresh town end with
 eight or nine businesses and a few million YM.
+
+## 6c. Testing-period switches (September 2026)
+
+Three things are switched off for the test classes. Each is one line to
+undo; a rule in `config/economy.v4.json` reaches a class only when that
+class is reset (rules are stamped per class), the page lock reaches
+everyone on the next deploy.
+
+| What | Where | To reopen |
+|---|---|---|
+| Research and Know-how (quests pay Prestige only, no research can be bought or applies) | `businessDesign.researchEnabled: false` | set to `true` (or delete the key), deploy, `reset CODE --yes` |
+| Worker head count pinned at 104 for every town | `workforce.populationFixedTotal: 104` | delete the key (or `0`), deploy, reset; growth was recorded meanwhile and resumes |
+| Operations page shows only the Focus tree ("CLOSED FOR TESTING") | `LOCKED = true` at the top of `operations-lock.js` | set `false` and bump the `?v=` of `operations-lock.js` in `advanced-hq.html`, deploy |
+
+`reset` takes one class code per call (`reset CODE1 --yes`, then
+`reset CODE2 --yes`), or `reset --all --yes` for every active class.
 
 ## 7. Updating the code
 

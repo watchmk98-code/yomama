@@ -1,5 +1,7 @@
 # Opening, income and system purposes
 
+> The fixed-project sequence documented below describes legacy class snapshots. New classes with `businessDesign.connectedProgression` use three active order containers, separate group-project tracking and real business quests. See [SYSTEM_ROLES.md](SYSTEM_ROLES.md) for the current rules and deployment/reset behavior. The historical pacing results below do not measure the connected version.
+
 Implemented 2026-09-13. These rules are in the game engine; no economy configuration version bump or class reset is required. Existing access, seats, authentication and class clocks are preserved.
 
 ## What each system does

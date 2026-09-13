@@ -111,6 +111,28 @@ def test_upgrade_persists_and_reserve_survives_reloading(town):
     assert state(token)['buildings'][0]['reserve'] is True
 
 
+@pytest.mark.parametrize('kind',['production','sales'])
+def test_upgrade_response_and_reload_show_new_income_at_the_same_tick(town,kind):
+    _,_,players=town
+    token=players[0]['token']
+    def prepare(cfg,st):
+        st['cash']=10000
+        if kind=='production': st['b'][0].update(sales=3,auto=3)
+    edit(token,prepare)
+    before=state(token);other=state(players[1]['token'])
+    after=A.econ_upgrade(dict(token=token,slot=0,kind=kind))
+    assert after['tick']==before['tick']
+    assert after['incomePerMinute']>before['incomePerMinute']
+    assert after['buildings'][0]['incomePerMinute']>before['buildings'][0]['incomePerMinute']
+    assert after['receipt']['incomeBefore']==before['incomePerMinute']
+    assert after['receipt']['incomeAfter']==after['incomePerMinute']
+    assert after['cash']==before['cash']-after['receipt']['cost']
+    assert after['earnings']==before['earnings']
+    A._book_cache.clear()
+    assert state(token)['incomePerMinute']==after['incomePerMinute']
+    assert state(players[1]['token'])['incomePerMinute']==other['incomePerMinute']
+
+
 def test_orders_reject_shortages_and_stale_double_fulfillment(town):
     _, _, players = town
     token = players[0]['token']

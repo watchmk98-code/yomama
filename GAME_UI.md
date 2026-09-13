@@ -9,7 +9,7 @@ section is Game; Build is its business-management screen.
 | Dash | Business overview and class standings |
 | Build | Selected business, stock, sales controls, upgrades, construction, and events |
 | Market | Orders, delivery reservations, and regular buyers |
-| Operations | Raw output, recipes, and production upgrades |
+| Operations | Building focus trees, permanent teams, recipes, quests and Advanced HQ |
 | Licence | Milestones, quiz, and the separate practice portfolio |
 
 ## Build reference layout
@@ -44,7 +44,12 @@ costs, ingredients, stock, timers and permissions remain server-owned.
 `game-fit.js` makes the four management pages fill the available viewport.
 Desktop panels stretch to the bottom. Buildings, recipes, inventories, orders,
 and milestones use explicit pagination when their content exceeds available
-room. Controls must not be clipped merely to hide scrollbars.
+room. Order and regular-buyer requirements show every item at once without
+ingredient arrows. Short lists keep the current maximum type size; longer lists
+adapt text, icons and spacing to the available width and height. Sizes reset on
+each render and resize so shorter lists grow back. Controls must not be clipped
+merely to hide scrollbars. Verify requirements with
+`node tests/ui_market_goods_fit.cjs` and `node tests/ui_delivery_recipes.cjs`.
 
 Below 1100px width or at most 650px height, view tabs switch between panels. A compact
 navigation select and business selector preserve access without long lists.
@@ -66,9 +71,13 @@ through its pager. No fake data, filler paragraphs, or repeated order cards.
 
 Market gives a brief pixel-art crying-face reaction on an order card when the player
 successfully replaces an order that was fulfillable or a jackpot when its request
-was sent, including orders skipped by queued spam clicks. Saving a jackpot with
-Save for this order shows a green pixel dollar sign using the same reaction;
-releasing goods or saving other orders does not trigger it. New Order has no cooldown.
+was sent, including orders skipped by queued spam clicks. Save for this order
+shows a pixel thumbs-up for standard, large and rare orders, or a pixel lucky 7
+for jackpot orders. Successful deliveries show a green pixel dollar sign, or
+pixel gold bars when the delivered order was a jackpot.
+Town projects also show the thumbs-up when saved and the dollar when delivered,
+including the final project. Releasing goods does not trigger a reaction.
+New Order has no cooldown.
 The reaction appears immediately, lasts 0.5 seconds with a fade at the end,
 survives rapid card re-renders, and does not
 intercept clicks. Failed requests and newly generated ready orders do not
@@ -77,7 +86,10 @@ shows the same icon without animation. This is
 local visual feedback with no economic penalty or saved state. Verify with
 `node tests/ui_order_reaction.cjs` using intercepted API responses.
 The transparent sprite is `assets/game-art/reactions/crying-face-pixel.png`,
-preloaded by Market alongside `assets/game-art/reactions/dollar-sign-pixel.svg`.
+preloaded by Market alongside `assets/game-art/reactions/dollar-sign-pixel.svg`,
+`assets/game-art/reactions/thumbs-up-pixel.svg`,
+`assets/game-art/reactions/lucky-seven-pixel.svg` and
+`assets/game-art/reactions/gold-bars-pixel.svg`.
 The crying face's generation prompt is stored beside it.
 
 ## Breakfast Club

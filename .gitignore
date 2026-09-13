@@ -19,3 +19,7 @@ backups/
 roster*.json
 output/
 previews/missed-order-*.png
+
+# stray output dirs and local installs
+undefined/
+node_modules/

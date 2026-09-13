@@ -1,4 +1,4 @@
-/* Named delivery recipes stay readable and every ingredient remains reachable.
+/* Named delivery recipes stay readable and every ingredient is visible at once.
    All game API writes are intercepted; no player save is changed. */
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
@@ -69,14 +69,9 @@ const base=process.argv[2]||'http://127.0.0.1:3007';
      assert.equal(await card.locator('.game-order-name').textContent(),recipes[slot][0]);
      assert.equal(await card.locator('.game-order-channel').textContent(),recipes[slot][1]);
      assert.equal(await card.locator('.game-order-purpose').textContent(),recipes[slot][2]);
-     const seenGoods=new Set();
-     for(let goodsPage=0;goodsPage<5;goodsPage++){
-      const names=await card.locator('.econ-good-line').evaluateAll(es=>es.filter(e=>!e.hidden&&e.getClientRects().length).map(e=>e.querySelector('.econ-good-name').textContent));
-      names.forEach(name=>seenGoods.add(name));await checkBounds(width+'x'+height+' ingredients '+goodsPage);
-      const next=card.locator('.game-pager button:last-child:not(:disabled)');
-      if(!await next.count())break;await next.click();
-     }
-     assert.equal(seenGoods.size,recipes[slot][3].length,'All ingredients accessible at '+width+'x'+height);
+     const names=await card.locator('.econ-good-line').evaluateAll(es=>es.filter(e=>!e.hidden&&e.getClientRects().length).map(e=>e.querySelector('.econ-good-name').textContent));
+     assert.equal(new Set(names).size,recipes[slot][3].length,'All ingredients visible at once at '+width+'x'+height);
+     assert.equal(await card.locator('.game-pager').count(),0,'Ingredients need no arrow navigation');
     }
     const next=page.locator('.game-pager[data-page="Orders"] button:last-child:not(:disabled)');
     if(!await next.count())break;await next.click();

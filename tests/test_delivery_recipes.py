@@ -7,6 +7,7 @@ import json
 import pytest
 
 import production_economy as E
+import business_progression as P
 from delivery_recipes import ORDER_RECIPES
 
 
@@ -14,6 +15,11 @@ def town(cfg, tiers=None):
     state = E.new_state(cfg, seed=31)
     state['tierOf'] = list(range(len(cfg['tiers']))) if tiers is None else list(tiers)
     state['b'] = [E._building(tier) for tier in state['tierOf']]
+    # These catalog-coverage fixtures represent established businesses whose
+    # complete recipe catalog survives the introduction of business quests.
+    # Keep operating expenses enabled; fresh signature locks have separate tests.
+    state.pop('businessProgression', None)
+    P.ensure(cfg, state, migrating=True)
     state['offers'] = None
     state['orderRecipeHistory'] = [[], [], []]
     E.offer_contracts(cfg, state, state['tick'])
@@ -182,6 +188,7 @@ def test_migration_keeps_saved_orders_cash_inventory_and_adds_history():
 
 def test_legacy_nonfood_town_can_trade_while_its_food_project_is_locked():
     cfg = E.load_config()
+    cfg['businessDesign'].pop('connectedProgression', None)  # Existing class snapshot.
     old = E.legacy.new_state(E.legacy.load_config())
     old.update(tierOf=[3], b=[dict(tier=3, lv=4, auto=1)], cash=420, pend={})
     migrated = E.migrate_state(cfg, old)
@@ -225,6 +232,8 @@ def test_committed_multichain_recipe_can_be_produced_and_delivered_atomically(mo
     cfg = E.load_config()
     goods = E.catalog(cfg)
     state = town(cfg)
+    # This test isolates reservation/recipe reachability with funded operations.
+    state['cash'] = 1_000_000
     choices = [r for r in ORDER_RECIPES if len(r['goods']) == 5]
     # Exercise a real catalog bundle with as many processed products as possible.
     target = max(choices, key=lambda r: (sum(bool(goods[g].get('inputs')) for g in r['goods']),

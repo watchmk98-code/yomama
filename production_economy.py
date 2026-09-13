@@ -2,7 +2,7 @@
 
 Goods and YM are whole integers. Recipe completion debits inputs atomically;
 retail and deliveries debit the same inventory. Fixed-point work survives JSON
-reloads. Nothing spends player cash without an explicit purchase action.
+reloads. New-rule operating expenses apply only to completed production.
 """
 from __future__ import annotations
 import copy
@@ -12,8 +12,11 @@ import math
 from pathlib import Path
 from delivery_recipes import ORDER_RECIPES
 import business_activity
+import business_operations
+import business_progression
 import earnings
 import town_projects
+import workforce
 import economy as legacy
 from economy import *  # Stable public helpers used by the classroom API.
 
@@ -95,6 +98,9 @@ def new_state(cfg, start_tick=0, seed=1):
     _customer_defaults(st)
     earnings.ensure(st)
     business_activity.ensure(st)
+    business_operations.ensure(cfg,st,new=True)
+    workforce.ensure(cfg,st)
+    business_progression.ensure(cfg,st)
     town_projects.default(cfg,st)
     offer_contracts(cfg,st,start_tick)
     return st
@@ -114,6 +120,9 @@ def migrate_state(cfg, st, tick=None):
     # Existing v4 towns gain an empty roster without resetting their economy.
     _customer_defaults(st)
     if st.get('modelVersion')==4:
+        workforce.ensure(cfg,st)
+        business_operations.ensure(cfg,st)
+        business_progression.ensure(cfg,st,migrating=True)
         town_projects.migrate(cfg,st)
         _sync_project_offer(cfg,st)
         return st
@@ -148,6 +157,9 @@ def migrate_state(cfg, st, tick=None):
     earnings.prune(cfg,st,clear=True)
     business_activity.prune(cfg,st,clear=True)
     town_projects.migrate(cfg,st)
+    workforce.ensure(cfg,st)
+    business_operations.ensure(cfg,st)
+    business_progression.ensure(cfg,st,migrating=True)
     offer_contracts(cfg,st,st.get('tick',0))
     return st
 
@@ -167,6 +179,9 @@ def product_speed(cfg, st, b, good):
     chosen = {'coffee': 'roastery_espresso_shots', 'pastry': 'roastery_pastries'}.get(event.get('upgrade'))
     if event.get('stage') == 5 and good['id'] == chosen:
         speed += 25
+    speed += business_operations.speed_bonus(cfg,b,good)
+    speed += business_progression.speed_bonus(cfg,st,b,good)
+    speed += workforce.bonuses(cfg,st,b)['production']
     return speed
 
 
@@ -198,11 +213,26 @@ def _upgrade_capacity(cfg,st,slot,kind):
     b=st['b'][slot];goods=cfg['tiers'][st['tierOf'][slot]]['goods']
     if kind=='production':
         rate=sum(product_speed(cfg,st,b,good)/100*good['quantity']*60/
-                 (good['cycleTicks']*cfg['global']['tick']) for good in goods)
+                 (good['cycleTicks']*cfg['global']['tick']) for good in goods
+                 if business_progression.product_unlocked(cfg,st,good['id']))
     else:
         rate=sum(customer_demand(cfg,st,b)/10000*60/
                  (good['cycleTicks']*cfg['global']['tick']) for good in goods)
     return round(rate,2)
+
+
+def _optimized_production_income(cfg,st,slot):
+    """Retail value of installed output with enough inputs and buyers.
+
+    This isolated production potential assumes the business is running, all
+    unlocked recipes have supplies, and every output can be sold. It does not
+    forecast current sales, deduct ingredient costs or credit any cash.
+    """
+    b=dict(st['b'][slot],paused=False)
+    goods=cfg['tiers'][st['tierOf'][slot]]['goods']
+    return sum(product_speed(cfg,st,b,good)/100*good['quantity']*60/
+               (good['cycleTicks']*cfg['global']['tick'])*good['unitPrice']
+               for good in goods if business_progression.product_unlocked(cfg,st,good['id']))
 
 
 def upgrade_preview(cfg,st,slot,kind):
@@ -211,7 +241,9 @@ def upgrade_preview(cfg,st,slot,kind):
     before_capacity=_upgrade_capacity(cfg,st,slot,kind)
     after_capacity=_upgrade_capacity(cfg,after,slot,kind)
     unit={'production':'goods/min','sales':'walk-ins/min','storage':'spaces'}[kind]
-    delta=round(town_income(cfg,after)-town_income(cfg,st),2)
+    income_before=round(town_income(cfg,st),2)
+    income_after=round(town_income(cfg,after),2)
+    delta=round(income_after-income_before,2)
     if kind=='storage':
         message=f'+{_capacity(cfg,after,slot)-_capacity(cfg,st,slot)} spaces · income unchanged'
     elif delta!=0: message=f'Est. ongoing income {delta:+g} YM/min'
@@ -228,13 +260,37 @@ def upgrade_preview(cfg,st,slot,kind):
             message='Ingredients limit output · supply the recipes'
         else: message='Customer demand limits income · extra output goes to stock'
     unlocks=kind=='production' and after['b'][slot]['lv']==3 and bool(focus_options(cfg,after['b'][slot]))
-    return dict(incomeDelta=delta,consequence=message,unlocksSpecialty=unlocks,
+    result=dict(incomeBefore=income_before,incomeAfter=income_after,
+                incomeDelta=delta,consequence=message,unlocksSpecialty=unlocks,
                 capacityBefore=before_capacity,capacityAfter=after_capacity,capacityUnit=unit,
                 effect=f'{before_capacity:g} → {after_capacity:g} {unit}')
+    if kind=='production':
+        optimized_before=round(_optimized_production_income(cfg,st,slot),2)
+        optimized_after=round(_optimized_production_income(cfg,after,slot),2)
+        result.update(optimizedIncomeBefore=optimized_before,optimizedIncomeAfter=optimized_after,
+                      optimizedIncomeDelta=round(optimized_after-optimized_before,2))
+    if business_operations.enabled(cfg):
+        before_rates,before_regulars=_flows(cfg,st)
+        after_rates,after_regulars=_flows(cfg,after)
+        goods=cfg['tiers'][st['tierOf'][slot]]['goods']
+        before_sales=sum(before_rates[g['id']]['retail']*g['unitPrice'] for g in goods)+before_regulars['byBuilding'].get(str(slot),0)
+        after_sales=sum(after_rates[g['id']]['retail']*g['unitPrice'] for g in goods)+after_regulars['byBuilding'].get(str(slot),0)
+        before_cost=business_operations.forecast_cost(cfg,st,slot,before_rates)
+        after_cost=business_operations.forecast_cost(cfg,after,slot,after_rates)
+        before_profit=before_sales-before_cost
+        after_profit=after_sales-after_cost
+        result.update(operatingCostScope='business',
+                      businessIncomeBefore=round(before_sales,2),businessIncomeAfter=round(after_sales,2),
+                      operatingCostBefore=round(before_cost,2),operatingCostAfter=round(after_cost,2),
+                      operatingCostDelta=round(after_cost-before_cost,2),
+                      profitBefore=round(before_profit,2),profitAfter=round(after_profit,2),
+                      profitDelta=round(after_profit-before_profit,2))
+    return result
 
 
 def customer_demand(cfg, st, b):
     base = sales_multiplier(cfg, b)
+    base += cfg['production']['customerBasePercent'] * workforce.bonuses(cfg,st,b)['customer']
     if cfg['tiers'][b['tier']]['id'] == 'roastery' and st.get('regularDeliveries', 0) >= 3:
         base = base * 120 // 100
     return base
@@ -243,7 +299,10 @@ def customer_demand(cfg, st, b):
 def order_reservations(st, exclude=None):
     """Committed orders own a bounded amount of stock, in board order."""
     held = {}
-    for order in st.get('offers') or []:
+    orders = list(st.get('offers') or [])
+    if st.get('legacyProjectOffer'):
+        orders.append(st['legacyProjectOffer'])
+    for order in orders:
         if order.get('committed') and order['id'] != exclude:
             for need in order['requirements']:
                 gid = need['goodId']
@@ -288,8 +347,9 @@ def chain_reservations(cfg,st):
     protected={}
     batches=cfg['production']['chainBufferBatches']
     for slot,ti in enumerate(st['tierOf']):
-        if not st['b'][slot].get('processing',True): continue
+        if not st['b'][slot].get('processing',True) or business_operations.paused(cfg,st['b'][slot]): continue
         for good in cfg['tiers'][ti]['goods']:
+            if not business_progression.product_unlocked(cfg,st,good['id']): continue
             for need in good.get('inputs',[]):
                 protected[need['goodId']]=protected.get(need['goodId'],0)+need['quantity']*batches
     return protected
@@ -302,7 +362,10 @@ def _produce(cfg,st,tick=None):
     # Tier order is stable and dependency edges always point to an earlier good.
     for slot in sorted(range(len(st['b'])),key=lambda i:st['tierOf'][i]):
         b=st['b'][slot];tier=cfg['tiers'][st['tierOf'][slot]]
+        if business_operations.paused(cfg,b): continue
         for good in tier['goods']:
+            if not business_progression.product_unlocked(cfg,st,good['id']):
+                st['productionBlocked'][good['id']]=dict(reason='quest');continue
             if good.get('inputs') and not b.get('processing',True): continue
             gid=good['id'];denom=good['cycleTicks']*100
             work=pwork.get(gid,0)+product_speed(cfg,st,b,good)
@@ -315,8 +378,12 @@ def _produce(cfg,st,tick=None):
                 if inv.get(gid,0)+good['quantity']>_good_capacity(cfg,st,slot,gid):
                     st['productionBlocked'][gid]=dict(reason='storage')
                     work=denom;break
+                if not business_operations.charge_batch(cfg,st,b,good,st.get('tick',0) if tick is None else tick):
+                    st['productionBlocked'][gid]=dict(reason='cash')
+                    work=denom;break
                 for n in needs: inv[n['goodId']]-=n['quantity']
                 inv[gid]=inv.get(gid,0)+good['quantity']
+                business_progression.record_production(cfg,st,gid,good['quantity'])
                 made+=good['quantity'];value+=good['quantity']*good['unitPrice'];work-=denom
                 by_building[slot]=by_building.get(slot,0)+good['quantity']
             pwork[gid]=work
@@ -332,12 +399,13 @@ def _retail(cfg,st,tick=None):
             gid=good['id'];denom=good['cycleTicks']*10000
             # Idle demand cannot be banked then cashed in as unlimited customers.
             work=st['salesWork'].get(gid,0)+customer_demand(cfg,st,b)
-            if b['reserve']:
+            if b['reserve'] or business_operations.paused(cfg,b):
                 st['salesWork'][gid]=0;continue
             available=max(0,inv.get(gid,0)-protected.get(gid,0))
-            take=min(available,work//denom)
+            take=min(available,int(work//denom))
             if take:
                 inv[gid]-=take;gross=take*good['unitPrice']
+                business_progression.record_sale(cfg,st,[dict(goodId=gid,quantity=take)],'walkIns')
                 earned+=gross;slot_income+=gross;sold+=take;work-=take*denom
                 units_by_building[slot]=units_by_building.get(slot,0)+take
             st['salesWork'][gid]=work%denom
@@ -352,9 +420,13 @@ def _retail(cfg,st,tick=None):
 
 
 def player_tick(cfg,cls,st,k):
+    workforce.ensure(cfg,st)
+    business_operations.ensure(cfg,st)
     if st.get('build') is not None and k>=st['build']['t']:
         finish_build(cfg,st,k)
     _produce(cfg,st,k+1);_tick_customer_contracts(cfg,st,k+1);_retail(cfg,st,k+1);_sync_pools(cfg,st)
+    business_operations.advance_shifts(cfg,st)
+    workforce.advance(cfg,st)
     st['tick']=k+1
 
 
@@ -392,6 +464,7 @@ def advance_class(cfg,cls,players,start,target):
             st['recentRetail']={}
             earnings.prune(cfg,st,tick=target,clear=True)
             business_activity.prune(cfg,st,tick=target,clear=True)
+            business_operations.prune(cfg,st,tick=target,clear=True)
             # Production beyond the absence cap is never paid or caught up.
             # Preserve the interval remaining at the cap for the next visit.
             for contract in st.get('customerContracts',{}).get('active',[]):
@@ -414,7 +487,8 @@ def revS(cfg,st): return sum(bRev(cfg,st,i) for i in range(len(st['b'])))
 def warehouse_cap(cfg,st): return [_capacity(cfg,st,i) for i in range(len(st['b']))]
 def net_worth(cfg_or_state,st=None):
     st=cfg_or_state if st is None else st
-    return int(st['cash'])+sum(st.get('pend',{}).values())+int(st['book'])
+    return (int(st['cash'])+sum(st.get('pend',{}).values())+int(st['book'])
+            +int(st.get('businessProgression',{}).get('equipmentValue',0)))
 
 
 def upgrade_cost(cfg,st,slot,kind):
@@ -440,6 +514,7 @@ def buy_upgrade(cfg,st,slot,kind):
     consequence=upgrade_preview(cfg,st,slot,kind)
     key={'production':'lv','sales':'sales','storage':'storage'}[kind]
     st['cash']-=cost;st['book']+=cost;st['b'][slot][key]+=1
+    business_operations.record_investment(cfg,st,slot,cost)
     st['b'][slot]['auto']=st['b'][slot]['sales']
     if kind=='production' and st['b'][slot]['lv']>=cfg['gate']['levelNeeded']: st['checklist']['lv25']=True
     if kind=='sales': st['checklist']['auto']=True
@@ -466,6 +541,7 @@ def sell_one(cfg,st,bi,price=1,manual=True):
     if not units: return dict(ok=False,why='No spare stock')
     gross=value*cfg['production']['clearStockPercent']//100
     for gid,q in removed: st['inventory'][gid]-=q
+    business_progression.record_sale(cfg,st,[dict(goodId=gid,quantity=q) for gid,q in removed],'clearance')
     st['cash']+=gross;_sync_pools(cfg,st)
     earnings.record(cfg,st,'clearance',gross,by_building={bi:gross})
     return dict(ok=True,gross=gross,net=gross,tax=0,quantity=units,discountPercent=100-cfg['production']['clearStockPercent'])
@@ -488,10 +564,15 @@ def expansion_quote(cfg,st,ti):
     missing=required-used
     full_cost=t['baseCost']+missing*substitute
     grant=town_projects.construction_grant(cfg,st,ti)
-    return dict(baseCost=t['baseCost'],cost=0 if grant else full_cost,materialUnitValue=substitute,
+    result=dict(baseCost=t['baseCost'],cost=0 if grant else full_cost,materialUnitValue=substitute,
                 materialCost=required,materialsCost=required,materialsUsed=0 if grant else used,
                 materialsMissing=0 if grant else missing,constructionGrant=grant,
                 fundedValue=t['baseCost']+required*substitute if grant else 0)
+    if business_operations.enabled(cfg):
+        requirements=business_progression.expansion_requirements(cfg,st,ti)
+        result.update(requirements=requirements['requirements'],requirementsReady=requirements['ready'],
+                      requirementWhy=requirements.get('why',''),rebuildRemainingSeconds=business_operations.cooldown_seconds(cfg,st,ti))
+    return result
 
 
 def can_expand(cfg,st,ti):
@@ -500,6 +581,9 @@ def can_expand(cfg,st,ti):
     if len(st['queue'])+bool(st.get('build'))>=cfg['global']['queueDepth']:
         return dict(quote,ok=False,why='Construction queue full')
     if ti not in expand_options(cfg,st): return dict(quote,ok=False,why='Choose an available business',frontier=expand_options(cfg,st))
+    if quote.get('rebuildRemainingSeconds',0):
+        return dict(quote,ok=False,why='Rebuild available in {}s'.format(quote['rebuildRemainingSeconds']))
+    if not quote.get('requirementsReady',True): return dict(quote,ok=False,why=quote['requirementWhy'])
     if st['cash']<quote['cost']: return dict(quote,ok=False,why=f'Need {quote["cost"]-st["cash"]} YM more')
     return dict(quote,ok=True)
 
@@ -507,10 +591,14 @@ def can_expand(cfg,st,ti):
 def expand(cfg,st,ti,tick):
     result=can_expand(cfg,st,ti)
     if not result['ok']: return result
+    progression=business_progression.consume_expansion(cfg,st,ti)
+    if not progression['ok']: return progression
     if result.get('constructionGrant'):
         claimed=town_projects.consume_construction_grant(cfg,st,ti)
         if not claimed['ok']: return claimed
-    st['cash']-=result['cost'];st['book']+=result['cost']+result.get('fundedValue',0);st['materials']-=result['materialsUsed']
+    installed_non_cash=result.get('fundedValue',0)+progression.get('consumedValue',0)
+    st['cash']-=result['cost'];st['book']+=result['cost']+installed_non_cash;st['materials']-=result['materialsUsed']
+    business_operations.reserve_construction(cfg,st,ti,result['cost'],installed_non_cash)
     if st.get('build') is None:
         st['build']=dict(i=ti,t=tick+max(1,jsround(cfg['tiers'][ti]['timerH']*3600/cfg['global']['tick'])))
     else: st['queue'].append(ti)
@@ -519,6 +607,7 @@ def expand(cfg,st,ti,tick):
 
 def finish_build(cfg,st,k,DAY=None):
     ti=st['build']['i'];st['b'].append(_building(ti));st['tierOf'].append(ti);st['build']=None
+    business_operations.complete_construction(cfg,st,len(st['b'])-1)
     st['unlock'][str(len(st['b'])-1)]=k/ticks_per_day(cfg);st['report']['builds']+=1
     if st.get('gateDay') is None and len(st['b'])>=cfg['global']['gateTier']: st['gateDay']=k/ticks_per_day(cfg)
     if st['queue']:
@@ -560,13 +649,22 @@ def _customer_catalog(cfg,st):
         required=set()
         for gid,qty in needs: dependencies(gid,required)
         missing=sorted({goods[gid]['tier'] for gid in required}-owned)
+        locked=next((goods[gid] for gid in required if not business_progression.product_unlocked(cfg,st,gid)),None)
         requirements=[dict(goodId=gid,name=goods[gid]['name'],buildingId=goods[gid]['buildingId'],quantity=qty)
                       for gid,qty in needs]
-        customers.append(dict(id=customer_id,name=name,description=description,available=not missing,
-                              unlockText='Open '+', '.join(cfg['tiers'][ti]['name'] for ti in missing) if missing else '',
+        customers.append(dict(id=customer_id,name=name,description=description,available=not missing and locked is None,
+                              unlockText='Open '+', '.join(cfg['tiers'][ti]['name'] for ti in missing) if missing else
+                              'Complete the product quest for '+locked['name'] if locked else '',
                               requirements=requirements,reward=jsround(sum(goods[gid]['unitPrice']*qty for gid,qty in needs)*1.25),
                               intervalSeconds=seconds))
     return customers
+
+
+def _customer_business_paused(cfg,st,contract):
+    if not business_operations.enabled(cfg): return False
+    paused_goods={good['id'] for slot,b in enumerate(st['b']) if business_operations.paused(cfg,b)
+                  for good in cfg['tiers'][st['tierOf'][slot]]['goods']}
+    return any(need['goodId'] in paused_goods for need in contract['requirements'])
 
 
 def _customer_stock_plan(cfg,st):
@@ -583,7 +681,7 @@ def _customer_stock_plan(cfg,st):
     totals={};assigned={};by_tier={ti:i for i,ti in enumerate(st['tierOf'])}
     for contract in sorted(active,key=lambda c:c['slot']):
         stock={};assigned[contract['id']]=stock
-        if contract['paused']: continue
+        if contract['paused'] or _customer_business_paused(cfg,st,contract): continue
         for need in contract['requirements']:
             gid=need['goodId'];slot=by_tier[goods[gid]['tier']]
             prior=protected.get(gid,0)+totals.get(gid,0)
@@ -669,7 +767,7 @@ def manage_customer_contract(cfg,st,slot,action,customer_id=None,contract_id=Non
 def _tick_customer_contracts(cfg,st,tick):
     data=st.get('customerContracts',{})
     for contract in sorted(data.get('active',[]),key=lambda c:c['slot']):
-        if contract['paused'] or tick<contract['nextDeliveryTick']: continue
+        if contract['paused'] or _customer_business_paused(cfg,st,contract) or tick<contract['nextDeliveryTick']: continue
         stock=_customer_stock_plan(cfg,st)[1].get(contract['id'],{})
         if any(stock.get(n['goodId'],0)<n['quantity'] for n in contract['requirements']): continue
         # Debit every item together; shortages never receive partial payments.
@@ -677,6 +775,7 @@ def _tick_customer_contracts(cfg,st,tick):
         st['cash']+=contract['reward']
         earnings.record_goods(cfg,st,'regularBuyers',contract['reward'],contract['requirements'],tick=tick)
         business_activity.record_regular_shipment(cfg,st,contract['requirements'],tick=tick)
+        business_progression.record_sale(cfg,st,contract['requirements'],'regularBuyers')
         contract['deliveries']+=1;contract['earned']+=contract['reward']
         data['deliveries']+=1;data['earned']+=contract['reward']
         st['report']['customerEarned']+=contract['reward']
@@ -701,6 +800,8 @@ def customer_contract_payload(cfg,st):
         status_text='Paused · goods released' if contract['paused'] else (
             'Waiting for {} {}'.format(missing[0]['quantity']-missing[0]['owned'],missing[0]['name']) if status=='waiting'
             else 'Stock ready · ships automatically' if not missing else 'Saving the next shipment')
+        if _customer_business_paused(cfg,st,contract):
+            status='paused';status_text='A supplying business is paused · resume it to ship'
         larger=contract.get('largerOrder',False);offer=None
         if not larger and contract['deliveries']>=3 and contract['customerId'] in by_id:
             base=by_id[contract['customerId']]
@@ -725,10 +826,11 @@ def _order_recipe(cfg,st,index,rarity,digest,goods):
     def can_make(gid,visiting=frozenset()):
         if gid in producible: return producible[gid]
         if gid in visiting or gid not in goods or goods[gid]['tier'] not in owned: return False
+        if not business_progression.product_unlocked(cfg,st,gid): return False
         producible[gid]=all(can_make(n['goodId'],visiting|{gid}) for n in goods[gid].get('inputs',[]))
         return producible[gid]
     eligible=[r for r in ORDER_RECIPES if all(can_make(gid) for gid in r['goods'])]
-    if index==2:
+    if index==2 and not business_progression.connected_enabled(cfg):
         # Legacy migrations can preserve a town with only an industrial
         # business. Give it ordinary jobs until it can supply breakfast food.
         eligible=[r for r in eligible if r['breakfast']] or eligible
@@ -766,13 +868,22 @@ def _project_order(cfg,st):
 
 def _sync_project_offer(cfg,st):
     offers=st.get('offers') or []
+    if business_progression.connected_enabled(cfg):
+        if len(offers)>2 and offers[2].get('project'):
+            # A saved fixed delivery retains its exact terms outside the three
+            # active containers. Already completed cards promise no more reward.
+            current=town_projects.current_order(cfg,st)
+            if current and offers[2]['id']==current['id']:
+                st.setdefault('legacyProjectOffer',copy.deepcopy(offers[2]))
+            offers[2]=_make_order(cfg,st,2)
+        return
     if len(offers)>2 and offers[2].get('project'):
         current=_project_order(cfg,st)
         if offers[2]['id']!=current['id']: offers[2]=current
 
 
 def _make_order(cfg,st,index):
-    if index==2 and town_projects.enabled(cfg): return _project_order(cfg,st)
+    if index==2 and town_projects.enabled(cfg) and not business_progression.connected_enabled(cfg): return _project_order(cfg,st)
     goods=catalog(cfg)
     serial=st['orderSerial'];st['orderSerial']+=1
     # Independent deterministic randomness: saving/reloading cannot reroll the
@@ -797,9 +908,9 @@ def _make_order(cfg,st,index):
     material_value=cfg['production']['materialCashValue']
     materials=max(1,jsround(value*.25/material_value)) if index == 1 else 0
     reward_percent=jsround([125,110,115][index]*rarity['payoutPercent']/100)
-    breakfast=index==2 and recipe['breakfast']
+    breakfast=index==2 and recipe['breakfast'] and not business_progression.connected_enabled(cfg)
     return dict(id=f'order-{st.get("rngState",1)}-{serial}',name=recipe['name'],recipeId=recipe['id'],purpose=recipe['purpose'],
-                channelLabel=['Quick cash','Building supplies','Breakfast regulars' if breakfast else 'Town deliveries'][index],
+                channelLabel=['Quick cash','Building supplies','Product deliveries' if business_progression.connected_enabled(cfg) else 'Breakfast regulars' if breakfast else 'Town deliveries'][index],
                 requirements=requirements,reward=jsround(value*reward_percent/100),materials=materials,
                 customer='breakfast' if breakfast else None,committed=False,
                 rarity=rarity['id'],rarityLabel=rarity['label'],rewardPercent=reward_percent,retailValue=value)
@@ -820,7 +931,17 @@ def _order_check(st,index,order_id):
 def fulfill_order(cfg,st,offerIndex,order_id=None):
     check=_order_check(st,offerIndex,order_id)
     if not check['ok']: return check
-    order=st['offers'][offerIndex];goods=catalog(cfg)
+    order=st['offers'][offerIndex]
+    result=_settle_order(cfg,st,order)
+    if result['ok']:
+        st['offers'][offerIndex]=_make_order(cfg,st,offerIndex)
+        _sync_pools(cfg,st)
+    return result
+
+
+def _settle_order(cfg,st,order):
+    """One debit and payment, followed by observations of that same delivery."""
+    goods=catalog(cfg)
     if order.get('project'):
         access=town_projects.check(cfg,st,order['id'])
         if not access['ok']: return access
@@ -831,15 +952,38 @@ def fulfill_order(cfg,st,offerIndex,order_id=None):
     for need in order['requirements']: st['inventory'][need['goodId']]-=need['quantity']
     st['cash']+=order['reward'];st['materials']+=order['materials']
     earnings.record_goods(cfg,st,'orders',order['reward'],order['requirements'])
+    business_progression.record_sale(cfg,st,order['requirements'],'orders')
+    if not order.get('project'):
+        town_projects.record_delivery(cfg,st,order['requirements'],order['id'])
     st['cStats']['accepted']+=1;st['cStats']['done']+=1
     raw_value=sum(goods[n['goodId']]['unitPrice']*n['quantity'] for n in order['requirements'])
     st['cStats']['net']+=order['reward']-raw_value;st['checklist']['goodSales']=st['cStats']['done']
     if order.get('customer') == 'breakfast':
         st['regularDeliveries']=min(3,st.get('regularDeliveries',0)+1)
     project_result=town_projects.complete(cfg,st,order['id']) if order.get('project') else {}
-    st['offers'][offerIndex]=_make_order(cfg,st,offerIndex);_sync_pools(cfg,st)
     return dict(ok=True,kind='delivery',reward=order['reward'],materials=order['materials'],orderId=order['id'],
                 projectReward=project_result.get('rewardText',''))
+
+
+def fulfill_legacy_project(cfg,st,order_id):
+    order=st.get('legacyProjectOffer')
+    if not business_progression.connected_enabled(cfg) or not order or order.get('id')!=order_id:
+        return dict(ok=False,why='This saved project delivery is no longer available')
+    result=_settle_order(cfg,st,order)
+    if result['ok']:
+        st.pop('legacyProjectOffer',None)
+        _sync_pools(cfg,st)
+    return result
+
+
+def claim_group_project(cfg,st,project_id):
+    if st.get('legacyProjectOffer'):
+        return dict(ok=False,why='Finish your saved project delivery first')
+    result=town_projects.claim(cfg,st,project_id)
+    if result['ok']:
+        st['cash']+=result['cashReward']
+        earnings.record(cfg,st,'events',result['cashReward'])
+    return result
 
 
 def replace_order(cfg,st,offerIndex,order_id=None):
@@ -898,9 +1042,13 @@ def _flows(cfg,st):
         b=st['b'][by_tier[ti]]
         for g in cfg['tiers'][ti]['goods']:
             rate=product_speed(cfg,st,b,g)/100*60/(g['cycleTicks']*cfg['global']['tick'])
+            if business_operations.paused(cfg,b) or not business_progression.product_unlocked(cfg,st,g['id']): rate=0
             if g.get('inputs') and not b.get('processing',True): rate=0
             for need in g.get('inputs',[]): rate=min(rate,pool.get(need['goodId'],0)/need['quantity'])
             for need in g.get('inputs',[]): pool[need['goodId']]=max(0,pool.get(need['goodId'],0)-rate*need['quantity'])
+            # Inputs above are consumed per batch; downstream supply, sales
+            # and displayed production all count the completed output units.
+            rate*=g['quantity']
             pool[g['id']]=rate
             rates[g['id']]=dict(production=rate,retail=0)
     regulars=earnings.allocate_regular_flow(cfg,st,pool)
@@ -910,7 +1058,7 @@ def _flows(cfg,st):
         for g in cfg['tiers'][ti]['goods']:
             rates[g['id']]['regulars']=regulars['unitsPerMinute'].get(g['id'],0)
             demand=customer_demand(cfg,st,b)/10000*60/(g['cycleTicks']*cfg['global']['tick'])
-            rates[g['id']]['retail']=0 if b['reserve'] else min(pool[g['id']],demand)
+            rates[g['id']]['retail']=0 if b['reserve'] or business_operations.paused(cfg,b) else min(pool[g['id']],demand)
     return rates,regulars
 
 
@@ -970,7 +1118,33 @@ def opening_step(cfg,st,project,order,frontier,build):
                 href='./marketplace.html#town-project',actionLabel='View project')
 
 
+def group_opening_step(group,frontier,build):
+    if not group.get('enabled'):
+        return None
+    if build:
+        return dict(title=build['name']+' is being built',
+                    detail=str(build['remainingSec'])+'s remaining. Your other businesses keep working.')
+    funded=next((item for item in frontier if item.get('constructionGrant')),None)
+    if funded:
+        return dict(title='Your '+funded['name']+' is fully funded',
+                    detail='The group project earned this construction grant.',
+                    action='expand:'+str(funded['tier']),actionLabel='Build with grant',disabled=not funded['canExpand'])
+    if group.get('legacyDelivery'):
+        return dict(title='Finish your saved project delivery',
+                    detail='Its original goods and rewards are preserved.',
+                    href='./buildings.html#group-projects',actionLabel='View saved delivery')
+    current=group.get('current')
+    if not current:
+        return None
+    return dict(title='Group project '+str(group['completed']+1)+'/'+str(group['total'])+' · '+current['title'],
+                detail=('Ready to claim. ' if current['canClaim'] else current['why']+'. ')+current['rewardText']+'.',
+                action='group_project_claim:'+current['projectId'] if current['canClaim'] else None,
+                href=None if current['canClaim'] else './marketplace.html',
+                actionLabel='Claim group reward' if current['canClaim'] else 'View orders')
+
+
 def payload(cfg,st,cls,session,behind=False):
+    business_operations.ensure(cfg,st)
     _sync_project_offer(cfg,st)
     _sync_pools(cfg,st)
     g=cfg['global'];goods=catalog(cfg);rates,regular_flow=_flows(cfg,st);protected=protected_stock(cfg,st)
@@ -991,15 +1165,23 @@ def payload(cfg,st,cls,session,behind=False):
                      customerCapacityPerMinute=round(customer_demand(cfg,st,b)/10000*60/(good['cycleTicks']*g['tick']),2),
                      inputs=[dict(n,name=goods[n['goodId']]['name'],owned=inventory.get(n['goodId'],0),buildingId=goods[n['goodId']]['buildingId']) for n in good.get('inputs',[])])
             rows.append(row);board.append(row)
+            if business_operations.enabled(cfg):
+                locked=not business_progression.product_unlocked(cfg,st,good['id'])
+                row.update(locked=locked,unlockText='Complete this business’s second quest to unlock' if locked else '',
+                           operatingCostPerBatch=business_operations.effective_batch_cost(cfg,b,good,st))
         production=sum(rates[x['id']]['production'] for x in t['goods'])
         sales=sum(rates[x['id']]['retail'] for x in t['goods'])
         potential_income=sum(rates[x['id']]['retail']*x['unitPrice'] for x in t['goods'])+regular_flow['byBuilding'].get(str(slot),0)
         shop_receipts=receipts['byBuilding'][str(slot)]
-        income=shop_receipts['operatingIncome']
+        # Income/min is the installed earning rate, so purchases update it in
+        # this response. Completed payments remain in the earnings receipt.
+        income=potential_income
         recipe_goods=[x for x in t['goods'] if x.get('inputs')]
         recipes=[dict(inputs=[dict(n,name=goods[n['goodId']]['name'],owned=inventory.get(n['goodId'],0),buildingId=goods[n['goodId']]['buildingId']) for n in x['inputs']],
                       output=dict(goodId=x['id'],name=x['name'],quantity=x['quantity']),
-                      available=all(inventory.get(n['goodId'],0)>=n['quantity'] for n in x['inputs'])) for x in recipe_goods]
+                      available=business_progression.product_unlocked(cfg,st,x['id']) and all(inventory.get(n['goodId'],0)>=n['quantity'] for n in x['inputs']),
+                      locked=not business_progression.product_unlocked(cfg,st,x['id']),
+                      unlockText='Complete this business’s second quest to unlock' if not business_progression.product_unlocked(cfg,st,x['id']) else '') for x in recipe_goods]
         blocked=[st.get('productionBlocked',{}).get(x['id'],{}) for x in t['goods']]
         missing=[x['goodId'] for x in blocked if x.get('reason')=='ingredient']
         storage=_goods_count(cfg,st,slot);cap=_capacity(cfg,st,slot)
@@ -1010,6 +1192,10 @@ def payload(cfg,st,cls,session,behind=False):
         elif any(r['quantity']>=r['capacity'] for r in rows): status='Storage full'
         elif any(r['quantity']>max(2,r['reserved']) for r in rows) and sales<production:
             status='More customers needed' if b['sales']<cfg['production']['maxLevel'] else 'Goods ready'
+        if business_operations.paused(cfg,b): status='Business paused'
+        elif any(st.get('productionBlocked',{}).get(good['id'],{}).get('reason')=='cash'
+                 and business_operations.batch_quote(cfg,b,good,st)[0]>st['cash'] for good in t['goods']):
+            status='Need cash for production'
         upgrades={}
         for kind,key in (('production','lv'),('sales','sales'),('storage','storage')):
             cost=upgrade_cost(cfg,st,slot,kind);level=b[key]
@@ -1037,6 +1223,7 @@ def payload(cfg,st,cls,session,behind=False):
         item['focusUnlocked']=b['lv']>=3
         item['focusOptions']=[dict(id=o[0],name=o[1],effect=o[2]) for o in focus_options(cfg,b)]
         item['regularBonus']=20 if t['id']=='roastery' and st.get('regularDeliveries',0)>=3 else 0
+        item.update(business_operations.building_payload(cfg,st,slot,shop_receipts['operatingIncome'],potential_income,rates))
         buildings.append(item)
     frontier=[]
     for ti in expand_options(cfg,st):
@@ -1046,7 +1233,9 @@ def payload(cfg,st,cls,session,behind=False):
                              productionPerMinute=round(sum(60/(x['cycleTicks']*g['tick']) for x in t['goods']),2),
                              timerH=t['timerH'],affordable=st['cash']>=quote['cost'],canExpand=check['ok'],why=check.get('why','')))
     orders=[]
-    for order in st.get('offers') or []:
+    saved_legacy=st.get('legacyProjectOffer') if business_progression.connected_enabled(cfg) else None
+    visible_orders=list(st.get('offers') or [])+([saved_legacy] if saved_legacy else [])
+    for order in visible_orders:
         held=delivery_reservations(cfg,st,exclude=order['id'])
         requirements=[dict(n,name=goods[n['goodId']]['name'],owned=max(0,inventory.get(n['goodId'],0)-held.get(n['goodId'],0)),
                            buildingId=goods[n['goodId']]['buildingId']) for n in order['requirements']]
@@ -1059,19 +1248,34 @@ def payload(cfg,st,cls,session,behind=False):
                            canCommit=room['ok'],commitWhy=room.get('why',''),
                            why=access.get('why','') if not access['ok'] else '' if ready else 'Need '+str(missing[0]['quantity']-missing[0]['owned'])+' '+missing[0]['name'],
                            target=target,delivered=owned,penalty=0,remainingSec=None,progressPercent=round(owned/target*100,1) if target else 100,building=order['name']))
+        if order.get('project') and order.get('projectId'):
+            project_spec=next((p for p in town_projects.PROJECTS if p['id']==order['projectId']),None)
+            if project_spec: orders[-1]['buildingId']=project_spec['building']
         orders[-1]['supplyConflicts']=_project_supply_conflicts(cfg,st,order)
         orders[-1]['replaceRemainingSec']=0  # Also clears cooldowns from older saves.
+    legacy_delivery=orders.pop() if saved_legacy else None
     build=dict(tier=st['build']['i'],name=cfg['tiers'][st['build']['i']]['name'],remainingSec=max(0,(st['build']['t']-st['tick'])*g['tick'])) if st.get('build') else None
     capacity=sum(b['capacity'] for b in buildings);stored=sum(b['stored'] for b in buildings)
-    income=round(sum(b['incomePerMinute'] for b in buildings),2);prod=round(sum(b['productionPerMinute'] for b in buildings),2)
+    income=round(town_income(cfg,st),2);prod=round(sum(b['productionPerMinute'] for b in buildings),2)
     project_order=next((o for o in orders if o.get('project')),None)
     available={n['goodId']:n['owned'] for n in project_order['requirements']} if project_order else {}
-    project=town_projects.project_payload(cfg,st,available)
-    step=opening_step(cfg,st,project,project_order,frontier,build)
-    next_goal=step['title'] if step else 'Grow your businesses'
+    project_held=delivery_reservations(cfg,st)
+    project_stock={gid:max(0,quantity-project_held.get(gid,0)) for gid,quantity in inventory.items()}
+    project=town_projects.project_payload(cfg,st,available,project_stock)
+    group=town_projects.group_payload(cfg,st)
+    if legacy_delivery:
+        group['legacyDelivery']=legacy_delivery
+    step=(group_opening_step(group,frontier,build) if business_progression.connected_enabled(cfg)
+          else opening_step(cfg,st,project,project_order,frontier,build))
+    next_goal=step['title'] if step else 'Grow your conglomerate' if business_progression.connected_enabled(cfg) else 'Grow your businesses'
     newest=buildings[-1]
     return dict(modelVersion=4,tick=st['tick'],tickSeconds=g['tick'],behind=behind,cash=int(st['cash']),
-                rulesRevision=3,townProjects=project,nextStep=step,earnings=receipts,potentialIncomePerMinute=round(town_income(cfg,st),2),regularDeliveries=st.get('regularDeliveries',0),regularTarget=3,
+                operations=business_operations.payload(cfg,st,buildings,receipts['operatingIncome'],town_income(cfg,st)),
+                progression=business_progression.payload(cfg,st),
+                workforce=workforce.payload(cfg,st),
+                rulesRevision=4 if business_progression.connected_enabled(cfg) else 3,
+                connectedProgression=business_progression.connected_enabled(cfg),groupProjects=group,
+                townProjects=project,nextStep=step,earnings=receipts,potentialIncomePerMinute=round(town_income(cfg,st),2),regularDeliveries=st.get('regularDeliveries',0),regularTarget=3,
                 customerContracts=customer_contract_payload(cfg,st),
                 customerUnitsSold=st['report'].get('unitsSold',0),customerUnitsNeeded=100,materialUnitValue=cfg['production']['materialCashValue'],
                 netWorth=net_worth(st),book=st['book'],taxPaid=st['taxPaid'],taxRate=0,
@@ -1095,3 +1299,20 @@ def set_processing(cfg,st,slot,enabled):
     if type(enabled) is not bool: return dict(ok=False,why='Processing must be true or false')
     st['b'][slot]['processing']=enabled
     return dict(ok=True,kind='processing',enabled=enabled)
+
+
+def business_slot(cfg,st,building_id):
+    return business_operations.find_slot(cfg,st,building_id)
+
+
+def manage_business(cfg,st,body):
+    if not isinstance(body,dict): return dict(ok=False,why='Choose a business action')
+    result=business_operations.manage(cfg,st,body)
+    if result['ok'] and body.get('action')=='salvage':
+        # Uncommitted offers are replaceable; deal only still-producible goods.
+        # Committed jobs and regular buyers were protected by the quote checks.
+        for index,order in enumerate(st.get('offers') or []):
+            if not order.get('committed') and not order.get('project'):
+                st['offers'][index]=_make_order(cfg,st,index)
+        _sync_pools(cfg,st)
+    return result

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <title>Prestige gold star</title>
+  <path fill="#4c3012" d="M14 2h4v4h2v4h8v2h2v4h-4v2h-2v4h2v7h-4v-2h-4v-2h-4v2h-4v2H6v-7h2v-4H6v-2H2v-4h2v-2h8V6h2z"/>
+  <path fill="#c67b15" d="M15 4h2v4h2v4h9v2h-4v2h-2v6h2v5h-2v-2h-4v-2h-4v2h-4v2H8v-5h2v-6H8v-2H4v-2h10V8h1z"/>
+  <path fill="#ffb000" d="M15 4h2v4h2v4h7v2h-4v2h-2v5h2v3h-4v-3h-4v2h-4v2H8v-3h2v-6H8v-2H4v-2h10V8h1z"/>
+  <path fill="#ffe7a0" d="M15 4h2v4h-2zM14 8h2v5h-2zM5 12h9v2H8v1H6v-1H5z"/>
+  <path fill="#ffda63" d="M14 14h4v5h-4zM12 18h2v4h-2v2h-2v-3h2z"/>
+</svg>

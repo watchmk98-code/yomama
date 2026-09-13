@@ -166,22 +166,13 @@ body.build-page { overflow: auto; }
 .build-page .shell { overflow-x: clip; }
 .build-upgrades > .k-status { grid-column: 1 / -1; margin: 0; align-self: start; }
 .build-page dialog .build-dialog-head { position: sticky; top: -16px; padding-block: 8px; background: var(--bg); z-index: 1; }
-/* Supplied eight-frame strips. Scope motion to building art only. */
+/* Supplied eight-frame strips stay on their first frame permanently. */
 .build-page .k-art--animated { display: block; }
 .build-page .k-art--animated > img { display: block; width: 800%; max-width: none; height: 100%; object-fit: fill; image-rendering: pixelated; }
-.build-page.motion-paused .k-art--animated > img { animation: build-art-frames .96s steps(8, end) infinite !important; }
-.build-page.motion-paused .k-art--paused > img { animation-play-state: paused !important; }
-@keyframes build-art-frames { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+.build-page .k-art > img { animation: none !important; transform: none !important; }
 .build-site-controls { display: flex; align-items: center; gap: 12px; font-size: 14px; }
-.build-art-toggle { color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 3px 6px; min-height: 28px; font-size: 14px; cursor: pointer; }
-.build-art-toggle[aria-pressed="true"] { color: var(--amber); border-color: var(--amber); }
-@media (prefers-reduced-motion: reduce) {
-  .build-page.motion-paused .k-art--animated > img { animation: none !important; transform: none; }
-  .build-art-toggle { display: none; }
-}
 @media (max-width: 520px) {
   .build-site-controls { gap: 6px; }
-  .build-art-toggle { min-height: 44px; }
 }
 /* Keep explanations out of the main loop; show only decision-critical notes. */
 .build-hint:empty { display: none; }

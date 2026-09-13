@@ -66,8 +66,21 @@ def test_first_sale_and_affordable_first_choices():
     assert state['cash'] > 0, 'A new player should earn a first sale within one minute.'
     replay(cfg, state, int(180 / cfg['global']['tick']) - state['tick'])
     assert state['cash'] >= upgrade_price, 'First upgrade should be affordable within three minutes.'
-    replay(cfg, state, int(600 / cfg['global']['tick']) - state['tick'])
-    assert E.expand(cfg, state, 1, state['tick'])['ok'], 'A passive starter should reach the second business within ten minutes.'
+    # Real ordinary shipments qualify the separate construction achievement.
+    # The first tomato order is deliberately preserved from the opening deal.
+    while not E.town_projects.check_claim(cfg, state, 'farm_neighbors')['ok']:
+        for _ in range(100):
+            order = state['offers'][0]
+            if any(n['goodId'] == 'farm_tomatoes' for n in order['requirements']):
+                break
+            assert E.replace_order(cfg, state, 0, order['id'])['ok']
+        assert E.commit_order(cfg, state, 0, order['id'], True)['ok']
+        while not E.fulfill_order(cfg, state, 0, order['id'])['ok']:
+            assert state['tick'] < int(600 / cfg['global']['tick'])
+            replay(cfg, state, 1)
+    assert E.claim_group_project(cfg, state, 'farm_neighbors')['ok']
+    assert E.expansion_quote(cfg, state, 1)['cost'] == 0
+    assert E.expand(cfg, state, 1, state['tick'])['ok'], 'The opening delivery should fund a second business within ten minutes.'
 
 
 def test_catalog_has_resolvable_profitable_recipes_and_finite_upgrade_caps():
@@ -136,6 +149,7 @@ def test_recipe_inputs_are_required_and_consumed_once():
     tier, product = next((i, g) for i, t in enumerate(cfg['tiers']) for g in t['goods']
                          if g.get('inputs') and all(owners[n['goodId']] != i for n in g['inputs']))
     state = sole_product(cfg, tier, product)
+    state['cash'] = 1000  # Isolate ingredient conservation from the operating budget.
     state['b'][0]['reserve'] = True
     replay(cfg, state, product['cycleTicks'] * 10)
     assert state['inventory'][product['id']] == 0
@@ -229,6 +243,7 @@ def test_random_actions_preserve_integer_nonnegative_accounting_and_capacities()
 def test_full_reserved_storage_does_not_permanently_starve_a_product():
     cfg = config()
     state = E.new_state(cfg)
+    state['cash'] = 10000  # Reserved stock earns no cash to cover production.
     state['b'][0]['reserve'] = True
     replay(cfg, state, 1200)
     products = cfg['tiers'][0]['goods']
@@ -295,6 +310,11 @@ def test_order_rotation_can_reach_every_owned_product():
     state = E.new_state(cfg)
     state['tierOf'] = list(range(7))
     state['b'] = [building(i) for i in state['tierOf']]
+    # This catalog-rotation scenario represents an established town whose
+    # learned products survive migration; locked-product exclusion is tested
+    # separately in the new progression suite.
+    state.pop('businessProgression', None)
+    state = E.migrate_state(cfg, state)
     state['offers'] = None
     E.offer_contracts(cfg, state, 0)
     expected = {g['id'] for t in cfg['tiers'][:7] for g in t['goods']}

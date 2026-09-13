@@ -13,6 +13,7 @@ assert(['127.0.0.1','localhost','[::1]'].includes(new URL(base).hostname),'Use a
 const output=path.join(root,'.checks','upgrade-feedback');
 const clone=value=>JSON.parse(JSON.stringify(value));
 const units=value=>value.toLocaleString('en-US',{maximumFractionDigits:2});
+const incomeRate=value=>units(value)+' YM';
 
 function engineSnapshots(){
  return JSON.parse(execFileSync(path.join(root,'.venv','bin','python'),['-c',String.raw`
@@ -20,24 +21,45 @@ import copy, json
 import production_economy as E
 import breakfast_event as B
 cfg=E.load_config()
-st=E.new_state(cfg,seed=39)
-cls=E.new_class(cfg)
 def pack(state):
     payload=E.payload(cfg,state,cls,dict(paused=False))
     payload['breakfastEvent']=B.payload(state,state['tick']*cfg['global']['tick'],cfg=cfg)
     payload['classCompetition']=False
     payload['overnightReport']=None
     return payload
-# Let the farm earn both upgrade payments through normal production and sales.
-E.advance_class(cfg,cls,[st],0,24)
-result=dict(initial=pack(st),scenarios=[])
-for kind,metric in (('production','producedUnits'),('sales','soldUnits')):
+result=dict(scenarios=[])
+for seed,kind,metric,prerequisite,count in ((39,'production','producedUnits','sales',2),
+                                          (40,'sales','soldUnits','production',1)):
+    st=E.new_state(cfg,seed=seed)
+    cls=E.new_class(cfg)
+    def earn_upgrade(upgrade):
+        for _ in range(256):
+            if st['cash']>=E.upgrade_cost(cfg,st,0,upgrade):
+                return
+            E.advance_class(cfg,cls,[st],st['tick'],st['tick']+1)
+        raise AssertionError('Farm could not earn '+upgrade+' upgrade')
+    # Buy the complementary capacity through the real engine so each tested
+    # upgrade removes a current limit: customers 3 for production, production 2
+    # for customers. The two towns earn their own upgrade costs independently.
+    for _ in range(count):
+        earn_upgrade(prerequisite)
+        assert E.buy_upgrade(cfg,st,0,prerequisite)['ok']
+    E.advance_class(cfg,cls,[st],st['tick'],st['tick']+24)
+    earn_upgrade(kind)
     before=pack(st)
     control=copy.deepcopy(st)
     receipt=E.buy_upgrade(cfg,st,0,kind)
     assert receipt['ok'], receipt
     purchased=pack(st)
     assert purchased['buildings'][0]['activity']==before['buildings'][0]['activity']
+    assert purchased['earnings']==before['earnings']
+    assert purchased['buildings'][0]['earnings']==before['buildings'][0]['earnings']
+    assert purchased['cash']==before['cash']-receipt['cost']
+    assert receipt['incomeBefore']==before['incomePerMinute']
+    assert receipt['incomeAfter']==purchased['incomePerMinute']
+    assert receipt['incomeDelta']>0, kind+' scenario must improve income immediately'
+    assert purchased['incomePerMinute']>before['incomePerMinute']
+    assert purchased['buildings'][0]['incomePerMinute']>before['buildings'][0]['incomePerMinute']
     assert receipt['capacityAfter']>receipt['capacityBefore']
     steps=[]
     for _ in range(16):
@@ -53,6 +75,7 @@ for kind,metric in (('production','producedUnits'),('sales','soldUnits')):
     result['scenarios'].append(dict(kind=kind,metric=metric,before=before,
                                     receipt=receipt,purchased=purchased,steps=steps,
                                     control=reference,elapsedSeconds=len(steps)*cfg['global']['tick']))
+result['initial']=result['scenarios'][0]['before']
 print(json.dumps(result))
 `],{cwd:root,encoding:'utf8'}));
 }
@@ -70,7 +93,8 @@ print(json.dumps(result))
  try{
   for(const viewport of [{name:'desktop',width:1366,height:768},
                          {name:'mobile',width:390,height:844},
-                         {name:'landscape',width:844,height:390}]){
+                         {name:'landscape',width:844,height:390},
+                         {name:'desktop-legacy',width:1366,height:768,legacy:true}]){
    const page=await browser.newPage({viewport:{width:viewport.width,height:viewport.height}});
    currentPage=page;
    currentLabel=viewport.name+'-startup';
@@ -79,6 +103,32 @@ print(json.dumps(result))
    const errors=[],calls=[];
    let state,scenarioIndex=0;
    const use=(sample,receipt=null)=>{state=Object.assign(clone(metadata),clone(sample),{receipt,overnightReport:null,classCompetition:false});};
+   function wireState(){
+    const payload=clone(state);
+    if(viewport.legacy){
+     // Older running previews report completed receipts as income while the
+     // current earning rate is already available in the potential fields.
+     delete payload.operations;
+     delete payload.progression;
+     payload.incomePerMinute=payload.earnings.operatingIncome;
+     for(const business of payload.buildings){
+      business.incomePerMinute=business.earnings.operatingIncome;
+      for(const upgrade of Object.values(business.upgrades || {})){
+       delete upgrade.businessIncomeBefore;
+       delete upgrade.businessIncomeAfter;
+      }
+     }
+     if(payload.receipt){
+      delete payload.receipt.incomeBefore;
+      delete payload.receipt.incomeAfter;
+      delete payload.receipt.incomeDelta;
+     }
+     // Older previews only expose each business forecast, so the HUD must
+     // add those rates itself for both kinds of upgrade.
+     delete payload.potentialIncomePerMinute;
+    }
+    return payload;
+   }
    use(samples.initial);
    page.on('pageerror',error=>errors.push(error.message));
    await page.route('**/*',async route=>{
@@ -88,7 +138,7 @@ print(json.dumps(result))
     try{
      if(url.pathname==='/api/game/buildings')return route.fulfill({json:{buildings:{}}});
      if(request.method()==='POST'){
-      if(url.pathname==='/api/game/econ/login')return route.fulfill({json:state});
+      if(url.pathname==='/api/game/econ/login')return route.fulfill({json:wireState()});
       assert.equal(url.pathname,'/api/game/econ/upgrade','Unexpected API mutation is intercepted');
       const data=request.postDataJSON(),scenario=samples.scenarios[scenarioIndex];
       assert(scenario,'No further purchase expected');
@@ -97,11 +147,11 @@ print(json.dumps(result))
       calls.push({slot:data.slot,kind:data.kind});
       use(scenario.purchased,clone(scenario.receipt));
       scenarioIndex++;
-      return route.fulfill({json:state});
+      return route.fulfill({json:wireState()});
      }
      assert.equal(request.method(),'GET','Unexpected API method is intercepted');
      assert(['/api/game/state','/api/game/econ/state'].includes(url.pathname),'Unexpected API read: '+url.pathname);
-     return route.fulfill({json:state});
+     return route.fulfill({json:wireState()});
     }catch(error){
      errors.push(error.stack||String(error));
      return route.fulfill({status:500,json:{error:'Isolated upgrade test rejected this request'}});
@@ -120,13 +170,15 @@ print(json.dumps(result))
    const metric=name=>page.locator('.game-site [data-business-metric="'+name+'"]');
    async function checkValues(){
     const b=state.buildings[0];
+    assert.equal((await metric('income').locator('.game-live-value').textContent()).trim(),incomeRate(b.incomePerMinute),'Selected business shows its current income rate');
+    assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),incomeRate(state.incomePerMinute).replace(/\s+/g,''),'Town HUD shows its current income rate');
     assert.equal((await metric('produced').locator('.game-live-value').textContent()).trim(),units(b.productionCapacityPerMinute));
     assert.equal((await metric('sold').locator('.game-live-value').textContent()).trim(),units(b.customerCapacityPerMinute));
     const production=(await metric('produced').locator('.game-live-rate').textContent()).trim();
     const demand=(await metric('sold').locator('.game-live-rate').textContent()).trim();
     assert.match(production,new RegExp('Actual '+b.activity.producedUnits+' produced.*last 60s','i'));
     assert.match(demand,new RegExp('Actual '+b.activity.soldUnits+' sold.*last 60s','i'));
-    assert.match(await page.locator('.game-live-heading').textContent(),/Live rates/i);
+    assert.match(await page.locator('.game-live-heading').textContent(),/Live rates|Current estimates/i);
    }
    async function fit(label){
     currentLabel=viewport.name+'-'+label;
@@ -191,24 +243,46 @@ print(json.dumps(result))
    await checkValues();
    await fit('before-upgrades');
    for(const scenario of samples.scenarios){
+    use(scenario.before);await refresh();await checkValues();
     await showTab('Upgrades');
     const button=page.locator('[data-econ-action="upgrade:0:'+scenario.kind+'"]');
     const row=button.locator('xpath=ancestor::div[contains(concat(" ", normalize-space(@class), " "), " game-operation ")]');
-    const preview=await row.locator('.game-upgrade-capacity').textContent();
+    const preview=await button.getAttribute('title');
     const effect=units(scenario.receipt.capacityBefore)+' → '+units(scenario.receipt.capacityAfter);
     assert(preview.includes(effect),preview+' must include '+effect);
     assert(preview.includes(scenario.receipt.capacityUnit),preview);
+    assert.equal(await row.locator('.game-upgrade-capacity').count(),0,'Capacity details stay in the tooltip');
+    const incomeDelta=scenario.kind==='production'?scenario.receipt.optimizedIncomeDelta:Math.round((scenario.receipt.businessIncomeAfter-scenario.receipt.businessIncomeBefore)*100)/100;
+    assert.equal(await row.locator('.game-upgrade-impact').textContent(),'+'+units(incomeDelta)+' YM/min');
     await fit(scenario.kind+'-preview');
     const historical=clone(state.buildings[0].activity);
+    const earnings=clone(state.earnings),businessEarnings=clone(state.buildings[0].earnings);
+    const incomeBefore=state.incomePerMinute,businessIncomeBefore=state.buildings[0].incomePerMinute,cashBefore=state.cash,tickBefore=state.tick;
+    const displayedBefore=await metric('income').locator('.game-live-value').textContent();
+    const hudBefore=await page.locator('[data-build-metric="income"] dd').textContent();
     assert(await button.isEnabled());
     await button.click();await settle();
     assert.equal(calls.at(-1).kind,scenario.kind);
     assert.deepEqual(state.buildings[0].activity,historical,'Buying an upgrade must not rewrite historical goods totals');
+    assert.deepEqual(state.earnings,earnings,'Buying an upgrade must not credit historical town earnings');
+    assert.deepEqual(state.buildings[0].earnings,businessEarnings,'Buying an upgrade must not credit historical business earnings');
+    assert.equal(state.tick,tickBefore,'Income updates at the purchase tick without waiting for production');
+    assert.equal(state.cash,cashBefore-scenario.receipt.cost,'The purchase deducts only the upgrade cost');
+    assert.equal(scenario.receipt.incomeBefore,incomeBefore);
+    assert.equal(scenario.receipt.incomeAfter,state.incomePerMinute);
     await checkValues();
+    assert(scenario.receipt.incomeDelta>0,'Each scenario must exercise an immediate income increase');
+    assert(state.incomePerMinute>incomeBefore,'Town income increases in the purchase response');
+    assert(state.buildings[0].incomePerMinute>businessIncomeBefore,'Business income increases in the purchase response');
+    assert.notEqual(await metric('income').locator('.game-live-value').textContent(),displayedBefore,'Business income updates before any future tick');
+    assert.notEqual(await page.locator('[data-build-metric="income"] dd').textContent(),hudBefore,'HUD income updates before any future tick');
     const status=await page.locator('[data-econ-status]').first().textContent();
-    assert(status.includes(effect),status+' must confirm '+effect);
-    assert(status.includes(scenario.receipt.capacityUnit),status);
-    assert.match(status,/upcoming|next|future|batch|15s|15\s+second/i,'Feedback must explain when actual counters can change');
+    const incomeEffect=units(scenario.receipt.incomeBefore)+' → '+units(scenario.receipt.incomeAfter)+' YM/min';
+    assert(status.includes(incomeEffect),status+' must confirm '+incomeEffect);
+    assert.match(status,/cash.*sales/i,'Feedback explains when the increased rate becomes cash');
+    // A later state poll at this same tick must retain the new income rate,
+    // including when historical legacy receipts have not changed yet.
+    await refresh();await checkValues();
     await fit(scenario.kind+'-purchased-upgrades');
     await showTab('Building');
     await fit(scenario.kind+'-purchased-building');
@@ -218,6 +292,7 @@ print(json.dumps(result))
     assert(actual>historical[scenario.metric]);
     assert(actual>control,'Completed goods must exceed the same town without this upgrade');
     observations.push({view:viewport.name,upgrade:scenario.kind,
+      incomeBefore:scenario.receipt.incomeBefore,incomeAfter:scenario.receipt.incomeAfter,
       capacityBefore:scenario.receipt.capacityBefore,capacityAfter:scenario.receipt.capacityAfter,
       capacityUnit:scenario.receipt.capacityUnit,purchaseCount:historical[scenario.metric],
       laterCount:actual,withoutUpgradeCount:control,elapsedSeconds:scenario.elapsedSeconds});
@@ -230,7 +305,7 @@ print(json.dumps(result))
   }
   fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({observations,fitProblems,errors:allErrors},null,2)+'\n');
   assert.deepEqual(fitProblems,[],'Viewport/content clipping detected; see .checks/upgrade-feedback/results.json');
-  console.log('Passed: real production/customer upgrade previews and immediate capacity feedback; historical totals preserved until real future batches/sales; increased actual output against unchanged controls; desktop, mobile and landscape fit.');
+  console.log('Passed: real production/customer upgrades immediately update business/HUD income on current and legacy payloads, and subsequent polls preserve the rate; cash and historical receipts preserved except upgrade cost; increased actual output against unchanged controls; desktop, mobile and landscape fit.');
   console.log('Screenshots and engine observations: .checks/upgrade-feedback/');
  }catch(error){
   if(currentPage&&!currentPage.isClosed())await currentPage.screenshot({path:path.join(output,currentLabel+'-failure.png')}).catch(()=>{});

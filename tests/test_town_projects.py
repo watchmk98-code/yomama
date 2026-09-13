@@ -8,8 +8,15 @@ import production_economy as E
 import town_projects as P
 
 
-def town():
+def legacy_config():
+    """A saved v4 snapshot predating connected group projects."""
     cfg = E.load_config()
+    cfg.setdefault('businessDesign', {}).pop('connectedProgression', None)
+    return cfg
+
+
+def town():
+    cfg = legacy_config()
     st = E.new_state(cfg, seed=37)
     P.migrate(cfg, st)
     return cfg, st
@@ -154,7 +161,7 @@ def test_guide_uses_available_stock_and_serializes_deterministically():
 
 
 def test_tier_positions_are_looked_up_by_configured_id():
-    cfg = E.load_config()
+    cfg = legacy_config()
     cfg['tiers'][1], cfg['tiers'][3] = cfg['tiers'][3], cfg['tiers'][1]
     st = dict(tierOf=[0], inventory={}, cash=0, materials=0, queue=[])
     first = P.current_order(cfg, st)
@@ -164,7 +171,7 @@ def test_tier_positions_are_looked_up_by_configured_id():
 
 
 def test_project_bundles_never_reserve_inputs_needed_by_their_own_outputs():
-    cfg = E.load_config()
+    cfg = legacy_config()
     catalog = E.catalog(cfg)
     for project in P.PROJECTS:
         selected = {gid for gid, qty in project['goods']}
@@ -195,3 +202,80 @@ def test_current_fixed_bundles_fill_under_normal_production_with_project_holds()
         for need in order['requirements']:
             st['inventory'][need['goodId']] -= need['quantity']
         assert P.complete(cfg, st, order['id'])['ok']
+
+
+def test_building_project_catalog_retains_locked_and_completed_projects():
+    cfg, st = town()
+    before = copy.deepcopy(st)
+    rows = P.project_payload(cfg, st)['projects']
+    assert [row['buildingId'] for row in rows] == ['farm', 'fish_stall', 'roastery']
+    assert [row['status'] for row in rows] == ['available', 'locked', 'locked']
+    assert rows[0]['orderId'] == st['offers'][2]['id']
+    assert rows[1]['orderId'] is None and rows[0]['title'] in rows[1]['unlockText']
+    assert all(row['buildingName'] == cfg['tiers'][tier(cfg, row['buildingId'])]['name']
+               for row in rows)
+    assert st == before, 'Browsing business projects must not alter orders or progression.'
+
+    st['inventory']['farm_tomatoes'] = 6
+    assert E.fulfill_order(cfg, st, 2, st['offers'][2]['id'])['ok']
+    rows = P.project_payload(cfg, st)['projects']
+    assert [row['status'] for row in rows] == ['completed', 'locked', 'locked']
+    assert rows[0]['orderId'] is None
+    assert rows[1]['orderId'] == st['offers'][2]['id']
+    assert rows[1]['unlockText'] == 'Open ' + rows[1]['buildingName'] + ' first'
+    own(cfg, st, 'fish_stall')
+    assert P.project_payload(cfg, st)['projects'][1]['status'] == 'available'
+
+    st['regularDeliveries'] = 3
+    before_offers = copy.deepcopy(st['offers'])
+    completed = P.project_payload(cfg, st)
+    assert completed['status'] == 'complete'
+    assert len(completed['projects']) == P.TOTAL
+    assert all(row['status'] == 'completed' and row['orderId'] is None
+               for row in completed['projects'])
+    assert st['offers'] == before_offers
+
+
+def test_building_project_catalog_never_creates_actions_for_a_preserved_legacy_order():
+    cfg, st = town()
+    st['offers'][2] = dict(id='preserved-delivery', name='Existing delivery',
+                           requirements=[dict(goodId='farm_tomatoes', quantity=8)],
+                           reward=20, materials=0, customer=None, committed=True)
+    st['inventory']['farm_tomatoes'] = 12
+    before = copy.deepcopy(st['offers'])
+    state = E.payload(cfg, st, E.new_class(cfg), {'paused': False})
+    current = state['townProjects']['projects'][0]
+    assert current['status'] == 'locked' and current['orderId'] is None
+    assert 'saved delivery' in current['unlockText']
+    assert current['requirements'][0]['owned'] == 4
+    assert st['offers'] == before
+    assert state['contracts']['offers'][2]['id'] == 'preserved-delivery'
+    assert 'buildingId' not in state['contracts']['offers'][2]
+
+
+def test_building_project_stock_matches_market_and_counts_other_saved_orders():
+    cfg, st = town()
+    st['offers'][0] = dict(id='saved-supplies', name='Other saved order',
+                           requirements=[dict(goodId='farm_tomatoes', quantity=4),
+                                         dict(goodId='fish_stall_smoked_fish', quantity=1)],
+                           reward=30, materials=0, customer=None, committed=True)
+    st['offers'][2]['committed'] = True
+    # Existing saved project orders may predate the new association metadata.
+    st['offers'][2].pop('buildingId', None)
+    st['inventory'].update(farm_tomatoes=10, fish_stall_smoked_fish=3)
+    before = copy.deepcopy(st['offers'])
+    state = E.payload(cfg, st, E.new_class(cfg), {'paused': False})
+    current, future, _ = state['townProjects']['projects']
+    order = state['contracts']['offers'][2]
+    assert current['requirements'][0]['owned'] == order['requirements'][0]['owned'] == 6
+    assert current['requirements'][0]['name'] == order['requirements'][0]['name']
+    assert future['requirements'][0]['owned'] == 2
+    assert order['buildingId'] == current['buildingId'] == 'farm'
+    assert st['offers'] == before, 'Metadata must not rewrite persisted project orders.'
+
+
+def test_building_project_catalog_hides_projects_unavailable_in_custom_rules():
+    cfg, st = town()
+    cfg['tiers'] = [item for item in cfg['tiers'] if item['id'] != 'roastery']
+    payload = P.project_payload(cfg, st)
+    assert payload['status'] == 'locked' and payload['projects'] == []

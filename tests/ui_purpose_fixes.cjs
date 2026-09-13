@@ -11,7 +11,7 @@ const root=path.resolve(__dirname,'..');
 const base=new URL(process.argv[2]||'http://127.0.0.1:3014').origin;
 const output=path.join(root,'.checks','purpose-fixes');
 const clone=value=>JSON.parse(JSON.stringify(value));
-const money=value=>Math.round(value).toLocaleString('en-US')+' YM';
+const incomeRate=value=>Number(value).toLocaleString('en-US',{maximumFractionDigits:2})+' YM';
 
 // Use real settled payments, project deliveries and construction grants. Keep
 // these in process memory: no preview POST, seed file or development save write.
@@ -70,6 +70,9 @@ build_grant()
 advance(st['build']['t']-st['tick']+1)
 result['unlocked']=pack()
 assert result['unlocked']['breakfastEvent']['locked'] is False
+cfg['businessDesign']['enabled']=False
+result['legacyWorkshop']=pack()
+cfg['businessDesign']['enabled']=True
 assert B.act(st,st['tick']*cfg['global']['tick'],dict(action='start'),cfg=cfg)['ok']
 result['playing']=pack()
 now=st['tick']*cfg['global']['tick']
@@ -182,7 +185,7 @@ print(json.dumps(result))
      const problems=[],margin=2;
      const visible=el=>el.getClientRects().length&&!el.closest('[hidden]')&&getComputedStyle(el).visibility!=='hidden';
      const identify=el=>(el.id?'#'+el.id:el.className||el.tagName)+' '+(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,65);
-     const dialog=document.querySelector('dialog[open]');
+     const dialog=document.activeElement.closest('dialog[open]')||Array.from(document.querySelectorAll('dialog[open]')).at(-1);
      if(document.documentElement.scrollWidth>innerWidth+1)problems.push('Document horizontal overflow');
      if(!dialog&&document.documentElement.scrollHeight>innerHeight+1)problems.push('Document vertical overflow');
      const scope=dialog||document.querySelector('.game-workspace');
@@ -220,6 +223,8 @@ print(json.dumps(result))
     await page.screenshot({path:path.join(output,currentLabel+'.png')});
    }
    async function selectShop(slot){
+    const buildingTab=page.getByRole('tab',{name:'Building',exact:true});
+    if(await buildingTab.isVisible()){await buildingTab.click();await settle();}
     const picker=page.locator('.game-fit-picker');
     if(state.buildings.length===1){
      assert.equal(state.buildings[0].slot,slot);
@@ -244,17 +249,27 @@ print(json.dumps(result))
 
    await go('buildings');
    assert.equal(state.breakfastEvent.locked,true);
-   const guide=page.locator('.game-opening-guide');
-   assert.match(await guide.textContent(),/Project 1\/3/);
-   assert.match(await guide.locator('a').getAttribute('href'),/marketplace\.html#town-project$/);
+   const projectsButton=page.locator('[data-building-activities="projects"]');
+   assert.equal(await page.locator('.game-opening-guide,[data-game-breakfast]').count(),0,'Build shows activities for the selected business');
+   assert.match(await page.locator('[data-activity-kind="projects"]').textContent(),/Feed the neighborhood/);
    await fit('fresh-build');
-   if(viewport.name!=='desktop')for(const name of ['Upgrades','Expand','Building']){
+   if(await page.getByRole('tab',{name:'Building',exact:true}).isVisible())for(const name of ['Upgrades','Expand','Building']){
     await page.getByRole('tab',{name,exact:true}).click();await settle();
-    assert(await guide.isVisible(),'The next project remains reachable from every Build tab');
+    assert(await projectsButton.isVisible(),'Business projects remain reachable from every Build tab');
     await fit('fresh-build-'+name.toLowerCase());
    }
-   await guide.locator('a').click();
-   await page.waitForURL('**/marketplace.html#town-project');await settle();
+   await projectsButton.click();
+   assert.deepEqual(await page.locator('#game-activities [data-game-project]').evaluateAll(items=>items.map(item=>item.dataset.gameProject)),['farm_neighbors']);
+   await page.locator('[data-game-project="farm_neighbors"]').click();
+   await page.locator('#game-project[open]').waitFor();
+   assert.match(await page.locator('#game-project').textContent(),/Fully funded Harbor Fish Stall construction/);
+   await fit('farm-project');
+   await page.locator('#game-project-save').click();await settle();
+   assert.equal(calls.at(-1).endpoint,'orders/commit');
+   assert.equal(calls.at(-1).data.orderId,state.contracts.offers[2].id);
+   assert.equal(await page.locator('#game-project-save').getAttribute('aria-pressed'),'true');
+   await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+   await page.goto(base+'/marketplace.html#town-project');await settle();
    assert.equal(await page.locator('.game-order-grid > .game-order').first().getAttribute('data-order-slot'),'2');
    const project=page.locator('[data-order-slot="2"]');
    assert(await project.isVisible(),'The project must be the first visible market card, including mobile');
@@ -263,11 +278,15 @@ print(json.dumps(result))
    assert.equal(await project.locator('.game-order-reaction').count(),0);
    assert.match(await project.textContent(),/Fully funded Harbor Fish Stall construction/);
    await fit('project-market');
+   // Release the goods saved in Build, then exercise the same save on Market.
+   assert.equal(await project.locator('.game-order-commit').getAttribute('aria-pressed'),'true');
+   await project.locator('.game-order-commit').click();await settle();
    await project.locator('.game-order-commit').click();await settle();
    assert.equal(calls.at(-1).endpoint,'orders/commit');
    assert.equal(calls.at(-1).data.offerIndex,2);
    assert.equal(await project.locator('.game-order-commit').getAttribute('aria-pressed'),'true');
-   assert.equal(await project.locator('.game-order-reaction').count(),0);
+   assert.equal(await project.locator('[data-saved-order="2"]').count(),1);
+   assert.match(await project.locator('[data-saved-order="2"] img').getAttribute('src'),/thumbs-up-pixel\.svg$/);
 
    // Both original random jobs retain their free reroll, save and reaction paths.
    for(const slot of [0,1]){
@@ -293,30 +312,38 @@ print(json.dumps(result))
 
    use('fresh');await go('buildings');
    const beforePreview=calls.length;
-   await page.locator('[data-game-breakfast]').click();
-   await page.locator('#game-breakfast[open]').waitFor();
-   assert.equal(await page.locator('#game-breakfast [data-econ-action]').count(),0,'A locked preview cannot start or cook');
-   assert.match(await page.locator('#game-breakfast').textContent(),/Open the roastery/i);
-   await fit('workshop-locked');
+   await page.locator('[data-building-activities="quests"]').click();
+   assert.equal(await page.locator('#game-activities [data-game-breakfast]').count(),0,'Breakfast Club belongs to the roastery');
+   assert.deepEqual(await page.locator('#game-activities [data-game-quest]').evaluateAll(items=>items.map(item=>item.dataset.gameQuest)),['farm-plan','farm-signature']);
+   await page.locator('[data-game-quest="farm-signature"]').click();
+   await page.locator('#game-quest[open]').waitFor();
+   assert.equal(await page.locator('#game-quest [data-econ-action]').count(),0,'A locked quest cannot start or craft');
+   assert.match(await page.locator('#game-quest').textContent(),/Complete .* first/i);
+   await fit('quest-locked');
    assert.equal(calls.length,beforePreview);
-   await page.keyboard.press('Escape');
+   await page.keyboard.press('Escape');await page.keyboard.press('Escape');
 
    use('income');await refresh();await selectShop(0);
    async function checkIncome(slot){
     const b=state.buildings.find(item=>item.slot===slot);
-    assert.equal(b.incomePerMinute,b.earnings.operatingIncome);
-    assert.equal(b.incomePerMinute,b.earnings.bySource.walkIns+b.earnings.bySource.regularBuyers);
-    assert.equal((await page.locator('.game-site .game-output').textContent()).trim(),money(b.incomePerMinute));
+    assert.equal(b.incomePerMinute,b.potentialIncomePerMinute,'Income/min shows the selected business current earning rate');
+    assert.equal(b.earnings.operatingIncome,b.earnings.bySource.walkIns+b.earnings.bySource.regularBuyers,'Historical operating income still counts only settled sales');
+    assert.equal(state.incomePerMinute,state.potentialIncomePerMinute,'Town income uses the current earning rate');
+    assert.equal((await page.locator('.game-site .game-output').textContent()).trim(),incomeRate(b.incomePerMinute));
+    assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),incomeRate(state.incomePerMinute).replace(/\s+/g,''));
     const metric=name=>page.locator('.game-site [data-business-metric="'+name+'"] .game-live-value');
-    assert.equal(await page.locator('.game-site [data-business-metric]').count(),4);
+    assert.equal(await page.locator('.game-site [data-business-metric]').count(),state.operations.enabled?5:4);
     assert.match(await page.locator('.game-site').textContent(),/last 60s/i);
     assert.equal((await metric('produced').textContent()).trim(),String(b.productionCapacityPerMinute));
     assert.equal((await metric('sold').textContent()).trim(),String(b.customerCapacityPerMinute));
-    assert.equal((await metric('stock').textContent()).trim(),b.stored.toLocaleString('en-US',{maximumFractionDigits:1})+' / '+b.capacity.toLocaleString('en-US',{maximumFractionDigits:1}));
-    assert.equal(await page.locator('.game-site .game-production-loop,.game-site .game-income-detail').count(),0,'Live business data replaces the tutorial and estimate');
+    if(state.operations.enabled){
+     assert.equal((await metric('cost').textContent()).trim(),'−'+incomeRate(b.potentialOperatingCostPerMinute));
+     assert.equal((await metric('profit').textContent()).trim(),incomeRate(b.potentialProfitPerMinute));
+    }else assert.equal((await metric('stock').textContent()).trim(),b.stored.toLocaleString('en-US',{maximumFractionDigits:1})+' / '+b.capacity.toLocaleString('en-US',{maximumFractionDigits:1}));
+    assert.equal(await page.locator('.game-site .game-production-loop,.game-site .game-income-detail').count(),0,'Live business metrics stay in the main panel');
     assert.equal(await page.locator('.game-building-stock').count(),1);
     assert.equal(await page.locator('.game-business-shipment').count(),0);
-    observations.push({view:viewport.name,slot,actual:b.incomePerMinute,walkIns:b.earnings.bySource.walkIns,regularBuyers:b.earnings.bySource.regularBuyers,estimate:b.potentialIncomePerMinute});
+    observations.push({view:viewport.name,slot,incomeRate:b.incomePerMinute,actualReceipts:b.earnings.operatingIncome,walkIns:b.earnings.bySource.walkIns,regularBuyers:b.earnings.bySource.regularBuyers});
    }
    assert(state.buildings[0].earnings.bySource.regularBuyers>0,'Actual settled regular payment is present');
    await checkIncome(0);await fit('income-farm');
@@ -329,15 +356,27 @@ print(json.dumps(result))
    await checkIncome(0);
    await fit('grant-build');
    const cash=state.cash,materials=state.materials;
-   const grantButton=page.locator('.game-opening-guide [data-econ-action^="expand:"]');
+   const expandTab=page.getByRole('tab',{name:'Expand',exact:true});
+   if(await expandTab.isVisible()){await expandTab.click();await settle();}
+   await page.locator('#game-expansion-choice').selectOption(String(samples.grantTier));
+   const grantButton=page.locator('.game-expansion [data-econ-action="expand:'+samples.grantTier+'"]');
    assert(await grantButton.isEnabled());await grantButton.click();await settle();
-   assert.equal(calls.at(-1).endpoint,'expand','The guide uses the standard authenticated expansion endpoint');
+   assert.equal(calls.at(-1).endpoint,'expand','The construction panel uses the standard authenticated expansion endpoint');
    assert.equal(calls.at(-1).data.tier,samples.grantTier);
    assert.equal(state.cash,cash);assert.equal(state.materials,materials);
-   assert.match(await page.locator('.game-opening-guide').textContent(),/being built/);
+   assert.match(await page.locator('.game-construction').textContent(),/Harbor Fish Stall/);
 
-   use('unlocked');await refresh();
-   await page.locator('[data-game-breakfast]').click();
+   use('legacyWorkshop');await go('buildings');await selectShop(2);
+   await page.locator('[data-building-activities="quests"]').click();
+   assert.equal(await page.locator('#game-activities [data-game-breakfast]').count(),1,'Legacy roastery classes retain their workshop');
+   await page.locator('#game-activities [data-game-breakfast]').click();
+   assert(await page.locator('#game-breakfast [data-econ-action="breakfast:start"]').isEnabled());
+   await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+
+   use('unlocked');await refresh();await selectShop(2);
+   await page.locator('[data-building-activities="quests"]').click();
+   await page.locator('[data-game-quest="roastery-signature"]').click();
+   await page.locator('[data-related-breakfast]').click();
    const start=page.locator('#game-breakfast [data-econ-action="breakfast:start"]');
    assert(await start.isEnabled());
    assert.match(await page.locator('#game-breakfast').textContent(),/25%.*base speed/i);
@@ -361,7 +400,7 @@ print(json.dumps(result))
   }
   fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({observations,fitProblems,errors:allErrors},null,2)+'\n');
   assert.deepEqual(fitProblems,[],'Viewport/content clipping detected; see .checks/purpose-fixes/results.json');
-  console.log('Passed: actual 60-second walk-in/regular income and shop selection; project-first guide/card with no rarity or reroll; both random job controls/reactions; locked/unlocked workshop; grant through normal expand endpoint; desktop, mobile and short landscape fit.');
+  console.log('Passed: current business/town income rates with separate actual receipts; selected-business projects and quests; original Market controls/reactions; locked quest, linked and legacy Breakfast Club; grant through normal expand endpoint; desktop, mobile and short landscape fit.');
   console.log('Screenshots and measured income: .checks/purpose-fixes/');
  }catch(error){
   if(currentPage&&!currentPage.isClosed())await currentPage.screenshot({path:path.join(output,currentLabel+'-failure.png')}).catch(()=>{});

@@ -84,7 +84,8 @@
           "unitPrice": 2,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 0
         },
         {
           "name": "Eggs",
@@ -93,7 +94,8 @@
           "unitPrice": 4,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 1
         },
         {
           "name": "Honey",
@@ -102,10 +104,11 @@
           "unitPrice": 8,
           "cycleTicks": 4,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 1
         }
       ],
-      "upgradeBase": 32,
+      "upgradeBase": 24,
       "materialCost": 0,
       "capacity": 180
     },
@@ -126,7 +129,8 @@
           "unitPrice": 3,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 1
         },
         {
           "name": "Oysters",
@@ -135,7 +139,8 @@
           "unitPrice": 6,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 1
         },
         {
           "name": "Smoked Fish",
@@ -149,7 +154,8 @@
               "goodId": "fish_stall_fresh_catch",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 2
         }
       ],
       "upgradeBase": 48,
@@ -173,7 +179,8 @@
           "unitPrice": 5,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 1
         },
         {
           "name": "Espresso Shots",
@@ -187,7 +194,8 @@
               "goodId": "roastery_roasted_beans",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 1
         },
         {
           "name": "Pastries",
@@ -205,7 +213,8 @@
               "goodId": "farm_honey",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 4
         }
       ],
       "upgradeBase": 160,
@@ -229,7 +238,8 @@
           "unitPrice": 8,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 1
         },
         {
           "name": "Spare Parts",
@@ -238,7 +248,8 @@
           "unitPrice": 12,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 2
         },
         {
           "name": "Custom Mods",
@@ -252,7 +263,8 @@
               "goodId": "garage_spare_parts",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 4
         }
       ],
       "upgradeBase": 650,
@@ -276,7 +288,8 @@
           "unitPrice": 12,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 2
         },
         {
           "name": "Welded Frames",
@@ -285,7 +298,8 @@
           "unitPrice": 20,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 4
         },
         {
           "name": "Machined Bolts",
@@ -299,7 +313,8 @@
               "goodId": "workshop_steel_brackets",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 6
         }
       ],
       "upgradeBase": 1900,
@@ -323,7 +338,8 @@
           "unitPrice": 18,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 3
         },
         {
           "name": "Battery Storage",
@@ -337,7 +353,8 @@
               "goodId": "workshop_steel_brackets",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 5
         },
         {
           "name": "Carbon Credits",
@@ -346,7 +363,8 @@
           "unitPrice": 45,
           "cycleTicks": 4,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 8
         }
       ],
       "upgradeBase": 5000,
@@ -379,7 +397,8 @@
               "goodId": "farm_tomatoes",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 5
         },
         {
           "name": "Sauces",
@@ -388,7 +407,8 @@
           "unitPrice": 20,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 4
         },
         {
           "name": "Preserves",
@@ -397,7 +417,8 @@
           "unitPrice": 30,
           "cycleTicks": 4,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 5
         }
       ],
       "upgradeBase": 11000,
@@ -421,7 +442,8 @@
           "unitPrice": 30,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 5
         },
         {
           "name": "Tooling",
@@ -430,7 +452,8 @@
           "unitPrice": 42,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 8
         },
         {
           "name": "Prototypes",
@@ -448,7 +471,8 @@
               "goodId": "garage_spare_parts",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 12
         }
       ],
       "upgradeBase": 22000,
@@ -472,7 +496,8 @@
           "unitPrice": 45,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 8
         },
         {
           "name": "Capacity Contracts",
@@ -481,7 +506,8 @@
           "unitPrice": 65,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 12
         },
         {
           "name": "Green Certificates",
@@ -495,7 +521,8 @@
               "goodId": "solar_coop_daytime_kwh",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 17
         }
       ],
       "upgradeBase": 45000,
@@ -519,7 +546,8 @@
           "unitPrice": 65,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 12
         },
         {
           "name": "Peak Power",
@@ -528,7 +556,8 @@
           "unitPrice": 95,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 17
         },
         {
           "name": "Steam Heat",
@@ -542,7 +571,8 @@
               "goodId": "solar_coop_daytime_kwh",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 24
         }
       ],
       "upgradeBase": 90000,
@@ -566,7 +596,8 @@
           "unitPrice": 95,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 17
         },
         {
           "name": "SMS Traffic",
@@ -575,7 +606,8 @@
           "unitPrice": 135,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 24
         },
         {
           "name": "Tower Leases",
@@ -589,7 +621,8 @@
               "goodId": "generator_baseload_power",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 34
         }
       ],
       "upgradeBase": 160000,
@@ -613,7 +646,8 @@
           "unitPrice": 135,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 24
         },
         {
           "name": "Cold Storage",
@@ -622,7 +656,8 @@
           "unitPrice": 190,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 34
         },
         {
           "name": "Last-Mile Delivery",
@@ -640,7 +675,8 @@
               "goodId": "relay_station_bandwidth",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 49
         }
       ],
       "upgradeBase": 270000,
@@ -664,7 +700,8 @@
           "unitPrice": 190,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 34
         },
         {
           "name": "Cloud Storage",
@@ -673,7 +710,8 @@
           "unitPrice": 270,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 49
         },
         {
           "name": "API Calls",
@@ -691,7 +729,8 @@
               "goodId": "generator_baseload_power",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 68
         }
       ],
       "upgradeBase": 450000,
@@ -715,7 +754,8 @@
           "unitPrice": 270,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 49
         },
         {
           "name": "Reserve Capacity",
@@ -724,7 +764,8 @@
           "unitPrice": 380,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 68
         },
         {
           "name": "Renewable Credits",
@@ -738,7 +779,8 @@
               "goodId": "turbine_field_wind_kwh",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 97
         }
       ],
       "upgradeBase": 700000,
@@ -762,7 +804,8 @@
           "unitPrice": 380,
           "cycleTicks": 1,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 68
         },
         {
           "name": "Ground Time",
@@ -771,7 +814,8 @@
           "unitPrice": 540,
           "cycleTicks": 2,
           "quantity": 1,
-          "inputs": []
+          "inputs": [],
+          "operatingCost": 97
         },
         {
           "name": "Telemetry",
@@ -789,7 +833,8 @@
               "goodId": "relay_station_bandwidth",
               "quantity": 1
             }
-          ]
+          ],
+          "operatingCost": 137
         }
       ],
       "upgradeBase": 1000000,
@@ -875,5 +920,32 @@
       1,
       3
     ]
+  },
+  "businessDesign": {
+    "enabled": true,
+    "connectedProgression": true,
+    "version": 1,
+    "prestigeExpansion": true,
+    "questsPerBuilding": 2,
+    "researchEnabled": false,
+    "questKnowHowReward": 1,
+    "questPrestigeReward": 1,
+    "questSpeedBonus": 5,
+    "researchSpeedBonus": 10,
+    "customerCostPerLevel": 10,
+    "storageCostPerLevel": 5,
+    "operatingCostDescription": "Charged per completed production batch; no charge while paused or blocked.",
+    "signatureUnlock": "Complete the business product-line quest to unlock its advanced recipe. First three businesses preserve all opening-project recipes."
+  },
+  "workforce": {
+    "enabled": true,
+    "version": 1,
+    "populationEnabled": true,
+    "populationFixedTotal": 104,
+    "populationWorkersPerBusiness": 5,
+    "populationWorkersPerProductionLevel": 1,
+    "hireCooldownSeconds": 1800,
+    "workerTrainingSeconds": 300,
+    "trainerTrainingSeconds": 600
   }
 }

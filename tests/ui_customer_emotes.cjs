@@ -62,9 +62,10 @@ const base=process.argv[2]||'http://127.0.0.1:3010';
     const body=root.querySelector('.game-contract-body').getBoundingClientRect();
     const footer=root.querySelector('.game-contract-footer').getBoundingClientRect();
     const contentBottom=Math.max(...[...root.querySelectorAll('.game-contract-summary,.game-contract-supply')].map(node=>node.getBoundingClientRect().bottom));
-    return {rosterBeforeDetails:slots.bottom<=body.top+1,detailsBeforeFooter:body.bottom<=footer.top+1,contentBeforeFooter:contentBottom+3<=footer.top+1};
+    const rosterAndDetailsSeparated=slots.bottom<=body.top+1||slots.right<=body.left+1||body.right<=slots.left+1;
+    return {rosterAndDetailsSeparated,detailsBeforeFooter:body.bottom<=footer.top+1,contentBeforeFooter:contentBottom+3<=footer.top+1};
    });
-   assert.deepEqual(regions,{rosterBeforeDetails:true,detailsBeforeFooter:true,contentBeforeFooter:true},label+' roster, details content and footer do not overlap');
+   assert.deepEqual(regions,{rosterAndDetailsSeparated:true,detailsBeforeFooter:true,contentBeforeFooter:true},label+' roster, details content and footer do not overlap');
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1&&document.documentElement.scrollHeight<=innerHeight+1),label+' has no page scrolling');
   }
   await decodeVisibleArt();

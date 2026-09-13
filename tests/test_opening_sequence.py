@@ -13,6 +13,13 @@ import production_economy as E
 import town_projects as P
 
 
+def legacy_config():
+    """Keep these fixed-project tests on their original saved v4 rules."""
+    cfg = E.load_config()
+    cfg.setdefault('businessDesign', {}).pop('connectedProgression', None)
+    return cfg
+
+
 def tier(cfg, building_id):
     return next(i for i, item in enumerate(cfg['tiers']) if item['id'] == building_id)
 
@@ -28,7 +35,7 @@ def run_opening(seed=0, policy='baseline', decision_ticks=4, limit_minutes=60):
     optional upgrade policy spends all affordable cash before the goal action.
     Other-job reservations are intentionally left parked to expose interference.
     """
-    cfg = E.load_config()
+    cfg = legacy_config()
     st = E.new_state(cfg, seed=seed)
     cls = E.new_class(cfg)
     events, errors, opened = [], [], set(st['tierOf'])
@@ -114,7 +121,7 @@ def test_opening_finishes_with_normal_tick_production_and_discretionary_spending
 
 
 def test_all_cash_can_go_to_an_upgrade_while_fish_construction_stays_fully_funded():
-    cfg = E.load_config()
+    cfg = legacy_config()
     st = E.new_state(cfg, seed=4)
     order = st['offers'][2]
     st['inventory']['farm_tomatoes'] = 6
@@ -136,7 +143,7 @@ def test_all_cash_can_go_to_an_upgrade_while_fish_construction_stays_fully_funde
 
 
 def test_failed_queue_guard_does_not_consume_a_construction_grant():
-    cfg = E.load_config()
+    cfg = legacy_config()
     st = E.new_state(cfg, seed=3)
     st['inventory']['farm_tomatoes'] = 6
     assert E.fulfill_order(cfg, st, 2, st['offers'][2]['id'])['ok']
@@ -148,7 +155,7 @@ def test_failed_queue_guard_does_not_consume_a_construction_grant():
 
 
 def test_cash_purchase_supersedes_old_project_card_and_releases_only_its_hold():
-    cfg = E.load_config()
+    cfg = legacy_config()
     st = E.new_state(cfg, seed=9)
     first = st['offers'][2]['id']
     assert E.commit_order(cfg, st, 2, first, True)['ok']
@@ -166,7 +173,7 @@ def test_cash_purchase_supersedes_old_project_card_and_releases_only_its_hold():
 
 
 def test_overlapping_random_orders_can_be_released_to_make_room_for_project():
-    cfg = E.load_config()
+    cfg = legacy_config()
     st = E.new_state(cfg, seed=0)
     # These are the real maximum quantities of the two ordinary starter jobs.
     for i, quantity in enumerate((15, 40)):
@@ -195,12 +202,17 @@ def test_overlapping_random_orders_can_be_released_to_make_room_for_project():
 def api_town(tmp_path, monkeypatch):
     monkeypatch.setattr(A, 'DB_PATH', tmp_path / 'project-race.db')
     monkeypatch.setattr(A, 'economy', E)
-    monkeypatch.setattr(A, '_startup_config', E.load_config())
+    monkeypatch.setattr(A, '_startup_config', legacy_config())
     monkeypatch.setattr(A, 'AUTO_LOGIN', False)
     monkeypatch.setattr(A.time, 'time', lambda: 2_000_000_000.0)
     A._book_cache.clear()
     A.init_db()
     session = A.create_session({})
+    # create_session snapshots the currently installed rules directly. Model
+    # an existing class by restoring its original rules before its first join.
+    with A.connect() as conn:
+        conn.execute('UPDATE sessions SET econ_config=? WHERE code=?',
+                     (json.dumps(legacy_config()), session['code']))
     seat = A.join(dict(code=session['code'], name='PROJECT TEST',
                        pin=str(secrets.randbelow(10000)).zfill(4)))
     try:
@@ -240,7 +252,7 @@ def test_concurrent_project_delivery_and_grant_redemption_each_succeed_once(api_
     def no_cash(cfg, st):
         st['cash'], st['materials'] = 0, 17
     edit_api(token, no_cash)
-    target = tier(E.load_config(), 'fish_stall')
+    target = tier(legacy_config(), 'fish_stall')
     def expand(_):
         try:
             return A.econ_expand(dict(token=token, tier=target))
@@ -255,7 +267,7 @@ def test_concurrent_project_delivery_and_grant_redemption_each_succeed_once(api_
 
 
 def test_old_roastery_without_farm_is_guided_to_its_missing_supplier():
-    cfg = E.load_config()
+    cfg = legacy_config()
     st = E.new_state(cfg)
     roastery = tier(cfg, 'roastery')
     st['tierOf'] = [roastery]

@@ -1,5 +1,7 @@
 # YoMama production economy
 
+> The default configuration enables connected business quests, conglomerate group projects and scarce Prestige focus costs. See [SYSTEM_ROLES.md](SYSTEM_ROLES.md) for the current gameplay and migration contract; older snapshots retain their previous rules.
+
 The current game runs `production_economy.py` with `config/economy.v4.json`.
 `economy.py`, `config/economy.v3.json`, the supplied JavaScript reference, and
 its golden tests remain the original economic context. The previous engine's

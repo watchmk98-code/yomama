@@ -227,19 +227,20 @@ def test_real_regular_customers_improve_total_forecast_and_all_actual_cash_is_vi
     witnessed_regular = False
     for _ in range(24):
         before = st['cash']
+        costs_before = st['businessOperations']['totalOperatingCosts']
         engine_replay(cfg, st, 1)
-        changes.append(st['cash'] - before)
+        production_cost = st['businessOperations']['totalOperatingCosts'] - costs_before
+        changes.append(st['cash'] - before + production_cost)
         view = engine_view(cfg, st)
         receipt = view['earnings']
         assert receipt['totalIncome'] == sum(changes[-4:])
         assert receipt['oneOffIncome'] == 0
-        assert view['incomePerMinute'] == receipt['operatingIncome']
-        assert view['potentialIncomePerMinute'] == 24.03
-        assert sum(b['incomePerMinute'] for b in view['buildings']) == receipt['operatingIncome']
+        assert view['incomePerMinute'] == view['potentialIncomePerMinute'] == 24.03
+        assert sum(b['incomePerMinute'] for b in view['buildings']) == view['incomePerMinute']
         assert view['buildings'][0]['earnings'] == receipt['byBuilding']['0']
         witnessed_regular |= receipt['bySource']['regularBuyers'] > 0
     assert witnessed_regular
-    assert st['cash'] == st['report']['retailEarned'] + st['report']['customerEarned']
+    assert st['cash'] + st['businessOperations']['totalOperatingCosts'] == st['report']['retailEarned'] + st['report']['customerEarned']
 
 
 def test_real_cross_shop_regular_shipment_pays_once_and_attributes_each_producer(town, monkeypatch):
@@ -264,7 +265,7 @@ def test_real_cross_shop_regular_shipment_pays_once_and_attributes_each_producer
     assert receipt['byBuilding']['0']['bySource']['regularBuyers'] == 10
     assert receipt['byBuilding']['2']['bySource']['regularBuyers'] == 25
     assert receipt['byBuilding']['1']['bySource']['regularBuyers'] == 0
-    assert sum(b['incomePerMinute'] for b in view['buildings']) == receipt['operatingIncome']
+    assert sum(b['earnings']['operatingIncome'] for b in view['buildings']) == receipt['operatingIncome']
     saved = copy.deepcopy(st)
     engine_replay(cfg, st, 0)
     assert st == saved, 'Repeated reads must not replay a shipment payment.'
@@ -338,8 +339,10 @@ def test_real_offline_cap_clears_window_and_resume_has_only_new_receipts():
     assert engine_view(cfg, st)['earnings']['observedSeconds'] == 0
     st = E.State(json.loads(json.dumps(st)))
     E.on_login(cfg, st)
+    costs_before = st['businessOperations']['totalOperatingCosts']
     engine_replay(cfg, st, 1)
-    assert engine_view(cfg, st)['earnings']['totalIncome'] == st['cash'] - cash
+    production_cost = st['businessOperations']['totalOperatingCosts'] - costs_before
+    assert engine_view(cfg, st)['earnings']['totalIncome'] == st['cash'] - cash + production_cost
     assert engine_view(cfg, st)['earnings']['observedSeconds'] == 15
 
 

@@ -35,7 +35,9 @@ def test_first_minute_counts_completed_goods_and_retail_not_forecasts():
         producedUnits=0, soldUnits=0, soldBySource=dict(walkIns=0, regularBuyers=0))
     replay(cfg, st, 4)
     activity = view(cfg, st)['buildings'][0]['activity']
-    assert activity['producedUnits'] == st['report']['unitsProduced'] == 7
+    # Four free tomato batches fund two egg batches. The first honey batch
+    # waits for running cash; the installed seven-unit forecast is not output.
+    assert activity['producedUnits'] == st['report']['unitsProduced'] == 6
     assert activity['soldUnits'] == st['report']['unitsSold'] > 0
     assert activity['soldBySource']['walkIns'] == activity['soldUnits']
     assert activity['producedUnits'] - activity['soldUnits'] == sum(st['inventory'].values())
@@ -44,6 +46,7 @@ def test_first_minute_counts_completed_goods_and_retail_not_forecasts():
 
 def recipe_town():
     cfg, st = town((0, 2))
+    st['cash'] = 100  # Isolate ingredient/storage constraints from running cash.
     for tier in cfg['tiers']:
         for good in tier['goods']:
             good['cycleTicks'] = 10000

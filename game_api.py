@@ -712,6 +712,15 @@ def _act(body, apply_fn) -> dict:
         p, s = _auth(conn, body, open_only=True)
         cfg, book, st, behind = _player_econ(conn, p, s)
         if behind: raise ApiError("Catching up; retry after replay completes", 409)
+        # A second tab can still display a slot that moved after a closure.
+        # New clients identify the instance as well as its displayed slot.
+        if 'slot' in body and 'buildingId' in body:
+            slot = _index(body, 'slot')
+            building_id = body.get('buildingId')
+            if (not isinstance(building_id, str) or not building_id
+                    or not 0 <= slot < len(st['b'])
+                    or st['b'][slot].get('buildingId') != building_id):
+                raise ApiError('This business changed; refresh and try again', 409)
         result = apply_fn(cfg, st, book)
         if not result.get("ok"):
             raise ApiError(result.get("why", "not allowed"), details=result)
@@ -735,6 +744,39 @@ def econ_breakfast(body):
         if cfg.get('version') != 4:
             return dict(ok=False, why='Event unavailable')
         return breakfast_event.act(st, cls['nextTick'] * cfg['global']['tick'], body, cfg)
+    return _act(body, apply)
+
+
+def econ_business(body):
+    """Apply one business intention inside the seat's class transaction."""
+    def apply(cfg, st, cls):
+        if cfg.get('version') != 4:
+            return dict(ok=False, why='Business operations unavailable')
+        return economy.manage_business(cfg, st, body)
+    return _act(body, apply)
+
+
+def econ_progression(body):
+    """Business quests and group milestones share the seat's atomic save."""
+    def apply(cfg, st, cls):
+        if cfg.get('version') != 4:
+            return dict(ok=False, why='Business progression unavailable')
+        if body.get('action') == 'group_project_claim':
+            return economy.claim_group_project(cfg, st, body.get('projectId'))
+        if body.get('action') == 'legacy_project_deliver':
+            return economy.fulfill_legacy_project(cfg, st, body.get('id'))
+        import business_progression
+        return business_progression.act(cfg, st, body)
+    return _act(body, apply)
+
+
+def econ_workforce(body):
+    """Permanent teams and HQ share the class transaction and economy clock."""
+    def apply(cfg, st, cls):
+        if cfg.get('version') != 4:
+            return dict(ok=False, why='Workforce development unavailable')
+        import workforce
+        return workforce.act(cfg, st, body)
     return _act(body, apply)
 
 
@@ -1300,11 +1342,50 @@ def teacher_econ(query):
             students.append(dict(name=row['name'],buildings=payload['buildings'],families=families,netWorth=payload['netWorth'],
                                   checklist=st['checklist'],gateOpen=payload['gateOpen'],tier=len(st['b']),tierName=payload['buildingName'],
                                   level=payload['level'],auto=payload['auto'],revenuePerDay=payload['revenuePerDay'],taxPaid=st['taxPaid'],behind=behind))
+            # Reuse the student's authoritative view, including reserved stock
+            # and the goods-sold alternative to the delivery licence milestone.
+            students[-1].update({key: payload[key] for key in (
+                'cash', 'warehouseStored', 'warehouseCap', 'warehouseFillPercent', 'overflowing', 'build')})
+            if cfg.get('version') == 4:
+                students[-1].update({key: payload[key] for key in (
+                    'materials', 'incomePerMinute', 'productionPerMinute', 'customerUnitsSold',
+                    'customerUnitsNeeded', 'regularDeliveries', 'townProjects', 'nextStep', 'nextGoal')})
+                customers=payload['customerContracts'];active=customers['active']
+                offers=payload['contracts']['offers']
+                workshop=payload['breakfastEvent']
+                students[-1].update(
+                    deliveriesCompleted=st['cStats']['done'],
+                    readyDeliveries=sum(bool(order['canFulfill']) for order in offers),
+                    deliverySlots=len(offers),
+                    customerContracts=dict(slots=customers['slots'],active=len(active),
+                        supplying=sum(c['status']=='supplying' for c in active),
+                        waiting=sum(c['status']=='waiting' for c in active),
+                        paused=sum(c['status']=='paused' for c in active),
+                        deliveries=customers['deliveries'],earned=customers['earned']),
+                    breakfastEvent={key: workshop[key] for key in ('status','locked','stage') if key in workshop})
+                if 'operations' in payload:
+                    students[-1]['operations']=payload['operations']
+                if 'progression' in payload:
+                    progression=payload['progression']
+                    students[-1]['progression']=dict(enabled=progression['enabled'],
+                        knowHow=progression['knowHow'],prestige=progression['prestige'],
+                        questsCompleted=sum(q['status']=='done' for q in progression['quests']),
+                        questsReady=sum(bool(q['ready']) for q in progression['quests']),
+                        researchCompleted=sum(bool(r['owned']) for r in progression['research']),
+                        equipmentOwned=sum(e['quantity'] for e in progression['equipment']))
         students.sort(key=lambda p:-p['netWorth'])
         for i,p in enumerate(students): p['rank']=i+1
-        return dict(modelVersion=cfg.get('version',3),code=s['code'],paused=bool(s['paused']),tick=cls['nextTick'],day=cls['nextTick']/economy.ticks_per_day(cfg),
+        result=dict(modelVersion=cfg.get('version',3),code=s['code'],label=s['label'],classSize=max(1,int(s['class_size'])),
+                    paused=bool(s['paused']),tick=cls['nextTick'],day=cls['nextTick']/economy.ticks_per_day(cfg),gateTier=cfg['global']['gateTier'],
                     goodSalesNeeded=cfg['gate']['goodSalesNeeded'],students=students,count=len(students),families=cfg['families'],
                     eventDefaults=dict(up=cfg['fun']['eventMagUp'],down=cfg['fun']['eventMagDown'],holdMin=cfg['fun']['eventHoldMin']))
+        result['licenceRequirements']=dict(productionLevel=cfg['gate']['levelNeeded'],
+            customerLevel=2 if cfg.get('version') == 4 else cfg['global']['a1Mult'],
+            deliveries=cfg['gate']['goodSalesNeeded'],buildings=cfg['global']['gateTier'],
+            checklistText=cfg['gate']['checklist'])
+        if cfg.get('version') == 4:
+            result['licenceRequirements']['customerUnits']=100
+        return result
 
 
 def teacher_event(body):
@@ -1353,5 +1434,6 @@ def _class_locked(fn):
 
 for _name in ('get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
               'econ_upgrade','econ_reserve','econ_processing','econ_fulfill_order','econ_replace_order','econ_commit_order','econ_focus','econ_breakfast',
+              'econ_business','econ_progression','econ_workforce',
               'econ_contracts','econ_accept_contract','econ_customers','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
     globals()[_name]=_class_locked(globals()[_name])

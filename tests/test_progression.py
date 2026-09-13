@@ -153,6 +153,7 @@ def test_specialty_changes_actual_production_and_has_a_cost_in_output():
     cfg,st=setup()
     assert not E.set_focus(cfg,st,0,'supply')['ok']
     st['b'][0]['lv']=3;st['b'][0]['reserve']=True
+    st['cash']=1000  # Both plans can pay for every batch while stock is held.
     balanced=copy.deepcopy(st)
     assert E.set_focus(cfg,st,0,'supply')['ok']
     run(cfg,st,16);run(cfg,balanced,16)
@@ -163,6 +164,9 @@ def test_specialty_changes_actual_production_and_has_a_cost_in_output():
 
 def test_cafe_project_unlocks_once_and_increases_actual_walk_in_demand():
     cfg,st=setup(True)
+    cfg['businessDesign'].pop('connectedProgression', None)
+    st['townProjects'].pop('groupProgress', None)
+    st['offers'][2] = E._project_order(cfg, st)  # Legacy fixed-project class.
     snapshot(cfg,st)  # Existing roastery satisfies the two construction steps.
     o=st['offers'][2]
     for n in o['requirements']:st['inventory'][n['goodId']]=n['quantity']
@@ -222,7 +226,14 @@ def test_api_commits_persist_and_concurrent_delivery_pays_once(town):
     body=dict(token=token,offerIndex=0,orderId=o['id'])
     result=A.econ_commit_order(dict(body,committed=True))
     assert result['contracts']['offers'][0]['committed']
-    now[0]+=180;A._book_cache.clear();before=state(token)
+    # Wait for the actual shipment, independent of the randomly rolled size
+    # and the new operating-cost budget. Reservation must persist on reload.
+    for _ in range(30):
+        now[0]+=60;A._book_cache.clear();before=state(token)
+        saved=before['contracts']['offers'][0]
+        assert saved['id']==o['id'] and saved['committed']
+        if saved['canFulfill']:break
+    assert saved['canFulfill'], 'A saved starter order must remain attainable'
     def deliver(_):
         try:return A.econ_fulfill_order(body)
         except A.ApiError:return None

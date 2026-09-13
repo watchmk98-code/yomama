@@ -4,6 +4,8 @@ This module owns progression, never the economy transaction. The caller checks
 unreserved stock, debits goods, and pays the order before calling ``complete``.
 Construction grants cover the complete quote without consuming cash/materials;
 the caller consumes the grant only after its queue/frontier checks have passed.
+Connected groups observe already-settled ordinary deliveries. Their claim
+returns a cash reward for the caller to pay, and never consumes goods again.
 No engine import is used, so the economy can safely import these helpers.
 """
 from __future__ import annotations
@@ -29,6 +31,18 @@ PROJECTS = (
 )
 TOTAL = len(PROJECTS)
 STATE_KEY = 'townProjects'
+RECENT_DELIVERY_LIMIT = 128
+GROUP_COPY = {
+    'farm_neighbors': ('Launch farm supply',
+                       'Deliver 6 tomatoes through ordinary orders to earn fully funded fish-stall construction.',
+                       'Your first supplier funds the next business in your conglomerate.'),
+    'harbor_lunch': ('Establish seafood processing',
+                     'Deliver 2 smoked fish and 4 oysters through ordinary orders to earn fully funded roastery construction.',
+                     'Turn fresh catch into a finished product before adding another business.'),
+    'cafe_opening': ('Connect the café supply chain',
+                     'Deliver 4 espresso shots and 2 pastries through ordinary orders to earn a permanent customer bonus.',
+                     'Your farm supplies eggs and honey; your roastery turns them into pastries alongside its coffee production.'),
+}
 
 
 def _count(value):
@@ -72,6 +86,11 @@ def enabled(cfg):
                and all(gid in catalog for gid, _ in p['goods']) for p in PROJECTS)
 
 
+def connected(cfg):
+    design = cfg.get('businessDesign', {})
+    return bool(design.get('enabled') and design.get('connectedProgression')) and enabled(cfg)
+
+
 def _grant(data, cfg, st, building_id):
     if not building_id:
         return
@@ -90,10 +109,15 @@ def migrate(cfg, st):
     refunds or newly awarding their corresponding grants. Earned grants survive
     saving; a consumed grant is never restored by repeated migration.
     """
+    data = st.get(STATE_KEY)
+    observing = connected(cfg) and isinstance(data, dict) and isinstance(data.get('groupProgress'), dict)
     legacy = _count(st.get('regularDeliveries', 0))
     inferred = 2 if _owned_or_pending(cfg, st, 'roastery') else (
         1 if _owned_or_pending(cfg, st, 'fish_stall') else 0)
-    data = st.get(STATE_KEY)
+    # Import existing ownership once. Afterwards group achievements come from
+    # deliveries and claims, never a later purchase or construction queue.
+    if observing:
+        inferred = 0
     if not isinstance(data, dict):
         data = dict(version=1, completed=max(legacy, inferred), legacyCredit=legacy, grants={})
         st[STATE_KEY] = data
@@ -124,6 +148,13 @@ def migrate(cfg, st):
                 data['grants'][target] = 'used'
             elif inferred >= step and target not in data['grants']:
                 data['grants'][target] = 'skipped'
+    if connected(cfg):
+        group = data.setdefault('groupProgress', {})
+        group.setdefault('version', 1)
+        group.setdefault('delivered', {})
+        group.setdefault('seenOrderIds', [])
+        group.setdefault('creditedOrderIds', [])
+        del group['seenOrderIds'][:-RECENT_DELIVERY_LIMIT]
     return data
 
 
@@ -154,6 +185,7 @@ def current_order(cfg, st):
     value = sum(catalog[gid]['unitPrice'] * qty for gid, qty in project['goods'])
     return dict(id='town-project-' + project['id'], name=project['title'],
                 project=True, projectId=project['id'], projectStage=stage,
+                buildingId=project['building'],
                 recipeId='project_' + project['id'], purpose=project['purpose'],
                 description=project['description'], channelLabel='Town project',
                 requirements=[dict(goodId=gid, quantity=qty) for gid, qty in project['goods']],
@@ -214,6 +246,158 @@ def complete(cfg, st, order_id):
                 rewardText=_reward_text(cfg, project))
 
 
+def record_delivery(cfg, st, requirements, order_id):
+    """Observe one successful ordinary delivery; the engine owns settlement.
+
+    Only the project active when this event occurs can receive progress. Receipt
+    Contributing IDs survive every stage/reload, bounded by the finite required
+    goods totals. Recent noncontributing IDs are bounded; the engine rejects
+    already-settled offers before invoking this observer. No inventory snapshot
+    or practice stock is progress; completed groups retain no new receipts.
+    """
+    if not connected(cfg):
+        return dict(ok=True, kind='group_project_progress', recorded=False)
+    if not isinstance(order_id, str) or not order_id or len(order_id) > 200:
+        return dict(ok=False, why='A settled delivery ID is required')
+    if not isinstance(requirements, (list, tuple)) or any(
+            not isinstance(need, dict) or not isinstance(need.get('goodId'), str)
+            or type(need.get('quantity')) is not int or need['quantity'] <= 0
+            for need in requirements):
+        return dict(ok=False, why='A settled delivery needs whole positive goods quantities')
+    data = migrate(cfg, st)
+    group = data['groupProgress']
+    if (data['completed'] >= TOTAL or order_id in group['seenOrderIds']
+            or order_id in group['creditedOrderIds']):
+        return dict(ok=True, kind='group_project_progress', recorded=False)
+    group['seenOrderIds'].append(order_id)
+    del group['seenOrderIds'][:-RECENT_DELIVERY_LIMIT]
+    project = PROJECTS[data['completed']]
+    access = check(cfg, st, 'town-project-' + project['id'])
+    if not access['ok']:
+        return dict(ok=True, kind='group_project_progress', recorded=False,
+                    projectId=project['id'], why=access['why'])
+    supplied = {}
+    for need in requirements:
+        gid = need['goodId']
+        supplied[gid] = supplied.get(gid, 0) + need['quantity']
+    delivered = group['delivered'].setdefault(project['id'], {})
+    added = {}
+    for gid, target in project['goods']:
+        prior = min(target, max(0, delivered.get(gid, 0)))
+        amount = min(target - prior, supplied.get(gid, 0))
+        if amount:
+            delivered[gid] = prior + amount
+            added[gid] = amount
+    if added:
+        group['creditedOrderIds'].append(order_id)
+    return dict(ok=True, kind='group_project_progress', recorded=bool(added),
+                projectId=project['id'], added=added,
+                ready=all(delivered.get(gid, 0) >= qty for gid, qty in project['goods']))
+
+
+def check_claim(cfg, st, project_id):
+    """Validate a group milestone without consuming its already-delivered goods."""
+    if not connected(cfg):
+        return dict(ok=False, why='Group projects are not enabled for this conglomerate')
+    data = migrate(cfg, st)
+    if data['completed'] >= TOTAL:
+        return dict(ok=False, why='These group projects are complete')
+    project = PROJECTS[data['completed']]
+    if project_id != project['id']:
+        return dict(ok=False, why='This group project changed. Check your current project.')
+    if _legacy_project_pending(st, project):
+        return dict(ok=False, why='Complete your saved project delivery first')
+    access = check(cfg, st, 'town-project-' + project['id'])
+    if not access['ok']:
+        return access
+    delivered = data['groupProgress']['delivered'].get(project['id'], {})
+    goods = _goods(cfg)
+    for gid, quantity in project['goods']:
+        missing = quantity - delivered.get(gid, 0)
+        if missing > 0:
+            return dict(ok=False, why='Deliver ' + str(missing) + ' more ' + goods[gid]['name'] + ' in ordinary orders')
+    order = current_order(cfg, st)
+    return dict(ok=True, projectId=project['id'], cashReward=order['reward'])
+
+
+def _legacy_project_pending(st, project):
+    saved = st.get('legacyProjectOffer')
+    return isinstance(saved, dict) and (saved.get('projectId') == project['id']
+                                       or saved.get('id') == 'town-project-' + project['id'])
+
+
+def _group_suppliers(cfg, st, project):
+    goods = _goods(cfg)
+    producers = {good['id']: tier['id'] for tier in cfg['tiers'] for good in tier['goods']}
+    direct = {producers[gid] for gid, _ in project['goods']}
+    needed = set()
+    pending = [gid for gid, _ in project['goods']]
+    seen = set()
+    while pending:
+        gid = pending.pop()
+        if gid in seen:
+            continue
+        seen.add(gid)
+        needed.add(producers[gid])
+        pending.extend(need['goodId'] for need in goods[gid].get('inputs', []))
+    return [dict(buildingId=tier['id'], name=tier['name'], owned=_owned(cfg, st, tier['id']),
+                 role='Final products' if tier['id'] in direct else 'Ingredients')
+            for tier in cfg['tiers'] if tier['id'] in needed]
+
+
+def claim(cfg, st, project_id):
+    """Advance once; the engine pays cashReward in its same atomic transaction."""
+    result = check_claim(cfg, st, project_id)
+    if not result['ok']:
+        return result
+    completed = complete(cfg, st, 'town-project-' + project_id)
+    if not completed['ok']:
+        return completed
+    return dict(completed, kind='group_project_claim', cashReward=result['cashReward'])
+
+
+def group_payload(cfg, st):
+    """Separate progress guide; all three Market cards remain ordinary orders."""
+    if not connected(cfg):
+        return dict(enabled=False, completed=0, total=TOTAL, current=None, projects=[])
+    data = migrate(cfg, st)
+    goods = _goods(cfg)
+    done = data['completed']
+    rows = []
+    for stage, project in enumerate(PROJECTS):
+        title, description, purpose = GROUP_COPY[project['id']]
+        completed = stage < done
+        current = stage == done
+        delivered = data['groupProgress']['delivered'].get(project['id'], {})
+        requirements = [dict(goodId=gid, name=goods[gid]['name'], quantity=qty,
+                             delivered=qty if completed else min(qty, max(0, delivered.get(gid, 0))),
+                             remaining=0 if completed else max(0, qty - delivered.get(gid, 0)))
+                        for gid, qty in project['goods']]
+        access = check(cfg, st, 'town-project-' + project['id']) if current else dict(ok=False)
+        if current and _legacy_project_pending(st, project):
+            access = dict(ok=False, why='Complete your saved project delivery first')
+        ready = current and access['ok'] and all(need['remaining'] == 0 for need in requirements)
+        why = '' if completed or ready else (access.get('why', '') if current and not access['ok'] else
+              'Fulfill ordinary orders containing these goods' if current else
+              'Complete ' + GROUP_COPY[PROJECTS[stage - 1]['id']][0] + ' first')
+        value = sum(goods[gid]['unitPrice'] * qty for gid, qty in project['goods'])
+        rows.append(dict(id=project['id'], projectId=project['id'], name=title, title=title,
+                         buildingId=project['building'], buildingName=_building_name(cfg, project['building']),
+                         description=description, purpose=purpose, stage=stage,
+                         suppliers=_group_suppliers(cfg, st, project),
+                         requirements=requirements,
+                         progressPercent=round(100 * sum(n['delivered'] for n in requirements) /
+                                               sum(n['quantity'] for n in requirements), 1),
+                         ready=ready, canClaim=ready, why=why, unlockText=why,
+                         completed=completed, status='completed' if completed else 'ready' if ready else
+                         'tracking' if current and access['ok'] else 'locked',
+                         cashReward=int(math.floor(value * 1.25 + .5)), rewardText=_reward_text(cfg, project)))
+    return dict(enabled=True, completed=done, total=TOTAL, current=rows[done] if done < TOTAL else None,
+                projects=rows, status='complete' if done >= TOTAL else rows[done]['status'],
+                title='Conglomerate opening projects complete' if done >= TOTAL else rows[done]['title'],
+                description='Ordinary deliveries grow your connected businesses. Each project reward is claimed once.')
+
+
 def construction_grant(cfg, st, tier):
     """Inspect a noncash entitlement covering the entire target build quote."""
     data = migrate(cfg, st)
@@ -236,12 +420,51 @@ def consume_construction_grant(cfg, st, tier):
     return dict(ok=True, **grant)
 
 
-def project_payload(cfg, st, available=None):
+def _project_rows(cfg, st, available=None, catalog_available=None):
+    """Keep each existing project visible under its business as progress changes."""
+    if not enabled(cfg):
+        return []
+    done = migrate(cfg, st)['completed']
+    goods = _goods(cfg)
+    inventory = st.get('inventory', {}) if catalog_available is None else catalog_available
+    rows = []
+    for stage, project in enumerate(PROJECTS):
+        order_id = 'town-project-' + project['id']
+        existing = next((order for order in st.get('offers') or []
+                         if order.get('project') and order.get('id') == order_id), None)
+        current = stage == done
+        stock = available if current and existing and available is not None else inventory
+        status, unlock_text = 'completed', ''
+        if stage > done:
+            status = 'locked'
+            unlock_text = 'Complete ' + PROJECTS[stage - 1]['title'] + ' first'
+        elif current:
+            access = check(cfg, st, order_id)
+            status = 'available' if access['ok'] and existing else 'locked'
+            if not access['ok']:
+                unlock_text = access['why']
+            elif not existing:
+                unlock_text = 'Finish or replace your saved delivery in Market first'
+        rows.append(dict(id=project['id'], buildingId=project['building'],
+                         buildingName=_building_name(cfg, project['building']),
+                         title=project['title'], description=project['description'],
+                         purpose=project['purpose'], rewardText=_reward_text(cfg, project),
+                         status=status, unlockText=unlock_text,
+                         orderId=order_id if current and existing else None,
+                         requirements=[dict(goodId=gid, name=goods[gid]['name'],
+                                            quantity=qty, owned=max(0, stock.get(gid, 0)))
+                                       for gid, qty in project['goods']]))
+    return rows
+
+
+def project_payload(cfg, st, available=None, catalog_available=None):
     """Player guide; pass engine-computed available stock for accurate readiness."""
     data = migrate(cfg, st)
     done = data['completed']
+    projects = _project_rows(cfg, st, available, catalog_available)
     if done >= TOTAL:
         return dict(status='complete', completed=TOTAL, total=TOTAL,
+                    projects=projects,
                     title='Neighborhood cafe established',
                     description='Your opening projects are complete.',
                     purpose='Choose a regular buyer and keep your connected businesses supplied.',
@@ -251,6 +474,7 @@ def project_payload(cfg, st, available=None):
     order = current_order(cfg, st)
     if order is None:
         return dict(status='locked', completed=done, total=TOTAL,
+                    projects=projects,
                     title=project['title'], description=project['description'],
                     purpose=project['purpose'], rewardText=_reward_text(cfg, project),
                     nextAction='This project is unavailable with this town\'s rules', orderId=None)
@@ -263,7 +487,7 @@ def project_payload(cfg, st, available=None):
     action = access['why'] if not access['ok'] else (
         'Deliver your project goods' if ready else
         'Your project goods are being saved' if committed else 'Save goods for this project')
-    return dict(status=status, completed=done, total=TOTAL, projectId=project['id'],
+    return dict(status=status, completed=done, total=TOTAL, projectId=project['id'], projects=projects,
                 title=project['title'], description=project['description'], purpose=project['purpose'],
                 rewardText=order['rewardText'], nextAction=action, orderId=order['id'],
                 requiredBuildingId=project['building'], committed=committed,

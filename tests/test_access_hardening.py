@@ -108,13 +108,13 @@ def test_a_wrong_pin_says_so_and_never_invites_a_second_seat(db):
     """A friend with a card mistypes the PIN: the answer must point at the PIN,
     not suggest 'add an initial' - that is how a stray 'BANANA B' seat was born."""
     c = opened(db)
-    A.join(dict(code=c["code"], name="BANANA", pin="2871"))
+    A.join(dict(code=c["code"], name="BANANA", pin="2468"))
     with pytest.raises(A.ApiError) as e:
         A.join(dict(code=c["code"], name="banana", pin="2817"))
     assert e.value.status == 409
     assert "PIN" in e.value.message and "BANANA" in e.value.message
     assert "initial" not in e.value.message and "BANANA B" not in e.value.message
-    assert A.join(dict(code=c["code"], name="BANANA", pin="2871"))["rejoined"]
+    assert A.join(dict(code=c["code"], name="BANANA", pin="2468"))["rejoined"]
     # and a closed class cannot grow a second seat even from a new name
     admin_do(db, admin.close_class, c["code"])
     with pytest.raises(A.ApiError) as e:

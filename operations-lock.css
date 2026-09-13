@@ -1,0 +1,13 @@
+/* Operations page while locked for testing: every panel but the Focus tree is blacked out. */
+.ops-locked .wf-workspace .wf-tabs { grid-template-columns: auto minmax(0, 1fr) !important; }
+.ops-locked .wf-tabs .ops-lock-cell { grid-column: 2 / -1; }
+.ops-locked .wf-tabs [data-wf-tab][hidden] { display: none; }
+.ops-locked .wf-tabs [data-wf-tab="focus"] { padding-left: 14px; padding-right: 14px; white-space: nowrap; }
+.ops-locked .ops-lock-cell { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; width: 100%; padding: 10px 16px; background: #000; color: #fff; border-left: 1px solid var(--line, #333); }
+.ops-locked .ops-lock-cell strong { font-size: clamp(20px, 3vw, 34px); font-weight: 700; letter-spacing: .12em; line-height: 1.05; white-space: nowrap; color: #fff; text-shadow: 0 0 12px rgba(255,255,255,.35); }
+.ops-locked .ops-lock-cell span { display: block; width: 100%; font-size: clamp(15px, 1.5vw, 19px); line-height: 1.25; color: #fff; white-space: normal; }
+@media (max-width: 700px) {
+  .ops-locked .ops-lock-cell { padding: 8px 10px; }
+  .ops-locked .ops-lock-cell strong { font-size: 18px; letter-spacing: .08em; }
+  .ops-locked .ops-lock-cell span { font-size: 13px; }
+}

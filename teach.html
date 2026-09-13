@@ -7,269 +7,23 @@
   <meta name="description" content="Teacher dashboard inside the YOMAMA terminal." />
   <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="./styles.css?v=20260912-live2" />
-  <style>
-    /* =====================================================================
-       TUNABLE WIDGET STYLES
-       Edit only the values in this :root block to restyle every widget.
-       Each line is one knob. The rules below just consume these.
-       ===================================================================== */
-    .teach-page{
-      /* -- shape / structure -- */
-      --tw-radius:      0px;              /* widget corner radius. 0 = square terminal; try 8px / 14px for rounded */
-      --tw-bd-width:    2px;              /* panel border thickness. bump to 3px for even chunkier frames */
-      --tw-bd-color:    var(--border);   /* panel border color (default amber-brown #7a4d00) */
-      --tw-gap:         var(--s3);        /* gap between widgets */
-      --tw-pad:         var(--s3);        /* inner padding of each widget */
-
-      /* -- panel background + glow -- */
-      --tw-card-bg:     linear-gradient(180deg, rgba(255,176,0,.05), rgba(255,176,0,.012)), #000;
-      --tw-card-glow:   inset 0 0 0 1px rgba(255,176,0,.04);   /* set to `none` to kill the inner glow */
-
-      /* -- VOLUME + MOTION (raised, glowing, animated look) -- */
-      --tw-volume:       10px;            /* how far the colored under-glow sits below each panel */
-      --tw-volume-color: rgba(255,176,0,.15);  /* under-glow color (overridden per colored card) */
-      --tw-lift:         5px;             /* how far a widget rises on hover */
-      --tw-glow:         rgba(255,176,0,.30);  /* hover/pulse glow color (overridden per colored card) */
-      --tw-rise:         .5s;             /* entrance animation duration */
-      --tw-shadow:
-          var(--tw-card-glow),
-          inset 0 2px 0 rgba(255,176,0,.14),
-          inset 0 -7px 12px rgba(0,0,0,.5),
-          0 var(--tw-volume) 26px var(--tw-volume-color),
-          0 calc(var(--tw-volume) + 4px) 20px rgba(0,0,0,.5);
-      --tw-shadow-hover:
-          var(--tw-card-glow),
-          inset 0 2px 0 rgba(255,176,0,.14),
-          inset 0 -7px 12px rgba(0,0,0,.5),
-          0 calc(var(--tw-volume) + var(--tw-lift)) 34px var(--tw-volume-color),
-          0 calc(var(--tw-volume) + var(--tw-lift) + 4px) 28px rgba(0,0,0,.6),
-          0 0 22px var(--tw-glow);
-
-      /* -- status palette (drives cards, bars, dots, gauges) -- */
-      --tw-accent:      var(--amber);     /* #ffb000 primary accent */
-      --tw-good:        var(--green);     /* #00ff66 */
-      --tw-warn:        var(--amber);     /* #ffb000 */
-      --tw-bad:         var(--red);       /* #ff4d4d */
-      --tw-good-bg:     rgba(0,255,102,.08);
-      --tw-warn-bg:     rgba(255,176,0,.10);
-      --tw-bad-bg:      rgba(255,77,77,.10);
-
-      /* -- type sizes -- */
-      --tw-title:       30px;             /* page title */
-      --tw-metric:      40px;             /* Score / Work big number */
-      --tw-stat:        50px;             /* colored-card big number */
-      --tw-label:       13px;             /* small uppercase labels */
-
-      /* -- table -- */
-      --tw-row-line:    var(--line);       /* row divider color */
-      --tw-row-hover:   rgba(255,176,0,.05);
-
-      display:block; padding:var(--s3) var(--s3) var(--s4); color:var(--text); font-family:var(--font-terminal);
-    }
-    .teach-page *{ box-sizing:border-box; font-family:var(--font-terminal); border-radius:var(--tw-radius); }
-
-    /* ---- page head ---- */
-    .teach-head{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s3); }
-    .teach-title{ font-size:var(--tw-title); line-height:1; color:var(--tw-accent); letter-spacing:.06em; }
-    .teach-classsel{ background:#000; color:var(--tw-accent); border:var(--tw-bd-width) solid var(--tw-bd-color); padding:var(--s1) var(--s2); font-size:17px; letter-spacing:.05em; }
-    .teach-stack{ display:flex; }
-    .teach-ava{ width:30px; height:30px; border:var(--tw-bd-width) solid var(--tw-bd-color); background:#000; color:var(--tw-accent);
-      display:grid; place-items:center; font-size:12px; margin-left:-1px; }
-    .teach-head .spacer{ flex:1 1 auto; }
-    .teach-alerts{ display:flex; align-items:center; gap:var(--s2); color:var(--muted); font-size:14px; letter-spacing:.1em; text-transform:uppercase; }
-
-    /* ---- widget grid (layout unchanged) ---- */
-    .widgets{ display:grid; grid-template-columns:1.15fr 1.15fr 1fr 1fr 1fr; gap:var(--tw-gap); margin-bottom:calc(var(--tw-volume) + var(--s3)); }
-    .card{
-      position:relative;
-      border:var(--tw-bd-width) solid var(--tw-bd-color);
-      background:var(--tw-card-bg);
-      box-shadow:var(--tw-shadow);
-      padding:var(--tw-pad);
-      transition:transform .18s ease, box-shadow .25s ease, border-color .25s ease;
-    }
-    .lbl{ font-size:var(--tw-label); color:var(--muted); letter-spacing:.12em; text-transform:uppercase; }
-    .metric-card{ display:flex; flex-direction:column; min-height:150px; }
-    .metric-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s2); }
-    .metric-num{ font-size:var(--tw-metric); line-height:1; color:var(--tw-accent); margin-top:auto; }
-    .metric-foot{ margin-top:4px; font-size:13px; color:var(--muted); letter-spacing:.04em; }
-    .metric-foot b{ color:var(--tw-good); font-weight:400; }
-
-    /* colored stat cards -> terminal bordered */
-    .stat{ position:relative; border:var(--tw-bd-width) solid var(--tw-bd-color); background:#000; padding:var(--tw-pad); display:flex; flex-direction:column; min-height:170px; box-shadow:var(--tw-shadow); transition:transform .18s ease, box-shadow .25s ease, border-color .25s ease; }
-    .stat-top{ display:flex; align-items:center; justify-content:space-between; }
-    .stat-lbl{ font-size:14px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-    .stat-num{ font-size:var(--tw-stat); line-height:1; margin-top:auto; }
-    .stat-sub{ font-size:13px; color:var(--muted); letter-spacing:.06em; margin-top:4px; }
-    .stat .mini .teach-ava{ width:24px; height:24px; font-size:11px; }
-    .stat.g{ border-color:var(--tw-good); background:linear-gradient(180deg,var(--tw-good-bg),transparent),#000; }
-    .stat.g .stat-num{ color:var(--tw-good); }
-    .stat.y{ border-color:var(--tw-warn); background:linear-gradient(180deg,var(--tw-warn-bg),transparent),#000; }
-    .stat.y .stat-num{ color:var(--tw-warn); }
-    .stat.o{ border-color:var(--tw-bad); background:linear-gradient(180deg,var(--tw-bad-bg),transparent),#000; }
-    .stat.o .stat-num{ color:var(--tw-bad); }
-
-    /* ---- proficiency ---- */
-    .prof{ position:relative; border:var(--tw-bd-width) solid var(--tw-bd-color); background:#000; box-shadow:var(--tw-shadow); transition:transform .18s ease, box-shadow .25s ease, border-color .25s ease; }
-    .prof-head{ display:flex; align-items:center; justify-content:space-between; padding:var(--s2) var(--s3); border-bottom:var(--tw-bd-width) solid var(--tw-row-line); }
-    .prof-head .h{ font-size:20px; color:var(--tw-accent); letter-spacing:.08em; }
-    .prof-head .right{ display:flex; align-items:center; gap:var(--s3); color:var(--muted); font-size:13px; letter-spacing:.08em; text-transform:uppercase; }
-    .chip-toggle{ border:var(--tw-bd-width) solid var(--tw-bd-color); padding:3px 10px; color:var(--tw-accent); }
-
-    /* proficiency shown as a character leaderboard (reuses the real .memos-* fighter styles) */
-    .teach-roster{ height:auto; grid-template-rows:none; grid-auto-rows:68px; gap:6px; padding:var(--s3); max-height:44vh; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border) #000; }
-    .teach-roster::-webkit-scrollbar{ width:10px; }
-    .teach-roster::-webkit-scrollbar-track{ background:#000; }
-    .teach-roster::-webkit-scrollbar-thumb{ background:var(--border); border:2px solid #000; }
-    .teach-roster .memos-fighter{ min-height:68px; grid-template-columns:44px 58px minmax(0,1fr) 184px; cursor:pointer; }
-    /* score block: big overall score with the strand scores beside it */
-    .teach-points{ display:flex; align-items:center; justify-content:flex-end; gap:12px; border-left:1px solid var(--line); padding-left:10px; height:100%; }
-    .teach-score-main{ font-size:30px; line-height:1; font-variant-numeric:tabular-nums; }
-    .teach-score-strands{ display:flex; flex-direction:column; gap:2px; font-size:14px; color:var(--muted); text-align:left; letter-spacing:.03em; }
-    .teach-score-strands b{ font-weight:400; }
-
-    /* -- student profile modal (mirrors the analyst BIO popup) -- */
-    .teach-modal{ position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:16px; background:rgba(0,0,0,.7); backdrop-filter:blur(1.5px); }
-    .teach-modal[hidden]{ display:none; }
-    .teach-modal .hero-bio-window{ width:min(920px,96%); max-height:min(88vh,720px); }
-    .teach-bio-right{ min-height:0; overflow:auto; display:flex; flex-direction:column; gap:14px; padding-right:4px; }
-    .teach-bio-name{ color:var(--amber); font-size:26px; letter-spacing:.06em; line-height:1; }
-    .teach-bio-sub{ color:var(--muted); font-size:14px; margin-top:4px; }
-    .teach-sec-title{ color:var(--amber); font-size:14px; letter-spacing:.12em; text-transform:uppercase; border-bottom:1px solid var(--line); padding-bottom:5px; margin-bottom:8px; }
-    .teach-kv{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
-    .teach-kv .cell{ border:1px solid var(--line); padding:7px 9px; }
-    .teach-kv .k{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
-    .teach-kv .v{ font-size:18px; margin-top:2px; }
-    .teach-prog{ display:flex; flex-direction:column; gap:9px; }
-    .teach-prog-row{ display:grid; grid-template-columns:120px 1fr 48px; align-items:center; gap:10px; }
-    .teach-prog-row .lab{ color:var(--muted); text-transform:uppercase; font-size:12px; letter-spacing:.06em; }
-    .teach-prog-row .trk{ height:14px; border:1px solid var(--line); background:#000; overflow:hidden; }
-    .teach-prog-row .trk > i{ display:block; height:100%; opacity:.85; }
-    .teach-prog-row .val{ text-align:right; font-size:15px; }
-    .teach-log{ border:1px solid var(--line); }
-    .teach-log .row{ display:grid; grid-template-columns:64px 1fr; gap:10px; padding:7px 9px; border-bottom:1px solid var(--line); font-size:14px; }
-    .teach-log .row:last-child{ border-bottom:0; }
-    .teach-log .row .t{ color:var(--muted); font-size:12px; }
-    .teach-log .row .m b{ color:var(--amber); font-weight:400; }
-    .teach-modal .hero-bio-portrait{ animation:memosSpriteBob 1.22s steps(2,end) infinite; }
-
-    /* -- clickable widgets + widget detail modal -- */
-    .widgets > *{ cursor:pointer; }
-    .teach-modal-body{ min-height:0; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:14px; }
-    .teach-dist{ display:flex; flex-direction:column; gap:8px; }
-    .teach-dist-row{ display:grid; grid-template-columns:150px 1fr 84px; gap:10px; align-items:center; }
-    .teach-dist-row .lab{ color:var(--muted); text-transform:uppercase; font-size:12px; letter-spacing:.06em; }
-    .teach-dist-row .trk{ height:16px; border:1px solid var(--line); background:#000; overflow:hidden; }
-    .teach-dist-row .trk > i{ display:block; height:100%; opacity:.85; }
-    .teach-dist-row .cnt{ text-align:right; font-size:14px; }
-    .teach-mini{ display:flex; flex-direction:column; border:1px solid var(--line); }
-    .teach-mini .row{ display:grid; grid-template-columns:34px 1fr auto; gap:10px; align-items:center; padding:6px 9px; border-bottom:1px solid var(--line); cursor:pointer; }
-    .teach-mini .row:last-child{ border-bottom:0; }
-    .teach-mini .row:hover{ background:rgba(255,176,0,.06); }
-    .teach-mini .pic{ width:30px; height:30px; border:1px solid var(--line); background:#000; display:grid; place-items:end center; overflow:hidden; }
-    .teach-mini .pic img{ width:100%; height:100%; object-fit:contain; object-position:center bottom; image-rendering:pixelated; }
-    .teach-mini .nm{ font-size:15px; }
-    .teach-mini .rk{ color:var(--muted); font-size:12px; }
-    .teach-mini .sc{ font-size:16px; font-variant-numeric:tabular-nums; }
-
-    /* -- roster toolbar (search / sort / filter) -- */
-    .teach-toolbar{ display:flex; align-items:center; gap:var(--s2); padding:var(--s2) var(--s3); border-bottom:1px solid var(--tw-row-line); flex-wrap:wrap; }
-    .teach-input{ background:#000; color:var(--text); border:1px solid var(--tw-bd-color); padding:5px 8px; font-family:var(--font-terminal); font-size:15px; }
-    .teach-input::placeholder{ color:var(--muted); }
-    .teach-input:focus, .teach-select:focus, .teach-note:focus{ outline:1px solid var(--tw-accent); }
-    #tb-search{ flex:1; min-width:150px; }
-    .teach-select{ background:#000; color:var(--tw-accent); border:1px solid var(--tw-bd-color); padding:5px 8px; font-family:var(--font-terminal); font-size:14px; letter-spacing:.04em; }
-    .teach-count{ color:var(--muted); font-size:13px; margin-left:auto; letter-spacing:.06em; }
-    .teach-empty{ padding:var(--s4); text-align:center; color:var(--muted); }
-    .teach-roster .memos-fighter.flagged{ border-color:rgba(255,77,77,.55); }
-    .flagmark{ color:var(--red); }
-
-    /* -- manage actions in profile modal -- */
-    .teach-actions{ display:flex; gap:var(--s2); margin-bottom:var(--s2); flex-wrap:wrap; }
-    .teach-btn{ background:#000; color:var(--tw-accent); border:1px solid var(--tw-bd-color); padding:6px 12px; font-family:var(--font-terminal); font-size:14px; letter-spacing:.05em; cursor:pointer; }
-    .teach-btn:hover{ background:rgba(255,176,0,.08); }
-    .teach-btn.on{ background:rgba(255,77,77,.14); border-color:var(--red); color:var(--red); }
-    .teach-btn.solid{ background:var(--tw-accent); color:#000; border-color:var(--tw-accent); }
-    .teach-btn.solid:hover{ filter:brightness(1.08); }
-    .teach-note{ width:100%; min-height:64px; background:#000; color:var(--text); border:1px solid var(--tw-bd-color); padding:8px; font-family:var(--font-terminal); font-size:14px; resize:vertical; }
-
-    table{ width:100%; border-collapse:collapse; }
-    thead th{ text-align:left; color:var(--muted); font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:400; padding:var(--s2) var(--s3); border-bottom:1px solid var(--tw-row-line); }
-    thead th.c{ text-align:center; }
-    tbody td{ padding:var(--s2) var(--s3); border-bottom:1px solid var(--tw-row-line); vertical-align:middle; }
-    tbody tr:hover td{ background:var(--tw-row-hover); }
-    .who{ display:flex; align-items:center; gap:var(--s2); }
-    .who .teach-ava{ width:34px; height:34px; font-size:13px; margin:0; }
-    .who .nm{ color:var(--text); font-size:16px; }
-    .who .un{ color:var(--muted); font-size:12px; letter-spacing:.06em; }
-    .frac{ color:var(--text); font-size:16px; }
-    .frac small{ color:var(--muted); }
-
-    .bar{ display:flex; align-items:center; gap:var(--s2); }
-    .bar .track{ flex:1; max-width:180px; height:18px; border:1px solid var(--tw-row-line); background:#000; overflow:hidden; }
-    .bar .fill{ height:100%; opacity:.85; transform-origin:left; animation:tw-grow .9s ease-out .25s backwards; }
-    .bar .pct{ color:var(--text); min-width:42px; }
-
-    .cellc{ text-align:center; }
-    .dot{ display:inline-grid; place-items:center; border-radius:50%; color:#000; font-weight:700; border:1px solid var(--tw-row-line); }
-    .dot.lg{ width:26px; height:26px; font-size:13px; }
-    .dot.md{ width:22px; height:22px; font-size:12px; }
-    .dot.sm{ width:19px; height:19px; font-size:11px; }
-    .dot.ghost{ background:#000; color:var(--muted); }
-
-    .backlink{ display:inline-flex; gap:6px; color:var(--muted); font-size:13px; letter-spacing:.08em; margin-top:calc(var(--tw-volume) + var(--s3)); text-transform:uppercase; }
-    .backlink:hover{ color:var(--tw-accent); }
-
-    /* -- hover lift -- */
-    .card:hover, .stat:hover, .prof:hover{ transform:translateY(calc(-1 * var(--tw-lift))); box-shadow:var(--tw-shadow-hover); }
-    .card:hover, .prof:hover{ border-color:var(--tw-accent); }
-
-    /* -- entrance rise (staggered) -- */
-    .widgets > *{ animation:tw-rise var(--tw-rise) ease-out backwards; }
-    .widgets > *:nth-child(1){ animation-delay:.04s; }
-    .widgets > *:nth-child(2){ animation-delay:.10s; }
-    .widgets > *:nth-child(3){ animation-delay:.16s; }
-    .widgets > *:nth-child(4){ animation-delay:.22s; }
-    .widgets > *:nth-child(5){ animation-delay:.28s; }
-    .prof{ animation:tw-rise var(--tw-rise) ease-out .34s backwards; }
-    @keyframes tw-rise{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:none; } }
-
-    /* -- score bar grow + score-ring draw -- */
-    @keyframes tw-grow{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
-    .ring-anim{ transition:stroke-dashoffset 1s ease-out, stroke .4s ease; }
-
-    /* -- pulsing status glow on the colored cards -- */
-    .stat.g{ --tw-glow:rgba(0,255,102,.32); --tw-volume-color:rgba(0,255,102,.25); }
-    .stat.y{ --tw-glow:rgba(255,176,0,.34); --tw-volume-color:rgba(255,176,0,.25); }
-    .stat.o{ --tw-glow:rgba(255,77,77,.32); --tw-volume-color:rgba(255,77,77,.25); }
-    .stat::after{ content:""; position:absolute; inset:-1px; pointer-events:none; animation:tw-pulse 2.6s ease-in-out infinite; }
-    @keyframes tw-pulse{ 0%,100%{ box-shadow:0 0 4px 0 rgba(255,176,0,.04); } 50%{ box-shadow:0 0 18px 1px var(--tw-glow); } }
-
-    /* -- respect reduced motion -- */
-    @media (prefers-reduced-motion: reduce){
-      .card, .stat, .prof, .widgets > *, .bar .fill, .stat::after, .ring-anim{ animation:none !important; }
-      .card, .stat, .prof, .ring-anim{ transition:none !important; }
-    }
-
-    @media (max-width:1000px){ .widgets{ grid-template-columns:1fr 1fr; } }
-    @media (max-width:620px){ .widgets{ grid-template-columns:1fr; } .bar .track{ max-width:120px; } }
-  </style>
+  <link rel="stylesheet" href="./teach-dashboard.css?v=20260913-1" />
 </head>
-<body>
+<body class="teacher-page">
   <div class="scanlines" aria-hidden="true"></div>
 
   <div class="shell">
     <header class="hero">
       <div class="topline">
         <div class="left-meta">
-          <span class="chip amber">2184 days in the market</span>
-          <span class="amber">Tue 23-APR-24</span>
+          <span class="chip amber">CLASSROOM ECONOMY</span>
+          <span class="amber">—</span>
         </div>
         <div class="ticker-container" aria-label="Live price action">
           <div class="ticker-wrap" id="ticker"></div>
         </div>
         <div class="right-meta">
-          <span class="amber" id="clock">5:04 PM</span>
+          <span class="amber" id="clock">—</span>
           <button class="pill" type="button">LOG OUT</button>
         </div>
       </div>
@@ -296,28 +50,30 @@
     </header>
 
     <main class="teach-page" aria-label="Teacher dashboard">
-      <section class="panel" id="econ-teacher" aria-label="Live class economy"></section>
-      <!-- page head -->
       <div class="teach-head">
-        <div class="teach-title">TEACHER DASHBOARD</div>
-        <select class="teach-classsel" id="class-select" aria-label="Class">
-          <option value="0">CLASS A · INTRO TO MARKETS</option>
-          <option value="1">CLASS B · APPLIED TRADING</option>
-          <option value="2">CLASS C · PORTFOLIO THEORY</option>
-        </select>
-        <div class="teach-stack" id="class-avatars"></div>
+        <h1 class="teach-title">TEACHER DASHBOARD</h1>
+        <span class="teach-classsel" id="class-label">NO CLASS CONNECTED</span>
+        <div class="teach-stack" id="class-avatars" aria-label="Class members"></div>
         <span class="spacer"></span>
-        <div class="teach-alerts"><span>Alerts</span>
-          <div class="teach-stack"><div class="teach-ava" style="color:var(--red)">!</div><div class="teach-ava">3</div></div>
+        <div class="teach-alerts"><span>Needs attention</span><span class="teach-ava" id="teach-attention-count">—</span></div>
+      </div>
+      <div class="teach-session">
+        <span class="teach-status" id="teach-state">CONNECT YOUR CLASS</span>
+        <span id="teach-day">DAY —</span>
+        <span id="teach-message" role="status" aria-live="polite">Open the class console with your teacher code to view live progress.</span>
+        <div class="teach-controls">
+          <button class="teach-btn" id="teach-pause" type="button" disabled>PAUSE CLASS</button>
+          <button class="teach-btn" id="teach-refresh" type="button" disabled>REFRESH</button>
+          <a class="teach-btn" id="teach-console" href="./class.html">CLASS CONSOLE ↗</a>
         </div>
       </div>
 
       <!-- widgets -->
       <div class="widgets">
-        <!-- Overall Class Score -->
-        <div class="card metric-card" data-widget="score" role="button" tabindex="0" aria-label="Overall class score details">
+        <!-- Licence progress -->
+        <div class="card metric-card" data-widget="progress" role="button" tabindex="0" aria-label="Class licence progress details">
           <div class="metric-top">
-            <div class="lbl">Overall Class Score</div>
+            <div class="lbl">Licence Progress</div>
             <svg width="72" height="72" viewBox="0 0 76 76" aria-hidden="true">
               <circle cx="38" cy="38" r="33" fill="none" stroke="rgba(255,176,0,.14)" stroke-width="7"/>
               <circle id="score-ring" class="ring-anim" cx="38" cy="38" r="33" fill="none" stroke="var(--amber)" stroke-width="7"
@@ -331,71 +87,71 @@
               </g>
             </svg>
           </div>
-          <div class="metric-num" id="score-num">68%</div>
-          <div class="metric-foot" id="score-foot"><b>&#9650; 4%</b> vs last term</div>
+          <div class="metric-num" id="score-num">—</div>
+          <div class="metric-foot" id="score-foot">5 milestones to unlock investing</div>
         </div>
 
-        <!-- Work Assigned -->
-        <div class="card metric-card" data-widget="work" role="button" tabindex="0" aria-label="Work assigned details">
+        <!-- Deliveries -->
+        <div class="card metric-card" data-widget="deliveries" role="button" tabindex="0" aria-label="Class delivery details">
           <div class="metric-top">
-            <div class="lbl">Work Assigned</div>
+            <div class="lbl">Deliveries</div>
             <svg width="72" height="72" viewBox="0 0 42 42" aria-hidden="true">
               <circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(255,176,0,.14)" stroke-width="6"/>
               <circle id="work-done-arc" cx="21" cy="21" r="15.9" fill="none" stroke="var(--green)" stroke-width="6" stroke-dasharray="0 100" transform="rotate(-90 21 21)" style="transition:stroke-dasharray .9s ease"/>
               <circle id="work-open-arc" cx="21" cy="21" r="15.9" fill="none" stroke="var(--amber)" stroke-width="6" stroke-dasharray="0 100" stroke-dashoffset="0" transform="rotate(-90 21 21)" style="transition:stroke-dasharray .9s ease"/>
             </svg>
           </div>
-          <div class="metric-num" id="work-num">36</div>
-          <div class="metric-foot" id="work-foot">27 completed &middot; 9 open</div>
+          <div class="metric-num" id="work-num">—</div>
+          <div class="metric-foot" id="work-foot">Completed across the class</div>
         </div>
 
-        <!-- colored stat cards -->
-        <div class="stat g" data-widget="ontrack" role="button" tabindex="0" aria-label="On track students">
-          <div class="stat-top"><span class="stat-lbl">On Track</span>
-            <div class="teach-stack mini"><div class="teach-ava">A</div><div class="teach-ava">G</div></div>
-          </div>
-          <div class="stat-num">21</div><div class="stat-sub">88% of class</div>
+        <div class="stat g" data-widget="licensed" role="button" tabindex="0" aria-label="Licensed students">
+          <div class="stat-top"><span class="stat-lbl">Licensed</span><span class="teach-stat-icon" aria-hidden="true">✓</span></div>
+          <div class="stat-num">—</div><div class="stat-sub">Ready for investing</div>
         </div>
-        <div class="stat y" data-widget="review" role="button" tabindex="0" aria-label="Needs review students">
-          <div class="stat-top"><span class="stat-lbl">Needs Review</span>
-            <div class="teach-stack mini"><div class="teach-ava">D</div><div class="teach-ava">L</div></div>
-          </div>
-          <div class="stat-num">10</div><div class="stat-sub">41% of class</div>
+        <div class="stat y" data-widget="growing" role="button" tabindex="0" aria-label="Students building up">
+          <div class="stat-top"><span class="stat-lbl">Building Up</span><span class="teach-stat-icon" aria-hidden="true">↗</span></div>
+          <div class="stat-num">—</div><div class="stat-sub">Working toward their licence</div>
         </div>
-        <div class="stat o" data-widget="risk" role="button" tabindex="0" aria-label="At risk students">
-          <div class="stat-top"><span class="stat-lbl">At Risk</span>
-            <div class="teach-stack mini"><div class="teach-ava">S</div><div class="teach-ava">A</div></div>
-          </div>
-          <div class="stat-num">5</div><div class="stat-sub">21% of class</div>
+        <div class="stat o" data-widget="attention" role="button" tabindex="0" aria-label="Students needing attention">
+          <div class="stat-top"><span class="stat-lbl">Needs Attention</span><span class="teach-stat-icon" aria-hidden="true">!</span></div>
+          <div class="stat-num">—</div><div class="stat-sub">Check production and next steps</div>
         </div>
       </div>
 
-      <!-- proficiency -->
+      <!-- Live class roster -->
       <div class="prof">
         <div class="prof-head">
-          <div class="h">STUDENT PROFICIENCY</div>
-          <div class="right"><span>Learning Objectives</span><span class="chip-toggle">ALL STRANDS &#9662;</span></div>
+          <div class="h">STUDENT PROGRESS</div>
+          <div class="right"><span>BUSINESSES · CUSTOMERS · LICENCE</span></div>
         </div>
         <div class="teach-toolbar">
           <input id="tb-search" class="teach-input" type="text" placeholder="Search students&hellip;" aria-label="Search students" />
           <select id="tb-sort" class="teach-select" aria-label="Sort by">
             <option value="rank">Sort: Rank</option>
-            <option value="work">Sort: Work</option>
+            <option value="deliveries">Sort: Deliveries</option>
             <option value="name">Sort: Name</option>
           </select>
           <select id="tb-band" class="teach-select" aria-label="Filter by status">
             <option value="all">All students</option>
-            <option value="on">On Track</option>
-            <option value="rev">Needs Review</option>
-            <option value="risk">At Risk</option>
-            <option value="flag">Flagged</option>
+            <option value="licensed">Licensed</option>
+            <option value="growing">Building Up</option>
+            <option value="attention">Needs Attention</option>
           </select>
           <span class="teach-count" id="tb-count"></span>
         </div>
-        <section class="memos-roster teach-roster" id="rows" aria-label="Student proficiency leaderboard"></section>
+        <section class="memos-roster teach-roster" id="rows" aria-label="Live student progress">
+          <div class="teach-empty">Connect a class to see its students and their towns.</div>
+        </section>
+        <div class="teach-pager" aria-label="Student pages">
+          <span class="teach-roster-hint">SELECT A STUDENT TO VIEW THEIR TOWN</span>
+          <button class="teach-btn" id="teach-page-prev" type="button" aria-label="Previous student page" disabled>← PREV</button>
+          <span id="teach-page-info" aria-live="polite">0 / 0</span>
+          <button class="teach-btn" id="teach-page-next" type="button" aria-label="Next student page" disabled>NEXT →</button>
+        </div>
       </div>
 
-      <a class="backlink" href="./index.html">&#8592; Back to terminal dashboard</a>
+      <div class="teach-footer"><a class="backlink" href="./index.html">&#8592; Back to terminal dashboard</a><span>LIVE CLASS DATA · UPDATES EVERY 15 SECONDS</span></div>
 
       <!-- student profile modal -->
       <div class="teach-modal" id="stu-modal" hidden>
@@ -434,385 +190,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
   <script src="./app.js?v=20260912-1"></script>
-  <script src="./teacher-econ.js?v=20260912-live2"></script>
-  <script>
-    /* =====================================================================
-       TUNABLE DATA-COLOR THRESHOLDS  (JS side of the widget styling)
-       ===================================================================== */
-    var TW = {
-      scoreGood:70, scoreWarn:40,   /* score >=Good green, >=Warn amber, else red */
-      dotGood:45,   dotWarn:25,     /* strand-score color buckets */
-      good:"#00ff66", warn:"#ffb000", bad:"#ff4d4d"
-    };
-
-    /* portraits cycle through the hero-select roster */
-    var PORTRAITS = [
-      "player-ozan.png?v=20260216-1","player-pelli.png?v=20260216-2","player-irene.png?v=20260216-1",
-      "player-buffett.png","player-marks.png","player-hara.png?v=20260216-2",
-      "player-can.png?v=20260216-1","player-hussein.png","player-dennis.png","player-derdo.png","player-peaker.png"
-    ];
-    var NAMES = [
-      "SABINE KLEIN","DANTE PODESVA","SUSAN CHAN","MARCUS VANE","IVY OKORO","LEON PARK",
-      "NADIA RAHMAN","TOM FISHER","ELIF DEMIR","OSCAR REYES","MAYA SINGH","LUCAS WEBER",
-      "ZOE MARTIN","OMAR HADDAD","CLARA BENNETT","NIKO PETROV","AMARA OKAFOR","FELIX BAUER",
-      "RENA IVANOVA","JONAH COLE","PRIYA NAIR","HUGO SILVA","LENA KOVAC","DIEGO MORA",
-      "ANYA VOLKOV","SAMIR KHAN","GRETA LIND","THEO ROUX","MILA HORVAT","BEN CARTER",
-      "ROSA MENDEZ","KAI NAKAMURA","FREYA LARSEN","OMER YILMAZ","NINA COSTA","ARLO WRIGHT",
-      "TESSA HALE","JUDE FALLON","MIRA SOLIS","EZRA BLOOM","LOLA IVANOV","GABRIEL REY",
-      "SIENA MARSH","DEV PATEL","AOIFE BYRNE","RUBEN ORTIZ","YARA HADID","MASON COLE",
-      "ISLA FROST","NOAH BRENNER","AVA LINDT","KIRA VOSS","TOBIAS KANE","EMIRA DAL"
-    ];
-
-    /* each class draws a distinct slice of the name pool + its own seed */
-    var CLASSES = [
-      { label:"CLASS A · INTRO TO MARKETS", start:0,  size:30, seed:0  },
-      { label:"CLASS B · APPLIED TRADING",  start:30, size:16, seed:50 },
-      { label:"CLASS C · PORTFOLIO THEORY", start:46, size:8,  seed:90 }
-    ];
-
-    var ASSIGN_TITLES = [
-      "Build a 5-stock portfolio","Risk write-up: TOMFORT method","Earnings reaction memo",
-      "Sector rotation analysis","Volatility case study","Value vs growth debate",
-      "Options basics quiz","Macro outlook brief","Portfolio rebalance exercise",
-      "Company deep-dive","Bond ladder worksheet","Trade journal review"
-    ];
-    var DUES = ["12-JAN","19-JAN","26-JAN","02-FEB","09-FEB","16-FEB","23-FEB","02-MAR","09-MAR","16-MAR","23-MAR","30-MAR"];
-
-    /* deterministic pseudo-random so a class is stable across reloads */
-    function rng(seed){ var x = Math.sin(seed * 99.13) * 10000; return x - Math.floor(x); }
-    function scoreColor(v){ return v>=TW.scoreGood?TW.good : v>=TW.scoreWarn?TW.warn : TW.bad; }
-    function dotColor(v){ return v>=TW.dotGood?TW.good : v>=TW.dotWarn?TW.warn : TW.bad; }
-    function strand(l, v){ return '<span class="teach-strand">'+l+' <b style="color:'+dotColor(v)+'">'+v+'</b></span>'; }
-    function initials(n){ return n.split(" ").map(function(w){ return w[0]; }).join("").slice(0,2); }
-    function ago(m){ return m<60 ? m+"m ago" : m<1440 ? Math.round(m/60)+"h ago" : Math.round(m/1440)+"d ago"; }
-    function band(v){ return v>=TW.scoreGood ? "on" : v>=TW.scoreWarn ? "rev" : "risk"; }
-    function escapeHtml(t){ return (t||"").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    /* ---- persistence: teacher edits survive reload (localStorage) ---- */
-    var SKEY = "yomama_teach_v2";
-    function loadStore(){ try{ return JSON.parse(localStorage.getItem(SKEY)) || {}; }catch(e){ return {}; } }
-    function saveStore(){ try{ localStorage.setItem(SKEY, JSON.stringify(store)); }catch(e){} }
-    var store = loadStore();
-    function seedAssignments(cfg){
-      var count = 8 + Math.floor(rng(cfg.seed + 500) * 5), out = [];
-      for(var i=0;i<count;i++) out.push({ id:"a"+cfg.seed+"_"+i, title:ASSIGN_TITLES[i % ASSIGN_TITLES.length], due:DUES[i % DUES.length] });
-      return out;
-    }
-    function classStore(idx){
-      if(!store[idx]) store[idx] = {};
-      var cs = store[idx];
-      if(!cs.assignments){ cs.assignments = seedAssignments(CLASSES[idx]); saveStore(); }
-      if(!cs.students) cs.students = {};
-      return cs;
-    }
-
-    function buildClass(cfg){
-      var list = [];
-      for(var k=0; k<cfg.size; k++){
-        var gi = cfg.start + k, seed = cfg.seed + k + 1;
-        list.push({
-          name:   NAMES[gi % NAMES.length],
-          img:    PORTRAITS[gi % PORTRAITS.length],
-          seed:   seed,
-          score:  Math.round(38 + rng(seed)     * 58),
-          frac:   0.5 + rng(seed + 7) * 0.5,
-          market: Math.round(12 + rng(seed + 3) * 48),
-          risk:   Math.round(6  + rng(seed + 5) * 44),
-          net:    Math.round(8  + rng(seed + 9) * 60),
-          flag:   false, note: ""
-        });
-      }
-      list.sort(function(a, b){ return b.score - a.score; });
-      list.forEach(function(s, i){ s.rank = i + 1; s.idx = i; });
-      return list;
-    }
-
-    /* ---- element refs + state ---- */
-    var elRows   = document.getElementById("rows");
-    var elModal  = document.getElementById("stu-modal");
-    var elWidget = document.getElementById("widget-modal");
-    var state    = { classIdx:0, list:[], assignments:[], cs:null, filter:{ q:"", sort:"rank", band:"all" } };
-
-    function totalWork(){ return state.assignments.length; }
-    function doneOf(s){ return Math.round(s.frac * totalWork()); }
-
-    /* per-student activity log (uses live totals) */
-    function buildLog(s){
-      var seed = s.seed, total = totalWork(), done = doneOf(s);
-      var pick = function(k, arr){ return arr[Math.floor(rng(seed*7 + k) * arr.length)]; };
-      var qty  = 5 + Math.round(rng(seed*7 + 1) * 30);
-      var sym  = pick(2, ["AAPL","MSFT","NVDA","SPY","TSLA","AMZN","META"]);
-      var side = rng(seed*7 + 3) > .5 ? "BUY" : "SELL";
-      var mod  = pick(4, ["Market Sense","Risk Mgmt","Portfolio","Analysis"]);
-      return [
-        { mins: 2   + Math.floor(rng(seed*7+5)*55),  msg:'placed a <b>'+side+'</b> order &mdash; '+sym+' x'+qty },
-        { mins: 60  + Math.floor(rng(seed*7+6)*180), msg:'scored <b>'+s.score+'%</b> on the weekly review' },
-        { mins: 240 + Math.floor(rng(seed*7+8)*300), msg:'completed the <b>'+mod+'</b> module' },
-        { mins: 1440, msg:'submitted <b>'+done+'/'+total+'</b> assignments' },
-        { mins: 2880, msg:'joined the class <b>portfolio challenge</b>' }
-      ];
-    }
-
-    /* ---- roster with search / sort / filter ---- */
-    function currentView(){
-      var q = state.filter.q.trim().toLowerCase(), b = state.filter.band, sort = state.filter.sort;
-      var arr = state.list.filter(function(s){
-        if(q && s.name.toLowerCase().indexOf(q) < 0) return false;
-        if(b === "flag") return s.flag;
-        if(b !== "all" && band(s.score) !== b) return false;
-        return true;
-      });
-      if(sort === "work")      arr.sort(function(a, c){ return c.frac - a.frac; });
-      else if(sort === "name") arr.sort(function(a, c){ return a.name.localeCompare(c.name); });
-      else                     arr.sort(function(a, c){ return a.rank - c.rank; });
-      return arr;
-    }
-    function renderRoster(){
-      var total = totalWork(), view = currentView();
-      var cnt = document.getElementById("tb-count");
-      if(cnt) cnt.textContent = view.length + " / " + state.list.length;
-      if(!view.length){ elRows.innerHTML = '<div class="teach-empty">No students match your filters.</div>'; return; }
-      elRows.innerHTML = view.map(function(s){
-        var done = Math.round(s.frac * total);
-        return '<article class="memos-fighter'+(s.flag?' flagged':'')+'" data-idx="'+s.idx+'" role="button" tabindex="0" aria-label="Open '+s.name+' profile">'
-          + '<span class="memos-fighter-bg" aria-hidden="true"><canvas class="memos-fighter-bg-canvas"></canvas></span>'
-          + '<span class="memos-rank">#'+s.rank+'</span>'
-          + '<span class="memos-fighter-portrait-shell"><img class="memos-fighter-portrait" src="./assets/hero-select/'+s.img+'" alt="'+s.name+' portrait" loading="lazy" decoding="async" /></span>'
-          + '<span class="memos-fighter-body">'
-          +   '<span class="memos-fighter-name">'+(s.flag?'<span class="flagmark">&#9873;</span> ':'')+s.name+'</span>'
-          +   '<span class="memos-fighter-style">'+done+' / '+total+' work completed</span>'
-          + '</span>'
-          + '<span class="memos-fighter-points teach-points">'
-          +   '<span class="teach-score-main" style="color:'+scoreColor(s.score)+'">'+s.score+'%</span>'
-          +   '<span class="teach-score-strands">'+strand("MKT",s.market)+strand("RSK",s.risk)+strand("NET",s.net)+'</span>'
-          + '</span>'
-          + '</article>';
-      }).join("");
-    }
-
-    function renderStats(list){
-      var n = list.length || 1, on = 0, rev = 0, risk = 0;
-      list.forEach(function(s){
-        if(s.score >= TW.scoreGood) on++;
-        else if(s.score >= TW.scoreWarn) rev++;
-        else risk++;
-      });
-      function setStat(sel, num, count){
-        var c = document.querySelector(sel); if(!c) return;
-        c.querySelector('.stat-num').textContent = num;
-        c.querySelector('.stat-sub').textContent = Math.round(count / n * 100) + '% of class';
-      }
-      setStat('.stat.g', on, on);
-      setStat('.stat.y', rev, rev);
-      setStat('.stat.o', risk, risk);
-    }
-
-    var RING_C = 2 * Math.PI * 33;   /* score-ring circumference (r=33) */
-    function renderGauges(list){
-      var n = list.length || 1, total = totalWork();
-      var avg = Math.round(list.reduce(function(a, s){ return a + s.score; }, 0) / n);
-      document.getElementById("score-ring").style.strokeDashoffset = (RING_C * (1 - avg / 100)).toFixed(1);
-      document.getElementById("score-num").textContent = avg + "%";
-      var avgDone = Math.round(list.reduce(function(a, s){ return a + Math.round(s.frac * total); }, 0) / n);
-      var open = total - avgDone, compPct = total ? Math.round(avgDone / total * 100) : 0;
-      document.getElementById("work-done-arc").setAttribute("stroke-dasharray", compPct + " " + (100 - compPct));
-      var openArc = document.getElementById("work-open-arc");
-      openArc.setAttribute("stroke-dasharray", (100 - compPct) + " " + compPct);
-      openArc.setAttribute("stroke-dashoffset", -compPct);
-      document.getElementById("work-num").textContent = total;
-      document.getElementById("work-foot").textContent = avgDone + " avg done · " + open + " avg open";
-    }
-
-    function renderHead(list){
-      var top = list.slice(0, 3).map(function(s){ return '<div class="teach-ava">'+initials(s.name)+'</div>'; }).join("");
-      document.getElementById("class-avatars").innerHTML = top + '<div class="teach-ava">+'+Math.max(0, list.length - 3)+'</div>';
-    }
-
-    /* ---- manage actions (persisted) ---- */
-    function persistStudent(s){ var o = state.cs.students[s.name] || (state.cs.students[s.name] = {}); o.flag = s.flag; o.note = s.note; saveStore(); }
-    function toggleFlag(s){ s.flag = !s.flag; persistStudent(s); renderRoster(); }
-    function saveNote(s, t){ s.note = t; persistStudent(s); }
-
-    function loadClass(idx){
-      state.classIdx = idx;
-      state.cs = classStore(idx);
-      state.assignments = state.cs.assignments;
-      state.list = buildClass(CLASSES[idx]);
-      state.list.forEach(function(s){ var o = state.cs.students[s.name]; if(o){ s.flag = !!o.flag; s.note = o.note || ""; } });
-      state.filter = { q:"", sort:"rank", band:"all" };
-      var sb = document.getElementById("tb-search"); if(sb) sb.value = "";
-      var so = document.getElementById("tb-sort");   if(so) so.value = "rank";
-      var ba = document.getElementById("tb-band");   if(ba) ba.value = "all";
-      renderRoster();
-      renderStats(state.list);
-      renderGauges(state.list);
-      renderHead(state.list);
-      closeModal();
-      closeWidget();
-    }
-
-    /* ---- student profile modal ---- */
-    function kv(k, v){ return '<div class="cell"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
-    function prog(l, v, isPct){
-      return '<div class="teach-prog-row"><span class="lab">'+l+'</span>'
-        + '<span class="trk"><i style="width:'+Math.min(100, v)+'%;background:'+scoreColor(v)+'"></i></span>'
-        + '<span class="val">'+v+(isPct?'%':'')+'</span></div>';
-    }
-    function renderLog(s){
-      var rows = buildLog(s).sort(function(a, b){ return a.mins - b.mins; });
-      return '<div class="teach-log">'+rows.map(function(e){
-        return '<div class="row"><span class="t">'+ago(e.mins)+'</span><span class="m">'+e.msg+'</span></div>';
-      }).join('')+'</div>';
-    }
-
-    function openModal(i){
-      var s = state.list[i]; if(!s) return;
-      var total = totalWork(), done = doneOf(s);
-      var status = s.score>=TW.scoreGood ? "ON TRACK" : s.score>=TW.scoreWarn ? "NEEDS REVIEW" : "AT RISK";
-      var col = scoreColor(s.score);
-      var img = document.getElementById("stu-modal-portrait");
-      img.src = "./assets/hero-select/"+s.img; img.alt = s.name+" portrait";
-      document.getElementById("stu-modal-content").innerHTML =
-          '<div><div class="teach-bio-name" id="stu-modal-name">'+s.name+'</div>'
-        +   '<div class="teach-bio-sub">'+CLASSES[state.classIdx].label+' &middot; Rank #'+s.rank+' of '+state.list.length+'</div></div>'
-        + '<div><div class="teach-sec-title">Profile</div><div class="teach-kv">'
-        +   kv("Overall Score", '<b style="color:'+col+'">'+s.score+'%</b>')
-        +   kv("Status", '<b style="color:'+col+'">'+status+'</b>')
-        +   kv("Work Completed", done+' / '+total)
-        +   kv("Class Rank", '#'+s.rank)
-        + '</div></div>'
-        + '<div><div class="teach-sec-title">Detailed Progress</div><div class="teach-prog">'
-        +   prog("Overall", s.score, true)
-        +   prog("Market Sense", s.market, false)
-        +   prog("Risk Mgmt", s.risk, false)
-        +   prog("Network", s.net, false)
-        + '</div></div>'
-        + '<div><div class="teach-sec-title">Activity Log</div>'+renderLog(s)+'</div>'
-        + '<div><div class="teach-sec-title">Teacher</div>'
-        +   '<div class="teach-actions"><button class="teach-btn'+(s.flag?' on':'')+'" id="flag-btn" type="button">'+(s.flag?'&#9873; FLAGGED &mdash; CLICK TO UNFLAG':'&#9873; FLAG FOR ATTENTION')+'</button></div>'
-        +   '<textarea class="teach-note" id="note-box" placeholder="Private note about this student&hellip;">'+escapeHtml(s.note)+'</textarea>'
-        + '</div>';
-      var fb = document.getElementById("flag-btn");
-      fb.addEventListener("click", function(){
-        toggleFlag(s);
-        fb.textContent = s.flag ? '⚑ FLAGGED — CLICK TO UNFLAG' : '⚑ FLAG FOR ATTENTION';
-        fb.classList.toggle('on', s.flag);
-      });
-      var nb = document.getElementById("note-box");
-      nb.addEventListener("input", function(){ saveNote(s, nb.value); });
-      elModal.hidden = false;
-    }
-    function closeModal(){ elModal.hidden = true; }
-
-    /* ---- widget detail modals (click a top card) ---- */
-    function closeWidget(){ elWidget.hidden = true; }
-
-    function distRow(lab, count, n, color){
-      var pct = n ? Math.round(count / n * 100) : 0;
-      return '<div class="teach-dist-row"><span class="lab">'+lab+'</span>'
-        + '<span class="trk"><i style="width:'+pct+'%;background:'+color+'"></i></span>'
-        + '<span class="cnt">'+count+' &middot; '+pct+'%</span></div>';
-    }
-    function miniRow(s){
-      return '<div class="row" data-idx="'+s.idx+'" role="button" tabindex="0">'
-        + '<span class="pic"><img src="./assets/hero-select/'+s.img+'" alt="" loading="lazy"></span>'
-        + '<span class="nm">'+s.name+' <span class="rk">#'+s.rank+'</span></span>'
-        + '<span class="sc" style="color:'+scoreColor(s.score)+'">'+s.score+'%</span></div>';
-    }
-    function miniList(arr){
-      if(!arr.length) return '<div class="teach-mini"><div class="row" style="cursor:default;color:var(--muted)">No students in this band.</div></div>';
-      return '<div class="teach-mini">'+arr.map(miniRow).join('')+'</div>';
-    }
-
-    function openWidget(kind){
-      var list = state.list, n = list.length || 1, total = totalWork();
-      var on   = list.filter(function(s){ return band(s.score)==="on"; });
-      var rev  = list.filter(function(s){ return band(s.score)==="rev"; });
-      var risk = list.filter(function(s){ return band(s.score)==="risk"; });
-      var title = "", html = "";
-
-      if(kind === "score"){
-        var scores = list.map(function(s){ return s.score; });
-        var avg = Math.round(scores.reduce(function(a,b){ return a+b; }, 0) / n);
-        var hi = Math.max.apply(null, scores), lo = Math.min.apply(null, scores);
-        var mid = list[Math.floor(n/2)] ? list[Math.floor(n/2)].score : 0;
-        title = "OVERALL CLASS SCORE";
-        html = '<div><div class="teach-sec-title">Summary</div><div class="teach-kv">'
-          +   kv("Class Average", '<b style="color:'+scoreColor(avg)+'">'+avg+'%</b>')
-          +   kv("Median", mid+'%')
-          +   kv("Highest", '<b style="color:'+scoreColor(hi)+'">'+hi+'%</b>')
-          +   kv("Lowest", '<b style="color:'+scoreColor(lo)+'">'+lo+'%</b>')
-          + '</div></div>'
-          + '<div><div class="teach-sec-title">Score Distribution</div><div class="teach-dist">'
-          +   distRow("On Track (70+)", on.length, n, TW.good)
-          +   distRow("Needs Review", rev.length, n, TW.warn)
-          +   distRow("At Risk (<40)", risk.length, n, TW.bad)
-          + '</div></div>'
-          + '<div><div class="teach-sec-title">Top Performers</div>'+miniList(list.slice(0, 5))+'</div>'
-          + '<div><div class="teach-sec-title">Needs Attention</div>'+miniList(list.slice(-5).reverse())+'</div>';
-      } else if(kind === "work"){
-        var avgDone = Math.round(list.reduce(function(a,s){ return a + Math.round(s.frac*total); }, 0) / n);
-        var open = total - avgDone, compPct = total ? Math.round(avgDone / total * 100) : 0;
-        title = "WORK ASSIGNED";
-        var byWork = list.slice().sort(function(a,b){ return b.frac - a.frac; }).map(function(s){
-          var done = Math.round(s.frac*total), pct = total ? Math.round(done / total * 100) : 0;
-          return '<div class="teach-dist-row"><span class="lab" style="text-transform:none;color:var(--text)">'+s.name+'</span>'
-            + '<span class="trk"><i style="width:'+pct+'%;background:'+scoreColor(pct)+'"></i></span>'
-            + '<span class="cnt">'+done+' / '+total+'</span></div>';
-        }).join('');
-        html = '<div><div class="teach-sec-title">Summary</div><div class="teach-kv">'
-          +   kv("Assignments", total)
-          +   kv("Avg Completed", avgDone)
-          +   kv("Avg Open", open)
-          +   kv("Completion", compPct+'%')
-          + '</div></div>'
-          + '<div><div class="teach-sec-title">Completion by Student</div><div class="teach-dist">'+byWork+'</div></div>';
-      } else {
-        var map = { ontrack:["ON TRACK", on, TW.good], review:["NEEDS REVIEW", rev, TW.warn], risk:["AT RISK", risk, TW.bad] };
-        var m = map[kind], arr = m[1];
-        title = m[0];
-        html = '<div><div class="teach-sec-title">'+m[0]+' &mdash; '+arr.length+' students ('+Math.round(arr.length / n * 100)+'% of class)</div>'
-          + miniList(arr) + '</div>';
-      }
-
-      document.getElementById("widget-modal-title").textContent = title;
-      document.getElementById("widget-modal-content").innerHTML = html;
-      elWidget.hidden = false;
-    }
-
-    var elWidgets = document.querySelector(".widgets");
-    elWidgets.addEventListener("click", function(e){
-      var w = e.target.closest("[data-widget]"); if(w) openWidget(w.getAttribute("data-widget"));
-    });
-    elWidgets.addEventListener("keydown", function(e){
-      if(e.key==="Enter" || e.key===" "){ var w = e.target.closest("[data-widget]"); if(w){ e.preventDefault(); openWidget(w.getAttribute("data-widget")); } }
-    });
-    elWidget.addEventListener("click", function(e){
-      if(e.target === elWidget){ closeWidget(); return; }
-      var r = e.target.closest(".teach-mini .row[data-idx]");
-      if(r){ closeWidget(); openModal(+r.getAttribute("data-idx")); }
-    });
-    document.getElementById("widget-modal-close").addEventListener("click", closeWidget);
-    document.addEventListener("keydown", function(e){ if(e.key==="Escape" && !elWidget.hidden) closeWidget(); });
-
-    /* ---- events ---- */
-    document.getElementById("class-select").addEventListener("change", function(){ loadClass(+this.value); });
-    document.getElementById("tb-search").addEventListener("input", function(){ state.filter.q = this.value; renderRoster(); });
-    document.getElementById("tb-sort").addEventListener("change", function(){ state.filter.sort = this.value; renderRoster(); });
-    document.getElementById("tb-band").addEventListener("change", function(){ state.filter.band = this.value; renderRoster(); });
-    elRows.addEventListener("click", function(e){
-      var a = e.target.closest(".memos-fighter"); if(a) openModal(+a.getAttribute("data-idx"));
-    });
-    elRows.addEventListener("keydown", function(e){
-      if(e.key==="Enter" || e.key===" "){ var a = e.target.closest(".memos-fighter"); if(a){ e.preventDefault(); openModal(+a.getAttribute("data-idx")); } }
-    });
-    document.getElementById("stu-modal-close").addEventListener("click", closeModal);
-    elModal.addEventListener("click", function(e){ if(e.target === elModal) closeModal(); });
-    document.addEventListener("keydown", function(e){ if(e.key==="Escape" && !elModal.hidden) closeModal(); });
-
-    /* ---- init ---- */
-    loadClass(0);
-  </script>
+  <script src="./teach-dashboard.js?v=20260913-1"></script>
   <script src="./account.js?v=1"></script>
   <script src="./econ-nav.js?v=3"></script>
 </body>

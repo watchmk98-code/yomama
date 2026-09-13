@@ -67,15 +67,15 @@ def test_reset_all_covers_every_class(db):
 def test_export_then_import_reproduces_codes_names_and_pins_in_a_new_database(db, tmp_path, monkeypatch, capsys):
     c1 = opened(db, label="Class A", size=6)
     c2 = opened(db, label="Class B", size=6)
-    for name, pin in (("APPLE", "8920"), ("BANANA", "2871")):
+    for name, pin in (("APPLE", "1357"), ("BANANA", "2468")):
         A.join(dict(code=c1["code"], name=name, pin=pin))
-    A.join(dict(code=c2["code"], name="TIGER", pin="4047"))
+    A.join(dict(code=c2["code"], name="TIGER", pin="9753"))
     assert admin.main(["--db", str(db), "export"]) == 0
     roster = json.loads(capsys.readouterr().out)
     assert {x["code"] for x in roster["classes"]} == {c1["code"], c2["code"]}
     cls_a = next(x for x in roster["classes"] if x["code"] == c1["code"])
     assert cls_a["teacher_code"] == c1["teacher_code"] and cls_a["class_size"] == 6
-    assert cls_a["seats"] == [{"name": "APPLE", "pin": "8920"}, {"name": "BANANA", "pin": "2871"}]
+    assert cls_a["seats"] == [{"name": "APPLE", "pin": "1357"}, {"name": "BANANA", "pin": "2468"}]
     path = tmp_path / "roster.json"
     path.write_text(json.dumps(roster))
 
@@ -88,7 +88,7 @@ def test_export_then_import_reproduces_codes_names_and_pins_in_a_new_database(db
     assert "created" in out and "2 new" in out
     # same codes, same teacher codes, same PINs - and playable at once
     assert A.teacher_login({"teacher_code": c1["teacher_code"]})["code"] == c1["code"]
-    j = A.join(dict(code=c1["code"], name="APPLE", pin="8920"))
+    j = A.join(dict(code=c1["code"], name="APPLE", pin="1357"))
     assert j["rejoined"] and "cash" in A.econ_state({"token": [j["token"]]})
     with pytest.raises(A.ApiError):
         A.join(dict(code=c1["code"], name="APPLE", pin="0000"))

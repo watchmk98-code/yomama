@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="80" height="80" shape-rendering="crispEdges">
+  <title>Yellow thumbs up</title>
+  <path fill="#633714" d="M15 1h5v2h2v8h-2v3h7v2h3v5h-1v4h-2v3h-3v2H13v-2h-3V15h2v-3h2V4h1z"/>
+  <path fill="#ffd34d" d="M16 3h3v2h1v6h-2v5h8v2h2v3h-1v3h-2v3h-2v1h-9v-2h-2V16h2v-3h2z"/>
+  <path fill="#fff3a1" d="M16 3h3v2h-1v7h-2zM14 13h2v5h-2zM12 18h2v7h-2zM20 16h6v2h-6z"/>
+  <path fill="#ee9b25" d="M25 18h3v3h-1v3h-2v3h-2v1h-9v-2h9v-2h2z"/>
+  <path fill="#b86a20" d="M22 20h6v2h-6zM21 24h5v2h-5z"/>
+  <path fill="#173960" d="M2 15h10v16H2z"/>
+  <path fill="#56b8f0" d="M4 17h6v12H4z"/>
+  <path fill="#b1e9ff" d="M4 17h2v10H4z"/>
+  <path fill="#2876c1" d="M8 17h2v12H4v-2h4z"/>
+  <path fill="#f4faff" d="M6 25h2v2H6z"/>
+</svg>

@@ -38,8 +38,9 @@ Stored goods are consumed only on successful fulfillment; missing even one item
 rejects the whole action. Each fulfilled ID pays once.
 
 Standard/large/rare/jackpot colors and a payout multiplier make bigger rolls
-recognizable. Ingredient lists paginate inside the card if needed. Rerolling
-resets that list to its first page. The pixel crying face flashes whenever a
+recognizable. Every ingredient stays visible inside the card; text, icons and
+spacing adapt to fit, with shorter lists returning to the current maximum size.
+No ingredient arrows are needed. The pixel crying face flashes whenever a
 successful replacement skips a ready order, including offers skipped by queued
 spam clicks. It does not delay rerolls or charge a penalty.
 

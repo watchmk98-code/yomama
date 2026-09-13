@@ -84,7 +84,7 @@ def test_recurring_inventory_and_money_are_conserved_without_legacy_rewards(town
     customers=st['customerContracts'];report=st['report'];goods=E.catalog(cfg)
     stock=sum(qty*goods[gid]['unitPrice'] for gid,qty in st['inventory'].items())
     assert customers['deliveries']>5
-    assert st['cash']==report['retailEarned']+customers['earned']
+    assert st['cash']+st['businessOperations']['totalOperatingCosts']==report['retailEarned']+customers['earned']
     assert report['produced']==stock+report['retailEarned']+customers['earned']*4//5
     assert report['customerEarned']==customers['earned']
     assert report['customerDeliveries']==customers['deliveries']

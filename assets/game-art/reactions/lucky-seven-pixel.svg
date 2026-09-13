@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="80" height="80" shape-rendering="crispEdges">
+  <title>Lucky seven</title>
+  <path fill="#652412" d="M4 3h23v10h-3v5h-3v5h-3v6H8v-6h3v-6h3v-5H4z"/>
+  <path fill="#ffc84a" d="M6 5h19v7h-3v5h-3v5h-3v5h-6v-3h3v-6h3v-6h3V10H6z"/>
+  <path fill="#f14443" d="M8 7h15v4h-3v5h-3v5h-3v4h-2v-1h3v-6h3v-6h3V8H8z"/>
+  <path fill="#ff8480" d="M8 7h15v2H8zM19 12h2v4h-2zM16 18h2v3h-2z"/>
+  <path fill="#c72b37" d="M23 9h2v3h-3v5h-3v5h-3v5h-2v-6h3v-5h3v-5h3z"/>
+  <path fill="#fff1a3" d="M6 5h19v2H6zM10 25h4v2h-4z"/>
+  <path fill="#8b501c" d="M28 1h2v2h2v2h-2v2h-2V5h-2V3h2zM3 20h2v2h2v2H5v2H3v-2H1v-2h2zM26 25h2v2h2v2h-2v2h-2v-2h-2v-2h2z"/>
+  <path fill="#ffda58" d="M28 2h2v2h1v1h-2v1h-1V4h-1V3h1zM3 21h2v2h1v1H4v1H3v-2H2v-1h1zM26 26h2v2h1v1h-2v1h-1v-2h-1v-1h1z"/>
+  <path fill="#fff4b0" d="M28 2h1v2h-1zM3 21h1v2H3zM26 26h1v2h-1z"/>
+</svg>

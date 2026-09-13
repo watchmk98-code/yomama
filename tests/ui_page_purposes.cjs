@@ -4,15 +4,37 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
+const path=require('node:path');
+const {execFileSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..');
 const base=process.argv[2]||'http://127.0.0.1:3003';
 (async()=>{
  const browser=await chromium.launch({headless:true});
  try {
- const page=await browser.newPage({viewport:{width:1366,height:768}});
+ const page=await browser.newPage({viewport:{width:1366,height:900}});
  const errors=[],calls=[];page.on('pageerror',e=>errors.push(e.message));
  const response=await fetch(base+'/api/game/econ/state');assert(response.ok);
- const s=await response.json();assert.equal(s.modelVersion,4);
- s.cash=100000;s.breakfastEvent={status:'new',reward:5};s.gateOpen=false;s.checklist.quiz=false;
+ const metadata=await response.json();assert.equal(metadata.modelVersion,4);
+ // A fresh, isolated three-business sample always has a roastery and room to
+ // expand, regardless of which businesses the preview currently owns.
+ const sample=JSON.parse(execFileSync(path.join(root,'.venv','bin','python'),['-c',String.raw`
+import json
+import production_economy as E
+import breakfast_event as B
+cfg=E.load_config()
+st=E.new_state(cfg,seed=37)
+st['b']=[E._building(ti,lv=3,sales=2) for ti in range(3)]
+st['tierOf']=list(range(3))
+st['cash']=100000
+st=E.migrate_state(cfg,st)
+st['offers']=None
+E.offer_contracts(cfg,st,st['tick'])
+s=E.payload(cfg,st,E.new_class(cfg),dict(paused=False))
+s['breakfastEvent']=B.payload(st,st['tick']*cfg['global']['tick'],cfg=cfg)
+print(json.dumps(s))
+`],{cwd:root,encoding:'utf8'}));
+ const s=Object.assign(metadata,sample,{overnightReport:null,classCompetition:false});
+ s.gateOpen=false;s.checklist.quiz=false;
  s.buildings.forEach(b=>Object.values(b.upgrades).forEach(u=>{u.canBuy=true;u.cost=100;u.why='';u.level=Math.min(u.level,8);}));
  s.contracts.offers.forEach(o=>{o.canFulfill=true;o.why='';o.requirements.forEach(g=>g.owned=g.quantity);});
  const quiz=JSON.parse(fs.readFileSync('config/quiz.json','utf8'));
@@ -20,6 +42,8 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());
   if(url.origin!==base)return route.abort();
+  if(url.pathname==='/api/game/state')return route.fulfill({json:s});
+  if(url.pathname==='/api/game/buildings')return route.fulfill({json:{buildings:{}}});
   if(!url.pathname.startsWith('/api/game/econ/'))return route.continue();
   const endpoint=url.pathname.slice('/api/game/econ/'.length);
   if(endpoint==='quiz'&&route.request().method()==='GET')return route.fulfill({json:quiz});
@@ -41,13 +65,36 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
   }
   return route.fulfill({json:s});
  });
- const pages={buildings:['expand','upgrade:production','upgrade:sales','upgrade:storage','reserve','sell'],marketplace:['fulfill','replace','commit','customer'],'advanced-hq':['processing'],license:['quiz']};
+ const pages={buildings:['expand','upgrade:production','upgrade:sales','upgrade:storage','reserve','sell'],marketplace:['fulfill','replace','commit','customer'],'advanced-hq':['processing','business','workforce'],license:['quiz']};
  const owners=new Map();
- async function go(file){await page.goto(base+'/'+file+'.html');await page.locator('.game-wallet,.game-resources').waitFor();if(await page.locator('#econ-overnight[open]').count())await page.locator('[data-overnight-close]').click();}
- async function act(action){const before=calls.length;await page.locator('[data-econ-action="'+action+'"]').click();await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'));assert.equal(calls.length,before+1);}
+ async function showTab(name){const tab=page.getByRole('tab',{name,exact:true});if(await tab.isVisible())await tab.click();}
+ async function go(file){await page.goto(base+'/'+file+'.html');await page.locator('.game-wallet,.game-resources').waitFor();if(await page.locator('#econ-overnight[open]').count())await page.locator('[data-overnight-close]').click();await page.waitForFunction(()=>window.YomamaEcon&&window.YomamaEcon.state()&&!document.querySelector('[aria-busy="true"]'));await page.evaluate(()=>window.YomamaFit&&window.YomamaFit.render());if(file==='buildings')await showTab('Building');else if(file==='advanced-hq')await showTab('Recipes');assert.deepEqual(errors,[]);}
+ async function act(action){
+  const family=action.split(':')[0],tab={upgrade:'Upgrades',expand:'Expand',reserve:'Stock',sell:'Stock',processing:'Recipes',business:'Team',fulfill:'Orders',replace:'Orders',commit:'Orders',quiz:'Quiz'}[family];
+  if(tab)await showTab(tab);
+  const control=page.locator('[data-econ-action="'+action+'"]');
+  if(['fulfill','replace','commit'].includes(family))for(let i=0;!await control.isVisible()&&i<3;i++){
+   const next=page.getByRole('button',{name:'Next orders page',exact:true});
+   if(await next.isEnabled())await next.click();
+   else while(await page.getByRole('button',{name:'Previous orders page',exact:true}).isEnabled())await page.getByRole('button',{name:'Previous orders page',exact:true}).click();
+  }
+  const before=calls.length;await control.click();await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'));assert.equal(calls.length,before+1);
+ }
  for(const [file,allowed] of Object.entries(pages)){
   await go(file);
-  const actions=await page.locator('.game-workspace [data-econ-action]').evaluateAll(es=>es.map(e=>e.dataset.econAction));
+  const readActions=()=>page.locator('.game-workspace [data-econ-action]').evaluateAll(es=>es.map(e=>e.dataset.econAction));
+  const actions=await readActions();
+  if(file==='advanced-hq' && await page.locator('.wf-workspace').count()){
+   for(const key of ['focus','team','hq']){
+    await page.locator('#game-wf-tab-'+key).click();
+    actions.push(...await readActions());
+    if(key==='team'){
+     await page.locator('#game-wf-team-business').click();
+     actions.push(...await readActions());
+    }
+   }
+   await showTab('Recipes');
+  }
   for(const action of actions){
    const parts=action.split(':');const family=parts[0]==='upgrade'?'upgrade:'+parts[2]:parts[0];
    assert(allowed.includes(family),file+' contains misplaced '+action);
@@ -63,14 +110,22 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  }
  for(const [file,families] of Object.entries(pages))for(const family of families.filter(f=>f!=='quiz'))assert.equal(owners.get(family),file,'Missing '+family+' on '+file);
  await go('buildings');assert.equal(await page.locator('#econ-building [data-econ-action^="reserve:"]').count(),1);
- const next=s.frontier[s.frontier.length-1];await page.selectOption('#game-expansion-choice',String(next.tier));
+ const next=s.frontier[s.frontier.length-1];await showTab('Expand');await page.selectOption('#game-expansion-choice',String(next.tier));
+ assert.deepEqual(errors,[]);
  assert.equal(await page.locator('.game-next-art').getAttribute('data-preview-business'),next.id);
  assert((await page.locator('.game-next-art .k-art').evaluate(e=>getComputedStyle(e).filter)).includes('grayscale(1)'));
  await page.evaluate(()=>window.YomamaEcon.refresh());assert.equal(await page.locator('.game-next-art').getAttribute('data-preview-business'),next.id);
+ await showTab('Building');
  while(await page.locator('.game-pager[data-page="Buildings"] button:first-child:not(:disabled)').count())await page.locator('.game-pager[data-page="Buildings"] button:first-child').click();
  await page.locator('[data-select-building="2"]').click();
  assert.equal(await page.locator('[data-business-focus],.game-specialty').count(),0,'Build repeats the Operations specialty control');
- await page.locator('[data-game-breakfast]').click();assert(await page.locator('#game-breakfast').evaluate(e=>e.open));await page.keyboard.press('Escape');assert(await page.locator('[data-game-breakfast]').evaluate(e=>e===document.activeElement));
+ await page.locator('[data-building-activities="quests"]').click();
+ assert.deepEqual(await page.locator('#game-activities [data-game-quest]').evaluateAll(items=>items.map(item=>item.dataset.gameQuest)),['roastery-plan','roastery-signature']);
+ await page.locator('[data-game-quest="roastery-signature"]').click();
+ await page.locator('[data-related-breakfast]').click();assert(await page.locator('#game-breakfast').evaluate(e=>e.open));
+ await page.keyboard.press('Escape');assert(await page.locator('[data-related-breakfast]').evaluate(e=>e===document.activeElement));
+ await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+ assert(await page.locator('[data-building-activities="quests"]').evaluate(e=>e===document.activeElement));
  for(const kind of ['production','sales','storage']){
   const level=s.buildings[2].upgrades[kind].level;await act('upgrade:2:'+kind);assert.equal(s.buildings[2].upgrades[kind].level,level+1);
  }
@@ -136,13 +191,14 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  }
  s.gateOpen=false;s.checklist.quiz=false;
  await go('license');assert.equal(await page.locator('.game-view-tabs [role=tab]').count(),2);
- for(const [file,labels] of Object.entries({buildings:['Building','Stock','Upgrades','Expand'],marketplace:['Orders','Contracts'],'advanced-hq':[]})){
-  await go(file);assert.deepEqual(await page.locator('.game-view-tabs [role=tab]').allTextContents(),labels,file+' repeats an obsolete panel');
+ for(const [file,labels] of Object.entries({buildings:['Building','Stock','Upgrades','Expand'],marketplace:['Orders','Contracts'],'advanced-hq':['Focus tree','Team','Recipes','Quests','Advanced HQ']})){
+  const selector=file==='advanced-hq'?'.wf-tabs [role=tab]':'.game-view-tabs [role=tab]';
+  await go(file);assert.deepEqual(await page.locator(selector).allTextContents(),labels,file+' has incorrect panels');
   if(!labels.length)continue;
-  await page.locator('.game-view-tabs [role=tab]').first().focus();
+  await page.locator(selector).first().focus();
   for(const [key,index] of [['End',labels.length-1],['ArrowRight',0],['ArrowLeft',labels.length-1],['Home',0]]){
    await page.keyboard.press(key);
-   const active=page.locator('.game-view-tabs [role=tab]').nth(index);assert.equal(await active.getAttribute('aria-selected'),'true');assert(await active.evaluate(e=>e===document.activeElement));
+   const active=page.locator(selector).nth(index);assert.equal(await active.getAttribute('aria-selected'),'true');assert(await active.evaluate(e=>e===document.activeElement));
    const panel=page.locator('#'+await active.getAttribute('aria-controls'));assert(await panel.isVisible());assert.equal(await panel.getAttribute('role'),'tabpanel');assert.equal(await panel.getAttribute('aria-labelledby'),await active.getAttribute('id'));
   }
  }
@@ -157,7 +213,7 @@ const base=process.argv[2]||'http://127.0.0.1:3003';
  await page.reload();await stock.waitFor();
  assert.equal(await stockTab.getAttribute('aria-selected'),'true','Reload preserves the Stock destination');
  assert.equal(await page.locator('.game-fit-picker').inputValue(),'2');
- await page.setViewportSize({width:1366,height:768});await page.evaluate(()=>window.YomamaFit.render());
+ await page.setViewportSize({width:1366,height:900});await page.evaluate(()=>window.YomamaFit.render());
  assert.equal(await page.locator('.game-site .game-building-stock').count(),1,'Stock returns below metrics on desktop resize');
  await page.setViewportSize({width:390,height:844});await page.evaluate(()=>window.YomamaFit.render());
  assert.equal(await stockTab.getAttribute('aria-selected'),'true','Resize retains compact Stock selection');
