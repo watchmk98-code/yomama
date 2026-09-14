@@ -1,0 +1,85 @@
+/* BUILD supplies the shared header; the catalog follows the approved pixel-art board. */
+.craft-content {--amber:#ffc400;display:flex;flex-direction:column;flex:1;min-height:0;gap:9px;}
+.craft-intro {display:flex;justify-content:space-between;align-items:center;gap:4px 12px;flex-wrap:wrap;margin:0;color:var(--muted);font-size:21px;line-height:1.1;flex:none;}
+#craft-wallet {color:var(--amber);white-space:nowrap;}
+.craft-notice {margin:0;color:var(--amber);font-size:21px;flex:none;}
+.craft-notice:empty {display:none;}
+.craft-grid {display:grid;grid-template-columns:repeat(var(--craft-columns,6),minmax(0,1fr));grid-template-rows:repeat(var(--craft-rows,5),minmax(0,1fr));gap:8px;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border) #000;}
+.craft-grid[data-scroll="true"] {grid-template-rows:repeat(var(--craft-rows),var(--craft-cell-height));align-content:start;}
+.craft-item {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:0;padding:6px;background:#000;border:2px solid #785500;color:var(--text);font:inherit;font-size:var(--craft-label,20px);line-height:1.05;cursor:pointer;}
+.craft-item:hover {border-color:var(--amber);}
+.craft-item[aria-expanded="true"] {border-color:var(--amber);}
+.craft-item-name {display:block;flex:none;min-height:2.1em;width:100%;max-width:100%;text-align:center;overflow-wrap:anywhere;}
+.craft-sprite {display:grid;place-items:center;flex:none;width:var(--craft-art,160px);height:var(--craft-art,160px);}
+.craft-sprite::before,.craft-supply-icon::before {content:'';display:block;width:var(--sprite-width);height:var(--sprite-height);background-size:var(--sprite-sheet-width) var(--sprite-sheet-height);background-position:var(--sprite-x) var(--sprite-y);background-repeat:no-repeat;image-rendering:pixelated;}
+.craft-sprite::before {background-image:url('./assets/craft/craft-items.png?v=1');}
+.game-craft-page #craft-dialog {--amber:#ffc400;width:min(720px,calc(100% - 24px));max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;margin:auto;padding:20px 24px 18px;border:3px solid var(--amber);background:#000;color:var(--text);font-family:var(--font-terminal);scrollbar-width:thin;scrollbar-color:var(--border) #000;}
+.game-craft-page #craft-dialog::backdrop {background:rgba(0,0,0,.78);}
+.craft-dialog-head {display:flex;align-items:flex-start;gap:12px;justify-content:space-between;}
+.craft-dialog-head h2 {margin:1px 0 0;color:var(--amber);font-weight:400;font-size:44px;line-height:1;text-transform:uppercase;overflow-wrap:break-word;}
+#craft-close {flex:none;width:44px;height:44px;padding:0;border:2px solid var(--amber);background:#000;color:var(--amber);font:inherit;font-size:42px;line-height:1;cursor:pointer;}
+.craft-dialog-art {display:flex;justify-content:center;padding:14px 0 10px;}
+.craft-dialog-art .craft-sprite {--craft-art:460px;--craft-art-height:280px;width:min(var(--craft-art),calc(var(--craft-art-height) * var(--sprite-ratio)));max-width:100%;height:auto;aspect-ratio:var(--sprite-ratio);}
+.craft-dialog-art .craft-sprite::before {width:100%;height:100%;}
+.craft-makes {margin:0 0 14px;text-align:center;font-size:28px;line-height:1.1;}
+.craft-ingredients {width:100%;border-collapse:collapse;table-layout:fixed;border-top:2px solid var(--border);}
+.craft-ingredients th {font-size:28px;color:var(--amber);font-weight:400;text-transform:uppercase;text-align:left;padding:10px 0 4px;}
+.craft-ingredients th:nth-child(n+2),.craft-ingredients td:nth-child(n+2) {width:62px;text-align:center;}
+.craft-ingredients td {padding:10px 0;border-bottom:1px solid var(--border);vertical-align:middle;}
+.craft-ingredients td:nth-child(n+2) {font-size:34px;}
+.craft-ingredient {display:flex;align-items:center;gap:12px;min-width:0;}
+.craft-ingredient img {width:96px;height:96px;object-fit:contain;image-rendering:pixelated;flex:none;}
+.craft-supply-icon {display:grid;place-items:center;width:96px;height:96px;flex:none;}
+.craft-supply-icon::before {background-image:url('./assets/craft/craft-supplies.png?v=1');}
+.craft-ingredient-info {min-width:0;}
+.craft-ingredient-name {display:block;font-size:30px;line-height:1.05;overflow-wrap:break-word;}
+.craft-ingredient-source {display:block;color:var(--muted);font-size:23px;line-height:1.15;margin-top:3px;}
+.craft-ingredient-reserved {display:block;color:var(--muted);font-size:17px;margin-top:2px;}
+.craft-have-enough {color:var(--green);}
+.craft-have-missing {color:var(--red);}
+.craft-buy {display:block;margin-top:6px;padding:3px 7px;background:#000;color:var(--amber);font:inherit;font-size:19px;line-height:1.1;border:1px solid var(--border);cursor:pointer;}
+.craft-buy:hover {border-color:var(--amber);}
+.craft-buy:disabled {opacity:.5;cursor:default;}
+.craft-owned {text-align:right;margin:8px 0 0;font-size:19px;color:var(--muted);}
+.craft-reason {margin:6px 0 10px;font-size:20px;color:var(--muted);line-height:1.1;}
+.craft-reason:empty,.craft-status:empty {display:none;}
+.craft-submit {width:100%;min-height:66px;margin-top:8px;padding:3px 10px;border:2px solid var(--amber);background:var(--amber);color:#000;font:inherit;font-size:42px;line-height:1;cursor:pointer;}
+.craft-submit:hover:not(:disabled) {filter:brightness(1.12);}
+.craft-submit:disabled {background:#4f3907;border-color:#715312;color:#c3a04d;cursor:default;}
+.craft-status {margin:10px 0 0;font-size:22px;line-height:1.1;color:var(--green);}
+.craft-status[data-tone="error"] {color:var(--red);}
+.craft-status[data-tone="pending"] {color:var(--muted);}
+.game-craft-page button:focus-visible,.game-craft-page a:focus-visible {outline:2px solid var(--text);outline-offset:3px;}
+@media(max-height:900px) and (min-width:601px) {
+  .craft-dialog-art .craft-sprite {--craft-art:360px;--craft-art-height:220px;}
+  .craft-ingredient img,.craft-supply-icon {width:72px;height:72px;}
+  .craft-ingredient-name {font-size:28px;}
+  .craft-ingredient-source {font-size:21px;}
+}
+@media(max-height:760px) and (min-width:601px) {
+  .craft-dialog-art .craft-sprite {--craft-art:300px;--craft-art-height:180px;}
+  .game-craft-page #craft-dialog {padding:14px 20px;}
+  .craft-dialog-head h2 {font-size:32px;}
+  .craft-ingredients td {padding:7px 0;}
+  .craft-ingredient img,.craft-supply-icon {width:52px;height:52px;}
+  .craft-ingredient-name {font-size:25px;}
+  .craft-ingredient-source {font-size:19px;}
+  .craft-ingredients th {font-size:24px;}
+  .craft-submit {min-height:54px;font-size:38px;}
+}
+@media(max-width:600px) {
+  .craft-intro {font-size:19px;}
+  .game-craft-page #craft-dialog {padding:14px 12px;width:calc(100% - 18px);max-height:calc(100dvh - 18px);}
+  .craft-dialog-head h2 {font-size:30px;}
+  #craft-close {width:38px;height:38px;font-size:36px;}
+  .craft-dialog-art .craft-sprite {--craft-art:260px;--craft-art-height:220px;}
+  .craft-ingredients th {font-size:20px;}
+  .craft-ingredients th:nth-child(n+2),.craft-ingredients td:nth-child(n+2) {width:44px;}
+  .craft-ingredient {gap:6px;}
+  .craft-ingredient img,.craft-supply-icon {width:48px;height:48px;}
+  .craft-ingredient-name {font-size:21px;}
+  .craft-ingredient-source {font-size:17px;}
+  .craft-ingredients td:nth-child(n+2) {font-size:26px;}
+  .craft-buy {font-size:17px;}
+  .craft-makes {font-size:22px;}
+}

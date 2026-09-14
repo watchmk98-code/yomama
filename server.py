@@ -328,6 +328,7 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         "/api/game/econ/processing": game_api.econ_processing,
         "/api/game/econ/event/breakfast": game_api.econ_breakfast,
         "/api/game/business": game_api.econ_business,
+        "/api/game/craft": game_api.econ_craft,
         "/api/game/progression": game_api.econ_progression,
         "/api/game/workforce": game_api.econ_workforce,
         "/api/game/econ/orders/fulfill": game_api.econ_fulfill_order,

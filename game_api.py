@@ -816,6 +816,12 @@ def econ_business(body):
     return _act(body, apply)
 
 
+def econ_craft(body):
+    """Craft or purchase basic supplies inside the authenticated class save."""
+    import crafting
+    return _act(body, lambda cfg, st, cls: crafting.act(cfg, st, body))
+
+
 def econ_progression(body):
     """Business quests and group milestones share the seat's atomic save."""
     def apply(cfg, st, cls):
@@ -1504,6 +1510,6 @@ def _class_locked(fn):
 
 for _name in ('get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
               'econ_upgrade','econ_reserve','econ_processing','econ_fulfill_order','econ_replace_order','econ_commit_order','econ_focus','econ_breakfast',
-              'econ_business','econ_progression','econ_workforce',
+              'econ_business','econ_progression','econ_workforce','econ_craft',
               'econ_contracts','econ_accept_contract','econ_customers','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
     globals()[_name]=_class_locked(globals()[_name])

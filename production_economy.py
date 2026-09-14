@@ -21,6 +21,7 @@ import rules_tables
 import town_projects
 import project_orders
 import workforce
+import crafting
 import economy as legacy
 from economy import *  # Stable public helpers used by the classroom API.
 
@@ -107,6 +108,7 @@ def new_state(cfg, start_tick=0, seed=1):
               report=dict(produced=0,unitsProduced=0,retailEarned=0,unitsSold=0,
                           overflowSold=0,overflowCost=0,builds=0,offlineTicksSkipped=0))
     _customer_defaults(st)
+    crafting.ensure(st)
     earnings.ensure(st)
     business_activity.ensure(st)
     business_operations.ensure(cfg,st,new=True)
@@ -136,6 +138,7 @@ def migrate_state(cfg, st, tick=None):
     The API records original JSON and handles clock reset for old snapshots.
     """
     if not isinstance(st,State): st=State(st)
+    crafting.ensure(st)
     st.setdefault('productionPhase',{})
     _independent_production_defaults(st)
     st.setdefault('orderRecipeHistory',[[],[],[]])
@@ -563,7 +566,8 @@ def warehouse_cap(cfg,st): return [_capacity(cfg,st,i) for i in range(len(st['b'
 def net_worth(cfg_or_state,st=None):
     st=cfg_or_state if st is None else st
     return (int(st['cash'])+sum(st.get('pend',{}).values())+int(st['book'])
-            +int(st.get('businessProgression',{}).get('equipmentValue',0)))
+            +int(st.get('businessProgression',{}).get('equipmentValue',0))
+            +crafting.stored_value(st))
 
 
 def upgrade_cost(cfg,st,slot,kind):
@@ -1473,6 +1477,7 @@ def payload(cfg,st,cls,session,behind=False):
                 operatingStatement=operating_margins.town_statement(cfg,st,buildings),
                 progression=business_progression.payload(cfg,st),
                 workforce=workforce.payload(cfg,st),
+                crafting=crafting.payload(cfg,st),
                 rulesRevision=4 if business_progression.connected_enabled(cfg) else 3,
                 connectedProgression=business_progression.connected_enabled(cfg),groupProjects=group,
                 townProjects=project,nextStep=step,earnings=receipts,potentialIncomePerMinute=round(town_income(cfg,st),2),regularDeliveries=st.get('regularDeliveries',0),regularTarget=3,
