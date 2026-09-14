@@ -862,6 +862,12 @@
 .game-opening-guide strong {display:block;font-size:20px;font-weight:400;color:#a89bff;text-shadow:0 0 8px rgba(168,155,255,.6),0 0 18px rgba(119,98,255,.35);}
 .game-opening-guide small {display:block;font-size:15px;color:var(--muted);line-height:1.2;}
 .game-opening-guide .game-small-button,.game-opening-guide .k-btn {flex:0 0 auto;width:auto;font-size:16px;min-height:38px;margin:0;}
+.game-management-dialog .game-opening-delivery {border-color:#927bff;background:linear-gradient(90deg,rgba(119,98,255,.12),rgba(119,98,255,.035)),var(--bg);box-shadow:0 0 7px rgba(119,98,255,.6),0 0 22px rgba(119,98,255,.35),inset 0 0 12px rgba(119,98,255,.12);}
+.game-opening-delivery > .game-panel-body > h3 {color:#a89bff;text-shadow:0 0 8px rgba(168,155,255,.6);}
+.game-build-page :is(.game-opening-guide,.game-opening-delivery) :is(.game-small-button,.k-btn) {color:#c1b5ff;background:#18112b;border-color:#927bff;box-shadow:0 0 8px rgba(119,98,255,.3);}
+.game-build-page :is(.game-opening-guide,.game-opening-delivery) :is(.game-small-button,.k-btn):hover:not(:disabled) {color:#e5dfff;background:#2b1f48;border-color:#c1b5ff;}
+.game-build-page :is(.game-opening-guide,.game-opening-delivery) :is(.game-small-button,.k-btn):focus-visible {outline:2px solid #c1b5ff;outline-offset:3px;}
+.game-build-page :is(.game-opening-guide,.game-opening-delivery) :is(.game-small-button,.k-btn):disabled {box-shadow:none;opacity:.45;}
 .game-income-detail {padding:5px 10px;border-top:1px solid var(--line);font-size:16px;line-height:1.2;}
 .game-income-detail b {font-weight:400;color:var(--amber);}
 .game-income-detail small {display:block;font-size:14px;color:var(--muted);margin-top:3px;}
