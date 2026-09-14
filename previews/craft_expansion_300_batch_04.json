@@ -1,0 +1,812 @@
+[
+  {
+    "id": "acoustic_levitation_rig",
+    "name": "Acoustic Levitation Rig",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "speaker_cones",
+        6
+      ],
+      [
+        "microcontrollers",
+        4
+      ],
+      [
+        "aluminum_profiles",
+        5
+      ],
+      [
+        "circuit_boards",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art open teal laboratory frame with two facing circular speaker plates and three tiny silver beads floating between them."
+  },
+  {
+    "id": "laboratory_centrifuge",
+    "name": "Laboratory Centrifuge",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "electric_motors",
+        5
+      ],
+      [
+        "ball_bearings",
+        5
+      ],
+      [
+        "plastic_casings",
+        5
+      ],
+      [
+        "microcontrollers",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art cream laboratory centrifuge with an open round blue lid and a silver rotor holding six red-capped sample tubes."
+  },
+  {
+    "id": "benchtop_spectrometer",
+    "name": "Benchtop Spectrometer",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "optical_lenses",
+        6
+      ],
+      [
+        "led_arrays",
+        5
+      ],
+      [
+        "circuit_boards",
+        5
+      ],
+      [
+        "metal_sheets",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art navy benchtop spectrometer with a glass prism chamber, a tiny rainbow beam and a bright multicolor spectrum screen."
+  },
+  {
+    "id": "thermal_imaging_camera",
+    "name": "Thermal Imaging Camera",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "optical_lenses",
+        5
+      ],
+      [
+        "display_panels",
+        4
+      ],
+      [
+        "battery_cells",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art black handheld thermal camera with a chunky orange grip and a display showing a vivid red-yellow-blue hand silhouette."
+  },
+  {
+    "id": "underwater_inspection_rov",
+    "name": "Underwater Inspection ROV",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "electric_motors",
+        6
+      ],
+      [
+        "optical_lenses",
+        4
+      ],
+      [
+        "wire_spools",
+        6
+      ],
+      [
+        "plastic_casings",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art yellow underwater inspection robot with four shrouded propellers, a front camera dome and a long coiled orange tether."
+  },
+  {
+    "id": "tilt_rotor_airship",
+    "name": "Tilt-Rotor Airship",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "electric_motors",
+        6
+      ],
+      [
+        "solar_cells",
+        6
+      ],
+      [
+        "fiber_bundles",
+        6
+      ],
+      [
+        "resin",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art silver cigar-shaped airship with blue solar stripes, a small cream gondola and four red tilting propeller pods."
+  },
+  {
+    "id": "electric_cargo_tricycle",
+    "name": "Electric Cargo Tricycle",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        6
+      ],
+      [
+        "electric_motors",
+        5
+      ],
+      [
+        "battery_cells",
+        6
+      ],
+      [
+        "rubber_sheets",
+        6
+      ],
+      [
+        "workshop_machined_bolts",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art mint electric cargo tricycle with two front wheels around a deep wooden-look cargo box and a black rear battery."
+  },
+  {
+    "id": "cable_camera_gondola",
+    "name": "Cable Camera Gondola",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "servo_motors",
+        5
+      ],
+      [
+        "optical_lenses",
+        4
+      ],
+      [
+        "aluminum_profiles",
+        5
+      ],
+      [
+        "drive_belts",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art small red camera gondola hanging beneath twin overhead rollers on a silver cable, with a black swiveling camera underneath."
+  },
+  {
+    "id": "portable_electric_winch",
+    "name": "Portable Electric Winch",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        5
+      ],
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "electric_motors",
+        5
+      ],
+      [
+        "fiber_bundles",
+        6
+      ],
+      [
+        "battery_cells",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art blue portable electric winch with a thick tan rope spool, silver hook, black motor housing and red battery pack."
+  },
+  {
+    "id": "folding_electric_scooter",
+    "name": "Folding Electric Scooter",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        5
+      ],
+      [
+        "battery_cells",
+        6
+      ],
+      [
+        "electric_motors",
+        4
+      ],
+      [
+        "rubber_sheets",
+        5
+      ],
+      [
+        "machine_works_cnc_parts",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art coral folding electric scooter with two black wheels, a broad dark deck and a silver handlebar stem folded at its hinge."
+  },
+  {
+    "id": "programmable_vending_machine",
+    "name": "Programmable Vending Machine",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "servo_motors",
+        5
+      ],
+      [
+        "microcontrollers",
+        5
+      ],
+      [
+        "glass_panels",
+        6
+      ],
+      [
+        "cannery_canned_goods",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art tall violet vending machine with a glass front displaying colorful canned food, cream selection buttons and a black delivery slot."
+  },
+  {
+    "id": "magnetic_stirring_hotplate",
+    "name": "Magnetic Stirring Hotplate",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "permanent_magnets",
+        5
+      ],
+      [
+        "heating_elements",
+        5
+      ],
+      [
+        "temperature_probes",
+        4
+      ],
+      [
+        "ceramic_pieces",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art cream laboratory hotplate with a black ceramic top and a clear flask swirling blue liquid around a tiny white stir bar."
+  },
+  {
+    "id": "recirculating_water_chiller",
+    "name": "Recirculating Water Chiller",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "electric_motors",
+        5
+      ],
+      [
+        "water_pumps",
+        5
+      ],
+      [
+        "temperature_probes",
+        5
+      ],
+      [
+        "copper_stock",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art blue recirculating chiller with a vented cream front, two clear looping hoses and a frosty silver reservoir cap."
+  },
+  {
+    "id": "pressure_test_chamber",
+    "name": "Pressure Test Chamber",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "pressure_valves",
+        6
+      ],
+      [
+        "glass_panels",
+        5
+      ],
+      [
+        "metal_sheets",
+        6
+      ],
+      [
+        "sealant",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art thick silver pressure chamber with a round blue viewing window, eight perimeter bolts and a red top pressure wheel."
+  },
+  {
+    "id": "mechanical_seismograph",
+    "name": "Mechanical Seismograph",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "springs",
+        6
+      ],
+      [
+        "permanent_magnets",
+        5
+      ],
+      [
+        "paper_sheets",
+        6
+      ],
+      [
+        "clockwork_gears",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art brass seismograph with a suspended heavy pendulum, a narrow ink needle and a rotating cream paper drum bearing jagged lines."
+  },
+  {
+    "id": "portable_geiger_counter",
+    "name": "Portable Geiger Counter",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "circuit_boards",
+        5
+      ],
+      [
+        "battery_cells",
+        5
+      ],
+      [
+        "display_panels",
+        4
+      ],
+      [
+        "plastic_casings",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art yellow handheld radiation meter with a pale-green needle display and a black cylindrical detector wand on a curled cord."
+  },
+  {
+    "id": "radio_direction_finder",
+    "name": "Radio Direction Finder",
+    "ingredients": [
+      [
+        "relay_station_bandwidth",
+        5
+      ],
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "copper_stock",
+        6
+      ],
+      [
+        "circuit_boards",
+        5
+      ],
+      [
+        "display_panels",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art olive field radio direction finder with a large vertical copper loop antenna and a round cream bearing dial."
+  },
+  {
+    "id": "optical_sorting_conveyor",
+    "name": "Optical Sorting Conveyor",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        6
+      ],
+      [
+        "drive_belts",
+        6
+      ],
+      [
+        "optical_lenses",
+        5
+      ],
+      [
+        "servo_motors",
+        5
+      ],
+      [
+        "microcontrollers",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art short silver sorting conveyor with a blue belt, an overhead red scanner and three small colored sorting bins."
+  },
+  {
+    "id": "electric_grain_mill",
+    "name": "Electric Grain Mill",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "electric_motors",
+        5
+      ],
+      [
+        "stainless_mesh",
+        6
+      ],
+      [
+        "steel_tubing",
+        5
+      ],
+      [
+        "ceramic_pieces",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art cream electric grain mill with a wide steel funnel hopper, round grinding housing and a blue collection cup."
+  },
+  {
+    "id": "articulated_desk_magnifier",
+    "name": "Articulated Desk Magnifier",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        5
+      ],
+      [
+        "springs",
+        5
+      ],
+      [
+        "optical_lenses",
+        5
+      ],
+      [
+        "led_arrays",
+        5
+      ],
+      [
+        "steel_tubing",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art white articulated magnifying lamp with a large circular blue lens, a glowing LED rim and two spring-loaded arms."
+  },
+  {
+    "id": "battery_spot_welder",
+    "name": "Battery Spot Welder",
+    "ingredients": [
+      [
+        "garage_custom_mods",
+        5
+      ],
+      [
+        "battery_cells",
+        6
+      ],
+      [
+        "power_inverters",
+        4
+      ],
+      [
+        "copper_stock",
+        6
+      ],
+      [
+        "circuit_boards",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art blue battery spot-welding box with two curved copper electrode arms, thick red cables and a silver foot switch."
+  },
+  {
+    "id": "induction_melting_crucible",
+    "name": "Induction Melting Crucible",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "copper_stock",
+        6
+      ],
+      [
+        "ceramic_pieces",
+        6
+      ],
+      [
+        "power_inverters",
+        5
+      ],
+      [
+        "insulation",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art black ceramic crucible surrounded by bright copper induction coils, with a warm orange glow inside and a blue power unit."
+  },
+  {
+    "id": "instrumented_fermentation_vat",
+    "name": "Instrumented Fermentation Vat",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        5
+      ],
+      [
+        "temperature_probes",
+        5
+      ],
+      [
+        "pressure_valves",
+        5
+      ],
+      [
+        "metal_sheets",
+        6
+      ],
+      [
+        "microcontrollers",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art tall stainless fermentation vat on three legs with a conical bottom, red valve, thermometer and small blue control panel."
+  },
+  {
+    "id": "automatic_coffee_brewer",
+    "name": "Automatic Coffee Brewer",
+    "ingredients": [
+      [
+        "roastery_roasted_beans",
+        6
+      ],
+      [
+        "water_pumps",
+        5
+      ],
+      [
+        "heating_elements",
+        5
+      ],
+      [
+        "copper_stock",
+        6
+      ],
+      [
+        "microcontrollers",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art cream automatic coffee brewer with a bean-filled top hopper, twin copper spouts and two dark coffee cups on a drip tray."
+  },
+  {
+    "id": "electric_food_mixer",
+    "name": "Electric Food Mixer",
+    "ingredients": [
+      [
+        "garage_spare_parts",
+        5
+      ],
+      [
+        "workshop_steel_brackets",
+        5
+      ],
+      [
+        "electric_motors",
+        5
+      ],
+      [
+        "metal_sheets",
+        6
+      ],
+      [
+        "food_safe_containers",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art cherry-red stand mixer with a tilted head, silver wire whisk and a broad polished steel mixing bowl."
+  },
+  {
+    "id": "automatic_label_applicator",
+    "name": "Automatic Label Applicator",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        6
+      ],
+      [
+        "servo_motors",
+        5
+      ],
+      [
+        "paper_sheets",
+        6
+      ],
+      [
+        "drive_belts",
+        5
+      ],
+      [
+        "microcontrollers",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art silver automatic label applicator with a large white label reel, orange guide rollers and a narrow blue conveyor."
+  },
+  {
+    "id": "music_roll_puncher",
+    "name": "Music Roll Puncher",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "servo_motors",
+        5
+      ],
+      [
+        "paper_sheets",
+        6
+      ],
+      [
+        "clockwork_gears",
+        5
+      ],
+      [
+        "metal_sheets",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art brass music-roll punching machine with two cream paper reels and a row of tiny silver punches above dotted paper."
+  },
+  {
+    "id": "miniature_automaton_theater",
+    "name": "Miniature Automaton Theater",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        5
+      ],
+      [
+        "servo_motors",
+        6
+      ],
+      [
+        "textile_cloth",
+        6
+      ],
+      [
+        "wooden_boards",
+        6
+      ],
+      [
+        "led_arrays",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art ornate walnut miniature theater with red curtains, a blue starry backdrop and three jointed clockwork figures on its stage."
+  },
+  {
+    "id": "desktop_jacquard_loom",
+    "name": "Desktop Jacquard Loom",
+    "ingredients": [
+      [
+        "machine_works_tooling",
+        5
+      ],
+      [
+        "servo_motors",
+        6
+      ],
+      [
+        "textile_cloth",
+        6
+      ],
+      [
+        "wooden_boards",
+        6
+      ],
+      [
+        "fiber_bundles",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art wooden desktop loom with a row of blue servo blocks, many vertical cream threads and a partly woven red geometric cloth."
+  },
+  {
+    "id": "immersive_flight_simulator",
+    "name": "Immersive Flight Simulator",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "data_center_compute_hours",
+        6
+      ],
+      [
+        "display_panels",
+        6
+      ],
+      [
+        "servo_motors",
+        6
+      ],
+      [
+        "workshop_welded_frames",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art compact dark-blue flight simulator cockpit with a wraparound curved screen, red pilot seat, control stick and silver motion base."
+  }
+]

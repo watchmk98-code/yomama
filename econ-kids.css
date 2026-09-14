@@ -701,14 +701,24 @@
 .game-order h3 {display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0;flex:none;}
 .game-order-name {min-width:0;overflow-wrap:anywhere;}
 .game-order-tier {flex:none;font-size:14px;line-height:1;padding:3px 5px;border:1px solid var(--border);color:var(--muted);}
-.game-order[data-rarity=small] .game-order-tier {color:#9bdfba;border-color:#41795b;}
-.game-order[data-rarity=bulk] .game-order-tier {color:#f1c08a;border-color:#926c41;}
-.game-order[data-rarity=large] .game-order-tier {color:#66d3ff;border-color:#337088;}
-.game-order[data-rarity=rare] {border-color:#b387ef;}
-.game-order[data-rarity=rare] .game-order-tier {color:#d4acff;border-color:#b387ef;}
+.game-order[data-rarity=small] {border-color:#9bdfba;}
+.game-order[data-rarity=small] .game-order-tier {color:#9bdfba;border-color:#9bdfba;}
+.game-order[data-rarity=bulk] {border-color:#f1c08a;}
+.game-order[data-rarity=bulk] .game-order-tier {color:#f1c08a;border-color:#f1c08a;}
+.game-order[data-rarity=large] {border-color:#66d3ff;}
+.game-order[data-rarity=large] .game-order-tier {color:#66d3ff;border-color:#66d3ff;}
+.game-order[data-rarity=rare] {border-color:#ff9caf;}
+.game-order[data-rarity=rare] .game-order-tier {color:#ff9caf;border-color:#ff9caf;}
 .game-order[data-rarity=jackpot] {border-color:var(--amber);box-shadow:inset 0 0 0 1px #665000;}
 .game-order[data-rarity=jackpot] .game-order-tier {background:var(--amber);color:#000;border-color:var(--amber);}
 .game-order[data-rarity=jackpot] .game-order-reward {color:var(--amber);font-size:24px;}
+.game-order[data-rarity=standard] {border-color:var(--muted);}
+.game-order[data-rarity=standard] h3,.game-order[data-rarity=standard] .game-order-channel,.game-order[data-rarity=standard] .game-order-reward {color:var(--muted);}
+.game-order[data-rarity=small] h3,.game-order[data-rarity=small] .game-order-channel,.game-order[data-rarity=small] .game-order-reward {color:#9bdfba;}
+.game-order[data-rarity=bulk] h3,.game-order[data-rarity=bulk] .game-order-channel,.game-order[data-rarity=bulk] .game-order-reward {color:#f1c08a;}
+.game-order[data-rarity=large] h3,.game-order[data-rarity=large] .game-order-channel,.game-order[data-rarity=large] .game-order-reward {color:#66d3ff;}
+.game-order[data-rarity=rare] h3,.game-order[data-rarity=rare] .game-order-channel,.game-order[data-rarity=rare] .game-order-reward {color:#ff9caf;}
+.game-order[data-rarity=jackpot] h3,.game-order[data-rarity=jackpot] .game-order-channel {color:var(--amber);}
 .game-order-items {flex:1;min-height:40px;display:flex;flex-direction:column;}
 .game-order-items .game-order-goods {flex:1;min-height:0;overflow:hidden;}
 .game-order-items .econ-good-line {min-height:26px;font-size:16px;}

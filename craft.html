@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="./styles.css?v=20260912-live2" />
   <link rel="stylesheet" href="./econ-kids.css?v=20260915-operating-statements" />
   <link rel="stylesheet" href="./idle-ui.css?v=20260913-upgrade-feedback" />
-  <link rel="stylesheet" href="./craft.css?v=5" />
+  <link rel="stylesheet" href="./craft.css?v=8" />
+  <link rel="stylesheet" href="./craft-dialog-fit.css?v=1" />
 </head>
 <body class="motion-paused game-page game-craft-page">
   <div class="scanlines" aria-hidden="true"></div>
@@ -54,14 +55,16 @@
         <a href="./advanced-hq.html"><img src="./assets/buildings-icons/facility_automation_custom_square.png" alt="" width="28" height="28" aria-hidden="true"><span>Operations</span></a>
         <a href="./license.html"><img src="./assets/game-art/badges/licence_unlocked.png" alt="" width="28" height="28" aria-hidden="true"><span>Licence</span></a>
       </nav></div>
+      <div id="game-hud" class="econ-kid"></div>
       <div id="econ-craft" class="craft-content" aria-busy="true">
-        <p class="craft-intro"><span>Choose an item to see its ingredients.</span><span id="craft-wallet" aria-label="Available cash"></span></p>
+        <p class="craft-intro"><span>Choose an item to see its ingredients.</span><span id="craft-catalog-count"></span></p>
         <p id="craft-notice" class="craft-notice" role="status">Opening your workshop…</p>
         <div id="craft-grid" class="craft-grid" aria-label="Craftable items"></div>
       </div>
     </main>
   </div>
   <dialog id="craft-dialog" aria-labelledby="craft-dialog-title" aria-describedby="craft-makes">
+    <div class="craft-dialog-body">
     <div class="craft-dialog-head">
       <h2 id="craft-dialog-title"></h2>
       <button id="craft-close" type="button" aria-label="Close item details" autofocus>×</button>
@@ -76,15 +79,17 @@
     <p id="craft-reason" class="craft-reason"></p>
     <button id="craft-submit" class="craft-submit" type="button" aria-describedby="craft-reason">CRAFT</button>
     <p id="craft-status" class="craft-status" role="status" aria-live="polite"></p>
+    </div>
   </dialog>
   <script src="./buildings-nav.js"></script>
   <script src="./yomama-net.js?v=1"></script>
   <script src="./app.js?v=20260912-1"></script>
-  <script src="./econ.js?v=20260915-operating-statements-3"></script>
+  <script src="./econ.js?v=20260915-craft-hud"></script>
   <script src="./account.js?v=1"></script>
   <script src="./econ-nav.js?v=4"></script>
   <script src="./game-fit.js?v=20260915-operating-statements"></script>
-  <script src="./craft-art.js?v=1"></script>
-  <script src="./craft.js?v=5"></script>
+  <script src="./craft-art.js?v=3"></script>
+  <script src="./craft.js?v=8"></script>
+  <script src="./craft-dialog-fit.js?v=1"></script>
 </body>
 </html>

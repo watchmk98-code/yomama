@@ -1,11 +1,57 @@
 # Craft pixel art
 
+## 300-item catalog and 64 supplies
+
+The second expansion adds 150 craft sprites and 28 supply sprites. All seven PNGs were generated with the built-in imagegen tool, using `craft-items-05.png` as a style reference, and copied into `assets/craft/` without bitmap changes. The complete final prompt set is [expansion-300-prompts.json](expansion-300-prompts.json). Names, recipes, and descriptions are in `previews/craft_expansion_300_catalog.json` and `previews/craft_expansion_64_supplies.json`.
+
+| Saved atlas | Catalog indices | Layout | Original generated filename |
+| --- | --- | --- | --- |
+| `craft-items-06.png` | Items 150–179 | 6 × 5 | `exec-769b9e31-970c-481d-ba27-f6d98dac3cfb.png` |
+| `craft-items-07.png` | Items 180–209 | 6 × 5 | `exec-00046a42-8774-4972-be5c-c3c3078a1e97.png` |
+| `craft-items-08.png` | Items 210–239 | 6 × 5 | `exec-780a3441-c6c4-468e-b13c-8f3052e591dc.png` |
+| `craft-items-09.png` | Items 240–269 | 6 × 5 | `exec-2b4b35cb-0b3d-4e62-b10a-f4909293d625.png` |
+| `craft-items-10.png` | Items 270–299 | 6 × 5 | `exec-d55c559a-1276-4865-916a-8533d14d7d26.png` |
+| `craft-supplies-04.png` | Supplies 36–51 | 4 × 4 | `exec-fd27a8b5-4981-4045-8c77-82d20bfe0570.png` |
+| `craft-supplies-05.png` | Supplies 52–63 | 4 × 3 | `exec-646e702c-ac4b-4759-b401-73d6b17ce837.png` |
+
+Indices are zero-based. `craft-art.js` provides the display rectangles measured by `previews/inspect_craft_atlas.py`; the existing icon-only responsive grid and ingredient popups consume the same mapping. The final item atlas contains the 30 expensive scientific, robotics, industrial, and space crafts.
+
+## Catalog expansion
+
+The built-in image-generation tool produced 120 additional craft icons and 24 additional component icons, using `craft-items.png` as a style reference. Original artwork remains unchanged. New images are copied into this directory and used directly by the game:
+
+| Atlas | Catalog indices | Layout |
+| --- | --- | --- |
+| `craft-items-02.png` | Items 30–59 | 6 columns × 5 rows |
+| `craft-items-03.png` | Items 60–89 | 6 columns × 5 rows |
+| `craft-items-04.png` | Items 90–119 | 6 columns × 5 rows |
+| `craft-items-05.png` | Items 120–149 | 6 columns × 5 rows |
+| `craft-supplies-02.png` | Supplies 12–23 | 4 columns × 3 rows |
+| `craft-supplies-03.png` | Supplies 24–35 | 4 columns × 3 rows |
+
+The complete prompts are in `item-expansion-prompts.json` and `expansion-prompts.json`. Appearance descriptions and item order are also recorded in `previews/craft_expansion_catalog.json` and `previews/craft_expansion_supplies.json`.
+
+`craft-art.js` maps each atlas to a stable starting index, image URL, dimensions, and display rectangles. `previews/inspect_craft_atlas.py` measures those rectangles without modifying image pixels. The catalog and ingredient dialogs share this mapping, so every item and supply has its own artwork.
+
 Generated with the built-in imagegen tool from the user-approved black/amber crafting mockup. The PNGs are original tool outputs; the UI selects cells through CSS background positions without cropping or changing the bitmaps.
 
 - `craft-items.png`: 1374 × 1145, 6 columns × 5 rows. Row-major order follows `crafting.RECIPES` / payload `iconIndex`.
 - `craft-supplies.png`: 1448 × 1086, 4 columns × 3 rows. Row-major order: wooden boards, fiber bundles, metal sheets, copper stock, battery cells, solar cells, glass panels, rubber sheets, plastic casings, circuit boards, insulation, packaging.
 
 Black gutters are intentional, matching the game's pure-black surface. The generator did not perfectly align equal-size cells, so `craft-art.js` records each visible sprite's display rectangle. CSS positions the original bitmap within those rectangles and preserves each sprite's aspect ratio; no sprite is cut off and neighboring sprites stay hidden. Keep `image-rendering: pixelated` when changing CSS sizes.
+
+## Expanded catalog
+
+Four additional 6-column by 5-row sheets add 120 items, in the order recorded in `previews/craft_expansion_catalog.json`:
+
+- `craft-items-02.png`: item indices 30–59.
+- `craft-items-03.png`: item indices 60–89.
+- `craft-items-04.png`: item indices 90–119.
+- `craft-items-05.png`: item indices 120–149.
+
+Two additional 4-column by 3-row sheets, `craft-supplies-02.png` and `craft-supplies-03.png`, cover supply indices 12–23 and 24–35. Each generated PNG is preserved without bitmap changes. Final prompts from the built-in imagegen tool are saved in [expansion-item-prompts.json](expansion-item-prompts.json) and [expansion-prompts.json](expansion-prompts.json).
+
+The small CRAFT navigation icon reuses the original Portable Toolbox sprite with CSS background positioning.
 
 ## Final item-atlas prompt
 

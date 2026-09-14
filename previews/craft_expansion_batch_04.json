@@ -1,0 +1,800 @@
+[
+  {
+    "id": "portable_cassette_player",
+    "name": "Portable Cassette Player",
+    "ingredients": [
+      [
+        "garage_spare_parts",
+        2
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "electric_motors",
+        2
+      ],
+      [
+        "speaker_cones",
+        2
+      ],
+      [
+        "plastic_casings",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art orange cassette player with twin reels, silver buttons and black headphones."
+  },
+  {
+    "id": "desktop_oscilloscope",
+    "name": "Desktop Oscilloscope",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        2
+      ],
+      [
+        "data_center_compute_hours",
+        3
+      ],
+      [
+        "display_panels",
+        2
+      ],
+      [
+        "circuit_boards",
+        3
+      ],
+      [
+        "wire_spools",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art cream instrument with a green waveform screen, blue knobs and coiled probes."
+  },
+  {
+    "id": "handheld_barcode_scanner",
+    "name": "Handheld Barcode Scanner",
+    "ingredients": [
+      [
+        "garage_custom_mods",
+        2
+      ],
+      [
+        "data_center_api_calls",
+        3
+      ],
+      [
+        "optical_lenses",
+        2
+      ],
+      [
+        "microcontrollers",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art dark teal scanner with a curved pistol grip and wide red glass window."
+  },
+  {
+    "id": "parcel_platform_scale",
+    "name": "Parcel Platform Scale",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        3
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "motion_sensors",
+        2
+      ],
+      [
+        "display_panels",
+        2
+      ],
+      [
+        "metal_sheets",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art square silver weighing platform beside a tall yellow display post."
+  },
+  {
+    "id": "shipping_label_printer",
+    "name": "Shipping Label Printer",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "data_center_api_calls",
+        2
+      ],
+      [
+        "electric_motors",
+        2
+      ],
+      [
+        "paper_sheets",
+        4
+      ],
+      [
+        "plastic_casings",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art blue desktop printer with a white label strip curling from its front slot."
+  },
+  {
+    "id": "yellow_pallet_jack",
+    "name": "Yellow Pallet Jack",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "machine_works_cnc_parts",
+        3
+      ],
+      [
+        "ball_bearings",
+        4
+      ],
+      [
+        "pressure_valves",
+        2
+      ],
+      [
+        "rubber_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art yellow pallet jack with two long forks, small black wheels and a loop handle."
+  },
+  {
+    "id": "hard_shell_flight_case",
+    "name": "Hard-Shell Flight Case",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        3
+      ],
+      [
+        "workshop_machined_bolts",
+        3
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "foam_padding",
+        4
+      ],
+      [
+        "hinges",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art blue rectangular case with silver corner guards, butterfly latches and an open foam lid."
+  },
+  {
+    "id": "glass_door_refrigerator",
+    "name": "Glass-Door Refrigerator",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        3
+      ],
+      [
+        "generator_baseload_power",
+        4
+      ],
+      [
+        "glass_panels",
+        3
+      ],
+      [
+        "electric_motors",
+        2
+      ],
+      [
+        "insulation",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art tall mint refrigerator with a glass door, white shelves and a black lower vent."
+  },
+  {
+    "id": "reflector_solar_oven",
+    "name": "Reflector Solar Oven",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        3
+      ],
+      [
+        "workshop_machined_bolts",
+        2
+      ],
+      [
+        "metal_sheets",
+        4
+      ],
+      [
+        "glass_panels",
+        2
+      ],
+      [
+        "hinges",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art black cooking box surrounded by four raised silver reflector flaps."
+  },
+  {
+    "id": "pyramid_water_still",
+    "name": "Pyramid Water Still",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "glass_panels",
+        4
+      ],
+      [
+        "flexible_hoses",
+        2
+      ],
+      [
+        "sealant",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art glass pyramid over a dark blue basin with copper channels and a side bottle."
+  },
+  {
+    "id": "paddle_waterwheel",
+    "name": "Paddle Waterwheel",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "machine_works_cnc_parts",
+        3
+      ],
+      [
+        "wooden_boards",
+        5
+      ],
+      [
+        "ball_bearings",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art upright wooden waterwheel with broad paddles, a steel axle and blue water droplets."
+  },
+  {
+    "id": "cup_anemometer",
+    "name": "Cup Anemometer",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "uplink_center_telemetry",
+        2
+      ],
+      [
+        "ball_bearings",
+        2
+      ],
+      [
+        "motion_sensors",
+        2
+      ],
+      [
+        "metal_sheets",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art three silver wind cups spinning above a thin red mast and square meter."
+  },
+  {
+    "id": "copper_rooster_vane",
+    "name": "Copper Rooster Weather Vane",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "copper_stock",
+        4
+      ],
+      [
+        "ball_bearings",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art copper rooster on a long arrow above four crossed compass letters."
+  },
+  {
+    "id": "illuminated_orbital_globe",
+    "name": "Illuminated Orbital Globe",
+    "ingredients": [
+      [
+        "uplink_center_ground_time",
+        2
+      ],
+      [
+        "uplink_center_telemetry",
+        3
+      ],
+      [
+        "glass_panels",
+        3
+      ],
+      [
+        "led_arrays",
+        2
+      ],
+      [
+        "resin",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art blue-green globe inside a tilted brass ring with a glowing dotted orbital trail."
+  },
+  {
+    "id": "rolled_constellation_chart",
+    "name": "Rolled Constellation Chart",
+    "ingredients": [
+      [
+        "uplink_center_telemetry",
+        3
+      ],
+      [
+        "data_center_compute_hours",
+        2
+      ],
+      [
+        "paper_sheets",
+        4
+      ],
+      [
+        "leather_straps",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art navy star chart with curled parchment ends, gold constellations and a brown strap."
+  },
+  {
+    "id": "brass_tripod_telescope",
+    "name": "Brass Tripod Telescope",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        3
+      ],
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "optical_lenses",
+        4
+      ],
+      [
+        "copper_stock",
+        3
+      ],
+      [
+        "wooden_boards",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art long brass telescope with a black eyepiece mounted on three wooden legs."
+  },
+  {
+    "id": "miniature_lunar_rover",
+    "name": "Miniature Lunar Rover",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        2
+      ],
+      [
+        "uplink_center_telemetry",
+        2
+      ],
+      [
+        "electric_motors",
+        3
+      ],
+      [
+        "solar_cells",
+        2
+      ],
+      [
+        "rubber_sheets",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art silver six-wheel rover with a blue solar panel, camera mast and tiny dish."
+  },
+  {
+    "id": "electronic_terrarium",
+    "name": "Electronic Terrarium",
+    "ingredients": [
+      [
+        "garage_custom_mods",
+        2
+      ],
+      [
+        "data_center_api_calls",
+        2
+      ],
+      [
+        "glass_panels",
+        4
+      ],
+      [
+        "water_pumps",
+        2
+      ],
+      [
+        "led_arrays",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art glass cube holding leafy plants, dark soil, a blue tube and purple overhead lights."
+  },
+  {
+    "id": "brass_pocket_compass",
+    "name": "Brass Pocket Compass",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "workshop_machined_bolts",
+        2
+      ],
+      [
+        "permanent_magnets",
+        2
+      ],
+      [
+        "copper_stock",
+        3
+      ],
+      [
+        "glass_panels",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art open brass pocket compass with a cream dial, red needle and round hinged lid."
+  },
+  {
+    "id": "clockwork_signal_train",
+    "name": "Clockwork Signal Train",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        3
+      ],
+      [
+        "garage_spare_parts",
+        2
+      ],
+      [
+        "clockwork_gears",
+        4
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "led_arrays",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art red toy locomotive with brass wheels, a silver winding key and green roof lamp."
+  },
+  {
+    "id": "semaphore_signal_tower",
+    "name": "Semaphore Signal Tower",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "garage_spare_parts",
+        2
+      ],
+      [
+        "electric_motors",
+        2
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "led_arrays",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art lattice tower with two red-and-white hinged arms and stacked colored lamps."
+  },
+  {
+    "id": "open_frame_server_rack",
+    "name": "Open-Frame Server Rack",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "data_center_compute_hours",
+        4
+      ],
+      [
+        "circuit_boards",
+        4
+      ],
+      [
+        "wire_spools",
+        3
+      ],
+      [
+        "electric_motors",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art black open rack holding silver server trays, blue status lights and looped yellow cables."
+  },
+  {
+    "id": "reel_tape_archive",
+    "name": "Reel Tape Archive",
+    "ingredients": [
+      [
+        "data_center_cloud_storage",
+        4
+      ],
+      [
+        "machine_works_cnc_parts",
+        3
+      ],
+      [
+        "electric_motors",
+        2
+      ],
+      [
+        "permanent_magnets",
+        3
+      ],
+      [
+        "metal_sheets",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art cream cabinet with two oversized black tape reels and a row of amber square buttons."
+  },
+  {
+    "id": "pocket_pixel_console",
+    "name": "Pocket Pixel Console",
+    "ingredients": [
+      [
+        "garage_custom_mods",
+        2
+      ],
+      [
+        "data_center_compute_hours",
+        2
+      ],
+      [
+        "display_panels",
+        2
+      ],
+      [
+        "microcontrollers",
+        3
+      ],
+      [
+        "plastic_casings",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art purple handheld console with a green screen, black cross pad and two orange buttons."
+  },
+  {
+    "id": "arched_mantel_clock",
+    "name": "Arched Mantel Clock",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "workshop_machined_bolts",
+        2
+      ],
+      [
+        "clockwork_gears",
+        4
+      ],
+      [
+        "wooden_boards",
+        3
+      ],
+      [
+        "glass_panels",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art rounded walnut mantel clock with a cream face, gold hands and brass feet."
+  },
+  {
+    "id": "digital_picture_frame",
+    "name": "Digital Picture Frame",
+    "ingredients": [
+      [
+        "data_center_cloud_storage",
+        3
+      ],
+      [
+        "data_center_api_calls",
+        2
+      ],
+      [
+        "display_panels",
+        2
+      ],
+      [
+        "microcontrollers",
+        2
+      ],
+      [
+        "wooden_boards",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art thick maple picture frame displaying a tiny mountain, pink sky and yellow sun."
+  },
+  {
+    "id": "camera_quadcopter",
+    "name": "Camera Quadcopter",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        3
+      ],
+      [
+        "relay_station_bandwidth",
+        2
+      ],
+      [
+        "electric_motors",
+        4
+      ],
+      [
+        "optical_lenses",
+        2
+      ],
+      [
+        "battery_cells",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art white quadcopter with four black propellers, red arm tips and a hanging camera."
+  },
+  {
+    "id": "nautical_signal_lamp",
+    "name": "Nautical Signal Lamp",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        3
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "optical_lenses",
+        3
+      ],
+      [
+        "led_arrays",
+        3
+      ],
+      [
+        "metal_sheets",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art large brass spotlight with black shutter slats on a squat swiveling pedestal."
+  },
+  {
+    "id": "spherical_weather_balloon",
+    "name": "Spherical Weather Balloon",
+    "ingredients": [
+      [
+        "uplink_center_telemetry",
+        3
+      ],
+      [
+        "relay_station_bandwidth",
+        2
+      ],
+      [
+        "rubber_sheets",
+        4
+      ],
+      [
+        "fiber_bundles",
+        3
+      ],
+      [
+        "motion_sensors",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art pale orange balloon with thin dangling cords and a small white instrument box."
+  },
+  {
+    "id": "twin_dish_ground_station",
+    "name": "Twin-Dish Ground Station",
+    "ingredients": [
+      [
+        "uplink_center_satellite_bandwidth",
+        3
+      ],
+      [
+        "uplink_center_ground_time",
+        3
+      ],
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "metal_sheets",
+        4
+      ],
+      [
+        "microcontrollers",
+        2
+      ]
+    ],
+    "artDescription": "Pixel-art two white satellite dishes angled apart above a navy base with orange indicator lights."
+  }
+]

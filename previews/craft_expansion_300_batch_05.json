@@ -1,0 +1,692 @@
+[
+  {
+    "id": "quantum_computer_cabinet",
+    "name": "Quantum Computer Cabinet",
+    "ingredients": [
+      [
+        "data_center_compute_hours",
+        6
+      ],
+      [
+        "quantum_cores",
+        8
+      ],
+      [
+        "cryogenic_coolant",
+        8
+      ],
+      [
+        "superconducting_coils",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art tall navy quantum computer cabinet with a glass front revealing a golden chandelier of stacked plates and violet cables."
+  },
+  {
+    "id": "fusion_containment_torus",
+    "name": "Fusion Containment Torus",
+    "ingredients": [
+      [
+        "generator_peak_power",
+        6
+      ],
+      [
+        "superconducting_coils",
+        8
+      ],
+      [
+        "plasma_igniters",
+        6
+      ],
+      [
+        "radiation_shields",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art massive silver fusion torus held inside dark magnetic brackets, with a luminous magenta circular plasma channel."
+  },
+  {
+    "id": "cryogenic_electron_microscope",
+    "name": "Cryogenic Electron Microscope",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "cryogenic_coolant",
+        8
+      ],
+      [
+        "superconducting_coils",
+        6
+      ],
+      [
+        "radiation_shields",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art towering cream electron microscope with a narrow silver column, frosted blue coolant tank and dark circular specimen chamber."
+  },
+  {
+    "id": "photonic_supercomputer",
+    "name": "Photonic Supercomputer",
+    "ingredients": [
+      [
+        "data_center_compute_hours",
+        6
+      ],
+      [
+        "photonic_processors",
+        12
+      ],
+      [
+        "metamaterial_tiles",
+        8
+      ],
+      [
+        "cryogenic_coolant",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art angular black supercomputer with stacked iridescent optical panels, bright rainbow fiber loops and blue cooling cylinders."
+  },
+  {
+    "id": "ion_thruster_assembly",
+    "name": "Ion Thruster Assembly",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "plasma_igniters",
+        8
+      ],
+      [
+        "superconducting_coils",
+        6
+      ],
+      [
+        "radiation_shields",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art silver spacecraft ion engine with concentric circular grids, copper coils and a long narrow blue exhaust glow."
+  },
+  {
+    "id": "magnetic_levitation_sled",
+    "name": "Magnetic Levitation Sled",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        6
+      ],
+      [
+        "superconducting_coils",
+        6
+      ],
+      [
+        "cryogenic_coolant",
+        4
+      ],
+      [
+        "precision_gyroscopes",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art sleek silver magnetic sled hovering above two dark rails, with frosty cyan coils and a small orange instrument seat."
+  },
+  {
+    "id": "orbital_laser_terminal",
+    "name": "Orbital Laser Communications Terminal",
+    "ingredients": [
+      [
+        "uplink_center_satellite_bandwidth",
+        6
+      ],
+      [
+        "photonic_processors",
+        6
+      ],
+      [
+        "optical_lenses",
+        6
+      ],
+      [
+        "precision_gyroscopes",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art white orbital laser terminal with a large gold-rimmed optical head, articulated blue gimbal and narrow red aiming beam."
+  },
+  {
+    "id": "planetary_radar_array",
+    "name": "Planetary Radar Array",
+    "ingredients": [
+      [
+        "uplink_center_telemetry",
+        6
+      ],
+      [
+        "superconducting_coils",
+        4
+      ],
+      [
+        "photonic_processors",
+        6
+      ],
+      [
+        "metal_sheets",
+        12
+      ]
+    ],
+    "artDescription": "Pixel-art broad curved silver planetary radar grid with many blue circular antenna cells, orange braces and a compact black control pedestal."
+  },
+  {
+    "id": "solar_sail_probe",
+    "name": "Solar Sail Probe",
+    "ingredients": [
+      [
+        "uplink_center_ground_time",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        12
+      ],
+      [
+        "precision_gyroscopes",
+        6
+      ],
+      [
+        "photonic_processors",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art tiny gold space probe centered within four enormous triangular iridescent solar-sail panels stretched on fine black booms."
+  },
+  {
+    "id": "deep_space_navigation_core",
+    "name": "Deep-Space Navigation Core",
+    "ingredients": [
+      [
+        "uplink_center_telemetry",
+        6
+      ],
+      [
+        "quantum_cores",
+        6
+      ],
+      [
+        "precision_gyroscopes",
+        8
+      ],
+      [
+        "radiation_shields",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art open hexagonal silver navigation core with nested gold gyroscope rings surrounding a bright violet crystal and blue star-map panels."
+  },
+  {
+    "id": "cryogenic_sample_vault",
+    "name": "Cryogenic Sample Vault",
+    "ingredients": [
+      [
+        "freight_terminal_cold_storage",
+        6
+      ],
+      [
+        "cryogenic_coolant",
+        12
+      ],
+      [
+        "radiation_shields",
+        6
+      ],
+      [
+        "metal_sheets",
+        12
+      ]
+    ],
+    "artDescription": "Pixel-art heavy blue cryogenic sample vault with a thick open round door, frost-covered drawers and six glowing cyan specimen capsules."
+  },
+  {
+    "id": "robotic_exoskeleton",
+    "name": "Robotic Exoskeleton",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "linear_actuators",
+        12
+      ],
+      [
+        "precision_gyroscopes",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        8
+      ]
+    ],
+    "artDescription": "Pixel-art empty orange-and-silver robotic exoskeleton standing upright with articulated legs, powerful shoulder braces and a dark chest harness."
+  },
+  {
+    "id": "orbital_docking_collar",
+    "name": "Orbital Docking Collar",
+    "ingredients": [
+      [
+        "uplink_center_ground_time",
+        6
+      ],
+      [
+        "linear_actuators",
+        12
+      ],
+      [
+        "precision_gyroscopes",
+        6
+      ],
+      [
+        "radiation_shields",
+        8
+      ]
+    ],
+    "artDescription": "Pixel-art large white orbital docking ring with six orange latches, layered black seals and three extended silver alignment arms."
+  },
+  {
+    "id": "plasma_glass_furnace",
+    "name": "Plasma Glass Furnace",
+    "ingredients": [
+      [
+        "generator_peak_power",
+        6
+      ],
+      [
+        "plasma_igniters",
+        8
+      ],
+      [
+        "radiation_shields",
+        6
+      ],
+      [
+        "ceramic_pieces",
+        12
+      ]
+    ],
+    "artDescription": "Pixel-art armored charcoal plasma furnace with two curved violet arc electrodes above a bright amber pool of molten glass."
+  },
+  {
+    "id": "vacuum_deposition_chamber",
+    "name": "Vacuum Deposition Chamber",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "superconducting_coils",
+        4
+      ],
+      [
+        "cryogenic_coolant",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art polished spherical vacuum deposition chamber with several brass side ports, a purple viewing window and a blue lower pump stack."
+  },
+  {
+    "id": "atomic_frequency_standard",
+    "name": "Atomic Frequency Standard",
+    "ingredients": [
+      [
+        "data_center_compute_hours",
+        6
+      ],
+      [
+        "quantum_cores",
+        4
+      ],
+      [
+        "superconducting_coils",
+        4
+      ],
+      [
+        "cryogenic_coolant",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art cream laboratory frequency-standard rack with a long copper resonance tube, cyan numeric windows and violet shielded coils."
+  },
+  {
+    "id": "gravitational_wave_interferometer",
+    "name": "Gravitational Wave Interferometer",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "photonic_processors",
+        6
+      ],
+      [
+        "optical_lenses",
+        12
+      ],
+      [
+        "metamaterial_tiles",
+        8
+      ]
+    ],
+    "artDescription": "Pixel-art silver L-shaped interferometer with two long perpendicular vacuum arms, red laser channels and a blue central beam-splitter chamber."
+  },
+  {
+    "id": "particle_beam_injector",
+    "name": "Particle Beam Injector",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "superconducting_coils",
+        8
+      ],
+      [
+        "plasma_igniters",
+        6
+      ],
+      [
+        "radiation_shields",
+        8
+      ]
+    ],
+    "artDescription": "Pixel-art long copper particle-beam injector passing through four dark magnetic collars, with a violet source chamber and a narrow cyan beam."
+  },
+  {
+    "id": "neutrino_detector_vessel",
+    "name": "Neutrino Detector Vessel",
+    "ingredients": [
+      [
+        "data_center_compute_hours",
+        6
+      ],
+      [
+        "photonic_processors",
+        6
+      ],
+      [
+        "cryogenic_coolant",
+        8
+      ],
+      [
+        "radiation_shields",
+        8
+      ]
+    ],
+    "artDescription": "Pixel-art cutaway blue cylindrical detector vessel lined with many golden sensor bulbs surrounding a luminous clear central volume."
+  },
+  {
+    "id": "aerogel_capture_capsule",
+    "name": "Aerogel Capture Capsule",
+    "ingredients": [
+      [
+        "uplink_center_ground_time",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        8
+      ],
+      [
+        "radiation_shields",
+        6
+      ],
+      [
+        "precision_gyroscopes",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art open bronze space-return capsule with a pale-blue translucent honeycomb capture tray and a scorched dark heat shield."
+  },
+  {
+    "id": "superconducting_power_buffer",
+    "name": "Superconducting Power Buffer",
+    "ingredients": [
+      [
+        "solar_array_utility_kwh",
+        6
+      ],
+      [
+        "superconducting_coils",
+        8
+      ],
+      [
+        "cryogenic_coolant",
+        8
+      ],
+      [
+        "power_inverters",
+        12
+      ]
+    ],
+    "artDescription": "Pixel-art thick violet superconducting energy-storage ring in a frost-covered silver cradle with blue inverter fins and red power cables."
+  },
+  {
+    "id": "quantum_entanglement_bench",
+    "name": "Quantum Entanglement Bench",
+    "ingredients": [
+      [
+        "data_center_api_calls",
+        6
+      ],
+      [
+        "quantum_cores",
+        8
+      ],
+      [
+        "photonic_processors",
+        6
+      ],
+      [
+        "optical_lenses",
+        12
+      ]
+    ],
+    "artDescription": "Pixel-art black optical laboratory table carrying twin violet crystal modules joined by intersecting red and blue beams through tiny gold mirrors."
+  },
+  {
+    "id": "adaptive_optics_mirror",
+    "name": "Adaptive Optics Mirror",
+    "ingredients": [
+      [
+        "uplink_center_telemetry",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        10
+      ],
+      [
+        "linear_actuators",
+        12
+      ],
+      [
+        "photonic_processors",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art large segmented hexagonal telescope mirror with iridescent gold tiles and many silver actuator rods visible behind its dark frame."
+  },
+  {
+    "id": "rotating_space_habitat",
+    "name": "Rotating Space Habitat",
+    "ingredients": [
+      [
+        "uplink_center_ground_time",
+        6
+      ],
+      [
+        "precision_gyroscopes",
+        8
+      ],
+      [
+        "radiation_shields",
+        12
+      ],
+      [
+        "metamaterial_tiles",
+        10
+      ]
+    ],
+    "artDescription": "Pixel-art white rotating space habitat ring with blue window bands, four silver spokes and a central gold docking hub."
+  },
+  {
+    "id": "autonomous_cargo_capsule",
+    "name": "Autonomous Cargo Capsule",
+    "ingredients": [
+      [
+        "freight_terminal_container_slots",
+        6
+      ],
+      [
+        "precision_gyroscopes",
+        6
+      ],
+      [
+        "radiation_shields",
+        8
+      ],
+      [
+        "photonic_processors",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art blunt-nosed silver cargo capsule with an open orange freight bay, folded dark landing legs and a blue navigation panel."
+  },
+  {
+    "id": "ocean_floor_observatory",
+    "name": "Ocean-Floor Observatory",
+    "ingredients": [
+      [
+        "relay_station_bandwidth",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        8
+      ],
+      [
+        "photonic_processors",
+        6
+      ],
+      [
+        "precision_gyroscopes",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art deep-sea observatory with three blue glass pressure spheres inside an orange tripod frame and a tall black sensor mast."
+  },
+  {
+    "id": "precision_wind_tunnel",
+    "name": "Precision Wind Tunnel",
+    "ingredients": [
+      [
+        "turbine_field_wind_kwh",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        6
+      ],
+      [
+        "linear_actuators",
+        8
+      ],
+      [
+        "photonic_processors",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art silver precision wind tunnel with a large honeycomb intake, transparent central chamber, tiny red wing model and blue laser sheet."
+  },
+  {
+    "id": "photonic_encryption_router",
+    "name": "Photonic Encryption Router",
+    "ingredients": [
+      [
+        "data_center_api_calls",
+        6
+      ],
+      [
+        "photonic_processors",
+        8
+      ],
+      [
+        "quantum_cores",
+        4
+      ],
+      [
+        "metamaterial_tiles",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art flat black encryption router with eight luminous rainbow optical ports, a violet central core window and gold-edged cooling fins."
+  },
+  {
+    "id": "space_elevator_climber",
+    "name": "Space Elevator Climber",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        6
+      ],
+      [
+        "metamaterial_tiles",
+        10
+      ],
+      [
+        "servo_motors",
+        12
+      ],
+      [
+        "precision_gyroscopes",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art orange space-elevator climber gripping a tall dark ribbon with four silver roller banks and two broad blue power panels."
+  },
+  {
+    "id": "deep_space_observatory_satellite",
+    "name": "Deep-Space Observatory Satellite",
+    "ingredients": [
+      [
+        "uplink_center_satellite_bandwidth",
+        6
+      ],
+      [
+        "photonic_processors",
+        8
+      ],
+      [
+        "radiation_shields",
+        10
+      ],
+      [
+        "precision_gyroscopes",
+        8
+      ]
+    ],
+    "artDescription": "Pixel-art large gold-and-silver observatory satellite with an open dark telescope barrel, broad blue solar wings and a layered silver sunshield."
+  }
+]

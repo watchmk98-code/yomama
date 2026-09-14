@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 
@@ -46,28 +47,65 @@ def stock(cfg, st, item_id):
     E._sync_pools(cfg, st)
 
 
-def test_catalog_has_30_items_uses_all_businesses_and_all_12_supplies():
+def test_catalog_has_300_items_uses_all_businesses_and_all_64_supplies():
     cfg, st = town(all_buildings=True)
     products = E.catalog(cfg)
-    assert len(C.RECIPES) == len({r[0] for r in C.RECIPES}) == 30
-    assert len(C.SUPPLIES) == 12
+    assert len(C.RECIPES) == len({r[0] for r in C.RECIPES}) == 300
+    assert len({r[1] for r in C.RECIPES}) == 300
+    assert len(C.SUPPLIES) == 64
     used = {gid for _, _, needs in C.RECIPES for gid, _ in needs}
     assert used <= set(products) | set(C.SUPPLIES)
     assert used & set(C.SUPPLIES) == set(C.SUPPLIES)
     assert {products[gid]['buildingId'] for gid in used if gid in products} == {t['id'] for t in cfg['tiers']}
     assert all(2 <= len(needs) <= 5 and all(type(q) is int and 1 <= q <= 4 for _, q in needs)
-               for _, _, needs in C.RECIPES)
+               for _, _, needs in C.RECIPES[:30])
+    assert all(3 <= len(needs) <= 5 and all(type(q) is int and 2 <= q <= 6 for _, q in needs)
+               for _, _, needs in C.RECIPES[30:270])
+    assert all(3 <= len(needs) <= 5 and all(type(q) is int and 2 <= q <= 12 for _, q in needs)
+               for _, _, needs in C.RECIPES[270:])
+    supply_only = {item_id for item_id, _, needs in C.RECIPES[30:150]
+                   if not any(gid in products for gid, _ in needs)}
+    assert supply_only == {'market_apron', 'field_notebook', 'wind_chime', 'insulated_delivery_bag'}
     rows = C.payload(cfg, st)['items']
-    assert [r['iconIndex'] for r in rows] == list(range(30))
+    assert [r['iconIndex'] for r in rows] == list(range(300))
     assert all(not r['canCraft'] and r['owned'] == 0 for r in rows)
     kinds = {n['id']: n['kind'] for row in rows for n in row['ingredients']}
     assert kinds['solar_coop_daytime_kwh'] == 'energy'
     assert kinds['uplink_center_telemetry'] == 'service'
+    assert kinds['solar_array_reserve_capacity'] == 'service'
+    assert all(row['source'] == 'Crafting supplies' for item in rows
+               for row in item['ingredients'] if row['kind'] == 'supply')
+
+
+def test_expansion_preserves_original_150_recipes_and_36_supply_prices():
+    # These release fingerprints protect saved ownership, atlas positions, and
+    # the already accepted recipes/prices while the catalog grows around them.
+    def fingerprint(value):
+        return hashlib.sha256(json.dumps(value, separators=(',', ':')).encode()).hexdigest()
+    assert fingerprint(C.RECIPES[:30]) == '02f4041d176b0569f3e86c9d54dc50139e1c56a4d7b8f2d72cee690589a62e7e'
+    assert fingerprint(list(C.SUPPLIES.items())[:12]) == 'b427e4cdaf225041ae5fc8eab1b2d68a50186e315e79cec058a5a114f351813c'
+    assert fingerprint(C.RECIPES[:150]) == 'd3e7d8f6e787efb05de9cdfa850f52aebb952b7034f0fa13afbadcff32d695b9'
+    assert fingerprint(list(C.SUPPLIES.items())[:36]) == '71ebee4c3bc296794201597419f168b3d5a0f4c9086eac4f3bded7809317eb84'
+
+
+def test_final_30_require_substantial_real_supply_purchases():
+    cfg, _ = town()
+    prices = {gid: good['unitPrice'] for gid, good in E.catalog(cfg).items()}
+    prices.update({gid: supply['unitPrice'] for gid, supply in C.SUPPLIES.items()})
+    old_max = max(sum(prices[gid] * quantity for gid, quantity in needs)
+                  for _, _, needs in C.RECIPES[:150])
+    assert len(C.RECIPES[270:]) == 30
+    for _, _, needs in C.RECIPES[270:]:
+        supply_cost = sum(C.SUPPLIES[gid]['unitPrice'] * quantity
+                          for gid, quantity in needs if gid in C.SUPPLIES)
+        assert 10000 <= supply_cost <= 100000
+        assert supply_cost > old_max * 2
 
 
 @pytest.mark.parametrize('item_id', [row[0] for row in C.RECIPES])
 def test_every_recipe_consumes_once_and_conserves_net_worth(item_id):
     cfg, st = town(all_buildings=True)
+    st['cash'] = 250000
     stock(cfg, st, item_id)
     before_worth = E.net_worth(cfg, st)
     cash, report, progression = st['cash'], copy.deepcopy(st['report']), copy.deepcopy(st['businessProgression'])
@@ -175,6 +213,45 @@ def test_old_saves_gain_empty_storage_and_crafted_objects_survive_migration():
     saved = copy.deepcopy(migrated['crafting'])
     migrated = E.migrate_state(cfg, json.loads(json.dumps(migrated)))
     assert migrated['crafting'] == saved
+    catalog = C.payload(cfg, migrated)['items']
+    assert len(catalog) == 300
+    assert catalog[3]['id'] == 'fish_trap' and catalog[3]['owned'] == 1
+    assert all(item['owned'] == 0 for item in catalog[30:])
+
+
+def test_150_item_save_keeps_all_ownership_then_accepts_new_supplies_and_crafts():
+    cfg, st = town(all_buildings=True)
+    st['cash'] = 250000
+    goods = E.catalog(cfg)
+    prices = {gid: row['unitPrice'] for gid, row in goods.items()}
+    prices.update({gid: row['unitPrice'] for gid, row in C.SUPPLIES.items()})
+    st['crafting']['items'] = {
+        item_id: dict(quantity=2, value=2 * sum(prices[gid] * qty for gid, qty in needs))
+        for item_id, _, needs in C.RECIPES[:150]}
+    st['crafting']['supplies'] = {
+        gid: dict(quantity=2, value=2 * row['unitPrice'])
+        for gid, row in list(C.SUPPLIES.items())[:36]}
+    st['crafting']['revision'] = 17
+    old_storage = copy.deepcopy(st['crafting'])
+    migrated = E.migrate_state(cfg, json.loads(json.dumps(st)))
+    assert migrated['crafting'] == old_storage
+    shown = C.payload(cfg, migrated)
+    assert all(item['owned'] == 2 for item in shown['items'][:150])
+    assert all(item['owned'] == 0 for item in shown['items'][150:])
+    assert all(supply['quantity'] == 2 for supply in shown['supplies'][:36])
+    assert all(supply['quantity'] == 0 for supply in shown['supplies'][36:])
+    before = E.net_worth(cfg, migrated)
+    buy(cfg, migrated, 'quantum_cores', 2)
+    assert E.net_worth(cfg, migrated) == before
+    assert migrated['crafting']['supplies']['quantum_cores']['quantity'] == 2
+    new_item = C.RECIPES[270][0]
+    stock(cfg, migrated, new_item)
+    before = E.net_worth(cfg, migrated)
+    assert C.act(cfg, migrated, body(migrated, itemId=new_item))['ok']
+    assert E.net_worth(cfg, migrated) == before
+    assert all(migrated['crafting']['items'][gid] == row
+               for gid, row in old_storage['items'].items())
+    assert migrated['crafting']['items'][new_item]['quantity'] == 1
 
 
 @pytest.fixture

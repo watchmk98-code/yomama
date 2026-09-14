@@ -1,0 +1,46 @@
+/* Keep the complete recipe and its actions in view, including short screens. */
+.game-craft-page #craft-dialog {
+  width:min(720px,calc(100% - 16px));
+  max-height:calc(100dvh - 16px);
+  padding:var(--dialog-padding,14px);
+  overflow:hidden;
+}
+#craft-dialog .craft-dialog-body {box-sizing:border-box;min-width:0;margin:0;}
+#craft-dialog .craft-dialog-head {gap:8px;}
+#craft-dialog .craft-dialog-head h2 {font-size:var(--dialog-title,36px);line-height:1;min-width:0;overflow-wrap:anywhere;}
+#craft-dialog #craft-close {width:36px;height:36px;font-size:34px;}
+#craft-dialog .craft-dialog-art {padding:6px 0 4px;}
+#craft-dialog .craft-dialog-art .craft-sprite {--craft-art:460px;--craft-art-height:var(--dialog-art-height,200px);}
+#craft-dialog .craft-makes {margin:0 0 7px;font-size:var(--dialog-caption,23px);line-height:1.05;overflow-wrap:anywhere;}
+#craft-dialog .craft-ingredients th {padding:6px 0 3px;font-size:var(--dialog-heading,23px);}
+#craft-dialog .craft-ingredients td {padding:4px 0;}
+#craft-dialog .craft-ingredients th:nth-child(n+2),#craft-dialog .craft-ingredients td:nth-child(n+2) {width:var(--dialog-number-width,48px);}
+#craft-dialog .craft-ingredients td:nth-child(n+2) {font-size:var(--dialog-number,28px);}
+#craft-dialog .craft-ingredient {gap:7px;}
+#craft-dialog .craft-ingredient img,#craft-dialog .craft-supply-icon {width:var(--dialog-icon,56px);height:var(--dialog-icon,56px);}
+#craft-dialog .craft-ingredient-name {font-size:var(--dialog-name,24px);line-height:1.03;overflow-wrap:anywhere;}
+#craft-dialog .craft-ingredient-source {font-size:var(--dialog-source,18px);line-height:1.05;margin-top:2px;overflow-wrap:anywhere;}
+#craft-dialog .craft-ingredient-reserved {font-size:var(--dialog-source,18px);line-height:1.05;margin-top:2px;}
+#craft-dialog .craft-buy {margin-top:3px;padding:2px 5px;font-size:var(--dialog-buy,18px);line-height:1.05;max-width:100%;white-space:normal;}
+#craft-dialog .craft-owned {margin:5px 0 0;font-size:var(--dialog-source,18px);line-height:1.05;}
+#craft-dialog .craft-reason {margin:5px 0;font-size:var(--dialog-feedback,19px);line-height:1.05;overflow-wrap:anywhere;}
+#craft-dialog .craft-submit {min-height:var(--dialog-control,48px);margin-top:5px;padding:2px 6px;font-size:var(--dialog-button,36px);line-height:1;}
+#craft-dialog .craft-status {margin:5px 0 0;font-size:var(--dialog-feedback,19px);line-height:1.05;overflow-wrap:anywhere;}
+#craft-dialog[data-fit-layout="wide"] {width:min(940px,calc(100% - 16px));}
+#craft-dialog[data-fit-layout="wide"] .craft-dialog-body {
+  display:grid;
+  grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);
+  grid-template-areas:"head head" "art ingredients" "makes ingredients" "owned ingredients" "reason reason" "submit submit" "status status";
+  column-gap:18px;
+}
+#craft-dialog[data-fit-layout="wide"] .craft-dialog-head {grid-area:head;margin-bottom:5px;}
+#craft-dialog[data-fit-layout="wide"] .craft-dialog-art {grid-area:art;align-self:center;}
+#craft-dialog[data-fit-layout="wide"] .craft-makes {grid-area:makes;align-self:end;margin-top:3px;}
+#craft-dialog[data-fit-layout="wide"] .craft-owned {grid-area:owned;text-align:center;}
+#craft-dialog[data-fit-layout="wide"] .craft-ingredients {grid-area:ingredients;align-self:start;}
+#craft-dialog[data-fit-layout="wide"] .craft-reason {grid-area:reason;}
+#craft-dialog[data-fit-layout="wide"] .craft-submit {grid-area:submit;}
+#craft-dialog[data-fit-layout="wide"] .craft-status {grid-area:status;}
+#craft-dialog[data-fit-layout="wide"] .craft-ingredients td {padding:2px 0;}
+#craft-dialog[data-fit-layout="wide"] .craft-ingredients th {padding-top:4px;}
+#craft-dialog[data-fit-layout="wide"] .craft-ingredient {gap:5px;}

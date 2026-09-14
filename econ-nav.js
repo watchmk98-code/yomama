@@ -10,11 +10,17 @@
       var craft=document.createElement('a');craft.href='./craft.html';
       craft.innerHTML='<span>Craft</span>';market.after(craft);
     }
-    if(location.pathname.endsWith('/craft.html'))nav.querySelector('a[href*="craft.html"]').setAttribute('aria-current','page');
+    var craftLink=nav.querySelector('a[href*="craft.html"]');
+    if(!craftLink.querySelector('.craft-nav-icon')){
+      var craftIcon=document.createElement('span');
+      craftIcon.className='craft-nav-icon';craftIcon.setAttribute('aria-hidden','true');
+      craftLink.prepend(craftIcon);
+    }
+    if(location.pathname.endsWith('/craft.html'))craftLink.setAttribute('aria-current','page');
   });
   if(document.querySelector('.game-nav[data-craft-nav]')){
     var craftNavStyle=document.createElement('style');
-    craftNavStyle.textContent='@media(max-width:900px){.game-page .game-page-head .game-nav[data-craft-nav],.game-page .game-nav[data-craft-nav]{grid-template-columns:repeat(5,minmax(0,1fr));}.game-nav[data-craft-nav] a{min-width:0;}}@media(max-width:550px){.game-nav[data-craft-nav] a{flex-direction:column;gap:2px;padding-inline:1px;font-size:14px;}.game-nav[data-craft-nav] a img{display:none;}}';
+    craftNavStyle.textContent='.game-nav .craft-nav-icon{display:inline-block;width:28px;height:28px;flex:0 0 28px;background:url("./assets/craft/craft-items.png?v=1") no-repeat -34.51px -32.57px / 190.46px 158.71px;image-rendering:pixelated;}@media(max-width:900px){.game-page .game-page-head .game-nav[data-craft-nav],.game-page .game-nav[data-craft-nav]{grid-template-columns:repeat(5,minmax(0,1fr));}.game-nav[data-craft-nav] a{min-width:0;}}@media(max-width:550px){.game-nav[data-craft-nav] a{flex-direction:column;gap:2px;padding-inline:1px;font-size:14px;}.game-nav[data-craft-nav] a img,.game-nav[data-craft-nav] .craft-nav-icon{display:none;}}';
     document.head.appendChild(craftNavStyle);
   }
   document.querySelectorAll('a[href*="produce.html"],a[href*="collect.html"],a[href*="focus-tree.html"]').forEach(function(a){a.hidden=true;});

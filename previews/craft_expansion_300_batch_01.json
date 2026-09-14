@@ -1,0 +1,692 @@
+[
+  {
+    "id": "stackable_bento",
+    "name": "Stackable Bento",
+    "ingredients": [
+      [
+        "farm_eggs",
+        2
+      ],
+      [
+        "farm_tomatoes",
+        2
+      ],
+      [
+        "fish_stall_smoked_fish",
+        2
+      ],
+      [
+        "food_safe_containers",
+        2
+      ],
+      [
+        "cork_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Two stacked blue bento boxes, top box open with eggs, tomatoes and smoked fish in neat compartments"
+  },
+  {
+    "id": "honey_dipper_set",
+    "name": "Honey Dipper Set",
+    "ingredients": [
+      [
+        "wooden_boards",
+        2
+      ],
+      [
+        "farm_honey",
+        3
+      ],
+      [
+        "food_safe_containers",
+        2
+      ]
+    ],
+    "artDescription": "Two ribbed wooden honey dippers beside a round amber honey jar with a cream lid"
+  },
+  {
+    "id": "tomato_drying_screen",
+    "name": "Tomato Drying Screen",
+    "ingredients": [
+      [
+        "farm_tomatoes",
+        4
+      ],
+      [
+        "stainless_mesh",
+        2
+      ],
+      [
+        "aluminum_profiles",
+        2
+      ]
+    ],
+    "artDescription": "Shallow silver mesh drying screen with a pale frame and neat rows of red tomato halves"
+  },
+  {
+    "id": "oyster_shucking_board",
+    "name": "Oyster Shucking Board",
+    "ingredients": [
+      [
+        "fish_stall_oysters",
+        4
+      ],
+      [
+        "wooden_boards",
+        2
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "leather_straps",
+        2
+      ]
+    ],
+    "artDescription": "Thick oval wooden board with two oyster shells, a short silver shucking knife and leather wrist loop"
+  },
+  {
+    "id": "coffee_bean_canister",
+    "name": "Coffee Bean Canister",
+    "ingredients": [
+      [
+        "roastery_roasted_beans",
+        4
+      ],
+      [
+        "food_safe_containers",
+        2
+      ],
+      [
+        "cork_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Tall clear canister filled with brown coffee beans, a thick cork lid and tiny wooden scoop"
+  },
+  {
+    "id": "pastry_stencil_kit",
+    "name": "Pastry Stencil Kit",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "silicone_molds",
+        2
+      ],
+      [
+        "metal_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Three thin silver pastry stencils with star, heart and spiral cutouts beside a teal silicone mat"
+  },
+  {
+    "id": "garden_watering_can",
+    "name": "Garden Watering Can",
+    "ingredients": [
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "copper_stock",
+        2
+      ],
+      [
+        "sealant",
+        2
+      ],
+      [
+        "workshop_steel_brackets",
+        2
+      ]
+    ],
+    "artDescription": "Rounded green watering can with an arched handle and long copper spout with a perforated rose"
+  },
+  {
+    "id": "bamboo_picnic_mat",
+    "name": "Bamboo Picnic Mat",
+    "ingredients": [
+      [
+        "bamboo_slats",
+        4
+      ],
+      [
+        "textile_cloth",
+        2
+      ],
+      [
+        "fiber_bundles",
+        2
+      ],
+      [
+        "leather_straps",
+        2
+      ]
+    ],
+    "artDescription": "Half-unrolled golden bamboo picnic mat with blue cloth edges and brown carrying straps"
+  },
+  {
+    "id": "cork_notice_board",
+    "name": "Cork Notice Board",
+    "ingredients": [
+      [
+        "cork_sheets",
+        3
+      ],
+      [
+        "wooden_boards",
+        3
+      ],
+      [
+        "felt_sheets",
+        2
+      ],
+      [
+        "adhesive_tape",
+        2
+      ]
+    ],
+    "artDescription": "Oak-framed tan cork notice board with colored square notes and a red felt corner"
+  },
+  {
+    "id": "zippered_tool_roll",
+    "name": "Zippered Tool Roll",
+    "ingredients": [
+      [
+        "machine_works_tooling",
+        2
+      ],
+      [
+        "textile_cloth",
+        3
+      ],
+      [
+        "zippers",
+        2
+      ],
+      [
+        "buckles",
+        2
+      ]
+    ],
+    "artDescription": "Open dark blue cloth tool roll containing silver tools, brass zippers and two square buckles"
+  },
+  {
+    "id": "retractable_tape_measure",
+    "name": "Retractable Tape Measure",
+    "ingredients": [
+      [
+        "metal_sheets",
+        2
+      ],
+      [
+        "springs",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ],
+      [
+        "workshop_machined_bolts",
+        2
+      ]
+    ],
+    "artDescription": "Chunky yellow tape measure with a curled silver measuring strip and black thumb lock"
+  },
+  {
+    "id": "pedal_bin",
+    "name": "Pedal Bin",
+    "ingredients": [
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "hinges",
+        2
+      ],
+      [
+        "springs",
+        2
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ]
+    ],
+    "artDescription": "Cylindrical teal metal pedal bin with its lid partly raised and a small silver foot pedal"
+  },
+  {
+    "id": "plant_moisture_meter",
+    "name": "Plant Moisture Meter",
+    "ingredients": [
+      [
+        "garage_custom_mods",
+        2
+      ],
+      [
+        "humidity_sensors",
+        2
+      ],
+      [
+        "microcontrollers",
+        2
+      ],
+      [
+        "display_panels",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ]
+    ],
+    "artDescription": "Small green moisture meter with twin metal soil probes and a blue display showing a droplet"
+  },
+  {
+    "id": "clothes_drying_rack",
+    "name": "Clothes Drying Rack",
+    "ingredients": [
+      [
+        "aluminum_profiles",
+        3
+      ],
+      [
+        "steel_tubing",
+        2
+      ],
+      [
+        "hinges",
+        2
+      ],
+      [
+        "textile_cloth",
+        2
+      ]
+    ],
+    "artDescription": "Fold-out silver clothes drying rack with crossed legs and a small blue towel draped over one rail"
+  },
+  {
+    "id": "folding_camp_chair",
+    "name": "Folding Camp Chair",
+    "ingredients": [
+      [
+        "steel_tubing",
+        3
+      ],
+      [
+        "textile_cloth",
+        3
+      ],
+      [
+        "hinges",
+        2
+      ],
+      [
+        "buckles",
+        2
+      ]
+    ],
+    "artDescription": "Folded-arm orange camping chair with a black tubular frame and crossed feet"
+  },
+  {
+    "id": "marionette_puppet",
+    "name": "Marionette Puppet",
+    "ingredients": [
+      [
+        "wooden_boards",
+        3
+      ],
+      [
+        "textile_cloth",
+        2
+      ],
+      [
+        "fiber_bundles",
+        3
+      ],
+      [
+        "pigments",
+        2
+      ],
+      [
+        "hinges",
+        2
+      ]
+    ],
+    "artDescription": "Smiling wooden marionette in a blue coat with articulated limbs hanging from a wooden crossbar"
+  },
+  {
+    "id": "tabletop_pinball",
+    "name": "Tabletop Pinball",
+    "ingredients": [
+      [
+        "springs",
+        2
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "wooden_boards",
+        3
+      ],
+      [
+        "glass_panels",
+        2
+      ],
+      [
+        "clockwork_gears",
+        2
+      ]
+    ],
+    "artDescription": "Small red tabletop pinball cabinet with a glass playfield, yellow bumpers and a chrome plunger"
+  },
+  {
+    "id": "mechanical_butterfly",
+    "name": "Mechanical Butterfly",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        2
+      ],
+      [
+        "servo_motors",
+        2
+      ],
+      [
+        "metal_sheets",
+        2
+      ],
+      [
+        "pigments",
+        2
+      ],
+      [
+        "springs",
+        2
+      ]
+    ],
+    "artDescription": "Brass mechanical butterfly with open turquoise wings and a tiny visible gear body"
+  },
+  {
+    "id": "ceramic_tile_mosaic",
+    "name": "Ceramic Tile Mosaic",
+    "ingredients": [
+      [
+        "ceramic_pieces",
+        4
+      ],
+      [
+        "pigments",
+        3
+      ],
+      [
+        "resin",
+        2
+      ],
+      [
+        "wooden_boards",
+        2
+      ]
+    ],
+    "artDescription": "Square wooden panel filled with a bright blue, gold and terracotta ceramic sun mosaic"
+  },
+  {
+    "id": "paint_palette",
+    "name": "Paint Palette",
+    "ingredients": [
+      [
+        "wooden_boards",
+        2
+      ],
+      [
+        "pigments",
+        4
+      ],
+      [
+        "sealant",
+        2
+      ]
+    ],
+    "artDescription": "Oval wooden artists palette with a thumb hole and six thick red, blue and yellow paint blobs"
+  },
+  {
+    "id": "wicker_laundry_basket",
+    "name": "Wicker Laundry Basket",
+    "ingredients": [
+      [
+        "bamboo_slats",
+        3
+      ],
+      [
+        "fiber_bundles",
+        3
+      ],
+      [
+        "textile_cloth",
+        2
+      ]
+    ],
+    "artDescription": "Tall woven bamboo laundry basket with a cream fabric liner and two loop handles"
+  },
+  {
+    "id": "rolltop_bread_box",
+    "name": "Rolltop Bread Box",
+    "ingredients": [
+      [
+        "wooden_boards",
+        3
+      ],
+      [
+        "bamboo_slats",
+        3
+      ],
+      [
+        "hinges",
+        2
+      ],
+      [
+        "food_safe_containers",
+        2
+      ]
+    ],
+    "artDescription": "Cream wooden bread box with a curved slatted rolltop and a small brass knob"
+  },
+  {
+    "id": "stovetop_popcorn_pot",
+    "name": "Stovetop Popcorn Pot",
+    "ingredients": [
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "clockwork_gears",
+        2
+      ],
+      [
+        "wooden_boards",
+        2
+      ],
+      [
+        "machine_works_cnc_parts",
+        2
+      ]
+    ],
+    "artDescription": "Silver stovetop popcorn pot with a copper stirring crank, round lid and long wooden handle"
+  },
+  {
+    "id": "manual_pasta_press",
+    "name": "Manual Pasta Press",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "aluminum_profiles",
+        3
+      ],
+      [
+        "drive_belts",
+        2
+      ],
+      [
+        "clockwork_gears",
+        2
+      ]
+    ],
+    "artDescription": "Shiny hand-cranked pasta machine with twin chrome rollers and a black tabletop clamp"
+  },
+  {
+    "id": "accordion_desk_lamp",
+    "name": "Accordion Desk Lamp",
+    "ingredients": [
+      [
+        "led_arrays",
+        2
+      ],
+      [
+        "aluminum_profiles",
+        3
+      ],
+      [
+        "springs",
+        2
+      ],
+      [
+        "wire_spools",
+        2
+      ]
+    ],
+    "artDescription": "Yellow accordion-arm desk lamp with visible black springs and a wide angled shade"
+  },
+  {
+    "id": "wall_coat_rack",
+    "name": "Wall Coat Rack",
+    "ingredients": [
+      [
+        "wooden_boards",
+        3
+      ],
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "cork_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Long walnut wall board with five curved brass coat hooks and a tan cork backing edge"
+  },
+  {
+    "id": "travel_sewing_case",
+    "name": "Travel Sewing Case",
+    "ingredients": [
+      [
+        "machine_works_tooling",
+        2
+      ],
+      [
+        "textile_cloth",
+        2
+      ],
+      [
+        "zippers",
+        2
+      ],
+      [
+        "buckles",
+        2
+      ]
+    ],
+    "artDescription": "Open red zippered sewing case with small scissors, needles, thread spools and a brass buckle"
+  },
+  {
+    "id": "folding_room_divider",
+    "name": "Folding Room Divider",
+    "ingredients": [
+      [
+        "bamboo_slats",
+        3
+      ],
+      [
+        "textile_cloth",
+        4
+      ],
+      [
+        "hinges",
+        2
+      ],
+      [
+        "wooden_boards",
+        2
+      ]
+    ],
+    "artDescription": "Three-panel folding room divider with pale bamboo frames and cream patterned cloth panels"
+  },
+  {
+    "id": "handheld_vacuum",
+    "name": "Handheld Vacuum",
+    "ingredients": [
+      [
+        "electric_motors",
+        2
+      ],
+      [
+        "filter_cartridges",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ],
+      [
+        "battery_cells",
+        2
+      ],
+      [
+        "garage_custom_mods",
+        2
+      ]
+    ],
+    "artDescription": "Compact purple handheld vacuum with a clear dust chamber, black grip and tapered nozzle"
+  },
+  {
+    "id": "floating_pool_lantern",
+    "name": "Floating Pool Lantern",
+    "ingredients": [
+      [
+        "solar_cells",
+        2
+      ],
+      [
+        "led_arrays",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ],
+      [
+        "sealant",
+        2
+      ],
+      [
+        "solar_charge_controllers",
+        2
+      ]
+    ],
+    "artDescription": "Round white floating lantern with a blue solar cap, glowing amber center and broad lily-pad base"
+  }
+]

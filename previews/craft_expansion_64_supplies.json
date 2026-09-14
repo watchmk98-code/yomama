@@ -1,0 +1,170 @@
+[
+  {
+    "id": "steel_tubing",
+    "name": "Steel Tubing",
+    "unitPrice": 18,
+    "artDescription": "Three hollow dark steel tubes with clean circular ends"
+  },
+  {
+    "id": "aluminum_profiles",
+    "name": "Aluminum Profiles",
+    "unitPrice": 16,
+    "artDescription": "Three silver aluminum rails with slotted square cross sections"
+  },
+  {
+    "id": "stainless_mesh",
+    "name": "Stainless Mesh",
+    "unitPrice": 12,
+    "artDescription": "Rolled fine silver woven metal mesh with a curled corner"
+  },
+  {
+    "id": "cork_sheets",
+    "name": "Cork Sheets",
+    "unitPrice": 7,
+    "artDescription": "Stack of tan cork sheets with a speckled texture"
+  },
+  {
+    "id": "bamboo_slats",
+    "name": "Bamboo Slats",
+    "unitPrice": 8,
+    "artDescription": "Bundle of pale green bamboo slats bound with brown twine"
+  },
+  {
+    "id": "felt_sheets",
+    "name": "Felt Sheets",
+    "unitPrice": 6,
+    "artDescription": "Folded thick felt squares in red, cream and navy"
+  },
+  {
+    "id": "silicone_molds",
+    "name": "Silicone Molds",
+    "unitPrice": 10,
+    "artDescription": "Flexible teal silicone molding tray with four round cavities"
+  },
+  {
+    "id": "food_safe_containers",
+    "name": "Food-Safe Containers",
+    "unitPrice": 9,
+    "artDescription": "Stack of clear food tubs with blue snap-on lids"
+  },
+  {
+    "id": "pigments",
+    "name": "Pigments",
+    "unitPrice": 8,
+    "artDescription": "Three small open pigment pots filled with red, blue and yellow powder"
+  },
+  {
+    "id": "adhesive_tape",
+    "name": "Adhesive Tape",
+    "unitPrice": 5,
+    "artDescription": "Two wide cream adhesive tape rolls with loose curled ends"
+  },
+  {
+    "id": "zippers",
+    "name": "Zippers",
+    "unitPrice": 7,
+    "artDescription": "Three brass-toothed fabric zippers in blue, red and black"
+  },
+  {
+    "id": "buckles",
+    "name": "Buckles",
+    "unitPrice": 9,
+    "artDescription": "Two chunky rectangular brass strap buckles"
+  },
+  {
+    "id": "springs",
+    "name": "Springs",
+    "unitPrice": 12,
+    "artDescription": "Three coiled steel springs of different lengths"
+  },
+  {
+    "id": "drive_belts",
+    "name": "Drive Belts",
+    "unitPrice": 14,
+    "artDescription": "Two looped black toothed drive belts"
+  },
+  {
+    "id": "servo_motors",
+    "name": "Servo Motors",
+    "unitPrice": 120,
+    "artDescription": "Compact blue servo motor with a brass output horn and short wire bundle"
+  },
+  {
+    "id": "linear_actuators",
+    "name": "Linear Actuators",
+    "unitPrice": 180,
+    "artDescription": "Silver linear actuator with an extended steel push rod and black motor housing"
+  },
+  {
+    "id": "temperature_probes",
+    "name": "Temperature Probes",
+    "unitPrice": 55,
+    "artDescription": "Two slender steel temperature probes attached to coiled red leads"
+  },
+  {
+    "id": "humidity_sensors",
+    "name": "Humidity Sensors",
+    "unitPrice": 48,
+    "artDescription": "Small turquoise vented humidity sensor beside a tiny gold circuit board"
+  },
+  {
+    "id": "solar_charge_controllers",
+    "name": "Solar Charge Controllers",
+    "unitPrice": 160,
+    "artDescription": "Orange solar charge controller with a blue screen and six bottom screw terminals"
+  },
+  {
+    "id": "power_inverters",
+    "name": "Power Inverters",
+    "unitPrice": 240,
+    "artDescription": "Blue finned power inverter with thick red and black terminal cables"
+  },
+  {
+    "id": "superconducting_coils",
+    "name": "Superconducting Coils",
+    "unitPrice": 4500,
+    "artDescription": "Heavy violet superconducting coil around a polished silver torus"
+  },
+  {
+    "id": "cryogenic_coolant",
+    "name": "Cryogenic Coolant",
+    "unitPrice": 2500,
+    "artDescription": "Frosted cyan cryogenic coolant canister with white vapor and a metal valve"
+  },
+  {
+    "id": "photonic_processors",
+    "name": "Photonic Processors",
+    "unitPrice": 5000,
+    "artDescription": "Black square processor with gold pins and a luminous rainbow optical center"
+  },
+  {
+    "id": "quantum_cores",
+    "name": "Quantum Cores",
+    "unitPrice": 5000,
+    "artDescription": "Small suspended violet crystalline quantum core inside a gold cubic frame"
+  },
+  {
+    "id": "precision_gyroscopes",
+    "name": "Precision Gyroscopes",
+    "unitPrice": 2200,
+    "artDescription": "Three nested polished brass gyroscope rings around a bright silver rotor"
+  },
+  {
+    "id": "metamaterial_tiles",
+    "name": "Metamaterial Tiles",
+    "unitPrice": 1800,
+    "artDescription": "Stack of iridescent hexagonal metamaterial tiles with fine honeycomb patterns"
+  },
+  {
+    "id": "plasma_igniters",
+    "name": "Plasma Igniters",
+    "unitPrice": 3500,
+    "artDescription": "Armored dark plasma igniter cartridge with a vivid magenta energized tip"
+  },
+  {
+    "id": "radiation_shields",
+    "name": "Radiation Shields",
+    "unitPrice": 3000,
+    "artDescription": "Stack of thick dark gray shield panels with orange edge bands and bolts"
+  }
+]

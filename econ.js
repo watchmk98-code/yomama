@@ -938,6 +938,7 @@
   // Brief local feedback for skipped opportunities, saved orders and deliveries.
   // Keep one reaction per slot across re-renders while rapid replacements finish.
   var orderReactions = {};
+  var orderClocks = {};
   function reactToOrder(index,kind,label,art) {
     if(orderReactions[index])window.clearTimeout(orderReactions[index].timer);
     var reaction={kind:kind,label:label,art:art || {missed:'crying-face-pixel.png',saved:'thumbs-up-pixel.svg',delivered:'dollar-sign-pixel.svg'}[kind],until:performance.now()+500};
@@ -955,6 +956,37 @@
     return '<span class="game-order-reaction game-'+kind+'-order" data-order-reaction="'+index+'" data-'+kind+'-order="'+index+'" role="img" aria-label="'+esc(reaction.label)+'"><span aria-hidden="true"><img src="./assets/game-art/reactions/'+art+'" alt="" width="80" height="80"></span></span>';
   }
 
+  function trackOrderClocks(s) {
+    var next={}, offers=orderOffers(s).slice();
+    var goal=goalOrder(s);
+    if(goal && !offers.some(function(o){return o.id===goal.id;}))offers.push(goal);
+    offers.forEach(function(o){
+      if(s.paused || !o.committed || o.etaSeconds==null) return;
+      var seconds=Number(o.etaSeconds);
+      if(!Number.isFinite(seconds))return;
+      // Production forecasts can move in either direction after any action.
+      // Every server snapshot replaces the previous local estimate.
+      next[o.id]={ready:!!o.canFulfill,deadline:Date.now()+Math.max(0,seconds)*1000};
+    });
+    orderClocks=next;
+  }
+
+  function orderClockLabel(clock) {
+    if(clock.ready)return 'Ready now';
+    var left=Math.max(0,Math.ceil((clock.deadline-Date.now())/1000));
+    // An elapsed estimate cannot prove that the required goods are available.
+    return left>0?'About '+duration(left):'Checking supplies…';
+  }
+
+  function syncOrderClocks() {
+    if(!businessConnected || (snapshot && snapshot.paused))return;
+    document.querySelectorAll('[data-order-countdown]').forEach(function(node){
+      var clock=orderClocks[node.dataset.orderCountdown];
+      if(!clock)return;
+      node.textContent=orderClockLabel(clock);
+    });
+  }
+
   function projectCard(o,i,s) {
     var project=s.townProjects || {}, done=!!o.completed;
     if(done)return '<section id="town-project" class="k-card game-order game-town-project is-complete" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3>Town projects complete <small>3 / 3</small></h3><p>Your town has earned the café reputation reward.</p><div class="game-project-reward">Café reputation: +20% walk-in customers</div><p class="game-hint">Next: upgrade your businesses, choose regular buyers, or try the Breakfast Club recipe workshop on Build.</p></section>';
@@ -963,8 +995,9 @@
 
   function orderEta(o) {
     if(o.etaLabel==null && o.etaSeconds==null && o.etaIfSavedSeconds==null && !o.etaReason)return '';
-    var label=o.etaLabel || (o.canFulfill?'Ready now':o.etaSeconds!=null?'About '+duration(o.etaSeconds):o.etaIfSavedSeconds!=null?'If saved: about '+duration(o.etaIfSavedSeconds):'Waiting for supplies');
-    return '<p class="game-order-eta" data-order-eta>'+esc(label)+(o.etaReason?'<small>'+esc(o.etaReason)+'</small>':'')+'</p>';
+    var clock=o.committed && orderClocks[o.id];
+    var label=o.canFulfill?'Ready now':clock?orderClockLabel(clock):o.etaLabel || (o.etaSeconds!=null?'About '+duration(o.etaSeconds):o.etaIfSavedSeconds!=null?'If saved: about '+duration(o.etaIfSavedSeconds):'Waiting for supplies');
+    return '<p class="game-order-eta" data-order-eta><span'+(clock?' data-order-countdown="'+esc(o.id)+'"':'')+'>'+esc(label)+'</span>'+(o.etaReason?'<small>'+esc(o.etaReason)+'</small>':'')+'</p>';
   }
 
   function ordersMarkup(s) {
@@ -1399,6 +1432,7 @@
     if(!businessConnected || businessClockNeedsSync)businessClocks={};
     businessClockNeedsSync=false;
     businessConnected=true;
+    trackOrderClocks(payload);
     trackBusinessMetrics(snapshot,payload);
     trackBusinessClocks(payload);
     trackCustomerDeliveries(snapshot,payload);
@@ -1695,6 +1729,7 @@
     tickTimer = window.setInterval(function () {
       syncCustomerEmotes();
       syncBusinessClocks();
+      syncOrderClocks();
       if(snapshot && snapshot.paused)return;
       document.querySelectorAll('[data-econ-countdown]').forEach(function (node) {
         if(node.dataset.countdownPaused==='true')return;
@@ -1755,5 +1790,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  window.YomamaEcon = { refresh: refresh, state: function () { return snapshot; }, format: ym };
+  window.YomamaEcon = { refresh: refresh, state: function () { return snapshot; }, format: ym, resourceBar: resourceBar };
 }());

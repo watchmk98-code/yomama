@@ -16,7 +16,6 @@
   var lastOp = null;
   var gridKey = '';
   var session = {};
-  var SUPPLY_ART = ['wooden_boards','fiber_bundles','metal_sheets','copper_stock','battery_cells','solar_cells','glass_panels','rubber_sheets','plastic_casings','circuit_boards','insulation','packaging'];
   try { session = JSON.parse(localStorage.getItem('yomama_session_v1') || '{}') || {}; } catch (_) {}
 
   function el(id) { return document.getElementById(id); }
@@ -30,10 +29,13 @@
     node.style.cssText = spriteStyle('items', index);
   }
   function spriteStyle(kind, index) {
-    var sheet = window.YomamaCraftArt[kind];
-    var rect = sheet.rects[Math.max(0, Math.min(sheet.rects.length - 1, Number(index) || 0))];
+    var sheets = window.YomamaCraftArt[kind];
+    if (!Array.isArray(sheets)) sheets = [sheets];
+    var sheet = sheets.find(function (entry) { return index >= (entry.start || 0) && index < (entry.start || 0) + entry.rects.length; });
+    if (!sheet) return '';
+    var rect = sheet.rects[index - (sheet.start || 0)];
     var size = Math.max(rect[2], rect[3]);
-    return '--sprite-ratio:' + rect[2] / rect[3] + ';--sprite-width:' + rect[2] / size * 100 + '%;--sprite-height:' + rect[3] / size * 100 + '%;' +
+    return '--sprite-image:url("' + sheet.src + '");--sprite-ratio:' + rect[2] / rect[3] + ';--sprite-width:' + rect[2] / size * 100 + '%;--sprite-height:' + rect[3] / size * 100 + '%;' +
       '--sprite-sheet-width:' + sheet.width / rect[2] * 100 + '%;--sprite-sheet-height:' + sheet.height / rect[3] * 100 + '%;' +
       '--sprite-x:' + rect[0] / (sheet.width - rect[2]) * 100 + '%;--sprite-y:' + rect[1] / (sheet.height - rect[3]) * 100 + '%;';
   }
@@ -60,7 +62,8 @@
     var chip = el('game-cash-chip');
     if (!chip) { chip = document.createElement('span'); chip.id = 'game-cash-chip'; chip.className = 'chip amber'; host.prepend(chip); }
     chip.textContent = session.name || snapshot.name || 'PLAYER';
-    el('craft-wallet').textContent = money(snapshot.cash);
+    el('game-hud').innerHTML = window.YomamaEcon.resourceBar(snapshot);
+    el('craft-catalog-count').textContent = catalog().length + ' items';
     var ticker = el('ticker');
     if (ticker && snapshot.tickerLines && snapshot.tickerLines.length) {
       ticker.innerHTML = '<span class="ticker-item">' + esc(snapshot.tickerLines.join(' · ')) + '</span>';
@@ -75,6 +78,7 @@
       items.forEach(function (item) {
         var button = document.createElement('button'); button.type = 'button'; button.className = 'craft-item';
         button.id = 'craft-item-' + item.id; button.dataset.craftItem = item.id;
+        button.title = item.name; button.setAttribute('aria-label', item.name);
         button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-expanded', 'false');
         var icon = document.createElement('span'); icon.className = 'craft-sprite'; icon.setAttribute('aria-hidden', 'true'); sprite(icon, item.iconIndex);
         var name = document.createElement('span'); name.className = 'craft-item-name'; name.textContent = item.name;
@@ -86,37 +90,29 @@
   function fit() {
     var count = catalog().length;
     if (!count || !grid.clientWidth || !grid.clientHeight) return;
-    var scroll = innerWidth < 1000 || innerHeight < 600;
-    grid.dataset.scroll = String(scroll);
     var width = grid.clientWidth, height = grid.clientHeight;
-    var gap = parseFloat(getComputedStyle(grid).columnGap) || 8;
+    var gap = width < 700 || height < 350 ? 2 : 4;
     var best = null;
-    // Choose the arrangement that gives all 30 items the largest complete icons.
-    // Small screens keep the same catalog in one vertically scrolling grid.
-    for (var columns = 3; columns <= 10; columns += 1) {
+    // Maximize icon size while keeping the complete catalog on one screen.
+    // Names remain available on hover, to assistive technology, and in dialogs.
+    for (var columns = 2; columns <= Math.min(40, count); columns += 1) {
       var rows = Math.ceil(count / columns);
       var cellWidth = (width - (columns - 1) * gap) / columns;
-      if (cellWidth < (scroll ? 98 : 116)) continue;
-      var label = cellWidth < 140 ? 18 : cellWidth < 180 ? 20 : 22;
-      var cellHeight = scroll ? Math.min(180, cellWidth - 16) + label * 2.1 + 20 : (height - (rows - 1) * gap) / rows;
-      var art = Math.floor(Math.min(260, cellWidth - 16, cellHeight - label * 2.1 - 20));
-      if (!best || art > best.art) best = {columns:columns, rows:rows, label:label, height:cellHeight, art:art};
+      var cellHeight = (height - (rows - 1) * gap) / rows;
+      var art = Math.floor(Math.min(cellWidth - 8, cellHeight - 8));
+      if (!best || art > best.art) best = {columns:columns, rows:rows, art:art};
     }
     if (!best) return;
+    grid.dataset.labels = 'false';
+    grid.style.setProperty('--craft-gap', gap + 'px');
     grid.style.setProperty('--craft-columns', String(best.columns));
     grid.style.setProperty('--craft-rows', String(best.rows));
-    grid.style.setProperty('--craft-label', best.label + 'px');
-    // Measure full names, including longer three-line labels, before sizing art.
-    var labelHeight = Math.max.apply(null, Array.from(grid.querySelectorAll('.craft-item-name')).map(function (name) { return name.getBoundingClientRect().height; }));
-    if (scroll) best.height = best.art + labelHeight + 20;
-    else best.art = Math.min(best.art, Math.floor(best.height - labelHeight - 20));
-    grid.style.setProperty('--craft-cell-height', Math.ceil(best.height) + 'px');
-    grid.style.setProperty('--craft-art', Math.max(24, best.art) + 'px');
+    grid.style.setProperty('--craft-art', Math.max(1, best.art) + 'px');
   }
   function ingredientIcon(row) {
     if (row.kind === 'supply') {
-      var index = SUPPLY_ART.indexOf(row.id);
-      return '<span class="craft-supply-icon" aria-hidden="true" style="' + spriteStyle('supplies', index) + '"></span>';
+      var index = snapshot.crafting.supplies.findIndex(function (supply) { return supply.id === row.id; });
+      return '<span class="craft-supply-icon" aria-hidden="true" style="' + esc(spriteStyle('supplies', index)) + '"></span>';
     }
     var id = row.id === 'cannery_preserves' ? 'cannery_canned_goods' : row.id;
     return '<img src="./assets/game-art/goods/' + encodeURIComponent(id) + '.png" width="64" height="64" alt="" aria-hidden="true">';
@@ -144,6 +140,7 @@
       else if (dialog.open && !dialog.contains(document.activeElement)) el('craft-close').focus({preventScroll:true});
     }
     dialog.scrollTop = scroll;
+    if (dialog.open && window.YomamaCraftFitDialog) window.YomamaCraftFitDialog.fit();
   }
   function apply(data) {
     snapshot = data; connected = true;
@@ -173,6 +170,7 @@
     selectedId = id; status(''); renderDetail();
     Array.from(grid.children).forEach(function (card) { card.setAttribute('aria-expanded', String(card.dataset.craftItem === id)); });
     if (!dialog.open) dialog.showModal();
+    if (window.YomamaCraftFitDialog) window.YomamaCraftFitDialog.fit();
     dialog.scrollTop = 0;
   }
   function perform(body, label) {

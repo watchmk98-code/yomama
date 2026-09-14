@@ -1,0 +1,812 @@
+[
+  {
+    "id": "motorized_potters_wheel",
+    "name": "Motorized Potter's Wheel",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "electric_motors",
+        3
+      ],
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "drive_belts",
+        3
+      ],
+      [
+        "rubber_sheets",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art teal pottery wheel with a broad silver spinning plate, brown clay bowl and chunky foot pedal."
+  },
+  {
+    "id": "desktop_vinyl_cutter",
+    "name": "Desktop Vinyl Cutter",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "linear_actuators",
+        3
+      ],
+      [
+        "microcontrollers",
+        3
+      ],
+      [
+        "electric_motors",
+        3
+      ],
+      [
+        "plastic_casings",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art wide coral desktop cutting machine feeding a curled turquoise sheet beneath a small silver blade carriage."
+  },
+  {
+    "id": "filament_3d_printer",
+    "name": "Filament 3D Printer",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "linear_actuators",
+        4
+      ],
+      [
+        "heating_elements",
+        4
+      ],
+      [
+        "microcontrollers",
+        4
+      ],
+      [
+        "aluminum_profiles",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art open black cube-shaped 3D printer with a coral filament spool and a tiny blue vase on its square print bed."
+  },
+  {
+    "id": "embroidery_machine",
+    "name": "Embroidery Machine",
+    "ingredients": [
+      [
+        "machine_works_tooling",
+        4
+      ],
+      [
+        "servo_motors",
+        4
+      ],
+      [
+        "microcontrollers",
+        3
+      ],
+      [
+        "steel_tubing",
+        3
+      ],
+      [
+        "textile_cloth",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art cream embroidery machine with a pink needle housing and a blue cloth hoop embroidered with a yellow flower."
+  },
+  {
+    "id": "robotic_chessboard",
+    "name": "Robotic Chessboard",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "wooden_boards",
+        4
+      ],
+      [
+        "permanent_magnets",
+        4
+      ],
+      [
+        "servo_motors",
+        4
+      ],
+      [
+        "microcontrollers",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art thick walnut chessboard with cream and black chess pieces, a glowing blue edge strip and one raised silver knight."
+  },
+  {
+    "id": "six_axis_robot_arm",
+    "name": "Six-Axis Robot Arm",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        6
+      ],
+      [
+        "servo_motors",
+        6
+      ],
+      [
+        "workshop_welded_frames",
+        4
+      ],
+      [
+        "microcontrollers",
+        4
+      ],
+      [
+        "wire_spools",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art orange industrial robot arm with six chunky articulated joints and a black two-finger gripper on a square steel base."
+  },
+  {
+    "id": "digital_synthesizer",
+    "name": "Digital Synthesizer",
+    "ingredients": [
+      [
+        "garage_spare_parts",
+        4
+      ],
+      [
+        "microcontrollers",
+        4
+      ],
+      [
+        "speaker_cones",
+        3
+      ],
+      [
+        "display_panels",
+        3
+      ],
+      [
+        "circuit_boards",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art slim purple synthesizer keyboard with black-and-white keys, amber knobs and a small cyan waveform screen."
+  },
+  {
+    "id": "reel_film_projector",
+    "name": "Reel Film Projector",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "electric_motors",
+        3
+      ],
+      [
+        "optical_lenses",
+        4
+      ],
+      [
+        "led_arrays",
+        4
+      ],
+      [
+        "metal_sheets",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art olive vintage film projector with two large silver reels, a bright forward lens and a loop of dark film."
+  },
+  {
+    "id": "desktop_letterpress",
+    "name": "Desktop Letterpress",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        5
+      ],
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "linear_actuators",
+        3
+      ],
+      [
+        "metal_sheets",
+        4
+      ],
+      [
+        "pigments",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art navy cast-metal letterpress with a large red lever, silver roller and a cream card bearing a simple gold leaf motif."
+  },
+  {
+    "id": "watchmakers_lathe",
+    "name": "Watchmaker's Lathe",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "machine_works_tooling",
+        4
+      ],
+      [
+        "electric_motors",
+        3
+      ],
+      [
+        "drive_belts",
+        3
+      ],
+      [
+        "workshop_steel_brackets",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art small mint precision lathe with a brass chuck, narrow silver bed, tiny handwheels and a dark motor belt."
+  },
+  {
+    "id": "hydroponic_tower",
+    "name": "Hydroponic Tower",
+    "ingredients": [
+      [
+        "farm_tomatoes",
+        4
+      ],
+      [
+        "water_pumps",
+        4
+      ],
+      [
+        "humidity_sensors",
+        4
+      ],
+      [
+        "plastic_casings",
+        5
+      ],
+      [
+        "flexible_hoses",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art tall white hydroponic column with staggered planting cups, leafy tomato plants, a blue reservoir and green hoses."
+  },
+  {
+    "id": "compact_electric_kiln",
+    "name": "Compact Electric Kiln",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        4
+      ],
+      [
+        "ceramic_pieces",
+        6
+      ],
+      [
+        "heating_elements",
+        5
+      ],
+      [
+        "insulation",
+        6
+      ],
+      [
+        "temperature_probes",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art short orange electric kiln with a thick open round lid, cream firebrick lining and a glowing red control dial."
+  },
+  {
+    "id": "desktop_laser_engraver",
+    "name": "Desktop Laser Engraver",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        4
+      ],
+      [
+        "linear_actuators",
+        4
+      ],
+      [
+        "optical_lenses",
+        4
+      ],
+      [
+        "circuit_boards",
+        4
+      ],
+      [
+        "metal_sheets",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art black enclosed laser engraver with an amber viewing window and a narrow red beam tracing a star on a wooden tile."
+  },
+  {
+    "id": "robot_floor_sweeper",
+    "name": "Robot Floor Sweeper",
+    "ingredients": [
+      [
+        "garage_custom_mods",
+        4
+      ],
+      [
+        "servo_motors",
+        4
+      ],
+      [
+        "motion_sensors",
+        4
+      ],
+      [
+        "battery_cells",
+        5
+      ],
+      [
+        "plastic_casings",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art round white floor-sweeping robot with a blue sensor dome, two visible side brushes and a black rubber bumper."
+  },
+  {
+    "id": "tabletop_air_hockey",
+    "name": "Tabletop Air Hockey",
+    "ingredients": [
+      [
+        "wooden_boards",
+        5
+      ],
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "electric_motors",
+        4
+      ],
+      [
+        "plastic_casings",
+        4
+      ],
+      [
+        "led_arrays",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art small red air-hockey table with a glossy pale-blue perforated surface, two red pushers and a bright yellow puck."
+  },
+  {
+    "id": "electric_harp",
+    "name": "Electric Harp",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "copper_stock",
+        5
+      ],
+      [
+        "speaker_cones",
+        3
+      ],
+      [
+        "wooden_boards",
+        5
+      ],
+      [
+        "circuit_boards",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art curved dark-blue electric harp with many fine copper strings, a walnut sound base and tiny amber control knobs."
+  },
+  {
+    "id": "holographic_display_cube",
+    "name": "Holographic Display Cube",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        4
+      ],
+      [
+        "data_center_compute_hours",
+        4
+      ],
+      [
+        "optical_lenses",
+        5
+      ],
+      [
+        "led_arrays",
+        5
+      ],
+      [
+        "glass_panels",
+        6
+      ]
+    ],
+    "artDescription": "Pixel-art transparent glass display cube on a black pedestal with a luminous cyan wireframe fish suspended at its center."
+  },
+  {
+    "id": "motorized_camera_slider",
+    "name": "Motorized Camera Slider",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "aluminum_profiles",
+        5
+      ],
+      [
+        "servo_motors",
+        4
+      ],
+      [
+        "drive_belts",
+        4
+      ],
+      [
+        "microcontrollers",
+        3
+      ]
+    ],
+    "artDescription": "Pixel-art long silver camera slider rail with a black moving platform, red adjustment knobs and a toothed belt underneath."
+  },
+  {
+    "id": "programmable_drawing_robot",
+    "name": "Programmable Drawing Robot",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "microcontrollers",
+        4
+      ],
+      [
+        "servo_motors",
+        4
+      ],
+      [
+        "drive_belts",
+        3
+      ],
+      [
+        "pigments",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art small blue drawing robot with a jointed silver pen arm above a cream sheet covered in a colorful spiral."
+  },
+  {
+    "id": "digital_braille_reader",
+    "name": "Digital Braille Reader",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        4
+      ],
+      [
+        "linear_actuators",
+        5
+      ],
+      [
+        "microcontrollers",
+        4
+      ],
+      [
+        "circuit_boards",
+        4
+      ],
+      [
+        "plastic_casings",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art slim burgundy electronic braille reader with a long row of raised pale dots and six large cream finger keys."
+  },
+  {
+    "id": "motorized_orrery",
+    "name": "Motorized Orrery",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "clockwork_gears",
+        5
+      ],
+      [
+        "servo_motors",
+        4
+      ],
+      [
+        "copper_stock",
+        5
+      ],
+      [
+        "resin",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art brass mechanical solar-system model with a golden central sun and colorful planets on concentric curved arms."
+  },
+  {
+    "id": "rotating_display_pedestal",
+    "name": "Rotating Display Pedestal",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        4
+      ],
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "electric_motors",
+        3
+      ],
+      [
+        "ball_bearings",
+        5
+      ],
+      [
+        "glass_panels",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art short cream cylindrical display pedestal with a wide circular blue glass top and a dark rotating rim."
+  },
+  {
+    "id": "magnetic_pendulum_sculpture",
+    "name": "Magnetic Pendulum Sculpture",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        4
+      ],
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "permanent_magnets",
+        5
+      ],
+      [
+        "copper_stock",
+        4
+      ],
+      [
+        "glass_panels",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art copper arch holding three suspended silver magnetic pendulums above a round blue glass base with red magnetic discs."
+  },
+  {
+    "id": "electric_marble_run",
+    "name": "Electric Marble Run",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "metal_sheets",
+        5
+      ],
+      [
+        "ball_bearings",
+        6
+      ],
+      [
+        "electric_motors",
+        4
+      ],
+      [
+        "wooden_boards",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art tall silver marble-run sculpture with looping tracks, shiny steel balls and a red motorized lift on a walnut base."
+  },
+  {
+    "id": "pneumatic_tube_station",
+    "name": "Pneumatic Tube Station",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "pressure_valves",
+        5
+      ],
+      [
+        "flexible_hoses",
+        5
+      ],
+      [
+        "electric_motors",
+        4
+      ],
+      [
+        "plastic_casings",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art cream pneumatic dispatch station with a tall clear tube, a red capsule and a teal pressure-control housing."
+  },
+  {
+    "id": "desktop_book_scanner",
+    "name": "Desktop Book Scanner",
+    "ingredients": [
+      [
+        "data_center_api_calls",
+        4
+      ],
+      [
+        "machine_works_cnc_parts",
+        4
+      ],
+      [
+        "optical_lenses",
+        5
+      ],
+      [
+        "display_panels",
+        4
+      ],
+      [
+        "led_arrays",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art black overhead book scanner with a wide camera arm above an open cream book in a blue V-shaped cradle."
+  },
+  {
+    "id": "polar_alignment_mount",
+    "name": "Polar Alignment Mount",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        5
+      ],
+      [
+        "precision_gyroscopes",
+        2
+      ],
+      [
+        "servo_motors",
+        4
+      ],
+      [
+        "steel_tubing",
+        5
+      ],
+      [
+        "microcontrollers",
+        4
+      ]
+    ],
+    "artDescription": "Pixel-art cream equatorial telescope mount with a tilted silver axis, two black counterweights and a sturdy red tripod."
+  },
+  {
+    "id": "digital_mixing_console",
+    "name": "Digital Mixing Console",
+    "ingredients": [
+      [
+        "data_center_compute_hours",
+        4
+      ],
+      [
+        "microcontrollers",
+        4
+      ],
+      [
+        "display_panels",
+        4
+      ],
+      [
+        "circuit_boards",
+        5
+      ],
+      [
+        "garage_spare_parts",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art broad dark-gray audio mixing desk with rows of colorful knobs, cream sliding faders and three cyan level screens."
+  },
+  {
+    "id": "electric_spinning_wheel",
+    "name": "Electric Spinning Wheel",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        4
+      ],
+      [
+        "electric_motors",
+        3
+      ],
+      [
+        "drive_belts",
+        4
+      ],
+      [
+        "fiber_bundles",
+        5
+      ],
+      [
+        "wooden_boards",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art walnut electric spinning wheel with a large side wheel, cream wool bobbin, small teal motor and foot pedal."
+  },
+  {
+    "id": "vacuum_forming_machine",
+    "name": "Vacuum Forming Machine",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        5
+      ],
+      [
+        "machine_works_prototypes",
+        4
+      ],
+      [
+        "electric_motors",
+        4
+      ],
+      [
+        "heating_elements",
+        5
+      ],
+      [
+        "metal_sheets",
+        5
+      ]
+    ],
+    "artDescription": "Pixel-art orange vacuum-forming machine with a raised rectangular heater, silver perforated bed and glossy blue molded shell."
+  }
+]

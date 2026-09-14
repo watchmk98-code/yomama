@@ -1,0 +1,704 @@
+[
+  {
+    "id": "tomato_seed_packets",
+    "name": "Tomato Seed Packets",
+    "ingredients": [
+      [
+        "farm_tomatoes",
+        4
+      ],
+      [
+        "paper_sheets",
+        3
+      ],
+      [
+        "packaging",
+        2
+      ]
+    ],
+    "artDescription": "Three cream seed envelopes illustrated with small red tomatoes and loose seeds"
+  },
+  {
+    "id": "market_apron",
+    "name": "Market Apron",
+    "ingredients": [
+      [
+        "textile_cloth",
+        3
+      ],
+      [
+        "leather_straps",
+        2
+      ],
+      [
+        "fiber_bundles",
+        2
+      ],
+      [
+        "packaging",
+        2
+      ]
+    ],
+    "artDescription": "Folded blue market apron with a large front pocket and brown leather straps"
+  },
+  {
+    "id": "picnic_table",
+    "name": "Picnic Table",
+    "ingredients": [
+      [
+        "wooden_boards",
+        4
+      ],
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "sealant",
+        2
+      ]
+    ],
+    "artDescription": "Wide honey-colored wooden picnic table with two attached benches"
+  },
+  {
+    "id": "honey_glazed_pastries",
+    "name": "Honey-Glazed Pastries",
+    "ingredients": [
+      [
+        "farm_honey",
+        3
+      ],
+      [
+        "roastery_pastries",
+        3
+      ],
+      [
+        "farm_eggs",
+        2
+      ],
+      [
+        "paper_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Three glossy golden pastries in pleated white paper cups with honey drips"
+  },
+  {
+    "id": "tomato_relish_set",
+    "name": "Tomato Relish Set",
+    "ingredients": [
+      [
+        "farm_tomatoes",
+        4
+      ],
+      [
+        "cannery_sauces",
+        2
+      ],
+      [
+        "glass_panels",
+        2
+      ],
+      [
+        "textile_cloth",
+        2
+      ]
+    ],
+    "artDescription": "Two red relish jars with green cloth lids beside a small tomato and spoon"
+  },
+  {
+    "id": "saltwater_aquarium",
+    "name": "Saltwater Aquarium",
+    "ingredients": [
+      [
+        "fish_stall_fresh_catch",
+        3
+      ],
+      [
+        "glass_panels",
+        4
+      ],
+      [
+        "water_pumps",
+        2
+      ],
+      [
+        "filter_cartridges",
+        2
+      ],
+      [
+        "sealant",
+        2
+      ]
+    ],
+    "artDescription": "Blue rectangular aquarium with two silver fish, coral stones and a small filter"
+  },
+  {
+    "id": "fishing_rod",
+    "name": "Fishing Rod",
+    "ingredients": [
+      [
+        "garage_custom_mods",
+        2
+      ],
+      [
+        "fiber_bundles",
+        3
+      ],
+      [
+        "copper_stock",
+        2
+      ],
+      [
+        "resin",
+        2
+      ]
+    ],
+    "artDescription": "Slender green fishing rod with a copper reel, curved line and red float"
+  },
+  {
+    "id": "dockside_smoker",
+    "name": "Dockside Smoker",
+    "ingredients": [
+      [
+        "fish_stall_smoked_fish",
+        2
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "heating_elements",
+        2
+      ],
+      [
+        "insulation",
+        2
+      ],
+      [
+        "hinges",
+        2
+      ]
+    ],
+    "artDescription": "Horizontal black barrel smoker on short legs with a tall chimney and fish rack"
+  },
+  {
+    "id": "coffee_roasting_pan",
+    "name": "Coffee Roasting Pan",
+    "ingredients": [
+      [
+        "roastery_roasted_beans",
+        3
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "rubber_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Wide copper roasting pan full of dark coffee beans with a long black handle"
+  },
+  {
+    "id": "travel_coffee_kit",
+    "name": "Travel Coffee Kit",
+    "ingredients": [
+      [
+        "roastery_espresso_shots",
+        2
+      ],
+      [
+        "roastery_roasted_beans",
+        2
+      ],
+      [
+        "glass_panels",
+        2
+      ],
+      [
+        "foam_padding",
+        2
+      ],
+      [
+        "leather_straps",
+        2
+      ]
+    ],
+    "artDescription": "Open brown travel case holding a small coffee bottle, cup and bean pouch"
+  },
+  {
+    "id": "pastry_cooling_rack",
+    "name": "Pastry Cooling Rack",
+    "ingredients": [
+      [
+        "roastery_pastries",
+        3
+      ],
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "wire_spools",
+        2
+      ]
+    ],
+    "artDescription": "Silver wire cooling rack with four golden pastries and small raised feet"
+  },
+  {
+    "id": "compact_air_compressor",
+    "name": "Compact Air Compressor",
+    "ingredients": [
+      [
+        "garage_spare_parts",
+        3
+      ],
+      [
+        "electric_motors",
+        2
+      ],
+      [
+        "pressure_valves",
+        2
+      ],
+      [
+        "flexible_hoses",
+        2
+      ]
+    ],
+    "artDescription": "Red horizontal air tank with a black motor, pressure dial and curled blue hose"
+  },
+  {
+    "id": "mechanics_stool",
+    "name": "Mechanic's Stool",
+    "ingredients": [
+      [
+        "workshop_welded_frames",
+        2
+      ],
+      [
+        "foam_padding",
+        3
+      ],
+      [
+        "leather_straps",
+        2
+      ],
+      [
+        "ball_bearings",
+        2
+      ]
+    ],
+    "artDescription": "Round red padded workshop stool on a chrome base with five small wheels"
+  },
+  {
+    "id": "metal_lockbox",
+    "name": "Metal Lockbox",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "hinges",
+        2
+      ],
+      [
+        "clockwork_gears",
+        2
+      ]
+    ],
+    "artDescription": "Small navy metal lockbox with a gold keyhole and hinged lid"
+  },
+  {
+    "id": "foldable_solar_mat",
+    "name": "Foldable Solar Mat",
+    "ingredients": [
+      [
+        "solar_coop_daytime_kwh",
+        2
+      ],
+      [
+        "solar_cells",
+        3
+      ],
+      [
+        "textile_cloth",
+        3
+      ],
+      [
+        "wire_spools",
+        2
+      ]
+    ],
+    "artDescription": "Three blue solar panels joined by black cloth hinges with a looped red cable"
+  },
+  {
+    "id": "portable_water_filter",
+    "name": "Portable Water Filter",
+    "ingredients": [
+      [
+        "solar_coop_daytime_kwh",
+        2
+      ],
+      [
+        "filter_cartridges",
+        3
+      ],
+      [
+        "plastic_casings",
+        2
+      ],
+      [
+        "flexible_hoses",
+        2
+      ]
+    ],
+    "artDescription": "Tall green portable filter bottle with a blue hose and white cartridge"
+  },
+  {
+    "id": "jam_label_printer",
+    "name": "Jam Label Printer",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "paper_sheets",
+        4
+      ],
+      [
+        "microcontrollers",
+        2
+      ],
+      [
+        "display_panels",
+        2
+      ],
+      [
+        "electric_motors",
+        2
+      ]
+    ],
+    "artDescription": "Tiny pink label printer feeding a strip of illustrated fruit-jar labels"
+  },
+  {
+    "id": "canning_funnel_set",
+    "name": "Canning Funnel Set",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "ceramic_pieces",
+        2
+      ]
+    ],
+    "artDescription": "Three nesting wide-mouth canning funnels in silver, cream and pale blue"
+  },
+  {
+    "id": "sauce_dispenser",
+    "name": "Sauce Dispenser",
+    "ingredients": [
+      [
+        "cannery_sauces",
+        3
+      ],
+      [
+        "glass_panels",
+        3
+      ],
+      [
+        "pressure_valves",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ]
+    ],
+    "artDescription": "Clear red sauce dispenser with a tall white pump and square base"
+  },
+  {
+    "id": "gear_puzzle_box",
+    "name": "Gear Puzzle Box",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "clockwork_gears",
+        3
+      ],
+      [
+        "wooden_boards",
+        3
+      ],
+      [
+        "resin",
+        2
+      ]
+    ],
+    "artDescription": "Walnut puzzle cube with exposed brass gears on two sides"
+  },
+  {
+    "id": "wind_up_music_box",
+    "name": "Wind-Up Music Box",
+    "ingredients": [
+      [
+        "machine_works_prototypes",
+        2
+      ],
+      [
+        "clockwork_gears",
+        3
+      ],
+      [
+        "wooden_boards",
+        2
+      ],
+      [
+        "metal_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Open blue wooden music box showing a brass pinned cylinder and silver winding key"
+  },
+  {
+    "id": "wind_spinner",
+    "name": "Wind Spinner",
+    "ingredients": [
+      [
+        "workshop_steel_brackets",
+        2
+      ],
+      [
+        "copper_stock",
+        3
+      ],
+      [
+        "ball_bearings",
+        2
+      ],
+      [
+        "resin",
+        2
+      ]
+    ],
+    "artDescription": "Bright copper spiral wind spinner twisting around a thin upright pole"
+  },
+  {
+    "id": "radiator_panel",
+    "name": "Radiator Panel",
+    "ingredients": [
+      [
+        "generator_steam_heat",
+        3
+      ],
+      [
+        "copper_stock",
+        3
+      ],
+      [
+        "metal_sheets",
+        3
+      ],
+      [
+        "pressure_valves",
+        2
+      ]
+    ],
+    "artDescription": "Cream metal radiator with six vertical fins and a red wheel valve"
+  },
+  {
+    "id": "pocket_pager",
+    "name": "Pocket Pager",
+    "ingredients": [
+      [
+        "relay_station_sms_traffic",
+        2
+      ],
+      [
+        "display_panels",
+        2
+      ],
+      [
+        "microcontrollers",
+        2
+      ],
+      [
+        "battery_cells",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ]
+    ],
+    "artDescription": "Small purple pager with a pale green display and three black buttons"
+  },
+  {
+    "id": "shipping_seal_set",
+    "name": "Shipping Seal Set",
+    "ingredients": [
+      [
+        "machine_works_cnc_parts",
+        2
+      ],
+      [
+        "copper_stock",
+        2
+      ],
+      [
+        "resin",
+        3
+      ],
+      [
+        "paper_sheets",
+        2
+      ]
+    ],
+    "artDescription": "Brass seal stamp beside red wax seals and a rolled paper shipping label"
+  },
+  {
+    "id": "folding_loading_ramp",
+    "name": "Folding Loading Ramp",
+    "ingredients": [
+      [
+        "workshop_machined_bolts",
+        2
+      ],
+      [
+        "workshop_welded_frames",
+        3
+      ],
+      [
+        "metal_sheets",
+        4
+      ],
+      [
+        "hinges",
+        2
+      ]
+    ],
+    "artDescription": "Silver folding cargo ramp with diamond-texture panels and yellow edge strips"
+  },
+  {
+    "id": "portable_memory_drive",
+    "name": "Portable Memory Drive",
+    "ingredients": [
+      [
+        "data_center_cloud_storage",
+        3
+      ],
+      [
+        "data_center_api_calls",
+        2
+      ],
+      [
+        "circuit_boards",
+        2
+      ],
+      [
+        "plastic_casings",
+        2
+      ],
+      [
+        "microcontrollers",
+        2
+      ]
+    ],
+    "artDescription": "Black pocket-sized memory drive with a teal stripe and short blue cable"
+  },
+  {
+    "id": "led_message_board",
+    "name": "LED Message Board",
+    "ingredients": [
+      [
+        "relay_station_sms_traffic",
+        2
+      ],
+      [
+        "display_panels",
+        3
+      ],
+      [
+        "led_arrays",
+        2
+      ],
+      [
+        "circuit_boards",
+        2
+      ]
+    ],
+    "artDescription": "Black rectangular message board showing amber pixel dots in a thick red frame"
+  },
+  {
+    "id": "emergency_power_cart",
+    "name": "Emergency Power Cart",
+    "ingredients": [
+      [
+        "solar_array_reserve_capacity",
+        2
+      ],
+      [
+        "battery_cells",
+        4
+      ],
+      [
+        "workshop_welded_frames",
+        2
+      ],
+      [
+        "electric_motors",
+        2
+      ]
+    ],
+    "artDescription": "Yellow wheeled power cart with two dark batteries, thick cables and a carry handle"
+  },
+  {
+    "id": "satellite_camera",
+    "name": "Satellite Camera",
+    "ingredients": [
+      [
+        "uplink_center_satellite_bandwidth",
+        2
+      ],
+      [
+        "uplink_center_telemetry",
+        2
+      ],
+      [
+        "optical_lenses",
+        3
+      ],
+      [
+        "display_panels",
+        2
+      ]
+    ],
+    "artDescription": "White box camera with a large black lens, blue sensor panel and a tiny satellite dish"
+  }
+]

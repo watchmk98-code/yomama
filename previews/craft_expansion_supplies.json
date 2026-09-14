@@ -1,0 +1,146 @@
+[
+  {
+    "id": "ball_bearings",
+    "name": "Ball Bearings",
+    "unitPrice": 14,
+    "artDescription": "Small polished steel ball bearings in an open square tin"
+  },
+  {
+    "id": "electric_motors",
+    "name": "Electric Motors",
+    "unitPrice": 32,
+    "artDescription": "Compact silver electric motor with copper coils and short drive shaft"
+  },
+  {
+    "id": "motion_sensors",
+    "name": "Motion Sensors",
+    "unitPrice": 26,
+    "artDescription": "Small white motion sensor module with a faceted pale dome"
+  },
+  {
+    "id": "optical_lenses",
+    "name": "Optical Lenses",
+    "unitPrice": 22,
+    "artDescription": "Two thick blue glass optical lenses in brass rim holders"
+  },
+  {
+    "id": "microcontrollers",
+    "name": "Microcontrollers",
+    "unitPrice": 38,
+    "artDescription": "Tiny dark green microcontroller chip board with gold contact pins"
+  },
+  {
+    "id": "permanent_magnets",
+    "name": "Permanent Magnets",
+    "unitPrice": 12,
+    "artDescription": "Red horseshoe magnet beside small silver disc magnets"
+  },
+  {
+    "id": "water_pumps",
+    "name": "Water Pumps",
+    "unitPrice": 30,
+    "artDescription": "Compact teal water pump with brass inlet and outlet"
+  },
+  {
+    "id": "pressure_valves",
+    "name": "Pressure Valves",
+    "unitPrice": 16,
+    "artDescription": "Brass pressure valve with red wheel handle and tiny dial"
+  },
+  {
+    "id": "flexible_hoses",
+    "name": "Flexible Hoses",
+    "unitPrice": 8,
+    "artDescription": "Coiled green flexible hose with brass end fittings"
+  },
+  {
+    "id": "wire_spools",
+    "name": "Wire Spools",
+    "unitPrice": 10,
+    "artDescription": "Wooden spool wound with red insulated electrical wire"
+  },
+  {
+    "id": "ceramic_pieces",
+    "name": "Ceramic Pieces",
+    "unitPrice": 8,
+    "artDescription": "Stack of cream ceramic discs and a short ceramic tube"
+  },
+  {
+    "id": "filter_cartridges",
+    "name": "Filter Cartridges",
+    "unitPrice": 14,
+    "artDescription": "Two white pleated filter cartridges with blue end caps"
+  },
+  {
+    "id": "textile_cloth",
+    "name": "Textile Cloth",
+    "unitPrice": 7,
+    "artDescription": "Folded blue and cream woven cloth squares"
+  },
+  {
+    "id": "hinges",
+    "name": "Hinges",
+    "unitPrice": 9,
+    "artDescription": "Two gold metal door hinges with visible hinge pins"
+  },
+  {
+    "id": "led_arrays",
+    "name": "LED Arrays",
+    "unitPrice": 18,
+    "artDescription": "Small rectangular board filled with warm yellow LED dots"
+  },
+  {
+    "id": "speaker_cones",
+    "name": "Speaker Cones",
+    "unitPrice": 14,
+    "artDescription": "Two charcoal speaker cones with copper rims"
+  },
+  {
+    "id": "display_panels",
+    "name": "Display Panels",
+    "unitPrice": 30,
+    "artDescription": "Small blue glass display panel in a dark frame with short connector ribbon"
+  },
+  {
+    "id": "clockwork_gears",
+    "name": "Clockwork Gears",
+    "unitPrice": 20,
+    "artDescription": "Cluster of three brass clockwork gears with different diameters"
+  },
+  {
+    "id": "paper_sheets",
+    "name": "Paper Sheets",
+    "unitPrice": 3,
+    "artDescription": "Stack of crisp cream paper sheets with one curled corner"
+  },
+  {
+    "id": "leather_straps",
+    "name": "Leather Straps",
+    "unitPrice": 10,
+    "artDescription": "Rolled brown leather straps with brass buckles"
+  },
+  {
+    "id": "heating_elements",
+    "name": "Heating Elements",
+    "unitPrice": 24,
+    "artDescription": "Curved copper heating coil with ceramic connector ends"
+  },
+  {
+    "id": "foam_padding",
+    "name": "Foam Padding",
+    "unitPrice": 5,
+    "artDescription": "Stack of pale blue foam padding sheets with a dotted texture"
+  },
+  {
+    "id": "sealant",
+    "name": "Sealant",
+    "unitPrice": 6,
+    "artDescription": "Short white sealant tube with blue band and tapered nozzle"
+  },
+  {
+    "id": "resin",
+    "name": "Resin",
+    "unitPrice": 11,
+    "artDescription": "Amber resin nuggets beside a small sealed amber bottle"
+  }
+]

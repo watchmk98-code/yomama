@@ -3,7 +3,7 @@
     python3 previews/craft_preview.py 4130
     python3 previews/craft_preview.py 4130 --fresh
 
-The showroom grants products and cash, but basic supplies must be purchased.
+The showroom grants products and cash, but crafting supplies must be purchased.
 Use --fresh to inspect ordinary new-player availability instead.
 """
 from __future__ import annotations
@@ -25,6 +25,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('port', type=int, nargs='?', default=4130)
     parser.add_argument('--fresh', action='store_true')
+    parser.add_argument('--cash', type=int, default=250000, help='Showroom cash for trying advanced crafts (ignored with --fresh).')
     args = parser.parse_args()
     label = 'CRAFT PREVIEW'
     with tempfile.TemporaryDirectory(prefix='yomama-craft-preview-') as directory:
@@ -37,7 +38,7 @@ def main():
                 st = A._load_state(player, cfg, session)
                 st['tierOf'] = list(range(len(cfg['tiers'])))
                 st['b'] = [E._building(i) for i in st['tierOf']]
-                st['cash'] = 5000
+                st['cash'] = max(0, args.cash)
                 st['inventory'] = {g['id']: 40 for t in cfg['tiers'] for g in t['goods']}
                 st['book'] = sum(t['baseCost'] for t in cfg['tiers'])
                 st = E.migrate_state(cfg, st)
