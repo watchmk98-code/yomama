@@ -1,3 +1,17 @@
+// Shared soundtrack controls for every game page with the standard header.
+(function () {
+  if (!document.querySelector('.hero .right-meta') || document.getElementById('game-music-script')) return;
+  const base = new URL('.', document.currentScript.src);
+  const style = document.createElement('link');
+  style.rel = 'stylesheet';
+  style.href = new URL('game-music.css?v=1', base).href;
+  document.head.appendChild(style);
+  const script = document.createElement('script');
+  script.id = 'game-music-script';
+  script.src = new URL('game-music.js?v=1', base).href;
+  document.head.appendChild(script);
+})();
+
 (() => {
   const runtimeParams = new URLSearchParams(window.location.search);
   const forceMotionPauseSetting = Boolean(

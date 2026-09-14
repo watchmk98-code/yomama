@@ -1,0 +1,31 @@
+.game-music-controls {display:inline-flex;flex:none;align-items:stretch;gap:0;}
+.game-music-controls button,#game-music-dialog button {font:inherit;color:var(--amber,#ffb000);background:#141007;border:1px solid var(--border,#77551c);cursor:pointer;}
+.game-music-controls button {height:32px;padding:2px 8px;font-size:17px;line-height:1;white-space:nowrap;}
+.game-music-controls .game-music-toggle {min-width:78px;}
+.game-music-controls .game-music-settings {width:30px;padding:0;border-left:0;font-size:22px;}
+.game-music-controls button[aria-pressed="true"] {color:var(--green,#7fe7a5);}
+.game-music-controls button:hover,#game-music-dialog button:hover {background:#332409;}
+.game-music-controls button:focus-visible,#game-music-dialog :focus-visible {outline:2px solid var(--amber,#ffb000);outline-offset:3px;}
+.game-music-compact {display:none;}
+#game-music-dialog {box-sizing:border-box;width:320px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;margin:auto;padding:20px;border:1px solid var(--amber,#ffb000);color:var(--amber,#ffb000);background:#0c0b08;font:20px 'VT323',monospace;box-shadow:0 12px 60px #000;}
+#game-music-dialog::backdrop {background:#0009;}
+.game-music-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.game-music-heading h2 {font:inherit;font-size:28px;margin:0;}
+#game-music-dialog .game-music-heading button {width:36px;height:36px;font-size:26px;}
+.game-music-track {line-height:1.3;color:#eee;margin:16px 0;}
+.game-music-track small {color:#aaa;}
+#game-music-dialog .game-music-play {width:100%;min-height:40px;font-size:22px;}
+.game-music-volume {display:flex;justify-content:space-between;margin:18px 0 6px;}
+#game-music-volume {display:block;width:100%;height:28px;margin:0;accent-color:var(--amber,#ffb000);cursor:pointer;}
+.game-music-status {font-size:17px;min-height:22px;line-height:1.3;margin:12px 0 0;color:#bbb;}
+@media(max-width:600px) {
+  .has-game-music .right-meta {gap:8px;}
+}
+/* Short compact layouts hide the topline. Share the existing navigation row. */
+@media(max-height:650px) {
+  .game-compact .has-game-music {position:relative;}
+  .game-compact .has-game-music #game-section-menu {width:calc(100% - 132px);}
+  .game-compact .has-game-music > .game-music-compact {display:inline-flex;position:absolute;right:8px;top:4px;}
+  .game-compact .game-music-compact button {height:36px;}
+  .game-compact .right-meta > .game-music-controls {display:none;}
+}
