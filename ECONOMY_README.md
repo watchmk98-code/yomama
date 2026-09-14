@@ -12,14 +12,15 @@ notes are preserved in [engine/ECONOMY_V3.md](engine/ECONOMY_V3.md).
 Produce actual goods, serve automatic customers, choose deliveries, and invest
 in production, customer capacity, storage, or another business. Existing building
 names and artwork are retained. All fifteen buildings operate under the new
-rules; short chains introduce processing without requiring every earlier
-building to be owned. Orders only request products whose immediate suppliers
-are owned.
+rules. Every unlocked product is made independently: production never takes
+ingredients from town stock, including goods made by the same business. Orders
+request unlocked products from owned businesses; no supplier chain is required.
 
 - All money and product quantities are whole integers. Work uses fixed-point
   counters, so fractional rates survive saving and replay without free goods.
-- Production runs every 15 seconds. A recipe consumes its inputs once when it
-  completes; the resulting inventory can be sold, processed, or delivered once.
+- Production runs every 15 seconds. Each completed batch adds goods and pays
+  that business's production cost. Cash, product unlocks and shelf space still
+  limit output. Each resulting item can be sold or delivered once.
 - Automatic customers buy at fixed unit prices, up to their per-product demand.
   Demand that cannot be served is not banked for unlimited future sales.
 - Production, customers, and storage have independent levels and costs. Their
@@ -27,14 +28,15 @@ are owned.
   Increasing production alone cannot raise customer demand.
 - Storage is divided among a building's products. A full product shelf pauses
   that product until space is available; it cannot crowd out all other goods.
-- Processing automatically protects a small ingredient buffer. Turning off
-  Processing releases that buffer and pauses recipes; raw production continues.
+- There are no automatic ingredient buffers or separate Processing controls.
+  The business pause stops all of its production and production costs.
 - Save for this order reserves only the requested quantities, including incoming
-  production. Retail, recipes and surplus clearance respect those reservations.
+  production after regular buyers receive first claim. Retail and surplus
+  clearance respect those reservations.
   Overlapping commitments must fit the product shelf; release or replace an order
   to free its goods. A separate manual sales pause remains in Warehouse.
-- Clear stock explicitly sells surplus at 60% of retail value. It preserves
-  ingredient buffers and committed order quantities and never generates a second inventory copy.
+- Clear stock explicitly sells surplus at 60% of reference shop payout. It preserves
+  regular-buyer and committed-order quantities and never generates a second inventory copy.
 - Three optional deliveries have stable IDs and no expiry penalties. Fulfillment
   checks every required quantity before consuming anything, then pays the listed
   cash and materials exactly once. Replacing an order is free and immediately repeatable. It releases that order's
@@ -46,10 +48,23 @@ are owned.
 - Construction and upgrades never trigger automatic spending. Existing
   businesses keep producing after expansion.
 
-The first three businesses use familiar goods: the farm supplies eggs and honey
-for roastery pastries; roasted beans become espresso; the fish stall processes
-fresh catch. Later businesses introduce further food, industry, and energy
-connections using the supplied art set.
+The first three businesses use familiar goods: the farm makes eggs and honey,
+the roastery makes coffee and pastries, and the fish stall makes its own fish
+products. Later businesses add food, industry, and energy products using the
+supplied art set. Manual crafting is planned separately; the existing optional
+practice workshops and explicit equipment crafting remain distinct actions.
+
+Sector rhythms change when completed goods arrive while preserving average
+production rates. Food keeps its small, frequent batches. Industry normally
+waits twice as long for twice the output and production cost; it can complete
+a smaller batch when cash or shelf space cannot support the larger one.
+Energy/Tech products start at staggered times, with one initial wait of up to
+two active game ticks (currently 30 game seconds). That wait pauses with the
+business or class, survives reloads and does not grant work.
+Production still advances in 15-second ticks. Existing saves retain accumulated
+work and initialize missing start delays once; no class reset is needed.
+The `production.sectorRhythms` setting enables these rhythms and may be disabled
+for baseline simulations. This is a production timing change, not a speed bonus.
 
 ## Time and income
 
@@ -59,11 +74,22 @@ clock past skipped production, so repeated requests cannot claim it again.
 Paid construction continues on the class clock, including across the production
 cap. A teacher pause stops the class clock.
 
-Income/min is the actual cash earned from ordinary customers over the last four
-ticks, not a promise derived from gross production value. Capacity forecasts
-account for ingredients consumed by downstream producers and are separate from
-cash accounting. Deliveries and bulk sales are explicit receipts. The overnight
-report uses actual produced units and customer income since the previous report.
+The main Sales, Costs and Profit figures show the last 60 game seconds, with
+potential per-minute figures below. The operating statement records gross
+walk-in and regular-buyer payments, production cash costs (including unsold
+stock), and supplies/selling charges paid from those customer payments. Profit
+margin is that operating cash profit divided by gross customer sales. Its
+reference target assumes base levels and all output sold at the shop payout,
+with production matching sales; it is not a guaranteed or clamped outcome. Manual-order and
+clearance payments and their selling charges stay outside this customer statement.
+Upfront purchases are also separate. Each business's forecast uses only its own
+products and costs, without cross-business ingredient transfers.
+
+Cash remains the spendable balance. Order and regular-buyer cards quote the
+take-home payment after selling charges; production costs are paid separately.
+Their percentage comparisons use the normal shop payout on the same take-home
+basis. Stock and net-worth values retain their recoverable value. The overnight
+report shows take-home customer cash and actual units produced.
 
 ## Saves and transaction boundaries
 
@@ -83,6 +109,11 @@ Migration runs once. Current v4 classes keep their configuration snapshot even
 when the default file changes. A SQLite backup of the local save is made before
 local rollout; the test suite only uses temporary databases.
 
+Independent production applies when existing v4 saves load, even if their saved
+configuration contains old input recipes. Cash, stock, product unlocks, work
+progress and existing orders remain. The obsolete Processing switch no longer
+blocks output. No class reset is needed; publishing needs Manual Deploy.
+
 ## Current actions
 
 All routes are under `/api/game/econ` and use the existing player token.
@@ -91,7 +122,7 @@ All routes are under `/api/game/econ` and use the existing player token.
 |---|---|
 | `/upgrade` | `slot`, `kind`: `production`, `sales`, or `storage` |
 | `/reserve` | `slot`, `reserve`: boolean |
-| `/processing` | `slot`, `enabled`: boolean |
+| `/processing` | Legacy route; rejects toggles and directs players to the business Pause control |
 | `/orders/fulfill` | `offerIndex`, `orderId` |
 | `/orders/replace` | `offerIndex`, `orderId` |
 | `/orders/commit` | `offerIndex`, `orderId`, `committed`: boolean |
@@ -117,8 +148,8 @@ node --check teacher-econ.js
 python3 tests/sim_production.py --days 7 --output previews/production-balance.json
 ```
 
-The engine tests verify conservation, bounded customer sales, recipe inputs,
-storage fairness, saved work, optional orders, missing-supplier behavior,
+The engine tests verify conservation, bounded customer sales, independent production,
+storage fairness, saved work, optional orders, supplier-independent eligibility,
 offline replay, and migration. API tests verify actual SQLite rollback,
 concurrent fulfillment, stale IDs, cap renewal, teacher pause, late joins,
 reset metadata, and licence enforcement. The original v3 oracle is still tested
@@ -144,21 +175,21 @@ event coins have no exchange into town cash. Replay/reward farming is disabled.
 
 ## Meaningful progression (rules revision 2)
 
-Upgrade buttons show the change in sustainable town-wide customer income. This
-includes downstream ingredients and specialties; it is a capacity estimate, not
-a cash promise while stock is unavailable or orders are being held. Storage
+Upgrade buttons show capacity estimates, including product specialties. The
+green production gain assumes all added output sells; it is not a cash promise
+while demand is limited, shelves are empty or orders are being held. Storage
 shows added spaces. A production upgrade can help deliveries without helping
-retail. The income/min readout still reports actual recent receipts.
+retail.
 
 At production level 3, the farm can specialize as a bakery supplier: eggs and
 honey gain 25 percentage points of base production speed and tomatoes lose 25.
-The roastery can favor coffee or pastries: the selected processed product gains
+The roastery can favor coffee or pastries: the selected product gains
 50 base speed points and the other loses 25. Mixed production remains available;
-switching is free. Recipes still consume their complete inputs.
+switching is free. These products are made independently without consuming inputs.
 
 The Breakfast Regulars order grants a permanent 20% roastery customer-capacity
 bonus after three deliveries, capped once. It can be earned before opening the
-roastery. Its goods change from farm ingredients to eligible roastery products
+roastery. Its goods change from farm products to eligible roastery products
 when that business is owned. The separate Breakfast Club cooking event grants
 five materials and +25 base speed points to its chosen roastery recipe upon
 completion. No useless final coins are awarded; event coins are cleared when
@@ -182,11 +213,15 @@ previously earned materials. A pre-change SQLite backup is in `backups/`.
 
 ## Free order rolls
 
-Every new offer rolls Standard (65%), Large (25%), Rare (8%) or Jackpot (2%).
+Every new offer rolls Standard (40%), Small (15%), Bulk (10%), Large (25%),
+Rare (8%) or Jackpot (2%). Small asks for half the normal quantity of one
+product at the normal order price. Bulk asks for three times the normal quantity
+of one product at 90% of the normal order price, trading lower payment per item
+for a larger sale. Whole-unit rounding and shelf limits still apply.
 Higher tiers request up to 3/4/5 distinct eligible goods and 1.5×/2×/2.5× base
 quantities, capped to each product shelf. Their cash premium is 1.3×/1.75×/2.5×
-the ordinary order's percentage of retail value. The card shows the actual
-retail multiplier and total payout. Existing offers keep their reward until
+the ordinary order's percentage of reference shop payout. The card shows the actual
+shop-payout multiplier and total take-home payout. Existing offers keep their reward until
 delivered or replaced; saved replacement cooldowns are ignored.
 
 Rerolls do not spend or award cash, goods, materials or reputation. Fulfillment

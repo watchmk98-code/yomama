@@ -168,12 +168,13 @@ def payload(cfg, st, tick=None):
                 attribution='Delivered goods, shared by retail value')
 
 
-def allocate_regular_flow(cfg, st, pool):
+def allocate_regular_flow(cfg, st, pool, *, production_costs=None):
     """Allocate an available goods/minute pool to whole regular shipments.
 
-    The caller first deducts recipe inputs from production. Customers claim
-    the remaining pool in actual slot priority; their scarcest required good
-    limits the entire bundle. Remaining goods may then serve walk-in demand.
+    With a finished-goods pool, customers claim goods in actual slot priority.
+    With per-unit ``production_costs``, the pool instead contains gross output
+    capacities: whole bundles reserve their entire supply chain before surplus
+    crafting. In either case the scarcest resource limits the entire bundle.
 
     This is a steady-flow estimate: current stock, finite manual commitments,
     shelf limits and discrete completion timing are intentionally excluded.
@@ -184,6 +185,7 @@ def allocate_regular_flow(cfg, st, pool):
     if any(not math.isfinite(rate) for rate in remaining.values()):
         raise ValueError('Production rates must be finite')
     consumed = {gid: 0.0 for gid in remaining}
+    production_used = {gid: 0.0 for gid in remaining}
     by_building = {str(slot): 0.0 for slot in range(len(st['b']))}
     customers = []
     total_income = 0.0
@@ -198,10 +200,19 @@ def allocate_regular_flow(cfg, st, pool):
             if type(quantity) is not int or quantity <= 0:
                 raise ValueError('Shipment quantities must be positive whole units')
             needs[gid] = needs.get(gid, 0) + quantity
-        frequency = min([requested] + [remaining.get(gid, 0.0) / qty for gid, qty in needs.items()]) if needs else 0.0
-        for gid, quantity in needs.items():
+        costs = needs
+        if production_costs is not None:
+            costs = {}
+            for gid, quantity in needs.items():
+                for resource, units in production_costs[gid].items():
+                    costs[resource] = costs.get(resource, 0.0) + units * quantity
+        frequency = min([requested] + [remaining.get(gid, 0.0) / qty for gid, qty in costs.items()]) if needs else 0.0
+        for gid, quantity in costs.items():
             used = quantity * frequency
             remaining[gid] = max(0.0, remaining.get(gid, 0.0) - used)
+            production_used[gid] = production_used.get(gid, 0.0) + used
+        for gid, quantity in needs.items():
+            used = quantity * frequency
             consumed[gid] = consumed.get(gid, 0.0) + used
         income = contract['reward'] * frequency
         shares = allocate_payment(cfg, st, contract['reward'], contract['requirements'])
@@ -213,5 +224,8 @@ def allocate_regular_flow(cfg, st, pool):
                               expectedIntervalSeconds=60.0 / frequency if frequency > 0 else None,
                               requestedIntervalSeconds=seconds,
                               supplyLimited=frequency < requested - 1e-9))
-    return dict(remaining=remaining, unitsPerMinute=consumed, incomePerMinute=total_income,
-                byBuilding=by_building, customers=customers)
+    result = dict(remaining=remaining, unitsPerMinute=consumed, incomePerMinute=total_income,
+                  byBuilding=by_building, customers=customers)
+    if production_costs is not None:
+        result['productionUnitsPerMinute'] = production_used
+    return result

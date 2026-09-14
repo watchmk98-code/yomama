@@ -17,7 +17,7 @@ def ticks(cfg, st, count):
 
 
 def staffed_recipe(type_id, good_id, branch, workers=10):
-    """Exercise real recipe effects retained by legacy crew snapshots."""
+    """Exercise production effects retained by legacy crew snapshots."""
     cfg = E.load_config()
     cfg['workforce']['populationEnabled'] = False
     cfg['workforce']['workerTrainingSeconds'] = 10**9
@@ -60,7 +60,7 @@ def assert_integer_wallet_and_stock(st):
     assert all(type(qty) is int and qty >= 0 for qty in st['inventory'].values())
 
 
-def test_production_workers_accelerate_pastries_and_consume_every_ingredient():
+def test_production_workers_accelerate_pastries_without_consuming_other_goods():
     cfg, staffed, good = staffed_recipe('roastery', 'roastery_pastries', 'production')
     for need in good['inputs']:
         staffed['inventory'][need['goodId']] = 100
@@ -70,11 +70,12 @@ def test_production_workers_accelerate_pastries_and_consume_every_ingredient():
     made = staffed['inventory'][good['id']]
     assert made > ordinary['inventory'][good['id']]
     for need in good['inputs']:
-        assert staffed['inventory'][need['goodId']] == 100 - made * need['quantity']
+        assert staffed['inventory'][need['goodId']] == ordinary['inventory'][need['goodId']] == 100
         staffed['inventory'][need['goodId']] = 0
     ticks(cfg, staffed, 100)
-    assert staffed['inventory'][good['id']] == made
-    assert staffed['productionBlocked'][good['id']]['reason'] == 'ingredient'
+    assert staffed['inventory'][good['id']] > made
+    assert all(staffed['inventory'][need['goodId']] == 0 for need in good['inputs'])
+    assert good['id'] not in staffed['productionBlocked']
     assert_integer_wallet_and_stock(staffed)
 
 

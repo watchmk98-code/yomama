@@ -1,7 +1,7 @@
 """Curated delivery jobs with exact, purposeful product bundles.
 
-Each bundle is unique, uses one to five goods, and keeps finished products
-separate from their production inputs so reservations cannot starve a job.
+Each shopping list is unique and uses one to five independently produced goods.
+These are delivery requests, not automatic crafting instructions.
 Amounts and rewards belong to the economy engine; this is content only.
 See DELIVERY_RECIPES.md for the complete player-facing catalog.
 """

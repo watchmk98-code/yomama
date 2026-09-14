@@ -2,15 +2,15 @@
 
 185 distinct orders across all 45 goods and all 15 businesses. Every name has its own exact goods bundle and a buyer with a reason to order it.
 
-Bundles grow from single-product restocks to coordinated five-product projects. Quantities and rewards are calculated by the game. Breakfast-marked recipes use food goods only. No bundle asks for a manufactured good together with one of its direct or indirect production inputs.
+Bundles grow from single-product restocks to coordinated five-product projects. Quantities and rewards are calculated by the game. Breakfast-marked bundles use food goods only. These are shopping lists for deliveries, not automatic production recipes: every unlocked product is made independently without using other town stock.
 
 The catalog is application content, outside the class economy configuration snapshot. After deployment, existing version 4 classes receive the new recipes on their next order replacement or fulfillment. Existing offers, cash and stock are retained; no class reset is needed. This change needs Manual Deploy.
 
 Order quantities still use the existing channel minutes, production cycle speed, rarity multiplier and shelf capacity limit. Payout calculations are unchanged.
 
-New orders rotate through unseen eligible recipes of the rolled size before repeating. Their complete supply chains must be owned. Cash and building-supply jobs cover every industry; Breakfast Regulars use the food recipes marked below. An older town with no eligible breakfast goods receives ordinary Town deliveries in that slot until it can supply food; those ordinary jobs do not award breakfast loyalty.
+New orders rotate through unseen eligible bundles of the rolled size before repeating. Their products must be unlocked and their businesses owned; no ingredient suppliers are needed. Cash and building-supply jobs cover every industry; Breakfast Regulars use the food bundles marked below. An older town with no eligible breakfast goods receives ordinary Town deliveries in that slot until it can supply food; those ordinary jobs do not award breakfast loyalty.
 
-For a town expanding through the catalog's building order, the pool grows from 7 recipes with the farm to 40 with the first three businesses, 72 with seven, 104 with ten, and all 185 with fifteen. Different expansion paths unlock the recipes their suppliers can support.
+As the town expands and unlocks products, more of the 185 shopping lists become available. Different expansion paths unlock the bundles their owned businesses can produce.
 
 | Goods per order | Recipes | Breakfast eligible |
 | --- | ---: | ---: |

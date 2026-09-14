@@ -105,6 +105,8 @@
   }
 
   function productionModel(s) { return Number(s.modelVersion) >= 4; }
+  function independentProduction(s) { return s.productionMode === 'independent'; }
+  function operatingStatement(s) { return s.operatingStatement && s.operatingStatement.enabled?s.operatingStatement:null; }
 
   function units(value) {
     return (Number(value) || 0).toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -113,6 +115,8 @@
   function materialAmount(value) { return units(value) + ' material' + (Number(value) === 1 ? '' : 's'); }
 
   function orderOffers(s) { return ((s.orders || s.contracts || {}).offers || []); }
+  function goalOrder(s) { return s.goalOrder || orderOffers(s).find(function(o){return o.goalOrder || o.goal;}) || null; }
+  function orderAt(s,index) { var goal=goalOrder(s);return goal && index===(goal.offerIndex==null?3:goal.offerIndex)?goal:orderOffers(s)[index]; }
 
   function mult(value) { return (Number(value) || 0).toFixed(2); }
 
@@ -358,13 +362,13 @@
 
   function resourceBar(s) {
     if(productionModel(s) && document.getElementById('game-hud')){
-      var costs=s.operations || {};
-      var costRate=costs.potentialOperatingCostPerMinute == null ? costs.operatingCostPerMinute || 0 : costs.potentialOperatingCostPerMinute;
+      var costs=s.operations || {}, statement=operatingStatement(s);
+      var costRate=statement?statement.costs:costs.operatingCostPerMinute || 0, actualSales=statement?statement.sales:s.earnings && s.earnings.operatingIncome;
       var metrics=[
         ['cash','Cash',s.cash,'Available to spend'],
-        ['net-worth','Net worth',s.netWorth,'Cash + stock value + business value'],
-        ['income',s.operations && s.operations.enabled?'Sales / min':'Income / min',s.incomePerMinute,'Current estimated income from walk-ins and regular buyers. Updates immediately after upgrades; cash arrives with sales. Excludes one-off payments.'],
-        ['cost','Cost / min',costRate,'Current estimated production expenses for all businesses. Cash is charged as production runs.'],
+        ['net-worth','Net worth',s.netWorth,'Cash + recoverable stock value + business value'],
+        ['income',actualSales!=null?'Sales · last 60s':'Potential sales/min',actualSales==null?s.incomePerMinute:actualSales,statement?'What walk-ins and regular buyers paid before selling fees in the last 60 game seconds. Order rewards are separate.':'Cash from walk-ins and regular buyers in the last 60 game seconds. Order payouts are separate.'],
+        ['cost','Costs · last 60s',costRate,statement?'Production costs plus supplies and selling fees paid from customer sales in the last 60 game seconds. Upfront purchases are separate.':'Production costs paid in the last 60 game seconds across all businesses. Upfront purchases are separate.'],
         ['materials','Materials',s.materials,'Used to open new businesses']
       ];
       var crew=s.workforce && s.workforce.enabled?workerOverview(s):null;
@@ -447,7 +451,7 @@
 
   function renderBuilding(el, s) {
     var b=selectedBuilding(s);
-    el.innerHTML=notice(s)+'<div class="game-layout">'+roster(s)+'<div class="game-center">'+site(b,s)+(productionModel(s)?'':stockPanel(b,s))+'</div><div class="game-actions">'+(productionModel(s)?operationsPanel(b,s):upgradePanel(b,s,false)+upgradePanel(b,s,true))+expansionPanel(s)+'</div></div><div class="game-build-bottom">'+(productionModel(s)?buildingActivityStrips(b,s):gameFooter(s)+breakfastStrip(s))+'</div>'+statusLine();
+    el.innerHTML=notice(s)+(productionModel(s)?openingGuide(s):'')+'<div class="game-layout">'+roster(s)+'<div class="game-center">'+site(b,s)+(productionModel(s)?'':stockPanel(b,s))+'</div><div class="game-actions">'+(productionModel(s)?operationsPanel(b,s):upgradePanel(b,s,false)+upgradePanel(b,s,true))+expansionPanel(s)+'</div></div><div class="game-build-bottom">'+(productionModel(s)?buildingActivityStrips(b,s):gameFooter(s)+breakfastStrip(s))+'</div>'+statusLine();
   }
 
   var breakfastGoods = {
@@ -525,36 +529,51 @@
 
   function businessMetrics(b,s) {
     var activity=b.activity || {}, changes=b.slot===lastRenderedSlot?(businessMetricChanges[b.slot] || {}):{};
+    var rhythm=s.sectorRhythms && s.sectorRhythms.enabled && b.productionRhythm;
+    var productionTip=independentProduction(s)?'Current production capacity. Goods need shelf space, their quest unlock, and cash for production costs. No ingredients are taken from stock.':'Current production capacity. Completed goods still need ingredients and shelf space.';
+    if(rhythm){
+      var batches=(b.goods || []).filter(function(g){return !g.locked && g.productionBatch && g.productionBatch.quantity>0 && g.productionBatch.averageSeconds>0;}).map(function(g){return g.name+': '+units(g.productionBatch.quantity)+' every '+units(g.productionBatch.averageSeconds)+'s on average';});
+      productionTip='Average output per minute. '+rhythm.description+(batches.length?' '+batches.join('; ')+'.':'')+' Stock updates every '+units(s.tickSeconds || 15)+' game seconds. '+productionTip;
+    }
     var metrics=[
-      ['income','Income / min',incomeRate(b.incomePerMinute),'Current estimated income from walk-ins and regular buyers. Updates immediately after upgrades; cash arrives with sales.'],
-      ['produced','Production / min',activity.producedUnits==null?'—':units(activity.producedUnits),'Current production capacity. Completed goods still need ingredients and shelf space.'],
+      ['income','Sales · last 60s',incomeRate(b.earnings && b.earnings.operatingIncome!=null?b.earnings.operatingIncome:b.incomePerMinute),'Cash actually received from walk-ins and regular buyers in the last 60 game seconds.'],
+      ['produced','Production / min',activity.producedUnits==null?'—':units(activity.producedUnits),productionTip],
       ['sold','Customer demand / min',activity.soldUnits==null?'—':units(activity.soldUnits),'Current walk-in demand. Sales still need available stock; regular shipments are additional.'],
       ['stock','Stock / capacity',units(b.stored)+' / '+units(b.capacity),'Goods currently stored in this business']
     ];
     var withCosts=s.operations && s.operations.enabled;
     if(withCosts)metrics=metrics.filter(function(m){return m[0]==='produced' || m[0]==='sold';});
     var note=activity.observedSeconds!=null && activity.observedSeconds<60?units(activity.observedSeconds)+'s recorded':'stock now';
-    return '<div class="game-business-numbers"><div class="game-live-heading"><span>'+(withCosts?'Current estimates':'Live rates')+' <small>· '+(withCosts?'cash arrives with sales':note)+'</small></span><span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
+    return '<div class="game-business-numbers"><div class="game-live-heading"><span>'+(withCosts?'Customer cashflow':'Live rates')+' <small>· '+(withCosts?'last 60 game seconds':note)+'</small></span><span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
       var capacity=m[0]==='produced'?b.productionCapacityPerMinute:m[0]==='sold'?b.customerCapacityPerMinute:null;
       var actualText=m[0]==='produced'?'Actual '+m[2]+' produced / last 60s':m[0]==='sold'?'Actual '+m[2]+' sold / last 60s':'';
       var value=capacity==null?m[2]:rateUnits(capacity);
-      return '<div data-business-metric="'+m[0]+'" title="'+m[3]+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+'">'+value+'</dd>'+(capacity==null?'':'<dd class="game-live-rate'+(changes[m[0]+'Actual']?' is-updated':'')+'">'+actualText+'</dd>')+'</div>';
-    }).join('')+'</dl></div>';
+      return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+'">'+value+'</dd>'+(m[0]==='produced' && rhythm?'<dd class="game-live-rate game-production-rhythm">'+esc(rhythm.shortLabel)+'</dd>':'')+(capacity==null?'':'<dd class="game-live-rate'+(changes[m[0]+'Actual']?' is-updated':'')+'">'+actualText+'</dd>')+'</div>';
+    }).join('')+'</dl>'+(withCosts && b.savingForOrders?'<p class="game-cashflow-note">Saving goods: production costs continue. Cash arrives after delivery.</p>':'')+'</div>';
   }
 
   function financeValues(b) {
-    var estimatedCost=b.potentialOperatingCostPerMinute!=null, estimatedProfit=b.potentialProfitPerMinute!=null;
-    var actualProfit=b.earnings && b.earnings.operatingIncome!=null && b.operatingCostPerMinute!=null?b.earnings.operatingIncome-b.operatingCostPerMinute:b.profitPerMinute;
-    return {cost:estimatedCost?b.potentialOperatingCostPerMinute:b.operatingCostPerMinute,profit:estimatedProfit?b.potentialProfitPerMinute:actualProfit,estimatedCost:estimatedCost,estimatedProfit:estimatedProfit};
+    var statement=operatingStatement(b);
+    if(statement)return {sales:statement.sales,cost:statement.costs,profit:statement.profit,margin:statement.margin,statement:statement};
+    var sales=b.earnings && b.earnings.operatingIncome!=null?b.earnings.operatingIncome:b.incomePerMinute;
+    var cost=b.operatingCostPerMinute, profit=sales!=null && cost!=null?sales-cost:b.profitPerMinute;
+    return {sales:sales,cost:cost,profit:profit,margin:sales>0 && Number.isFinite(profit)?profit/sales*100:null};
   }
 
   function financeMetrics(b,changes) {
-    var values=financeValues(b);
-    return '<div class="game-margin-row" aria-label="Sales, operating costs and profit">'+[
-      ['income','Sales / min',b.incomePerMinute,'Current estimated income from walk-ins and regular buyers. Updates immediately after upgrades; cash arrives with sales. Order payouts are separate.'],
-      ['cost',values.estimatedCost?'Costs / min':'Costs · last 60s',values.cost,(values.estimatedCost?'Current estimated production expenses.':'Production expenses in the last 60 game seconds.')+' Staff is paid separately when hired.'],
-      ['profit',values.estimatedProfit?'Profit / min':'Profit · last 60s',values.profit,values.estimatedProfit?'Current estimated customer income less estimated production expenses.':'Customer sales less operating costs in the last 60 game seconds.']
-    ].map(function(m){return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+(m[0]==='profit' && Number(m[2])<0?' is-loss':'')+'">'+(m[0]==='cost'?'−':'')+(m[0]==='income' || (m[0]==='cost' && values.estimatedCost) || (m[0]==='profit' && values.estimatedProfit)?incomeRate(m[2]):ym(m[2]))+'</dd></div>';}).join('')+'</div>';
+    var values=financeValues(b), statement=values.statement;
+    var marginTip='Operating cash margin over the last 60 game seconds: customer sales minus production and selling costs, divided by sales. Making stock can lower it. Order rewards and upfront purchases are separate.';
+    if(statement && Number.isFinite(statement.targetMarginPercent))marginTip+=' Base-level target (all output sold): '+rateUnits(statement.targetMarginPercent)+'%. Actual results can be higher, lower or negative.';
+    return '<div class="game-margin-row" aria-label="Actual customer cashflow in the last 60 game seconds">'+[
+      ['income','Sales · last 60s',values.sales,statement?'What walk-ins and regular buyers paid before selling fees. Order rewards are separate.':'Cash actually received from walk-ins and regular buyers. Order payouts are separate.',statement?statement.potentialSales:b.potentialIncomePerMinute],
+      ['cost','Costs · last 60s',values.cost,statement?'Production costs paid, including unsold stock, plus supplies and selling fees taken from customer sales. Hiring and upgrades are separate.':'Production costs actually paid, including goods kept in stock. Hiring and upgrades are paid separately.',statement?statement.potentialCosts:b.potentialOperatingCostPerMinute],
+      ['profit','Profit · last 60s',values.profit,statement?'Customer sales minus production and selling costs paid. Saving stock can make this negative. Order rewards add to Cash separately.':'Customer cash received minus production costs paid. Saving stock can make this negative. Order rewards add to Cash separately.',statement?statement.potentialProfit:b.potentialProfitPerMinute],
+      ['margin','Profit margin',values.margin,statement?marginTip:'Profit divided by actual customer sales, as a percentage. Order payouts and upfront purchases are separate.',null]
+    ].map(function(m){
+      var value=m[0]==='margin'?(m[2]==null?'—':Number(m[2].toFixed(1)).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'):(m[0]==='cost'?'−':'')+incomeRate(m[2]);
+      var potential=m[4]==null?'':'<dd class="game-finance-potential" title="Potential with current production and customers; saved goods and shipment timing can reduce actual cash received.">Potential '+rateUnits(m[4])+' / min</dd>';
+      return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+((m[0]==='profit' || m[0]==='margin') && Number(m[2])<0?' is-loss':'')+(m[0]==='margin' && m[2]==null?' is-unavailable':'')+'">'+value+'</dd>'+potential+'</div>';
+    }).join('')+'</div>';
   }
 
   function progressionEnabled(s) { return !!(s.progression && s.progression.enabled); }
@@ -587,7 +606,7 @@
     var staff=b.staff, salvage=b.salvage || {};
     return '<section class="game-panel game-business-team">'+panelHead('Temporary staff','1 shift at a time')+'<div class="game-team-body" data-keep-scroll="team"><div class="game-staff-hire">'+
       (staff?'<div class="game-active-shift"><strong>'+esc(staff.name)+'</strong><span class="k-good" data-econ-countdown="'+staff.remainingSeconds+'" data-countdown-paused="'+!!b.paused+'">'+duration(staff.remainingSeconds)+'</span><p>'+esc(staff.effect)+'</p></div>':chosen?'<label for="game-staff-choice">Hire for this business</label><select id="game-staff-choice">'+options.map(function(o){return '<option value="'+esc(o.id)+'"'+(o.id===chosen.id?' selected':'')+'>'+esc(o.name)+'</option>';}).join('')+'</select><p class="game-staff-effect">'+esc(chosen.effect)+'</p><div class="game-shift-price"><span>'+duration(chosen.durationSeconds)+' shift</span><strong>'+ym(chosen.cost)+' upfront</strong></div>'+bigButton(businessAction('hire',b,chosen.id),'Hire '+chosen.name,'',!chosen.canHire || s.paused)+(!chosen.canHire?why(chosen.why):''):'<p class="game-hint">Staff is unavailable.</p>')+
-      '<p class="game-hint">Ingredients and shelf space still limit output. Extra goods need customers. Shifts pause with this business and the class.</p></div><div class="game-business-control"><div><h3>'+(b.paused?'Business paused':'Business open')+'</h3><p class="game-hint">Pause production and its costs for free.</p></div><button id="game-business-toggle" type="button" class="game-small-button" data-econ-action="'+businessAction(b.paused?'resume':'pause',b)+'"'+(s.paused?' disabled':'')+'>'+(b.paused?'Resume':'Pause')+'</button></div><div class="game-salvage-entry"><div><h3>Close this business</h3><p class="game-hint">Salvage '+ym(salvage.value)+' · '+duration(salvage.cooldownSeconds)+' before rebuilding</p></div><button id="game-salvage-open" type="button" class="game-text-button" data-business-close="'+esc(b.buildingId)+'">Review →</button></div></div></section>';
+      '<p class="game-hint">'+(independentProduction(s)?'Cash and shelf space':'Ingredients and shelf space')+' still limit output. Extra goods need customers. Shifts pause with this business and the class.</p></div><div class="game-business-control"><div><h3>'+(b.paused?'Business paused':'Business open')+'</h3><p class="game-hint">Pause production and its costs for free.</p></div><button id="game-business-toggle" type="button" class="game-small-button" data-econ-action="'+businessAction(b.paused?'resume':'pause',b)+'"'+(s.paused?' disabled':'')+'>'+(b.paused?'Resume':'Pause')+'</button></div><div class="game-salvage-entry"><div><h3>Close this business</h3><p class="game-hint">Salvage '+ym(salvage.value)+' · '+duration(salvage.cooldownSeconds)+' before rebuilding</p></div><button id="game-salvage-open" type="button" class="game-text-button" data-business-close="'+esc(b.buildingId)+'">Review →</button></div></div></section>';
   }
 
   function questsPanel(b,s) {
@@ -645,7 +664,17 @@
     html+='<div class="game-connected-objectives">'+(project.requirements || []).map(function(g){var delivered=Number(g.delivered || 0);return '<div class="game-workshop-goal" data-group-objective="'+esc(g.goodId)+'"><span>Deliver '+esc(g.name)+'</span><strong class="'+(delivered>=g.quantity?'k-good':'')+'">'+units(Math.min(delivered,g.quantity))+' / '+units(g.quantity)+'</strong></div>';}).join('')+'</div>';
     if(project.status==='locked')return html+why(project.why || project.unlockText || 'Complete the preceding group project.')+'</article>';
     var ready=project.canClaim==null?project.ready:project.canClaim, legacy=(s.groupProjects || {}).legacyDelivery;
+    if(document.getElementById('econ-building')){
+      var goal=goalOrder(s);
+      if(!legacy && !ready && goal && goal.projectId===(project.projectId || project.id))html+=openingDeliveryMarkup(goal,s);
+      return html+(!legacy && ready?'<div class="game-confirm-actions">'+bigButton('group_project_claim:'+encodeURIComponent(project.projectId || project.id),'Claim project reward','',s.paused)+'</div>':'')+(!ready && project.why?why(project.why):'')+'</article>';
+    }
     return html+'<p class="game-hint">Deliver these products through Market orders. Completed deliveries count toward this project.</p><div class="game-confirm-actions">'+(!legacy?bigButton('group_project_claim:'+encodeURIComponent(project.projectId || project.id),'Claim project reward','',!ready || s.paused):'')+linkButton('./marketplace.html','Open orders →',' k-btn--alt')+'</div>'+(!ready && project.why?why(project.why):'')+'</article>';
+  }
+
+  function openingDeliveryMarkup(goal,s) {
+    var index=goal.offerIndex==null?3:goal.offerIndex;
+    return '<section class="game-panel"><div class="game-panel-body"><h3>Goal order</h3><p class="game-hint">Deliver the remaining goods here to finish this project.</p><div class="game-workshop-goals">'+(goal.requirements || []).map(function(g){return '<div class="game-workshop-goal"><span>'+esc(g.name)+'</span><strong class="'+(g.owned>=g.quantity?'k-good':'')+'">'+units(g.owned || 0)+' / '+units(g.quantity)+'</strong></div>';}).join('')+'</div>'+orderEta(goal)+'<p class="game-quest-reward">Delivery reward: '+ym(goal.reward)+'</p><div class="game-confirm-actions">'+bigButton('fulfill:'+index+':'+goal.id,'Deliver goal order',goal.canFulfill?'Ready':goal.why || 'Waiting for goods',!goal.canFulfill || s.paused)+'<button id="game-project-goal-save" type="button" class="game-small-button" data-econ-action="commit:'+index+':'+esc(goal.id)+'" aria-pressed="'+!!goal.committed+'"'+(s.paused || (!goal.committed && goal.canCommit===false)?' disabled':'')+'>'+ (goal.committed?'Release goods':'Save for this order')+'</button></div><p class="game-hint">'+esc(goal.canCommit===false?goal.commitWhy || 'Finish or release another saved order to make room.':'Regular buyers get goods first. Save the rest for this order. No deadline.')+'</p></div></section>';
   }
 
   function groupProjectsPanel(b,s) {
@@ -653,7 +682,7 @@
     if(!group || !group.enabled)return '<p class="game-hint">Group projects are unavailable.</p>';
     var current=group.current, legacy=group.legacyDelivery, saved='';
     if(legacy)saved='<article class="game-group-project game-legacy-project" data-legacy-project="'+esc(legacy.id)+'"><h3>'+esc(legacy.name || 'Saved project delivery')+'</h3><p class="game-hint">Your saved delivery keeps its original goods and reward.</p><div class="game-connected-objectives">'+(legacy.requirements || []).map(function(g){return '<div class="game-workshop-goal"><span>'+esc(g.name)+'</span><strong>'+units(g.owned || 0)+' / '+units(g.quantity)+'</strong></div>';}).join('')+'</div><p class="game-quest-reward">'+ym(legacy.reward)+(legacy.rewardText?' · '+esc(legacy.rewardText):'')+'</p>'+bigButton('legacy_project_deliver:'+encodeURIComponent(legacy.id),'Deliver saved project','',!legacy.canFulfill || s.paused)+(!legacy.canFulfill?why(legacy.why || 'Waiting for goods'):'')+'</article>';
-    return '<section class="game-panel game-group-projects">'+panelHead('Group projects',units(group.completed)+' / '+units(group.total))+'<div class="game-panel-body">'+saved+(current?groupProjectMarkup(current,s):'<div class="game-quest-complete"><strong class="k-good">✓ Group projects complete</strong><p>Your conglomerate has completed its opening supply chain.</p></div>')+'</div></section>';
+    return '<section class="game-panel game-group-projects">'+panelHead('Group projects',units(group.completed)+' / '+units(group.total))+'<div class="game-panel-body">'+saved+(current?groupProjectMarkup(current,s):'<div class="game-quest-complete"><strong class="k-good">✓ Group projects complete</strong><p>Your conglomerate has completed its opening projects.</p></div>')+'</div></section>';
   }
 
   function connectedQuestMarkup(q,s) {
@@ -676,7 +705,7 @@
     if(project.status==='locked')return html+'<p class="game-hint">'+esc(project.unlockText)+'</p>';
     var offers=(s.contracts || {}).offers || [], index=offers.findIndex(function(o){return o.id===project.orderId;}), offer=offers[index];
     if(!offer)return html+'<p class="game-hint">This project is not available yet.</p>';
-    return html+'<div class="game-confirm-actions">'+bigButton('fulfill:'+index+':'+offer.id,'Deliver project',offer.canFulfill?'Ready':offer.why || 'Waiting for goods',!offer.canFulfill || s.paused)+'<button id="game-project-save" type="button" class="game-small-button" data-econ-action="commit:'+index+':'+esc(offer.id)+'" aria-pressed="'+!!offer.committed+'"'+(s.paused || (!offer.committed && offer.canCommit===false)?' disabled':'')+' title="'+esc(offer.commitWhy || 'Protect this project’s goods from sales')+'">'+(offer.committed?'Release goods':'Save for this project')+'</button></div><p class="game-hint">'+esc(offer.canCommit===false?offer.commitWhy:'Save these goods to protect them from sales. Other goods keep earning. No deadline.')+'</p>';
+    return html+'<div class="game-confirm-actions">'+bigButton('fulfill:'+index+':'+offer.id,'Deliver project',offer.canFulfill?'Ready':offer.why || 'Waiting for goods',!offer.canFulfill || s.paused)+'<button id="game-project-save" type="button" class="game-small-button" data-econ-action="commit:'+index+':'+esc(offer.id)+'" aria-pressed="'+!!offer.committed+'"'+(s.paused || (!offer.committed && offer.canCommit===false)?' disabled':'')+' title="'+esc(offer.commitWhy || 'Save this project’s goods after regular buyers are supplied')+'">'+(offer.committed?'Release goods':'Save for this project')+'</button></div><p class="game-hint">'+esc(offer.canCommit===false?offer.commitWhy:'Regular buyers get goods first. Save the rest for this project. No deadline.')+'</p>';
   }
 
   function questMarkup(s) {
@@ -727,7 +756,7 @@
     var b=(s.buildings || []).find(function(item){return item.buildingId===salvageBuildingId;});
     if(!b)return '<p class="game-hint">This business is no longer open.</p>';
     var q=b.salvage || {};
-    return '<div class="game-salvage-review"><h3>Close '+esc(b.name)+'?</h3><div class="game-refund"><span>Cash returned</span><strong>'+units(q.value)+' YM</strong></div><p>'+units(q.percent)+'% of eligible cash spent on construction and permanent upgrades. Free grants and consumed supplies have no cash refund.</p><ul><li>Production stops and this business slot is freed.</li><li>Empty the shelves and finish any active shift before closing.</li><li>Wait '+duration(q.cooldownSeconds)+' before rebuilding this business type.</li><li>Completed quests, recipes and research stay learned.</li></ul>'+((q.affectedBusinesses || []).length?'<p class="game-salvage-impact">Supply affected: '+esc(q.affectedBusinesses.join(', '))+'.</p>':'')+(!q.canSalvage?why(q.why):'')+'<div class="game-confirm-actions"><button type="button" class="game-small-button" data-close-business-dialog>Keep business</button>'+bigButton(businessAction('salvage',b),'Close · receive '+units(q.value)+' YM','',!q.canSalvage || s.paused,' game-danger-button')+'</div></div>';
+    return '<div class="game-salvage-review"><h3>Close '+esc(b.name)+'?</h3><div class="game-refund"><span>Cash returned</span><strong>'+units(q.value)+' YM</strong></div><p>'+units(q.percent)+'% of eligible cash spent on construction and permanent upgrades. Free grants and consumed supplies have no cash refund.</p><ul><li>Production stops and this business slot is freed.</li><li>Empty the shelves and finish any active shift before closing.</li><li>Wait '+duration(q.cooldownSeconds)+' before rebuilding this business type.</li><li>Completed quests, product unlocks and research stay learned.</li></ul>'+((q.affectedBusinesses || []).length?'<p class="game-salvage-impact">Supply affected: '+esc(q.affectedBusinesses.join(', '))+'.</p>':'')+(!q.canSalvage?why(q.why):'')+'<div class="game-confirm-actions"><button type="button" class="game-small-button" data-close-business-dialog>Keep business</button>'+bigButton(businessAction('salvage',b),'Close · receive '+units(q.value)+' YM','',!q.canSalvage || s.paused,' game-danger-button')+'</div></div>';
   }
 
   function ensureBusinessDialogs() {
@@ -785,11 +814,31 @@
     focusGrowthTarget(growthTab,need.id);
   }
 
+  function openingReward(project) {
+    return {farm_neighbors:'earn your fish stall',harbor_lunch:'earn your roastery',cafe_opening:'earn +20% café customers'}[project.projectId || project.id] || project.rewardText || 'earn your reward';
+  }
+
   function openingGuide(s) {
-    var n=s.nextStep;
+    var n=s.nextStep, group=s.groupProjects || {}, project=group.current, goal=goalOrder(s);
+    if(s.build)n={title:s.build.name+' is being built',detail:s.build.remainingSec+'s remaining. Your other businesses keep working.'};
+    var buildStep=s.build || group.legacyDelivery || n && n.action && n.action.indexOf('expand:')===0;
+    if(project && !buildStep){
+      var ready=project.canClaim==null?project.ready:project.canClaim;
+      var requirements=project.requirements || [], list=requirements.map(function(g){return units(g.quantity)+' '+g.name.toLowerCase();}).join(' + ');
+      var progress=requirements.map(function(g){return '<span data-opening-good="'+esc(g.goodId)+'">'+units(Math.min(Number(g.delivered || 0),g.quantity))+' / '+units(g.quantity)+' '+esc(g.name.toLowerCase())+'</span>';}).join('<span aria-hidden="true"> · </span>');
+      if(goal && !ready){
+        var waiting=goal.requirements || [], need=waiting.reduce(function(total,g){return total+Number(g.quantity || 0);},0);
+        var stocked=waiting.reduce(function(total,g){return total+Math.min(Number(g.owned || 0),Number(g.quantity || 0));},0);
+        var stockText=goal.canFulfill?'Ready to deliver':(goal.committed?'Saved ':'In stock ')+units(stocked)+' / '+units(need)+' for this order';
+        if(need>0)progress+='<span aria-hidden="true"> · </span><span class="game-opening-stock'+(goal.canFulfill?' k-good':'')+'" data-opening-stock>'+esc(stockText)+'</span>';
+      }
+      var action=ready?bigButton('group_project_claim:'+encodeURIComponent(project.projectId || project.id),'Claim reward','',s.paused,' k-btn--alt'):'<button id="game-next-goal-order" type="button" class="game-small-button" data-building-activities="projects" aria-haspopup="dialog">'+(goal && goal.canFulfill?'Deliver goal order':'View goal order')+' →</button>';
+      return '<section class="game-opening-guide game-opening-goal" aria-label="Next goal" data-opening-project="'+esc(project.projectId || project.id)+'"><div><strong>'+(ready?'Delivery complete → ': 'Deliver '+esc(list)+' → ')+esc(openingReward(project))+'</strong><div class="game-opening-progress" aria-label="Delivered progress">Delivered '+progress+(ready?' · Reward ready':'')+'</div></div>'+action+'</section>';
+    }
+    if(!n && (group.enabled && group.total>0 && group.completed>=group.total || (s.townProjects || {}).completed>=3))n={title:'Opening goals complete',detail:'Your rewards are earned. Keep growing your businesses with upgrades and quests.'};
     if(!n)return '';
-    var control=n.action?bigButton(n.action,n.actionLabel || 'Continue','',!!n.disabled,' k-btn--alt'):n.href?'<a class="game-small-button" href="'+esc(n.href)+'">'+esc(n.actionLabel || 'Continue')+' →</a>':'';
-    return '<section class="game-opening-guide" aria-label="'+(connectedProgression(s)?'Next group goal':'Next town goal')+'"><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.detail)+'</small></div>'+control+'</section>';
+    var control=n.action?bigButton(n.action,n.actionLabel || 'Continue','',!!n.disabled || s.paused,' k-btn--alt'):n.href?'<button id="game-next-goal-order" type="button" class="game-small-button" data-building-activities="projects" aria-haspopup="dialog">View project →</button>':'';
+    return '<section class="game-opening-guide" aria-label="Next goal"><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.detail)+'</small></div>'+control+'</section>';
   }
 
   function focusMarkup(b) {
@@ -806,14 +855,15 @@
   function buildingStockPanel(b, s) {
     var goods=b.goods || s.board.filter(function(g){return g.slot===b.slot;});
     var canSell=b.clearableQuantity==null ? goods.some(function(g){return g.quantity>(g.reserved || 0);}) : b.clearableQuantity>0;
-    var saleNote=(s.clearStockPercent || 60)+'% of retail · Recipe and delivery supplies stay saved.';
+    var independent=independentProduction(s), protectedNote=independent?'Regular buyer and order goods stay saved.':'Recipe and delivery supplies stay saved.';
+    var saleNote=(s.clearStockPercent || 60)+(operatingStatement(s)?'% of shop payout · ':'% of retail · ')+protectedNote;
     return '<section id="stock" class="game-building-stock game-inventory-table" aria-label="'+esc(b.name)+' stock">'+
       '<div class="game-stock-heading"><h3>Stock</h3><span>'+esc(b.name)+'</span><small>'+(b.reserve?'Shop sales paused':'Automatic shop sales')+'</small></div>'+
       '<div class="game-inventory-head"><span>Item</span><span>Stock / cap.</span><span>Saved</span></div><div class="game-inventory-rows" data-keep-scroll="inventory">'+goods.map(function(g){
         var questId=unlockQuestId(b,s), quest=buildingQuests(b,s).find(function(q){return q.id===questId;});
-        var unlockText=quest?'Complete '+quest.title+' to unlock '+g.name:g.unlockText || 'Complete this business’s recipe quest';
-        return '<div class="game-inventory-row'+(g.locked?' is-locked':'')+'" data-stock-good="'+esc(g.goodId)+'" data-stock-locked="'+!!g.locked+'"><span class="game-inventory-good">'+goodIcon(b,g,false)+'<span><strong>'+esc(g.name)+'</strong>'+(g.locked?'<button id="game-stock-unlock-'+esc(g.goodId)+'" type="button" class="game-stock-unlock" title="'+esc(unlockText)+'" aria-label="'+esc(unlockText)+'" data-game-quest="'+esc(unlockQuestId(b,s))+'">Locked · Unlock →</button>':'')+bar(g.capacity?g.quantity/g.capacity*100:0)+'</span></span><span data-stock-count>'+units(g.quantity)+'<small> / '+units(g.capacity || 0)+'</small></span><span data-stock-saved title="Held for recipes, deliveries, or paused shop sales">'+units(g.reserved || 0)+'</span></div>';
-      }).join('')+'</div><div class="game-stock-controls"><button type="button" class="game-small-button game-reserve'+(b.reserve?' is-active':'')+'" data-econ-action="reserve:'+b.slot+':'+(!b.reserve)+'" aria-pressed="'+!!b.reserve+'" title="Pause walk-in sales for this business. Recipes and deliveries keep using their supplies.">'+(b.reserve?'Resume shop sales':'Hold goods')+'</button><button type="button" class="game-small-button game-stock-sell" data-econ-action="sell:'+b.slot+'"'+(!canSell?' disabled':'')+' title="'+(canSell?saleNote:'No surplus yet. Recipe and delivery supplies stay saved.')+'">Sell surplus · '+ym(b.clearStockValue || 0)+'</button><p class="game-hint">'+saleNote+(b.reserve?' Manually held surplus can be sold.':'')+'</p></div></section>';
+        var unlockText=quest?'Complete '+quest.title+' to unlock '+g.name:g.unlockText || 'Complete this business’s unlock quest';
+        return '<div class="game-inventory-row'+(g.locked?' is-locked':'')+'" data-stock-good="'+esc(g.goodId)+'" data-stock-locked="'+!!g.locked+'"><span class="game-inventory-good">'+goodIcon(b,g,false)+'<span><strong>'+esc(g.name)+'</strong>'+(g.locked?'<button id="game-stock-unlock-'+esc(g.goodId)+'" type="button" class="game-stock-unlock" title="'+esc(unlockText)+'" aria-label="'+esc(unlockText)+'" data-game-quest="'+esc(unlockQuestId(b,s))+'">Locked · Unlock →</button>':'')+bar(g.capacity?g.quantity/g.capacity*100:0)+'</span></span><span data-stock-count>'+units(g.quantity)+'<small> / '+units(g.capacity || 0)+'</small></span><span data-stock-saved title="'+(independent?'Held for regular buyers, saved orders, or paused shop sales':'Held for recipes, deliveries, or paused shop sales')+'">'+units(g.reserved || 0)+'</span></div>';
+      }).join('')+'</div><div class="game-stock-controls"><button type="button" class="game-small-button game-reserve'+(b.reserve?' is-active':'')+'" data-econ-action="reserve:'+b.slot+':'+(!b.reserve)+'" aria-pressed="'+!!b.reserve+'" title="Pause walk-in sales for this business. '+(independent?'Deliveries can still use their goods.':'Recipes and deliveries keep using their supplies.')+'">'+(b.reserve?'Resume shop sales':'Hold goods')+'</button><button type="button" class="game-small-button game-stock-sell" data-econ-action="sell:'+b.slot+'"'+(!canSell?' disabled':'')+' title="'+(canSell?saleNote:'No surplus yet. '+protectedNote)+'">Sell surplus · '+ym(b.clearStockValue || 0)+'</button><p class="game-hint">'+saleNote+(b.reserve?' Manually held surplus can be sold.':'')+'</p></div></section>';
   }
 
   function operationsPanel(b, s) {
@@ -830,11 +880,21 @@
     return u && u.capacityBefore!=null && u.capacityAfter!=null ? rateUnits(u.capacityBefore)+' → '+rateUnits(u.capacityAfter)+' '+u.capacityUnit : '';
   }
 
+  function forecastIncome(s) {
+    if(!s)return null;
+    if(s.potentialIncomePerMinute!=null)return s.potentialIncomePerMinute;
+    var buildings=s.buildings || [];
+    if(buildings.length && buildings.every(function(b){return b.potentialIncomePerMinute!=null;}))return Math.round(buildings.reduce(function(total,b){return total+b.potentialIncomePerMinute;},0)*100)/100;
+    return null;
+  }
+
   function upgradeMessage(receipt) {
     var capacity=upgradeCapacity(receipt);
+    var statement=receipt && receipt.operatingStatement;
+    if(statement && statement.before && statement.after)return 'Potential profit '+rateUnits(statement.before.profit)+' → '+rateUnits(statement.after.profit)+' YM/min'+(capacity?' · '+capacity:'')+' · Cash arrives with sales.';
     var costs=receipt && receipt.operatingCostDelta>0?' · Running costs +'+rateUnits(receipt.operatingCostDelta)+' YM/min':'';
     if(receipt && (receipt.upgrade==='production' || receipt.upgrade==='sales') && receipt.incomeBefore!=null && receipt.incomeAfter!=null){
-      return 'Income '+rateUnits(receipt.incomeBefore)+' → '+rateUnits(receipt.incomeAfter)+' YM/min'+(capacity?' · '+capacity:'')+costs+' · Cash arrives with sales.';
+      return 'Take-home sales '+rateUnits(receipt.incomeBefore)+' → '+rateUnits(receipt.incomeAfter)+' YM/min'+(capacity?' · '+capacity:'')+costs+' · Cash arrives with sales.';
     }
     if(!capacity)return (receipt && receipt.consequence || 'Upgrade complete')+costs;
     var label={production:'Production capacity',sales:'Walk-in demand',storage:'Storage'}[receipt.upgrade] || 'Capacity';
@@ -850,19 +910,21 @@
       var reasonId='game-upgrade-reason-'+b.slot+'-'+kind;
       var capacity=upgradeCapacity(u);
       var incomeDelta=u.businessIncomeBefore!=null && u.businessIncomeAfter!=null?Math.round((u.businessIncomeAfter-u.businessIncomeBefore)*100)/100:u.incomeDelta;
-      var optimized=kind==='production' && u.optimizedIncomeDelta!=null;
-      if(optimized)incomeDelta=u.optimizedIncomeDelta;
-      var incomeValue=incomeDelta==null?'':(incomeDelta>0?'+':incomeDelta<0?'−':'')+rateUnits(Math.abs(incomeDelta))+' YM/min';
-      var costValue=u.operatingCostDelta==null?'':(u.operatingCostDelta>0?'+':u.operatingCostDelta<0?'−':'')+rateUnits(Math.abs(u.operatingCostDelta))+' YM/min';
-      var incomeTitle=optimized?'Extra income from the next production level if all added output sells at retail price, with enough supplies and storage.':'Estimated income change for this business after the next upgrade, with current customers and supplies.';
-      var income=!done && incomeValue?'<small class="game-upgrade-impact k-good" aria-label="Estimated income change: '+incomeValue+'" title="'+incomeTitle+'">'+incomeValue+'</small>':'';
-      var costs=!done && costValue?'<small class="game-upgrade-running-cost" aria-label="Estimated cost change: '+costValue+'" title="Estimated running cost change for this business after the next upgrade. Costs are charged as goods are produced."><span class="game-upgrade-cost">'+costValue+'</span></small>':'';
-      return '<div class="game-operation"><div><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong>'+(done?'<span class="game-upgrade-capacity">Complete</span>':income+costs)+'</div><div class="game-upgrade-buy"><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(u.cost)))+'"'+(!u.canBuy&&!done?' aria-describedby="'+reasonId+'"':'')+' title="'+esc(u.why || (capacity?capacity+(u.unlocksSpecialty?' · Specialty':''):u.consequence || u.effect))+'">'+(done?'MAX':ym(u.cost)+' ↑')+'</button>'+(!u.canBuy&&!done?'<small id="'+reasonId+'" class="game-upgrade-reason">'+esc(u.why || 'Keep earning to upgrade')+'</small>':'')+'</div></div>';
+      var statement=u.operatingStatement, statementReady=statement && statement.before && statement.after;
+      var costDelta=u.operatingCostDelta;
+      if(statementReady){incomeDelta=Math.round((statement.after.sales-statement.before.sales)*100)/100;costDelta=Math.round((statement.after.costs-statement.before.costs)*100)/100;}
+      var incomeValue=incomeDelta==null?'':(incomeDelta>=0?'+':'−')+rateUnits(Math.abs(incomeDelta))+' YM/min';
+      var costValue=costDelta==null?'':(costDelta>0?'+':costDelta<0?'−':'')+rateUnits(Math.abs(costDelta))+' YM/min';
+      var incomeTitle=statementReady?'Estimated customer sales change before selling fees, with current customers and available goods. Net profit changes by '+rateUnits(statement.after.profit-statement.before.profit)+' YM/min.':'Estimated take-home sales change for this business after the next upgrade, with current customers and available goods. Production costs are separate.';
+      var income=!done && incomeValue?'<small class="game-upgrade-impact'+(incomeDelta>0?' k-good':incomeDelta<0?' k-bad':' game-no-gain')+'" aria-label="Estimated income change: '+incomeValue+'" title="'+incomeTitle+'">Sales <span class="game-upgrade-value">'+incomeValue+'</span></small>':'';
+      var extra=kind==='production' && incomeDelta<=0 && !done?'<small class="game-upgrade-explanation">'+esc(u.consequence || 'More goods, no extra sales yet. Attract customers or save for orders.')+'</small>':'';
+      var costs=!done && costValue?'<small class="game-upgrade-running-cost" aria-label="Estimated cost change: '+costValue+'" title="'+(statementReady?'Estimated production and selling cost change. Goods cost money to make; selling fees come out of customer payments.':'Estimated running cost change for this business after the next upgrade. Costs are charged as goods are produced.')+'">Costs <span class="game-upgrade-cost">'+costValue+'</span></small>':'';
+      return '<div class="game-operation"><div><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong>'+(done?'<span class="game-upgrade-capacity">Complete</span>':income+costs+extra)+'</div><div class="game-upgrade-buy"><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(u.cost)))+'"'+(!u.canBuy&&!done?' aria-describedby="'+reasonId+'"':'')+' title="'+esc(u.why || (capacity?capacity+(u.unlocksSpecialty?' · Specialty':''):u.consequence || u.effect))+'">'+(done?'MAX':ym(u.cost)+' ↑')+'</button>'+(!u.canBuy&&!done?'<small id="'+reasonId+'" class="game-upgrade-reason">'+esc(u.why || 'Keep earning to upgrade')+'</small>':'')+'</div></div>';
     }).join('')+'</div>';
   }
 
   function recipePanel(b, s) {
-    var recipes=b.recipes || (b.recipe ? [b.recipe] : []);
+    var recipes=independentProduction(s)?[]:b.recipes || (b.recipe ? [b.recipe] : []);
     if(!recipes.length) return '<section class="game-panel">'+panelHead('Produces','No ingredients needed')+'<div class="game-direct-products">'+(b.goods || []).map(function(g){return '<div>'+goodIcon(b,g,false)+'<span>'+esc(g.name)+'</span>'+(g.locked?'<button type="button" class="game-text-button" data-game-quest="'+esc(unlockQuestId(b,s))+'">Quest required →</button>':'')+'</div>';}).join('')+'</div></section>';
     var direct=(b.goods || []).filter(function(g){return !g.inputs || !g.inputs.length;});
     return '<section class="game-panel">'+panelHead('Production chains',processingControl(b))+'<div class="game-panel-body game-recipe">'+direct.map(function(g){return '<div class="game-recipe-chain"><div class="econ-good-line"><span class="econ-good-name">'+goodIcon(b,g,false)+esc(g.name)+'</span><span>'+units(g.productionPerMinute)+' / min</span></div><span class="game-hint">No ingredients needed</span></div>';}).join('')+recipes.map(function(recipe){
@@ -895,24 +957,34 @@
 
   function projectCard(o,i,s) {
     var project=s.townProjects || {}, done=!!o.completed;
-    if(done)return '<section id="town-project" class="k-card game-order game-town-project is-complete" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3>Town projects complete <small>3 / 3</small></h3><p>Your town has earned the café reputation reward.</p><div class="game-project-reward">Café reputation: +20% walk-in customers</div><p class="game-hint">Next: improve your supply chain, choose regular buyers, or try the Breakfast Club recipe workshop on Build.</p></section>';
-    return '<section id="town-project" class="k-card game-order game-town-project" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3><span class="game-order-name">'+esc(o.name)+'</span><small class="game-order-tier">Project '+((project.completed || 0)+1)+' / 3</small></h3><div class="game-order-context"><span class="game-order-channel">Town projects</span><p class="game-order-purpose">'+esc(o.purpose)+'</p><p class="game-project-reward">'+esc(o.rewardText || project.rewardText || '')+'</p></div><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){var b=s.buildings.find(function(x){return x.id===g.buildingId;}) || {id:g.buildingId};return '<div class="econ-good-line"><span class="econ-good-name">'+goodIcon(b,g,false)+'<span>'+esc(g.name)+'</span></span><span class="'+(g.owned>=g.quantity?'k-good':'k-money')+'">'+units(g.owned)+' / '+units(g.quantity)+'</span></div>';}).join('')+'</div></div><div class="game-order-reward"><span>'+ym(o.reward)+'</span><small>+ project reward above</small></div><div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,'Deliver project',o.canFulfill?'Ready':o.why || 'Waiting for goods',!o.canFulfill)+(o.locked?linkButton('./buildings.html',s.nextStep && s.nextStep.action?'Build with your grant →':'Open Build →',' k-btn--alt'):'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'"'+(!o.committed && o.canCommit===false?' disabled':'')+' title="'+esc(o.commitWhy || 'Save only this project’s goods')+'">'+(o.committed?'Release goods':'Save for this project')+'</button>')+'</div><p class="game-hint">'+esc(o.locked?o.why:o.canCommit===false?o.commitWhy:o.supplyConflicts && o.supplyConflicts.length?'Also saved for '+o.supplyConflicts[0]+'. Release that delivery to supply this project sooner.':'Save these goods to protect them from sales. Other goods keep earning. No deadline.')+'</p></section>';
+    if(done)return '<section id="town-project" class="k-card game-order game-town-project is-complete" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3>Town projects complete <small>3 / 3</small></h3><p>Your town has earned the café reputation reward.</p><div class="game-project-reward">Café reputation: +20% walk-in customers</div><p class="game-hint">Next: upgrade your businesses, choose regular buyers, or try the Breakfast Club recipe workshop on Build.</p></section>';
+    return '<section id="town-project" class="k-card game-order game-town-project" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3><span class="game-order-name">'+esc(o.name)+'</span><small class="game-order-tier">Project '+((project.completed || 0)+1)+' / 3</small></h3><div class="game-order-context"><span class="game-order-channel">Town projects</span><p class="game-order-purpose">'+esc(o.purpose)+'</p><p class="game-project-reward">'+esc(o.rewardText || project.rewardText || '')+'</p></div><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){var b=s.buildings.find(function(x){return x.id===g.buildingId;}) || {id:g.buildingId};return '<div class="econ-good-line"><span class="econ-good-name">'+goodIcon(b,g,false)+'<span>'+esc(g.name)+'</span></span><span class="'+(g.owned>=g.quantity?'k-good':'k-money')+'">'+units(g.owned)+' / '+units(g.quantity)+'</span></div>';}).join('')+'</div></div><div class="game-order-reward"><span>'+ym(o.reward)+'</span><small>+ project reward above</small></div><div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,'Deliver project',o.canFulfill?'Ready':o.why || 'Waiting for goods',!o.canFulfill)+(o.locked?linkButton('./buildings.html',s.nextStep && s.nextStep.action?'Build with your grant →':'Open Build →',' k-btn--alt'):'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'"'+(!o.committed && o.canCommit===false?' disabled':'')+' title="'+esc(o.commitWhy || 'Save only this project’s goods')+'">'+(o.committed?'Release goods':'Save for this project')+'</button>')+'</div><p class="game-hint">'+esc(o.locked?o.why:o.canCommit===false?o.commitWhy:o.supplyConflicts && o.supplyConflicts.length?'Also saved for '+o.supplyConflicts[0]+'. Release that delivery to supply this project sooner.':'Regular buyers get goods first. Save the rest for this project. No deadline.')+'</p></section>';
+  }
+
+  function orderEta(o) {
+    if(o.etaLabel==null && o.etaSeconds==null && o.etaIfSavedSeconds==null && !o.etaReason)return '';
+    var label=o.etaLabel || (o.canFulfill?'Ready now':o.etaSeconds!=null?'About '+duration(o.etaSeconds):o.etaIfSavedSeconds!=null?'If saved: about '+duration(o.etaIfSavedSeconds):'Waiting for supplies');
+    return '<p class="game-order-eta" data-order-eta>'+esc(label)+(o.etaReason?'<small>'+esc(o.etaReason)+'</small>':'')+'</p>';
   }
 
   function ordersMarkup(s) {
-    var indexed=orderOffers(s).map(function(o,i){return {order:o,index:i};});
-    indexed.sort(function(a,b){return Number(!!b.order.project && (!b.order.completed || !!orderReactions[b.index]))-Number(!!a.order.project && (!a.order.completed || !!orderReactions[a.index]));});
+    var goal=goalOrder(s), indexed=orderOffers(s).map(function(o,i){return {order:o,index:i};});
+    if(goal && !indexed.some(function(entry){return entry.order.id===goal.id;}))indexed.push({order:goal,index:goal.offerIndex==null?3:goal.offerIndex});
+    var rolls=(s.contracts || {}).rolls;
+    var rollTip='Free reroll · '+(Array.isArray(rolls)?rolls.map(function(r){return r.label+' '+r.chance+'%';}).join(', '):'Standard 65%, Large 25%, Rare 8%, Jackpot 2%')+' · Rewards require delivery';
+    indexed.sort(function(a,b){return Number(b.order===goal)*2+Number(!!b.order.project && (!b.order.completed || !!orderReactions[b.index]))-Number(a.order===goal)*2-Number(!!a.order.project && (!a.order.completed || !!orderReactions[a.index]));});
     return '<div class="game-card-grid game-order-grid" data-keep-scroll="orders">'+indexed.map(function(entry){
       var o=entry.order,i=entry.index;if(o.project)return projectCard(o,i,s);
-      var relationship=o.customer==='breakfast';
+      var isGoal=o===goal, relationship=o.customer==='breakfast';
       var note=relationship ? 'Saved delivery · original reward preserved; your next card shows town projects' : o.materials?'Materials reduce future construction costs':'';
-      var channel=relationship?'Saved town delivery':o.channelLabel || (o.materials?'Building supplies':'Quick cash');
-      var rarity=['standard','large','rare','jackpot'].includes(o.rarity)?o.rarity:'standard';
-      var label=o.rarityLabel || 'Standard';
-      return '<section class="k-card game-order" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3><span class="game-order-name">'+esc(o.name || channel)+'</span><small class="game-order-tier">'+esc(label)+'</small></h3><div class="game-order-context"><span class="game-order-channel">'+esc(channel)+'</span>'+(o.purpose?'<p class="game-order-purpose">'+esc(o.purpose)+'</p>':'')+(note?'<p class="game-order-progress">'+esc(note)+'</p>':'')+'</div><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){
+      var channel=isGoal?'Next goal · '+openingReward((s.groupProjects || {}).current || o):relationship?'Saved town delivery':(goal?'Optional · ':'')+(o.channelLabel || (o.materials?'Building supplies':'Quick cash'));
+      var rarity=['standard','small','bulk','large','rare','jackpot'].includes(o.rarity)?o.rarity:'standard';
+      var label=isGoal?'Goal order':o.rarityLabel || 'Standard';
+      var typeHint=rarity==='small'?'A few units of one product. A small, easy-to-fill shopping list.':rarity==='bulk'?'Many units of one product. Sell spare stock at a lower price per item than a standard order.':'';
+      return '<section '+(isGoal?'id="goal-order" ':'')+'class="k-card game-order'+(isGoal?' game-goal-order':'')+'" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3><span class="game-order-name">'+esc(o.name || channel)+'</span><small class="game-order-tier"'+(typeHint?' title="'+esc(typeHint)+'"':'')+'>'+esc(label)+'</small></h3><div class="game-order-context"><span class="game-order-channel">'+esc(channel)+'</span>'+(o.purpose?'<p class="game-order-purpose">'+esc(o.purpose)+'</p>':'')+(note?'<p class="game-order-progress">'+esc(note)+'</p>':'')+orderEta(o)+'</div><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){
         var building=s.buildings.find(function(b){return b.id===g.buildingId;}) || {id:g.buildingId};
         return '<div class="econ-good-line"><span class="econ-good-name">'+goodIcon(building,g,false)+'<span>'+esc(g.name)+'</span></span><span class="'+(g.owned>=g.quantity?'k-good':'k-money')+'">'+units(g.owned)+' / '+units(g.quantity)+'</span></div>';
-      }).join('')+'</div></div><div class="game-order-reward"><span title="Paid after you deliver all requested goods">'+ym(o.reward)+'</span>'+(o.rewardPercent?'<small>'+mult(o.rewardPercent/100)+'× retail</small>':'')+(o.materials?'<span>+'+materialAmount(o.materials)+'</span>':'')+'</div><div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,'Deliver',o.canFulfill?'Ready':o.why || 'Waiting for goods',!o.canFulfill)+(s.rulesRevision>=2?'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'" title="Save only this order’s quantities. Other goods keep selling. Recipes cannot consume committed stock.">'+(o.committed?'Release goods':'Save for this order')+'</button>':'')+'</div><button class="game-text-button" type="button" data-econ-action="replace:'+i+':'+esc(o.id)+'" title="Free reroll · Standard 65%, Large 25%, Rare 8%, Jackpot 2% · Rewards require delivery">New order ↻ <small>Free</small></button></section>';
+      }).join('')+'</div></div><div class="game-order-reward"><span title="Paid after you deliver all requested goods">'+ym(o.reward)+'</span>'+(o.rewardPercent?'<small>'+mult(o.rewardPercent/100)+(operatingStatement(s)?'× shop payout':'× retail')+'</small>':'')+(o.materials?'<span>+'+materialAmount(o.materials)+'</span>':'')+'</div><div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,isGoal?'Deliver goal order':'Deliver',o.canFulfill?'Ready':o.why || 'Waiting for goods',!o.canFulfill || s.paused)+(s.rulesRevision>=2?'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'"'+(!o.committed && o.canCommit===false || s.paused?' disabled':'')+' title="'+(independentProduction(s)?'Regular buyers get goods first. Save the rest for this order; walk-ins and other orders cannot use it.':'Regular buyers and their recipes get goods first. Save the rest for this order; other recipes and walk-ins cannot use it.')+'">'+(o.committed?'Release goods':'Save for this order')+'</button>':'')+'</div>'+(isGoal?'<p class="game-order-goal-note">Sized for your remaining goal. No deadline.</p>':'<button class="game-text-button" type="button" data-econ-action="replace:'+i+':'+esc(o.id)+'" title="'+esc(rollTip)+'">CLICK!!!!</button>')+'</section>';
     }).join('')+'</div>';
   }
 
@@ -1043,13 +1115,13 @@
         var unavailable=!item.available || taken.indexOf(item.id)>=0;
         return '<option value="'+esc(item.id)+'"'+(unavailable?' disabled':'')+(choice && item.id===choice.id?' selected':'')+'>'+esc(item.name)+(taken.indexOf(item.id)>=0?' · Already signed':!item.available?' · '+esc(item.unlockText || (connectedProgression(s)?'Grow your group to unlock':'Grow your town to unlock')):'')+'</option>';
       }).join('');
-      content='<div class="game-contract-summary"><label for="game-customer-choice">'+(switching?'Replace '+esc(current.name):'Choose a regular customer')+'</label><select id="game-customer-choice"'+(!choice?' disabled':'')+'>'+(!choice?'<option>No customers available</option>':'')+options+'</select>'+(choice?'<p class="game-contract-description">'+esc(choice.description)+'</p><div class="game-contract-pay"><strong>'+ym(choice.reward)+'</strong><span>per shipment · every '+duration(choice.intervalSeconds)+'</span></div>':'<p class="game-contract-description">New businesses bring new customers.</p>')+'</div><div class="game-contract-supply">'+(choice?'<div class="game-contract-caption" aria-label="Goods per shipment">Per shipment</div>'+customerRequirements(s,choice.requirements || [],false):'')+'<div class="game-contract-controls">'+bigButton(customerAction(switching?'switch':'accept',customerSlot,choice && choice.id,current && current.id),switching?'Switch customer':'Sign customer','',!choice)+(switching?'<button id="game-customer-cancel" class="game-text-button" type="button" data-customer-cancel>Keep current customer</button>':'')+'</div><p class="game-contract-help">'+(switching?'Switching frees held goods and starts a new shipment timer.':'First shipment after the full interval. Recipes and saved orders get goods first.')+'</p></div>';
+      content='<div class="game-contract-summary"><label for="game-customer-choice">'+(switching?'Replace '+esc(current.name):'Choose a regular customer')+'</label><select id="game-customer-choice"'+(!choice?' disabled':'')+'>'+(!choice?'<option>No customers available</option>':'')+options+'</select>'+(choice?'<p class="game-contract-description">'+esc(choice.description)+'</p><div class="game-contract-pay"><strong>'+ym(choice.reward)+'</strong><span>per shipment · every '+duration(choice.intervalSeconds)+'</span></div>':'<p class="game-contract-description">New businesses bring new customers.</p>')+'</div><div class="game-contract-supply">'+(choice?'<div class="game-contract-caption" aria-label="Goods per shipment">Per shipment</div>'+customerRequirements(s,choice.requirements || [],false):'')+'<div class="game-contract-controls">'+bigButton(customerAction(switching?'switch':'accept',customerSlot,choice && choice.id,current && current.id),switching?'Switch customer':'Sign customer','',!choice)+(switching?'<button id="game-customer-cancel" class="game-text-button" type="button" data-customer-cancel>Keep current customer</button>':'')+'</div><p class="game-contract-help">'+(switching?'Switching frees held goods and starts a new shipment timer.':'First shipment after the full interval. Goods are saved for this buyer first.')+'</p></div>';
     }else{
       var status=current.paused?'Paused · goods released':current.status==='waiting'?'Waiting for goods · no penalty':'Next shipment in <span data-econ-countdown="'+Math.max(0,current.nextDeliverySeconds || 0)+'">'+duration(current.nextDeliverySeconds)+'</span>';
-      content='<div class="game-contract-summary"><h3>'+esc(current.name)+'</h3><div class="game-contract-pay"><strong>'+ym(current.reward)+'</strong><span>per shipment · every '+duration(current.intervalSeconds)+'</span></div><p class="game-contract-status'+(current.paused?' is-paused':'')+'">'+status+'</p><span class="game-contract-history">'+units(current.deliveries)+' shipments · '+ym(current.earned)+' earned</span></div><div class="game-contract-supply"><div class="game-contract-caption" aria-label="Saved / needed for next shipment">Saved / need</div>'+customerRequirements(s,current.requirements || [],true)+'<div class="game-contract-controls"><button id="game-customer-toggle" class="game-small-button" type="button" data-econ-action="'+customerAction(current.paused?'resume':'pause',customerSlot,'',current.id)+'">'+(current.paused?'Resume':'Pause')+'</button><button id="game-customer-switch" class="game-small-button" type="button" data-customer-switch="'+esc(current.id)+'">Switch</button><button id="game-customer-release" class="game-text-button" type="button" data-econ-action="'+customerAction('release',customerSlot,'',current.id)+'">Release</button></div>'+(customerOrderChoice(current) || '<p class="game-contract-help">'+(current.paused?'Resume starts a new shipment timer.':'Ships automatically when ready, including while you’re away.')+'</p>')+'</div>';
+      content='<div class="game-contract-summary"><h3>'+esc(current.name)+'</h3><div class="game-contract-pay"><strong>'+ym(current.reward)+'</strong><span>per shipment · every '+duration(current.intervalSeconds)+'</span></div><p class="game-contract-status'+(current.paused?' is-paused':'')+'">'+status+'</p><span class="game-contract-history">'+units(current.deliveries)+' shipments · '+ym(current.earned)+' earned</span></div><div class="game-contract-supply"><div class="game-contract-caption" aria-label="Saved / needed for next shipment">Saved / need</div>'+customerRequirements(s,current.requirements || [],true)+'<div class="game-contract-controls"><button id="game-customer-toggle" class="game-small-button" type="button" data-econ-action="'+customerAction(current.paused?'resume':'pause',customerSlot,'',current.id)+'">'+(current.paused?'Resume':'Pause')+'</button><button id="game-customer-switch" class="game-small-button" type="button" data-customer-switch="'+esc(current.id)+'">Switch</button><button id="game-customer-release" class="game-text-button" type="button" data-econ-action="'+customerAction('release',customerSlot,'',current.id)+'">Release</button></div>'+(customerOrderChoice(current) || '<p class="game-contract-help">'+(current.paused?'Resume starts a new shipment timer.':'Ships automatically when ready. Pause to free the saved goods.')+'</p>')+'</div>';
     }
     var next=contracts.nextUnlock;
-    return '<section class="game-panel game-customer-contracts" aria-label="Customer contracts">'+panelHead('Regular buyers',active.length+' / '+slots+' signed')+'<div class="game-contract-panel"><p class="game-contract-intro">Repeat shipments earn cash automatically. Short of goods? Buyers wait.</p><div class="game-contract-slots" role="group" aria-label="Customer slots">'+slotMarkup+'</div><div class="game-contract-body">'+content+'</div><div class="game-contract-footer"><span>'+ym(contracts.earned)+' earned</span><button class="game-customer-motion" type="button" data-customer-motion aria-pressed="'+customerArtEnabled+'" aria-label="Animate customer emotes">Motion '+(customerArtEnabled?'on':'off')+'</button><span>'+(next?'Slot '+next.slots+' at '+next.buildings+' businesses':'All '+slots+' slots unlocked')+'</span></div></div></section>';
+    return '<section class="game-panel game-customer-contracts" aria-label="Customer contracts">'+panelHead('Regular buyers',active.length+' / '+slots+' signed')+'<div class="game-contract-panel"><p class="game-contract-intro">Automatic shipments at 90% of '+(operatingStatement(s)?'shop payout':'retail')+'. Regular buyers get goods first.</p><div class="game-contract-slots" role="group" aria-label="Customer slots">'+slotMarkup+'</div><div class="game-contract-body">'+content+'</div><div class="game-contract-footer"><span>'+ym(contracts.earned)+' earned</span><button class="game-customer-motion" type="button" data-customer-motion aria-pressed="'+customerArtEnabled+'" aria-label="Animate customer emotes">Motion '+(customerArtEnabled?'on':'off')+'</button><span>'+(next?'Slot '+next.slots+' at '+next.buildings+' businesses':'All '+slots+' slots unlocked')+'</span></div></div></section>';
   }
 
   function renderProductionInventory(el,s,b,market) {
@@ -1104,7 +1176,7 @@
       rows([
         ['Net worth', ym(s.netWorth)],
         ['Cash', ym(s.cash)],
-        [productionModel(s)?'Income / min':'Sales / min', incomeRate(s.incomePerMinute == null ? s.revenuePerDay/1440 : s.incomePerMinute)],
+        [operatingStatement(s)?'Take-home sales / min':productionModel(s)?'Income / min':'Sales / min', incomeRate(s.incomePerMinute == null ? s.revenuePerDay/1440 : s.incomePerMinute)],
         ['Buildings owned', s.buildingsOwned + ' of ' + s.tierCount],
         ['Licence', s.gateOpen ? 'open' : 'locked', s.gateOpen ? 'up' : 'muted'],
       ]) +
@@ -1223,7 +1295,7 @@
       });
     }
     if(focusId==='game-expansion-choice'){var expansionChoice=document.getElementById(focusId);if(expansionChoice)expansionChoice.focus({preventScroll:true});}
-    if(focusId && /^(game-wf-|game-staff-|game-growth-|game-quest-|game-activity-|game-activities-|game-project-|game-stock-unlock-)/.test(focusId)){var managementControl=document.getElementById(focusId);if(managementControl && !managementControl.disabled)managementControl.focus({preventScroll:true});}
+    if(focusId && /^(game-wf-|game-staff-|game-growth-|game-quest-|game-activity-|game-activities-|game-project-|game-next-goal-|game-stock-unlock-)/.test(focusId)){var managementControl=document.getElementById(focusId);if(managementControl && !managementControl.disabled)managementControl.focus({preventScroll:true});}
     if(focusId==='game-business-choice' || focusId==='game-business-focus'){var businessChoice=document.getElementById(focusId);if(businessChoice)businessChoice.focus({preventScroll:true});}
     var openBreakfast=document.querySelector('#game-breakfast[open]');
     if(openBreakfast && !openBreakfast.contains(document.activeElement))openBreakfast.querySelector('[data-close-breakfast]').focus({preventScroll:true});
@@ -1231,7 +1303,7 @@
     if(focusId && /^(game-customer-|game-tab-)/.test(focusId)){var customerControl=document.getElementById(focusId);if(customerControl && !customerControl.disabled)customerControl.focus({preventScroll:true});}
     renderCashChip(snapshot);
     var stats=document.getElementById('buildings-side-stats');
-    if(stats) stats.innerHTML=line('Buildings owned',snapshot.buildingsOwned)+line('Net worth',ym(snapshot.netWorth))+line(productionModel(snapshot)?'Est. revenue / day':'Revenue / day',ym(snapshot.revenuePerDay));
+    if(stats) stats.innerHTML=line('Buildings owned',snapshot.buildingsOwned)+line('Net worth',ym(snapshot.netWorth))+line(operatingStatement(snapshot)?'Est. take-home sales / day':productionModel(snapshot)?'Est. revenue / day':'Revenue / day',ym(snapshot.revenuePerDay));
     var messages=document.getElementById('buildings-lab-log');
     if(messages) messages.textContent=statusMessage ? statusMessage.text : (snapshot.tickerLines.join(' · ') || 'Your class market is open.');
     var ticker=document.getElementById('ticker');
@@ -1268,10 +1340,11 @@
       var before=(previous.buildings || []).find(function(item){return item.slot===b.slot && item.id===b.id;});
       if(!before)return;
       var changes={}, oldActivity=before.activity || {}, activity=b.activity || {};
-      if(before.incomePerMinute!==b.incomePerMinute)changes.income=true;
       var oldFinances=financeValues(before), finances=financeValues(b);
+      if(oldFinances.sales!==finances.sales)changes.income=true;
       if(oldFinances.cost!==finances.cost || oldFinances.estimatedCost!==finances.estimatedCost)changes.cost=true;
       if(oldFinances.profit!==finances.profit || oldFinances.estimatedProfit!==finances.estimatedProfit)changes.profit=true;
+      if(oldFinances.margin!==finances.margin)changes.margin=true;
       if(oldActivity.producedUnits!=null && activity.producedUnits!=null && oldActivity.producedUnits!==activity.producedUnits)changes.producedActual=true;
       if(oldActivity.soldUnits!=null && activity.soldUnits!=null && oldActivity.soldUnits!==activity.soldUnits)changes.soldActual=true;
       if(before.productionCapacityPerMinute!==b.productionCapacityPerMinute)changes.produced=true;
@@ -1314,25 +1387,8 @@
     });
   }
 
-  function useCurrentIncome(payload) {
-    if(!productionModel(payload))return;
-    // Older running servers put past sales in incomePerMinute. Their forecast
-    // already reflects the purchased levels, so use it before updating cards.
-    var buildings=payload.buildings || [], total=0, complete=buildings.length>0;
-    buildings.forEach(function(b){
-      if(typeof b.potentialIncomePerMinute==='number' && Number.isFinite(b.potentialIncomePerMinute)){
-        b.incomePerMinute=b.potentialIncomePerMinute;
-        total+=b.incomePerMinute;
-      }else complete=false;
-    });
-    if(typeof payload.potentialIncomePerMinute==='number' && Number.isFinite(payload.potentialIncomePerMinute)){
-      payload.incomePerMinute=payload.potentialIncomePerMinute;
-    }else if(complete)payload.incomePerMinute=Math.round(total*100)/100;
-  }
-
   function apply(payload) {
     if (!payload) return;
-    useCurrentIncome(payload);
     // Login is disabled for now: the server hands out a seat on first contact.
     // Keep it, so every page in this browser is the same player.
     if (payload.token && (!session || session.token !== payload.token)) {
@@ -1435,7 +1491,7 @@
       var focus=name.split(':');path='/focus';body={slot:Number(focus[1]),focus:focus[2]};
     } else if (/^(fulfill|replace|commit):/.test(name)) {
       var order=name.split(':');path='/orders/'+order[0];body={offerIndex:Number(order[1]),orderId:order.slice(2).join(':')};
-      var oldOrder=snapshot && orderOffers(snapshot)[body.offerIndex];
+      var oldOrder=snapshot && orderAt(snapshot,body.offerIndex);
       if(order[0]==='commit')body.committed=!(oldOrder && oldOrder.committed);
       var matchingOrder=!!oldOrder && oldOrder.id===body.orderId;
       skippedJackpot=order[0]==='replace' && matchingOrder && oldOrder.rarity==='jackpot';
@@ -1466,7 +1522,10 @@
     request('POST', path, body).then(function (payload) {
       busy = false;
       var receipt = payload.receipt;
-      var incomeBefore=snapshot && snapshot.incomePerMinute;
+      var upgradeBuilding=name.indexOf('upgrade:')===0 && snapshot && (snapshot.buildings || []).find(function(b){return b.slot===body.slot;});
+      var upgradePreview=upgradeBuilding && (upgradeBuilding.upgrades || {})[body.kind];
+      var incomeBefore=upgradePreview && upgradePreview.incomeBefore!=null?upgradePreview.incomeBefore:upgradePreview && upgradePreview.businessIncomeBefore!=null?upgradePreview.businessIncomeBefore:forecastIncome(snapshot);
+      var incomeAfter=upgradePreview && upgradePreview.incomeAfter!=null?upgradePreview.incomeAfter:upgradePreview && upgradePreview.businessIncomeAfter!=null?upgradePreview.businessIncomeAfter:forecastIncome(payload);
       if(skippedOpportunity)reactToOrder(body.offerIndex,'missed',skippedJackpot?'Skipped a jackpot order':'Skipped a ready order');
       if(savedOrder)reactToOrder(body.offerIndex,'saved',savedJackpot?'Saved a jackpot order':'Saved an order',savedJackpot?'lucky-seven-pixel.svg':null);
       if(deliveredOrder)reactToOrder(body.offerIndex,'delivered',deliveredJackpot?'Delivered a jackpot order':'Delivered an order',deliveredJackpot?'gold-bars-pixel.svg':null);
@@ -1475,18 +1534,18 @@
       apply(payload);
       if(name.indexOf('upgrade:')===0 && receipt){
         if(receipt.incomeBefore==null)receipt.incomeBefore=incomeBefore;
-        if(receipt.incomeAfter==null)receipt.incomeAfter=payload.incomePerMinute;
+        if(receipt.incomeAfter==null)receipt.incomeAfter=incomeAfter;
       }
       if(name.indexOf('customer:')===0){var nextCustomerControl=document.getElementById(body.action==='release'?'game-customer-choice':body.action==='upgrade' || body.action==='downgrade'?'game-customer-size':'game-customer-toggle');if(nextCustomerControl)nextCustomerControl.focus({preventScroll:true});}
       if (productionModel(payload)) {
         if(name.indexOf('workforce:')===0) setStatus(receipt && receipt.message || 'Workforce updated','success');
         else if(/^(group_project_claim|legacy_project_deliver):/.test(name)) setStatus(receipt && receipt.message || (body.action==='group_project_claim'?'Group project reward claimed':'Saved project delivered'),'success');
-        else if(name.indexOf('business:')===0 || name.indexOf('progression:')===0) setStatus(receipt && receipt.message || ({pause:'Business paused · production and operating costs stopped',resume:'Business resumed',hire:'Shift started',salvage:'Business closed · salvage paid',research:'Research learned',craft:'Equipment crafted',quest_plan:'Plan selected',quest_batch:'Practice batch complete',quest_finish:'Quest complete · reward unlocked',quest_reset:'Practice supplies restored'}[body.action]) || 'Saved','success');
+        else if(name.indexOf('business:')===0 || name.indexOf('progression:')===0) setStatus(receipt && receipt.message || ({pause:'Production paused · no new production costs',resume:'Business resumed',hire:'Shift started',salvage:'Business closed · salvage paid',research:'Research learned',craft:'Equipment crafted',quest_plan:'Plan selected',quest_batch:'Practice batch complete',quest_finish:'Quest complete · reward unlocked',quest_reset:'Practice supplies restored'}[body.action]) || 'Saved','success');
         else if (name.indexOf('customer:')===0) setStatus(receipt && receipt.message || ({accept:'Customer signed · automatic shipments start after the first interval',switch:'Customer switched · a new shipment timer has started',pause:'Customer paused · held goods released',resume:'Customer resumed · a new shipment timer has started',release:'Customer released · slot and goods available',upgrade:'Larger order accepted · a new shipment timer has started',downgrade:'Smaller order restored · a new shipment timer has started'}[body.action]),'success');
         else if (receipt && receipt.kind === 'breakfast') setStatus(receipt.message,'success');
         else if (receipt && receipt.kind === 'sell') setStatus('Stock sold · '+ym(receipt.net == null ? receipt.gross : receipt.net),'success');
         else if (name.indexOf('upgrade:')===0) setStatus(upgradeMessage(receipt),'success');
-        else if (name.indexOf('commit:')===0) setStatus(body.committed?'Saving this order’s goods · surplus keeps selling':'Goods released to customers and recipes','success');
+        else if (name.indexOf('commit:')===0) setStatus(body.committed?'Saving this order’s goods · surplus keeps selling':independentProduction(payload)?'Goods released to customers and orders':'Goods released to customers and recipes','success');
         else if (name.indexOf('focus:')===0) setStatus('Specialty changed · check your new output','success');
         else if (name.indexOf('reserve:')===0) setStatus(body.reserve?'Saving goods for orders':'Customer sales resumed','success');
         else if (name.indexOf('processing:')===0) setStatus(body.enabled?'Processing resumed':'Recipes paused','success');
@@ -1654,7 +1713,7 @@
     var dialog=document.getElementById('econ-overnight');
     if(!dialog){dialog=document.createElement('dialog');dialog.id='econ-overnight';dialog.className='econ-kid';document.body.appendChild(dialog);}
     if (snapshot && productionModel(snapshot)) {
-      dialog.innerHTML='<h2>Welcome back</h2>'+line('Retail sales',ym(r.retailEarned),'k-good')+(r.customerEarned || r.customerDeliveries?line('Customer contracts',ym(r.customerEarned),'k-good')+line('Customer shipments',units(r.customerDeliveries)):'')+line('Goods made',units(r.unitsProduced))+(r.builds?line('Businesses opened',r.builds):'')+(r.offlineTicksSkipped>0?'<p class="game-hint">'+units(snapshot.offlineHours || 12)+'h offline limit reached.</p>':'')+'<button class="k-btn" data-overnight-close>Continue</button>';
+      dialog.innerHTML='<h2>Welcome back</h2>'+line(operatingStatement(snapshot)?'Shop cash after selling fees':'Retail sales',ym(r.retailEarned),'k-good')+(r.customerEarned || r.customerDeliveries?line(operatingStatement(snapshot)?'Buyer cash after selling fees':'Customer contracts',ym(r.customerEarned),'k-good')+line('Customer shipments',units(r.customerDeliveries)):'')+line('Goods made',units(r.unitsProduced))+(r.builds?line('Businesses opened',r.builds):'')+(r.offlineTicksSkipped>0?'<p class="game-hint">'+units(snapshot.offlineHours || 12)+'h offline limit reached.</p>':'')+'<button class="k-btn" data-overnight-close>Continue</button>';
     } else {
       dialog.innerHTML='<h2>OVERNIGHT REPORT</h2>'+line('Goods produced',ym(r.produced))+line('Overflow goods sold',ym(r.overflowSold))+
         line('Overflow discount cost',ym(r.overflowCost))+line('Buildings completed',r.builds)+line('Market events',r.events)+

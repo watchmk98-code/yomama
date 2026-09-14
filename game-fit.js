@@ -7,6 +7,52 @@
   if(location.hash==='#team')tabs.Operations=1;
   if(location.hash==='#quests')tabs.Operations=2;
   function compact(){return innerWidth<1100 || innerHeight<=650 || (innerHeight<720 && !!document.querySelector('#econ-building')) || (innerHeight<820 && !!document.querySelector('#econ-building #game-expansion-choice, #econ-building .game-construction'));}
+  function guideText(value){var node=document.createElement('span');node.textContent=value;return node.innerHTML;}
+  function moneyGuide(state){
+    if(!state.operatingStatement || !state.operatingStatement.enabled)return '';
+    return '<p class="game-guide-tip"><strong>Sales</strong> shows what customers pay. <strong>Costs</strong> includes making goods, plus supplies and selling fees taken from sales. <strong>Cash</strong> is what you can spend. Order rewards and buyer cards show cash after selling fees; production costs are paid separately. <strong>Shop payout</strong> means the cash left from a normal shop sale after selling fees.</p>';
+  }
+  function rhythmGuide(state){
+    var rhythms=state.sectorRhythms;
+    if(!rhythms || !rhythms.enabled)return '';
+    return '<details class="game-guide-more"><summary>Why does stock arrive in batches?</summary><p><strong>Production / min</strong> shows an average. Goods arrive in batches, so your stock can jump after a wait. The batch pattern keeps the same average output.</p><ul>'+
+      (rhythms.profiles || []).map(function(profile){return '<li><strong>'+guideText(profile.label)+':</strong> '+guideText(profile.description)+'</li>';}).join('')+
+      '</ul><p>Industry can make a smaller batch if cash or shelf space is too tight for a large one. Energy products begin at different times, with a starting wait of up to '+guideText(2*(state.tickSeconds || 15))+' game seconds. Pausing the business or class pauses this wait. Stock updates every '+guideText(state.tickSeconds || 15)+' game seconds.</p></details>';
+  }
+  function guideMarkup(kind,state){
+    var costs=state.operations && state.operations.enabled, independent=state.productionMode==='independent';
+    if(kind==='build')return '<p class="game-guide-intro">Make goods → sell goods → earn cash.</p>'+
+      '<ol class="game-guide-steps">'+
+      '<li><strong>Choose a business.</strong> Select its name to see what it makes, its Stock, and its Upgrades.</li>'+
+      '<li><strong>Let it work.</strong> Open businesses make goods automatically over time. Goods appear in <strong>Stock</strong>. You earn cash when goods are sold.</li>'+
+      (independent?'<li><strong>Each business makes its own goods.</strong> It does not take ingredients from your other businesses.<span class="game-guide-example">The Roastery makes pastries. Your Farm keeps its eggs and honey.</span></li>':'<li><strong>Feed the recipes.</strong> Some products need goods from other businesses. A recipe uses up its ingredients to make a new item.<span class="game-guide-example">Farm eggs + honey → Roastery pastries</span></li>')+
+      '<li><strong>Sell or save.</strong> Shop customers buy automatically when goods are available. Visit <strong>Market</strong> to choose orders or sign regular buyers.</li></ol>'+
+      '<p class="game-guide-tip"><strong>Grey item?</strong> Click <strong>Locked · Unlock →</strong> in Stock and complete the quest shown.</p>'+
+      moneyGuide(state)+
+      rhythmGuide(state)+
+      '<details class="game-guide-more"><summary>Which upgrade should I choose?</summary><ul>'+
+      '<li><strong>Production:</strong> make goods faster. The green number shows extra sales with your current customers. <strong>+0 YM/min</strong> means more output but no extra sales yet.</li><li><strong>Customers:</strong> attract more walk-in buyers. They still need goods to buy.</li><li><strong>Storage:</strong> fit more goods on your shelves.</li></ul>'+
+      (costs?'<p>Upgrades cost cash and increase running costs. Check <strong>Sales · last 60s</strong> and <strong>Costs · last 60s</strong> for cash actually earned and spent. Potential figures are estimates. Saved goods still cost money to make; payment arrives when you deliver them.</p>':'')+
+      '<p>To open another business, use <strong>Expand</strong> and collect what its price and requirements show.</p></details>'+
+      '<details class="game-guide-more"><summary>Why did my goods stop growing?</summary><p>Check the business message and Stock. You may need '+(independent?'empty shelf space, a quest unlock':'ingredients, empty shelf space, an unlocked recipe')+(costs?', or cash to pay production costs.':'.')+' Make sure the business'+(independent?'':' and its recipes')+(independent?' is not paused.</p>':' are not paused.</p>')+
+      '<p><strong>Hold goods</strong> stops walk-in sales only. '+(independent?'Deliveries can still use goods.':'Recipes and deliveries can still use goods.')+' Press <strong>Resume shop sales</strong> to sell automatically again.</p>'+
+      '<p>Regular buyers'+(independent?'':' and their recipes')+' get supplies first. Pause a buyer in Market if you need those goods for something else.</p></details>';
+    var timed=!!state.orderPreview, varied=((state.contracts || {}).rolls || []).some(function(r){return r.id==='small';});
+    return '<p class="game-guide-intro">An order is a shopping list. Bring the goods to earn its reward.</p>'+
+      '<ol class="game-guide-steps">'+
+      '<li><strong>Pick a reward.</strong> The <strong>Goal order</strong> asks only for what your current opening goal still needs. Other cards are optional. Look at the cash and any materials at the bottom of a card. Materials help you build.</li>'+
+      '<li><strong>Fill the shopping list.</strong> Read <strong>Have / need</strong> beside each item.<span class="game-guide-example">3 / 5 = 3 ready to use. You need 2 more.</span>Let your businesses make the missing goods. The estimate shows how long gathering them may take; <strong>If saved</strong> assumes you press <strong>Save for this order</strong>.'+(state.sectorRhythms && state.sectorRhythms.enabled?' Industry makes larger batches, so stock may jump after a wait.':'')+' Use <strong>Save for this order</strong> to keep supplies for this job after regular buyers get theirs.</li>'+
+      '<li><strong>Deliver when every item is ready.</strong> Press <strong>Deliver</strong>. The goods leave your stock and you get the reward.'+
+      (timed?' <strong>Start delivery</strong> sends a timed shipment instead: its goods are saved for the trip, and you get paid when the timer ends.':'')+'</li></ol>'+
+      '<p class="game-guide-tip"><strong>Want another offer?</strong> <strong>CLICK!!!!</strong> changes that card for free. Clicking it earns no cash.</p>'+
+      moneyGuide(state)+
+      (varied?'<details class="game-guide-more"><summary>What do the order labels mean?</summary><ul><li><strong>Small:</strong> a few units of one product. Try this when you have a little stock to spare.</li><li><strong>Standard:</strong> a regular-sized shopping list.</li><li><strong>Bulk:</strong> lots of one product. Clear spare stock, but earn less per item than a Standard order on the same card.</li><li><strong>Large:</strong> a bigger shopping list with a better price per item.</li><li><strong>Rare and Jackpot:</strong> bigger requests with extra cash bonuses.</li></ul><p>Check the goods and reward each time. A bigger reward also uses more of your stock. On a timed card, you still wait for delivery.</p></details>':'')+
+      (timed?'<details class="game-guide-more"><summary>What is different about the three cards?</summary><ul><li><strong>Delivery:</strong> wait for payment. A bigger payout takes longer.</li><li><strong>Sector:</strong> an order from one business group, such as Food. The game picks the group. Earn cash and materials.</li><li><strong>Third card:</strong> a general order. Deliver its goods to get cash right away.</li></ul></details>':'')+
+      '<details class="game-guide-more"><summary>Who gets my goods first?</summary><p><strong>Regular buyers:</strong> choose a buyer and press <strong>Sign customer</strong>. They buy a set bundle automatically on a timer, at a lower price. '+(independent?'Goods for their next shipment are saved first.':'Their next shipment and its ingredients get supplies first.')+' Short of goods? The buyer waits.</p>'+
+      '<p><strong>Need those goods for an order?</strong> Press <strong>Pause</strong> on the buyer. You stop their payments and free their supplies. <strong>Resume</strong> starts a new shipment timer.</p>'+
+      '<p><strong>Walk-in customers:</strong> buy available goods automatically at the normal price. They may not buy everything you make. The <strong>Customers</strong> upgrade brings more buyers; demand does not change randomly.</p>'+
+      '<p><strong>One stock, many choices:</strong> goods you '+(independent?'sell or deliver':'sell or use in a recipe')+' are gone. Keep a regular buyer supplied, save for an order, or leave goods for walk-ins.</p></details>';
+  }
   function choose(group,index){tabs[group]=index;render();}
   function sectionMenu(){
     var nav=document.querySelector('.hero .tabs');if(!nav)return;
@@ -104,6 +150,10 @@
     document.body.classList.add('game-fitted');document.body.classList.toggle('game-compact',compact());sectionMenu();
     var build=document.getElementById('econ-building'), market=document.getElementById('econ-market'), ops=document.getElementById('econ-auto'), licence=document.getElementById('econ-license');
     if(build){
+      var buildHeading=document.querySelector('.game-build-page .game-page-head h1');
+      if(buildHeading && !document.getElementById('game-build-guide')){
+        var buildGuide=document.createElement('button');buildGuide.type='button';buildGuide.id='game-build-guide';buildGuide.className='game-guide-button game-build-guide';buildGuide.dataset.marketHelp='build';buildGuide.setAttribute('aria-haspopup','dialog');buildGuide.textContent='guide';buildHeading.after(buildGuide);
+      }
       build.querySelectorAll('.game-fit-controls').forEach(function(n){n.remove();});
       var site=build.querySelector('.game-site'), stock=build.querySelector('.game-building-stock');
       if(site && stock){if(compact())site.after(stock);else site.appendChild(stock);}
@@ -124,6 +174,10 @@
       market.classList.toggle('game-market-narrow',!compact() && !!regulars && innerWidth<1250);
       var buyerPanel=market.querySelector('.game-contract-panel');
       market.classList.toggle('game-market-tight',!!buyerPanel && buyerPanel.clientHeight<570);
+      var ordersHeading=market.querySelector('.game-market-orders > .game-panel-head');
+      if(ordersHeading && !ordersHeading.querySelector('[data-market-help="orders"]')){
+        var guide=document.createElement('button');guide.type='button';guide.id='game-orders-guide';guide.className='game-guide-button game-orders-guide';guide.dataset.marketHelp='orders';guide.setAttribute('aria-haspopup','dialog');guide.textContent='guide';ordersHeading.querySelector('h2').after(guide);
+      }
       var buyerHeading=regulars && regulars.querySelector('.game-panel-head');
       if(buyerHeading && !buyerHeading.querySelector('[data-market-help]')){
         var help=document.createElement('button');help.type='button';help.id='game-market-buyer-help';help.className='game-market-help';help.dataset.marketHelp='buyers';help.setAttribute('aria-label','About regular buyers');help.textContent='?';buyerHeading.appendChild(help);
@@ -135,7 +189,7 @@
         if(offer.hidden){offerPreview=document.createElement('button');offerPreview.id='game-market-offer';offerPreview.type='button';offerPreview.className='game-market-offer';offerPreview.dataset.marketHelp='offer';offerPreview.setAttribute('aria-label','Review order size');offerPreview.textContent='Order size…';market.querySelector('.game-contract-footer').appendChild(offerPreview);}
       }
     }
-    if(ops && !ops.querySelector('.wf-workspace'))tabset(ops,'Operations',[['Recipes',ops.querySelector('.game-purpose-main')],['Team',ops.querySelector('.game-business-team')],['Quests',ops.querySelector('.game-business-quests')]]);
+    if(ops && !ops.querySelector('.wf-workspace'))tabset(ops,'Operations',[[(window.YomamaEcon && window.YomamaEcon.state() || {}).productionMode==='independent'?'Products':'Recipes',ops.querySelector('.game-purpose-main')],['Team',ops.querySelector('.game-business-team')],['Quests',ops.querySelector('.game-business-quests')]]);
     if(licence){var sections=Array.from(licence.querySelector('.game-license-layout')?.children||[]);tabset(licence,'Licence',sections.map(function(n){return [n.classList.contains('game-invest')?'Invest':n.querySelector('#game-goals')?'Goals':'Quiz',n];}));var goals=licence.querySelector('#game-goals');if(goals)goals.open=true;}
     paginate('.game-roster-list','Buildings',68,1);
     var orderGrid=market && market.querySelector('.game-order-grid');
@@ -153,17 +207,19 @@
   document.addEventListener('click',function(event){
     var action=event.target.closest('.game-market-help-dialog [data-econ-action]');if(action){action.closest('dialog').close();return;}
     var trigger=event.target.closest('[data-market-help]');if(!trigger)return;
-    var panel=document.querySelector('.game-customer-contracts');if(!panel)return;
-    var dialog=document.createElement('dialog');dialog.className='econ-kid game-market-help-dialog';dialog.setAttribute('aria-labelledby','market-help-title');
-    var heading=document.createElement('div');heading.className='game-dialog-head';
-    var title=document.createElement('h2');title.id='market-help-title';title.textContent=trigger.dataset.marketHelp==='offer'?'Review order size':'Regular buyers';heading.appendChild(title);
-    var close=document.createElement('button');close.type='button';close.className='game-small-button';close.textContent='Close';close.addEventListener('click',function(){dialog.close();});heading.appendChild(close);dialog.appendChild(heading);
-    if(trigger.dataset.marketHelp==='offer'){var terms=panel.querySelector('.game-contract-order-choice').cloneNode(true);terms.hidden=false;terms.querySelectorAll('[id]').forEach(function(node){node.removeAttribute('id');});dialog.appendChild(terms);}
-    else panel.querySelectorAll('.game-contract-intro,.game-contract-description,.game-contract-help,.game-contract-footer > span:last-of-type').forEach(function(source){var paragraph=document.createElement('p');paragraph.textContent=source.textContent;dialog.appendChild(paragraph);});
     var helpKind=trigger.dataset.marketHelp;
+    var panel=document.querySelector('.game-customer-contracts');if(!panel && helpKind!=='orders' && helpKind!=='build')return;
+    var dialog=document.createElement('dialog');dialog.className='econ-kid game-market-help-dialog';dialog.setAttribute('aria-labelledby','market-help-title');
+    if(helpKind==='orders' || helpKind==='build')dialog.classList.add('game-guide-dialog');
+    var heading=document.createElement('div');heading.className='game-dialog-head';
+    var title=document.createElement('h2');title.id='market-help-title';title.textContent=helpKind==='build'?'Build guide':helpKind==='orders'?'Orders guide':helpKind==='offer'?'Review order size':'Regular buyers';heading.appendChild(title);
+    var close=document.createElement('button');close.type='button';close.className='game-small-button';close.textContent='Close';close.addEventListener('click',function(){dialog.close();});heading.appendChild(close);dialog.appendChild(heading);
+    if(helpKind==='orders' || helpKind==='build')dialog.insertAdjacentHTML('beforeend',guideMarkup(helpKind,window.YomamaEcon && window.YomamaEcon.state() || {}));
+    else if(helpKind==='offer'){var terms=panel.querySelector('.game-contract-order-choice').cloneNode(true);terms.hidden=false;terms.querySelectorAll('[id]').forEach(function(node){node.removeAttribute('id');});dialog.appendChild(terms);}
+    else panel.querySelectorAll('.game-contract-intro,.game-contract-description,.game-contract-help,.game-contract-footer > span:last-of-type').forEach(function(source){var paragraph=document.createElement('p');paragraph.textContent=source.textContent;dialog.appendChild(paragraph);});
     dialog.addEventListener('close',function(){dialog.remove();var next=document.querySelector('[data-market-help="'+helpKind+'"]');if(next)next.focus({preventScroll:true});});document.body.appendChild(dialog);dialog.showModal();
   });
-  window.addEventListener('hashchange',function(){if(location.hash==='#stock'){tabs.Build=1;render();}});
+  window.addEventListener('hashchange',function(){if(location.hash==='#stock'){tabs.Build=1;render();}else if(location.hash==='#goal-order'){tabs.Market=0;pages.Orders=0;render();}});
   window.addEventListener('resize',function(){clearTimeout(resizing);resizing=setTimeout(render,100);});
   window.addEventListener('yomama:econ',render);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();

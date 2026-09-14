@@ -143,28 +143,26 @@ def test_reserve_prevents_retail_sales_and_can_be_released():
     money_and_stock_are_valid(state)
 
 
-def test_recipe_inputs_are_required_and_consumed_once():
+def test_former_recipe_produces_without_suppliers_and_never_consumes_their_stock():
     cfg = config()
     owners = {g['id']: i for i, t in enumerate(cfg['tiers']) for g in t['goods']}
     tier, product = next((i, g) for i, t in enumerate(cfg['tiers']) for g in t['goods']
                          if g.get('inputs') and all(owners[n['goodId']] != i for n in g['inputs']))
     state = sole_product(cfg, tier, product)
-    state['cash'] = 1000  # Isolate ingredient conservation from the operating budget.
+    state['cash'] = 1000  # Isolate stock conservation from the operating budget.
     state['b'][0]['reserve'] = True
     replay(cfg, state, product['cycleTicks'] * 10)
-    assert state['inventory'][product['id']] == 0
+    assert state['inventory'][product['id']] == 10 * product['quantity']
     for ingredient in product['inputs']:
         state['inventory'][ingredient['goodId']] = ingredient['quantity']
     replay(cfg, state, product['cycleTicks'] * 3)
-    assert state['inventory'][product['id']] == 1
+    assert state['inventory'][product['id']] == 13 * product['quantity']
     for ingredient in product['inputs']:
-        assert state['inventory'][ingredient['goodId']] == 0
-    replay(cfg, state, product['cycleTicks'] * 100)
-    assert state['inventory'][product['id']] == 1
+        assert state['inventory'][ingredient['goodId']] == ingredient['quantity']
     money_and_stock_are_valid(state)
 
 
-def test_processing_can_pause_release_inputs_and_resume_without_duplication():
+def test_obsolete_processing_toggle_cannot_silently_stop_products():
     cfg = config()
     state = E.new_state(cfg)
     state['b'].append(building(2))
@@ -172,21 +170,19 @@ def test_processing_can_pause_release_inputs_and_resume_without_duplication():
     owners = {g['id']: i for i, tier in enumerate(cfg['tiers']) for g in tier['goods']}
     pastry = next(g for g in cfg['tiers'][2]['goods'] if g.get('inputs')
                   and all(owners[n['goodId']] != 2 for n in g['inputs']))
-    assert E.set_processing(cfg, state, 1, False)['ok']
+    before=copy.deepcopy(state)
+    assert not E.set_processing(cfg, state, 1, False)['ok']
+    assert state==before
     assert all(n['goodId'] not in E.chain_reservations(cfg, state) for n in pastry['inputs'])
-    replay(cfg, state, 100)
-    assert state['inventory'].get(pastry['id'], 0) == 0
-    assert state['report']['retailEarned'] > 0, 'Pausing recipes must leave raw production and customer sales active.'
-    assert any(state['inventory'].get(g['id'], 0) > 0 for g in cfg['tiers'][2]['goods'] if not g['inputs'])
-    assert E.set_processing(cfg, state, 1, True)['ok']
-    assert all(n['goodId'] in E.chain_reservations(cfg, state) for n in pastry['inputs'])
+    state['cash']=1000
+    state['b'][1]['processing']=False  # Old saved flag cannot stop new production.
     state['b'][1]['reserve'] = True
     replay(cfg, state, pastry['cycleTicks'] * 3)
     assert state['inventory'].get(pastry['id'], 0) > 0
     money_and_stock_are_valid(state)
 
 
-def test_flow_forecast_counts_supplier_consumption_and_actual_income_is_earned():
+def test_flow_forecast_is_independent_of_former_supplier_and_never_credits_cash():
     cfg = config()
     state = E.new_state(cfg)
     state['b'].append(building(2))
@@ -197,13 +193,14 @@ def test_flow_forecast_counts_supplier_consumption_and_actual_income_is_earned()
                   and all(owners[n['goodId']] != 2 for n in g['inputs']))
     scarce = max(pastry['inputs'], key=lambda n: goods(cfg)[n['goodId']]['cycleTicks'])['goodId']
     rates = E.flow_rates(cfg, state)
-    assert rates[pastry['id']]['production'] == rates[scarce]['production']
-    assert rates[scarce]['retail'] == 0, 'An ingredient consumed by pastries cannot also be forecast as a retail sale.'
+    assert rates[pastry['id']]['production'] > rates[scarce]['production']
+    assert rates[scarce]['retail'] > 0, 'Farm goods remain available for its own customers.'
     cash = state['cash']
     assert E.flow_rates(cfg, state) == rates
     assert state['cash'] == cash, 'A forecast never issues money.'
     state['b'][0]['lv'] += 1
-    assert E.flow_rates(cfg, state)[pastry['id']]['production'] > rates[pastry['id']]['production']
+    assert E.flow_rates(cfg, state)[pastry['id']] == rates[pastry['id']]
+    assert E.flow_rates(cfg, state)[scarce]['production'] > rates[scarce]['production']
 
 
 def test_random_actions_preserve_integer_nonnegative_accounting_and_capacities():
@@ -286,7 +283,7 @@ def test_delivery_shortage_is_atomic_and_stale_id_cannot_pay_again():
     money_and_stock_are_valid(state)
 
 
-def test_order_replacement_is_free_and_never_targets_unowned_supplier():
+def test_order_replacement_is_free_and_only_targets_owned_unlocked_products():
     cfg = config()
     state = E.new_state(cfg)
     state['tierOf'] = [0, 5]
@@ -294,12 +291,11 @@ def test_order_replacement_is_free_and_never_targets_unowned_supplier():
     state['offers'] = None
     E.offer_contracts(cfg, state, 0)
     owner = {g['id']: i for i, t in enumerate(cfg['tiers']) for g in t['goods']}
-    catalog = goods(cfg)
     for iteration in range(60):
         for i, order in enumerate(list(state['offers'][:2])):
             for need in order['requirements']:
                 assert owner[need['goodId']] in state['tierOf']
-                assert all(owner[n['goodId']] in state['tierOf'] for n in catalog[need['goodId']]['inputs'])
+                assert E.business_progression.product_unlocked(cfg,state,need['goodId'])
             old_cash, old_materials = state['cash'], state['materials']
             assert E.replace_order(cfg, state, i, order['id'])['ok']
             assert state['cash'] == old_cash and state['materials'] == old_materials
@@ -326,13 +322,14 @@ def test_order_rotation_can_reach_every_owned_product():
     assert seen == expected, 'Focusing one delivery slot must not trap it in a tiny repeating subset of products.'
 
 
-def test_bulk_clear_is_discounted_cannot_repeat_and_protects_recipe_buffer():
+def test_bulk_clear_is_discounted_cannot_repeat_and_has_no_ingredient_buffer():
     cfg = config()
     state = E.new_state(cfg)
     state['tierOf'] = [0, 2]
     state['b'] = [building(0), building(2)]
     state['inventory'] = {g['id']: 10 for g in cfg['tiers'][0]['goods']}
     protected = E.chain_reservations(cfg, state)
+    assert protected=={}
     expected = sum((10 - protected.get(g['id'], 0)) * g['unitPrice'] for g in cfg['tiers'][0]['goods'])
     receipt = E.sell_one(cfg, state, 0)
     assert receipt['ok'] and receipt['net'] == expected * cfg['production']['clearStockPercent'] // 100

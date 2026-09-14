@@ -77,7 +77,7 @@ for seed,kind,metric,prerequisite,count in ((39,'production','producedUnits','sa
                                     control=reference,elapsedSeconds=len(steps)*cfg['global']['tick']))
 result['initial']=result['scenarios'][0]['before']
 print(json.dumps(result))
-`],{cwd:root,encoding:'utf8'}));
+`],{cwd:root,encoding:'utf8',maxBuffer:16*1024*1024}));
 }
 
 (async()=>{
@@ -170,15 +170,15 @@ print(json.dumps(result))
    const metric=name=>page.locator('.game-site [data-business-metric="'+name+'"]');
    async function checkValues(){
     const b=state.buildings[0];
-    assert.equal((await metric('income').locator('.game-live-value').textContent()).trim(),incomeRate(b.incomePerMinute),'Selected business shows its current income rate');
-    assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),incomeRate(state.incomePerMinute).replace(/\s+/g,''),'Town HUD shows its current income rate');
+    assert.equal((await metric('income').locator('.game-live-value').textContent()).trim(),incomeRate(b.earnings.operatingIncome),'Selected business shows actual customer receipts');
+    assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),incomeRate(state.earnings.operatingIncome).replace(/\s+/g,''),'Town HUD shows actual customer receipts');
     assert.equal((await metric('produced').locator('.game-live-value').textContent()).trim(),units(b.productionCapacityPerMinute));
     assert.equal((await metric('sold').locator('.game-live-value').textContent()).trim(),units(b.customerCapacityPerMinute));
-    const production=(await metric('produced').locator('.game-live-rate').textContent()).trim();
-    const demand=(await metric('sold').locator('.game-live-rate').textContent()).trim();
+    const production=(await metric('produced').locator('.game-live-rate:not(.game-production-rhythm)').textContent()).trim();
+    const demand=(await metric('sold').locator('.game-live-rate:not(.game-production-rhythm)').textContent()).trim();
     assert.match(production,new RegExp('Actual '+b.activity.producedUnits+' produced.*last 60s','i'));
     assert.match(demand,new RegExp('Actual '+b.activity.soldUnits+' sold.*last 60s','i'));
-    assert.match(await page.locator('.game-live-heading').textContent(),/Live rates|Current estimates/i);
+    assert.match(await page.locator('.game-live-heading').textContent(),/Live rates|Customer cashflow/i);
    }
    async function fit(label){
     currentLabel=viewport.name+'-'+label;
@@ -252,8 +252,8 @@ print(json.dumps(result))
     assert(preview.includes(effect),preview+' must include '+effect);
     assert(preview.includes(scenario.receipt.capacityUnit),preview);
     assert.equal(await row.locator('.game-upgrade-capacity').count(),0,'Capacity details stay in the tooltip');
-    const incomeDelta=scenario.kind==='production'?scenario.receipt.optimizedIncomeDelta:Math.round((scenario.receipt.businessIncomeAfter-scenario.receipt.businessIncomeBefore)*100)/100;
-    assert.equal(await row.locator('.game-upgrade-impact').textContent(),'+'+units(incomeDelta)+' YM/min');
+    const incomeDelta=Math.round((scenario.receipt.businessIncomeAfter-scenario.receipt.businessIncomeBefore)*100)/100;
+    assert.equal(await row.locator('.game-upgrade-impact .game-upgrade-value').textContent(),'+'+units(incomeDelta)+' YM/min');
     await fit(scenario.kind+'-preview');
     const historical=clone(state.buildings[0].activity);
     const earnings=clone(state.earnings),businessEarnings=clone(state.buildings[0].earnings);
@@ -274,8 +274,8 @@ print(json.dumps(result))
     assert(scenario.receipt.incomeDelta>0,'Each scenario must exercise an immediate income increase');
     assert(state.incomePerMinute>incomeBefore,'Town income increases in the purchase response');
     assert(state.buildings[0].incomePerMinute>businessIncomeBefore,'Business income increases in the purchase response');
-    assert.notEqual(await metric('income').locator('.game-live-value').textContent(),displayedBefore,'Business income updates before any future tick');
-    assert.notEqual(await page.locator('[data-build-metric="income"] dd').textContent(),hudBefore,'HUD income updates before any future tick');
+    assert.equal(await metric('income').locator('.game-live-value').textContent(),displayedBefore,'Upgrading does not rewrite actual sales');
+    assert.equal(await page.locator('[data-build-metric="income"] dd').textContent(),hudBefore,'HUD customer receipts stay unchanged until sales occur');
     const status=await page.locator('[data-econ-status]').first().textContent();
     const incomeEffect=units(scenario.receipt.incomeBefore)+' → '+units(scenario.receipt.incomeAfter)+' YM/min';
     assert(status.includes(incomeEffect),status+' must confirm '+incomeEffect);
@@ -305,7 +305,7 @@ print(json.dumps(result))
   }
   fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({observations,fitProblems,errors:allErrors},null,2)+'\n');
   assert.deepEqual(fitProblems,[],'Viewport/content clipping detected; see .checks/upgrade-feedback/results.json');
-  console.log('Passed: real production/customer upgrades immediately update business/HUD income on current and legacy payloads, and subsequent polls preserve the rate; cash and historical receipts preserved except upgrade cost; increased actual output against unchanged controls; desktop, mobile and landscape fit.');
+  console.log('Passed: real production/customer upgrades show current sales improvements while actual business/HUD receipts stay unchanged until sales occur; cash and historical receipts preserved except upgrade cost; increased actual output against unchanged controls; desktop, mobile and landscape fit.');
   console.log('Screenshots and engine observations: .checks/upgrade-feedback/');
  }catch(error){
   if(currentPage&&!currentPage.isClosed())await currentPage.screenshot({path:path.join(output,currentLabel+'-failure.png')}).catch(()=>{});

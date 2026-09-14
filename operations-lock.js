@@ -1,13 +1,13 @@
 /* Operations page lock for testing: only the Focus tree is open.
    Flip LOCKED to false (and bump the ?v= on advanced-hq.html) to reopen
-   Team, Recipes, Quests, Group projects and Advanced HQ. Load this before
+   Team, Products, Quests, Group projects and Advanced HQ. Load this before
    workforce.js so the page opens on the Focus tree whatever the URL says. */
 (function () {
   'use strict';
   var LOCKED = true;
   var OPEN_TAB = 'focus';
   var MESSAGE = 'CLOSED FOR TESTING';
-  var DETAIL = 'Only the Focus tree is open right now. Team, Recipes, Quests and Advanced HQ come back later.';
+  var DETAIL = 'Only the Focus tree is open right now. Team, Products, Quests and Advanced HQ come back later.';
   window.YOMAMA_OPERATIONS_LOCKED = LOCKED;
   if (!LOCKED) return;
 

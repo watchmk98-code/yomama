@@ -20,12 +20,12 @@ PROJECTS = (
          building='farm', goods=(('farm_tomatoes', 6),), grant='fish_stall'),
     dict(id='harbor_lunch', title='Serve the harbor lunch',
          description='Supply smoked fish and oysters to earn a fully funded roastery.',
-         purpose='Turn fresh catch into a finished meal before connecting another business.',
+         purpose='Deliver your fish stall’s products before opening another business.',
          building='fish_stall', goods=(('fish_stall_smoked_fish', 2), ('fish_stall_oysters', 4)),
          grant='roastery'),
     dict(id='cafe_opening', title='Open the neighborhood cafe',
          description='Send espresso and pastries to welcome your cafe customers.',
-         purpose='Your farm supplies the pastries; your roastery brings the neighborhood together.',
+         purpose='Your roastery makes coffee and pastries to bring the neighborhood together.',
          building='roastery', goods=(('roastery_espresso_shots', 4), ('roastery_pastries', 2)),
          grant=None),
 )
@@ -38,10 +38,10 @@ GROUP_COPY = {
                        'Your first supplier funds the next business in your conglomerate.'),
     'harbor_lunch': ('Establish seafood processing',
                      'Deliver 2 smoked fish and 4 oysters through ordinary orders to earn fully funded roastery construction.',
-                     'Turn fresh catch into a finished product before adding another business.'),
-    'cafe_opening': ('Connect the café supply chain',
+                     'Produce seafood at your fish stall before adding another business.'),
+    'cafe_opening': ('Open the neighborhood café',
                      'Deliver 4 espresso shots and 2 pastries through ordinary orders to earn a permanent customer bonus.',
-                     'Your farm supplies eggs and honey; your roastery turns them into pastries alongside its coffee production.'),
+                     'Your roastery produces its own espresso and pastries for the neighborhood.'),
 }
 
 
@@ -206,21 +206,6 @@ def check(cfg, st, order_id):
     if not _owned(cfg, st, project['building']):
         return dict(ok=False, why='Open ' + _building_name(cfg, project['building']) + ' first',
                     requiredBuildingId=project['building'])
-    # Old towns can own a processor without its suppliers. Every ingredient
-    # producer must exist before this project can reserve or consume goods.
-    producers = {good['id']: tier['id'] for tier in cfg['tiers'] for good in tier['goods']}
-    goods = _goods(cfg)
-    pending = [need['goodId'] for need in order['requirements']]
-    seen = set()
-    while pending:
-        gid = pending.pop()
-        if gid in seen:
-            continue
-        seen.add(gid)
-        if not _owned(cfg, st, producers[gid]):
-            return dict(ok=False, why='Open ' + _building_name(cfg, producers[gid]) + ' first',
-                        requiredBuildingId=producers[gid])
-        pending.extend(need['goodId'] for need in goods[gid].get('inputs', []))
     return dict(ok=True, projectId=project['id'])
 
 
@@ -327,22 +312,11 @@ def _legacy_project_pending(st, project):
 
 
 def _group_suppliers(cfg, st, project):
-    goods = _goods(cfg)
     producers = {good['id']: tier['id'] for tier in cfg['tiers'] for good in tier['goods']}
     direct = {producers[gid] for gid, _ in project['goods']}
-    needed = set()
-    pending = [gid for gid, _ in project['goods']]
-    seen = set()
-    while pending:
-        gid = pending.pop()
-        if gid in seen:
-            continue
-        seen.add(gid)
-        needed.add(producers[gid])
-        pending.extend(need['goodId'] for need in goods[gid].get('inputs', []))
     return [dict(buildingId=tier['id'], name=tier['name'], owned=_owned(cfg, st, tier['id']),
-                 role='Final products' if tier['id'] in direct else 'Ingredients')
-            for tier in cfg['tiers'] if tier['id'] in needed]
+                 role='Products')
+            for tier in cfg['tiers'] if tier['id'] in direct]
 
 
 def claim(cfg, st, project_id):

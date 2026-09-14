@@ -186,11 +186,11 @@ def test_receipt_storage_is_bounded_but_contributing_orders_remain_idempotent():
     assert P.group_payload(cfg, st)['current']['progressPercent'] == 0
 
 
-def test_connected_copy_explains_suppliers_without_relabeling_legacy_projects():
+def test_connected_copy_lists_only_product_businesses_without_relabeling_legacy_projects():
     cfg, st = town()
     rows = P.group_payload(cfg, st)['projects']
     assert 'conglomerate' in rows[0]['purpose']
-    assert {supplier['buildingId'] for supplier in rows[2]['suppliers']} == {'farm', 'roastery'}
+    assert {supplier['buildingId'] for supplier in rows[2]['suppliers']} == {'roastery'}
     assert all('ordinary orders' in row['description'] for row in rows)
     assert P.current_order(cfg, st)['name'] == 'Feed the neighborhood'
 

@@ -60,7 +60,7 @@ def test_completed_batches_cost_cash_and_rolling_profit_reconciles():
     assert data['buildings'][0]['operatingCostPerMinute'] == expense
 
 
-def test_cash_shortage_never_consumes_recipe_inputs_or_creates_debt():
+def test_cash_shortage_never_changes_existing_goods_or_creates_debt():
     cfg, st = town()
     st['b'].append(E._building(2))
     st['tierOf'].append(2)
@@ -149,7 +149,7 @@ def test_technician_halves_completed_batch_costs_with_integer_carry():
     assert type(hired['cash']) is int
 
 
-def test_specialist_finishes_more_real_recipes_and_still_consumes_ingredients():
+def test_specialist_boosts_advanced_products_without_consuming_other_stock():
     cfg, baseline = town()
     baseline['b'].append(E._building(2))
     baseline['tierOf'].append(2)
@@ -162,11 +162,12 @@ def test_specialist_finishes_more_real_recipes_and_still_consumes_ingredients():
     ticks(cfg, baseline, 8)
     ticks(cfg, hired, 8)
     assert hired['inventory']['roastery_pastries'] > baseline['inventory']['roastery_pastries']
-    assert hired['inventory']['farm_eggs'] < baseline['inventory']['farm_eggs']
-    assert hired['inventory']['farm_honey'] < baseline['inventory']['farm_honey']
+    assert hired['inventory']['farm_eggs'] == baseline['inventory']['farm_eggs'] == 20
+    assert hired['inventory']['farm_honey'] == baseline['inventory']['farm_honey'] == 20
+    assert hired['inventory']['roastery_roasted_beans'] == baseline['inventory']['roastery_roasted_beans']
 
 
-def test_specialist_requires_an_unlocked_recipe_before_charging_cash():
+def test_specialist_requires_quest_unlock_but_ignores_old_recipe_pause():
     cfg, st = town()
     st['b'].append(E._building(3))
     st['tierOf'].append(3)
@@ -180,13 +181,21 @@ def test_specialist_requires_an_unlocked_recipe_before_charging_cash():
     assert st == before
     st['businessProgression']['quests']['garage-signature'] = dict(completed=True)
     b['processing'] = False
-    paused = copy.deepcopy(st)
-    result = act(cfg, st, b, 'hire', staffId='specialist')
-    assert not result['ok'] and result['why'] == 'Resume recipes before hiring'
-    assert st == paused
-    b['processing'] = True
     assert act(cfg, st, b, 'hire', staffId='specialist')['ok']
     assert st['cash'] < before['cash']
+
+
+def test_existing_specialist_shift_updates_only_its_obsolete_copy():
+    cfg, st = town()
+    st['b'][0]['staff'] = dict(id='specialist', name='Craft specialist',
+                             effect='Recipes +75% base speed', remainingTicks=7)
+    before = copy.deepcopy(st)
+    O.ensure(cfg, st)
+    assert st['b'][0]['staff'] == dict(id='specialist', name='Production specialist',
+                                     effect='Advanced products +75% base speed', remainingTicks=7)
+    before['b'][0]['staff'] = copy.deepcopy(st['b'][0]['staff'])
+    assert st == before
+    assert O.ensure(cfg, st) == before['businessOperations']
 
 
 def test_business_pause_stops_regular_shipments_and_expenses_until_resumed():
@@ -238,7 +247,7 @@ def test_salvage_refunds_only_cash_and_removes_full_book_value():
         assert not act(cfg, st, b, 'pause')['ok']
 
 
-def test_closure_blocks_stock_regulars_and_committed_dependency_orders():
+def test_closure_blocks_its_own_stock_regulars_and_saved_orders_only():
     cfg, st = town()
     b = built_fish(cfg, st)
     st['inventory']['fish_stall_fresh_catch'] = 1
@@ -249,8 +258,11 @@ def test_closure_blocks_stock_regulars_and_committed_dependency_orders():
     assert not act(cfg, st, b, 'salvage')['ok']
     contract = st['customerContracts']['active'][0]
     E.manage_customer_contract(cfg, st, 0, 'release', contract_id=contract['id'])
-    st['offers'][0].update(committed=True, requirements=[dict(goodId='cannery_canned_goods', quantity=1)])
+    st['offers'][0].update(committed=True, requirements=[dict(goodId='fish_stall_smoked_fish', quantity=1)])
     assert not act(cfg, st, b, 'salvage')['ok']
+    st['offers'][0]['requirements'] = [dict(goodId='cannery_canned_goods', quantity=1)]
+    assert O.salvage_quote(cfg, st, 1)['affectedBusinesses'] == []
+    assert act(cfg, st, b, 'salvage')['ok']
 
 
 def test_slot_remap_preserves_other_business_receipts_and_town_totals():
@@ -413,7 +425,7 @@ def test_free_starter_crop_and_legacy_rules_ignore_upgrade_operating_multiplier(
     assert st['cash'] == before
 
 
-def test_multi_output_recipe_forecast_matches_real_batches_inputs_and_costs():
+def test_multi_output_forecast_matches_independent_batches_and_costs():
     cfg, st = town()
     st['b'].append(E._building(1))
     st['tierOf'].append(1)
@@ -429,12 +441,12 @@ def test_multi_output_recipe_forecast_matches_real_batches_inputs_and_costs():
     rates, regulars = E._flows(cfg, st)
     assert rates[raw['id']]['production'] == 8
     assert rates[recipe['id']]['production'] == 4
-    assert regulars['remaining'][raw['id']] == 4, 'Two recipe batches use four raw units per minute.'
+    assert regulars['remaining'][raw['id']] == 8, 'Advanced products no longer consume the raw output.'
     forecast = O.forecast_cost(cfg, st, 1, rates)
-    assert forecast == 8, 'Four raw batches cost four; two recipe batches cost four.'
+    assert forecast == 8, 'Four basic batches cost four; two advanced batches cost four.'
     before = st['cash']
     ticks(cfg, st, 4)
-    assert st['inventory'][raw['id']] == 4
+    assert st['inventory'][raw['id']] == 8
     assert st['inventory'][recipe['id']] == 4
     assert st['report']['unitsProduced'] == 12
     assert st['cash'] == before - forecast

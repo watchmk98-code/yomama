@@ -20,6 +20,8 @@ import production_economy as E
 import business_progression as P
 import breakfast_event as B
 cfg=E.load_config()
+# This regression intentionally covers preserved workshop-style class saves.
+cfg['businessDesign']['connectedProgression']=False
 st=E.new_state(cfg,seed=37)
 cls=E.new_class(cfg)
 def pack():
@@ -48,20 +50,19 @@ for quest,choice,batches in [
     act('quest_finish',quest)
 samples['unlocked']=pack()
 assert not next(b for b in samples['unlocked']['buildings'] if b['id']=='garage')['goods'][-1]['locked']
-# The farm supplies the cafe: production preview values the farm's additional
-# output on its own, independent of how current buyers and recipes use it.
+# A farm beside a cafe still advertises only its own current-demand sales gain.
+# Independent production means other businesses do not consume farm goods.
 st=E.new_state(cfg,seed=37)
 st.update(cash=1000000,tierOf=[0,2],b=[E._building(0,sales=8),E._building(2,lv=8,sales=8)],offers=[])
 st=E.migrate_state(cfg,st)
 samples['supplyChain']=pack()
 preview=samples['supplyChain']['buildings'][0]['upgrades']['production']
-assert preview['incomeDelta']==8
-assert preview['businessIncomeAfter']-preview['businessIncomeBefore']==3
-assert preview['optimizedIncomeDelta']>3
+assert preview['businessIncomeAfter']>preview['businessIncomeBefore']
+assert preview['incomeDelta']==preview['businessIncomeAfter']-preview['businessIncomeBefore']
 assert E.buy_upgrade(cfg,st,0,'production')['ok']
 samples['supplyChainUpgraded']=pack()
 print(json.dumps(samples))
-`],{cwd:root,encoding:'utf8'}));
+`],{cwd:root,encoding:'utf8',maxBuffer:16*1024*1024}));
 }
 
 (async()=>{
@@ -124,6 +125,10 @@ print(json.dumps(samples))
    }
    async function openActivities(kind){
     const button=page.locator('[data-building-activities="'+kind+'"]');
+    if(!await button.isVisible()){
+     const buildingTab=page.getByRole('tab',{name:'Building',exact:true});
+     if(await buildingTab.isVisible()){await buildingTab.click();await settle();}
+    }
     assert(await button.isVisible(),kind+' launcher is visible on the selected Build panel');
     await button.focus();await page.keyboard.press('Enter');
     assert(await page.locator('#game-activities').isVisible(),'Keyboard opens '+kind);
@@ -173,15 +178,15 @@ print(json.dumps(samples))
    const cost=page.locator('[data-build-metric="cost"]');
    assert.equal(await cost.count(),1,'Town expenses have one dedicated HUD tile');
    assert.equal(await cost.evaluate(el=>el.previousElementSibling?.dataset.buildMetric),'income','Cost is immediately beside Sales / min');
-   assert.match(await cost.locator('dt').textContent(),/cost.*min/i);
-   assert.equal(await cost.locator('dd').getAttribute('title'),'−'+rate(state.operations.potentialOperatingCostPerMinute)+' YM','Exact town expenses remain available when large values are abbreviated');
+   assert.match(await cost.locator('dt').textContent(),/cost.*last 60s/i);
+   assert.equal(await cost.locator('dd').getAttribute('title'),'−'+rate(state.operations.operatingCostPerMinute)+' YM','Exact town expenses remain available when large values are abbreviated');
    assert.match((await cost.locator('dd').textContent()).replace(/\s/g,''),/^−[\d,.]+[kM]?YM$/);
    assert(await cost.locator('dd').evaluate(el=>{const [r,g,b]=getComputedStyle(el).color.match(/\d+/g).map(Number);return r>g+40&&r>b+40;}),'Cost rate is red');
    assert.equal(await page.locator('[data-build-metric="income"] .game-town-cost').count(),0,'Cost is not a footnote inside Sales');
-   const fullTownCost=state.operations.potentialOperatingCostPerMinute;
-   state.operations.potentialOperatingCostPerMinute=98.76;await refresh();
+   const fullTownCost=state.operations.operatingCostPerMinute;
+   state.operations.operatingCostPerMinute=98.76;await refresh();
    assert.equal((await cost.locator('dd').textContent()).replace(/\s/g,''),'−98.76YM','Cost tile updates immediately from the current potential rate');
-   state.operations.potentialOperatingCostPerMinute=fullTownCost;await refresh();
+   state.operations.operatingCostPerMinute=fullTownCost;await refresh();
 
    await select('farm');
    assert.doesNotMatch(await page.locator('#econ-building').textContent(),/Breakfast Club/,'Farm does not show the roastery workshop');
@@ -217,14 +222,14 @@ print(json.dumps(samples))
     const preview=row.locator('.game-upgrade-running-cost');
     assert(await preview.isVisible(),kind+' running-cost preview is visible before buying');
     assert.equal((await preview.locator('.game-upgrade-cost').textContent()).trim(),'+'+rate(upgrade.operatingCostDelta)+' YM/min');
-    const incomeDelta=kind==='production'?upgrade.optimizedIncomeDelta:Math.round((upgrade.businessIncomeAfter-upgrade.businessIncomeBefore)*100)/100;
+    const incomeDelta=Math.round((upgrade.businessIncomeAfter-upgrade.businessIncomeBefore)*100)/100;
     const income=row.locator('.game-upgrade-impact');
-    assert.equal((await income.textContent()).trim(),(incomeDelta>0?'+':incomeDelta<0?'−':'')+rate(Math.abs(incomeDelta))+' YM/min');
+    assert.equal((await income.locator('.game-upgrade-value').textContent()).trim(),(incomeDelta>=0?'+':'−')+rate(Math.abs(incomeDelta))+' YM/min');
     if(kind==='production'){
-     assert(incomeDelta>0,'Production shows its isolated potential even when current demand adds no income');
-     assert.match(await income.getAttribute('title'),/all added output sells at retail price/);
+     assert.match(await income.getAttribute('title'),/current customers/);
+     if(incomeDelta===0)assert(await row.locator('.game-upgrade-explanation').isVisible(),'A zero sales gain explains why');
     }
-    assert(await income.evaluate(el=>{const [r,g,b]=getComputedStyle(el).color.match(/\d+/g).map(Number);return g>r+40&&g>b+40;}),kind+' income change stays green, including zero');
+    if(incomeDelta>0)assert(await income.evaluate(el=>{const [r,g,b]=getComputedStyle(el).color.match(/\d+/g).map(Number);return g>r+40&&g>b+40;}),kind+' positive income change stays green');
     assert.match(await income.getAttribute('aria-label'),/^Estimated income change:/);
     assert.match(await preview.getAttribute('aria-label'),/^Estimated cost change:/);
     assert(!/Est\. income|Est\. cost/.test(await row.textContent()),kind+' shows values without labels');
@@ -284,19 +289,19 @@ print(json.dumps(samples))
    const farm=await select('farm');
    if(await upgradesTab.isVisible())await upgradesTab.click();
    const productionRow=page.locator('.game-operation').filter({has:page.locator('[data-econ-action="upgrade:0:production"]')});
-   assert.equal(await productionRow.locator('.game-upgrade-impact').textContent(),'+'+rate(farm.upgrades.production.optimizedIncomeDelta)+' YM/min','Farm preview shows optimized production value, independent of cafe supplies');
+   assert.equal(await productionRow.locator('.game-upgrade-impact .game-upgrade-value').textContent(),'+'+rate(farm.upgrades.production.businessIncomeAfter-farm.upgrades.production.businessIncomeBefore)+' YM/min','Farm preview shows extra income under current customer and supply limits');
    await fit('farm-next-upgrade-income');
    use('supplyChainUpgraded');await refresh();
-   assert.equal(state.buildings[0].incomePerMinute-farm.incomePerMinute,3,'Current sales still depend on demand and recipe use');
+   assert.equal(state.buildings[0].incomePerMinute-farm.incomePerMinute,farm.upgrades.production.businessIncomeAfter-farm.upgrades.production.businessIncomeBefore,'Advertised business sales gain matches the purchase response');
    const buildingTab=page.getByRole('tab',{name:'Building',exact:true});
    if(await buildingTab.isVisible())await buildingTab.click();
-   assert.equal((await page.locator('.game-site [data-business-metric="income"] .game-live-value').textContent()).trim(),'15 YM');
+   assert.equal((await page.locator('.game-site [data-business-metric="income"] .game-live-value').textContent()).trim(),rate(state.buildings[0].earnings.operatingIncome)+' YM');
 
    use('opening');await refresh();await select('farm');
    await fit('starter-town');
    if(await upgradesTab.isVisible())await upgradesTab.click();
    assert.equal(state.buildings[0].upgrades.production.incomeDelta,0,'Starter demand already has enough production');
-   assert.equal(await productionRow.locator('.game-upgrade-impact').textContent(),'+'+rate(state.buildings[0].upgrades.production.optimizedIncomeDelta)+' YM/min','Starter production displays a positive optimized gain instead of zero');
+   assert.equal(await productionRow.locator('.game-upgrade-impact .game-upgrade-value').textContent(),'+0 YM/min','Starter production shows no extra sales when demand is already met');
    assert(state.buildings[0].upgrades.production.optimizedIncomeDelta>0);
    await fit('starter-production-potential');
    await openActivities('projects');

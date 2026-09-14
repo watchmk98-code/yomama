@@ -39,7 +39,7 @@ def order(st,gid,qty,committed=False):
                          reward=40,materials=0,customer=None,committed=committed)
 
 
-def test_choices_slots_and_chain_unlocks(town):
+def test_choices_slots_and_product_business_unlocks(town):
     cfg,st=town
     view=E.customer_contract_payload(cfg,st)
     assert view['slots']==2 and view['maxSlots']==4
@@ -51,8 +51,10 @@ def test_choices_slots_and_chain_unlocks(town):
     assert not E.manage_customer_contract(cfg,st,2,'accept',customer_id='corner_grocer')['ok']
     own(st,2)
     cafe=next(c for c in E.customer_contract_payload(cfg,st)['customers'] if c['id']=='copper_cafe')
-    assert not cafe['available'] and 'Farm' in cafe['unlockText']
-    assert not E.manage_customer_contract(cfg,st,0,'accept',customer_id='copper_cafe')['ok']
+    assert cafe['available'] and not cafe['unlockText']
+    assert E.manage_customer_contract(cfg,st,0,'accept',customer_id='copper_cafe')['ok']
+    active=st['customerContracts']['active'][0]
+    assert E.manage_customer_contract(cfg,st,0,'release',contract_id=active['id'])['ok']
     own(st,0,1,2)
     assert E.customer_contract_payload(cfg,st)['slots']==3
     sign(cfg,st,'copper_cafe',2)
@@ -64,14 +66,14 @@ def test_choices_slots_and_chain_unlocks(town):
 def test_first_shipment_waits_full_interval_and_debits_real_goods(town):
     cfg,st=town
     contract=sign(cfg,st)
-    assert contract['reward']==15 and st['customerContracts']['earned']==0
+    assert contract['reward']==11 and st['customerContracts']['earned']==0
     replay(cfg,st,contract['intervalTicks']-1)
     assert st['customerContracts']['deliveries']==0
     before=st['inventory'].get('farm_tomatoes',0)
     replay(cfg,st,1)
     assert st['customerContracts']['deliveries']==1
     assert st['inventory']['farm_tomatoes']==before+1-6
-    assert st['report']['customerEarned']==15
+    assert st['report']['customerEarned']==11
     assert st['report']['customerDeliveries']==1
 
 
@@ -85,7 +87,9 @@ def test_recurring_inventory_and_money_are_conserved_without_legacy_rewards(town
     stock=sum(qty*goods[gid]['unitPrice'] for gid,qty in st['inventory'].items())
     assert customers['deliveries']>5
     assert st['cash']+st['businessOperations']['totalOperatingCosts']==report['retailEarned']+customers['earned']
-    assert report['produced']==stock+report['retailEarned']+customers['earned']*4//5
+    delivered_value=sum(c['deliveries']*sum(goods[n['goodId']]['unitPrice']*n['quantity']
+                        for n in c['requirements']) for c in customers['active'])
+    assert report['produced']==stock+report['retailEarned']+delivered_value
     assert report['customerEarned']==customers['earned']
     assert report['customerDeliveries']==customers['deliveries']
     assert (st['cStats'],st['checklist'])==before
@@ -112,18 +116,19 @@ def test_bundle_shortage_is_atomic_and_late_shipment_creates_no_backlog(town):
     assert st==after
 
 
-def test_committed_manual_delivery_keeps_priority_over_regular(town):
+def test_regular_shipment_keeps_priority_over_committed_manual_delivery(town):
     cfg,st=town
     contract=sign(cfg,st)
     order(st,'farm_tomatoes',6,committed=True)
     st['inventory']['farm_tomatoes']=6
-    E._tick_customer_contracts(cfg,st,contract['nextDeliveryTick'])
-    assert st['customerContracts']['earned']==0
-    assert st['inventory']['farm_tomatoes']==6
     view=E.payload(cfg,st,E.new_class(cfg),{'paused':False})
-    assert view['contracts']['offers'][0]['canFulfill']
-    assert view['customerContracts']['active'][0]['requirements'][0]['reserved']==0
-    assert E.fulfill_order(cfg,st,0,'chosen-delivery')['ok']
+    assert not view['contracts']['offers'][0]['canFulfill']
+    assert view['customerContracts']['active'][0]['requirements'][0]['reserved']==6
+    before=copy.deepcopy(st)
+    assert not E.fulfill_order(cfg,st,0,'chosen-delivery')['ok']
+    assert st==before
+    E._tick_customer_contracts(cfg,st,contract['nextDeliveryTick'])
+    assert st['customerContracts']['earned']==contract['reward']
     assert st['inventory']['farm_tomatoes']==0
 
 
@@ -142,18 +147,21 @@ def test_uncommitted_delivery_and_clear_stock_respect_regular_reservation(town):
     assert E.fulfill_order(cfg,st,0,'chosen-delivery')['ok']
 
 
-def test_new_manual_commit_can_take_priority_and_regular_waits(town):
+def test_new_manual_commit_only_saves_stock_after_regulars(town):
     cfg,st=town
     sign(cfg,st)
     order(st,'farm_tomatoes',6)
     st['inventory']['farm_tomatoes']=6
     assert E.customer_contract_payload(cfg,st)['active'][0]['requirements'][0]['owned']==6
     assert E.commit_order(cfg,st,0,'chosen-delivery',True)['ok']
-    assert E.customer_contract_payload(cfg,st)['active'][0]['requirements'][0]['owned']==0
+    assert E.customer_contract_payload(cfg,st)['active'][0]['requirements'][0]['owned']==6
+    assert not E.fulfill_order(cfg,st,0,'chosen-delivery')['ok']
+    st['inventory']['farm_tomatoes']=12
     assert E.fulfill_order(cfg,st,0,'chosen-delivery')['ok']
+    assert st['inventory']['farm_tomatoes']==6
 
 
-def test_regular_holds_leave_recipe_capacity_and_do_not_block_processing(town):
+def test_regular_holds_allow_other_products_to_run_without_ingredient_buffers(town):
     cfg,st=town
     own(st,0,1,2)
     sign(cfg,st,'sunrise_diner')
@@ -163,7 +171,7 @@ def test_regular_holds_leave_recipe_capacity_and_do_not_block_processing(town):
     history=st['customerContracts']['history']
     assert history['copper_cafe']['deliveries']>0
     assert st['report']['customerEarned']>0
-    assert E.chain_reservations(cfg,st)['farm_eggs']>0
+    assert E.chain_reservations(cfg,st)=={}
     for ti in st['tierOf']:
         slot=st['tierOf'].index(ti)
         for good in cfg['tiers'][ti]['goods']:
@@ -182,7 +190,13 @@ def test_shared_goods_are_reserved_once_and_shelf_capacity_is_bounded(town):
     assert [c['requirements'][0]['reserved'] for c in view['active']]==[6,2]
     order(st,'farm_tomatoes',58,committed=True)
     targets,_=E._customer_stock_plan(cfg,st)
-    assert targets['farm_tomatoes']==2
+    assert targets['farm_tomatoes']==12
+    st['b'][0]['storage']=1
+    second['requirements'][0]['quantity']=100
+    targets,assigned=E._customer_stock_plan(cfg,st)
+    assert targets['farm_tomatoes']==E._good_capacity(cfg,st,0,'farm_tomatoes')
+    assert assigned[contract['id']]['farm_tomatoes']==6
+    assert assigned[second['id']]['farm_tomatoes']==2
 
 
 def test_pause_release_and_switch_keep_cash_history_and_release_goods(town):
@@ -273,7 +287,7 @@ def test_offline_cap_does_not_pay_skipped_shipments_on_return(town):
     replay(cfg,long_absence,due_long-1)
     assert long_absence['customerContracts']['earned']==earned
     replay(cfg,long_absence,1)
-    assert long_absence['customerContracts']['earned']==earned+15
+    assert long_absence['customerContracts']['earned']==earned+11
 
 
 def test_old_v4_saves_gain_empty_customers_without_reset_and_migrate_idempotently(town):
@@ -310,11 +324,11 @@ def test_larger_offer_requires_three_shipments_and_never_changes_terms_automatic
     replay(cfg,st,contract['intervalTicks'])
     active=E.customer_contract_payload(cfg,st)['active'][0]
     assert not active['largerOrder']
-    assert active['largerOffer']==dict(reward=33,intervalSeconds=120,requirements=[
+    assert active['largerOffer']==dict(reward=22,intervalSeconds=120,requirements=[
         dict(goodId='farm_tomatoes',name='Tomatoes',buildingId='farm',quantity=12)])
     replay(cfg,st,contract['intervalTicks']*4)
     assert not contract['largerOrder']
-    assert contract['reward']==15
+    assert contract['reward']==11
     assert contract['requirements']==[dict(goodId='farm_tomatoes',quantity=6)]
 
 
@@ -329,7 +343,7 @@ def test_resizing_rotates_id_preserves_pause_and_history_without_spending_or_pay
     assert resized['ok'] and resized['contractId']!=first_id
     large_id=contract['id']
     assert contract['largerOrder'] and contract['paused']
-    assert contract['reward']==33 and contract['requirements'][0]['quantity']==12
+    assert contract['reward']==22 and contract['requirements'][0]['quantity']==12
     assert contract['nextDeliveryTick']==st['tick']+contract['intervalTicks']
     assert not E.customer_contract_payload(cfg,st)['active'][0]['largerOffer']
     assert E._customer_reservations(cfg,st)=={}
@@ -345,10 +359,10 @@ def test_resizing_rotates_id_preserves_pause_and_history_without_spending_or_pay
     smaller=E.manage_customer_contract(cfg,st,0,'downgrade',contract_id=large_id)
     assert smaller['ok'] and smaller['contractId'] not in (first_id,large_id)
     assert not contract['largerOrder'] and contract['paused']
-    assert contract['reward']==15 and contract['requirements'][0]['quantity']==6
+    assert contract['reward']==11 and contract['requirements'][0]['quantity']==6
     for field in ('cash','inventory','report','cStats','checklist','offers'):
         assert st[field]==before[field]
-    assert E.customer_contract_payload(cfg,st)['active'][0]['largerOffer']['reward']==33
+    assert E.customer_contract_payload(cfg,st)['active'][0]['largerOffer']['reward']==22
 
 
 def test_larger_shipments_require_double_goods_and_only_pay_after_full_interval(town):
@@ -368,8 +382,8 @@ def test_larger_shipments_require_double_goods_and_only_pay_after_full_interval(
     st['inventory']['farm_tomatoes']=12
     E._tick_customer_contracts(cfg,st,due+100)
     assert st['inventory']['farm_tomatoes']==0
-    assert st['cash']==before['cash']+33
-    assert st['report']['customerEarned']==before['report']['customerEarned']+33
+    assert st['cash']==before['cash']+22
+    assert st['report']['customerEarned']==before['report']['customerEarned']+22
     assert st['report']['customerDeliveries']==before['report']['customerDeliveries']+1
     assert contract['nextDeliveryTick']==due+100+contract['intervalTicks']
     paid=copy.deepcopy(st)
@@ -377,7 +391,7 @@ def test_larger_shipments_require_double_goods_and_only_pay_after_full_interval(
     assert st==paid
 
 
-def test_larger_regular_still_waits_for_manual_reservations_and_can_return_to_small(town):
+def test_larger_regular_precedes_old_manual_reservations_and_can_return_to_small(town):
     cfg,st=town
     contract=sign(cfg,st)
     replay(cfg,st,contract['intervalTicks']*3)
@@ -386,12 +400,14 @@ def test_larger_regular_still_waits_for_manual_reservations_and_can_return_to_sm
     st['inventory']['farm_tomatoes']=60
     before=copy.deepcopy(st)
     E._tick_customer_contracts(cfg,st,contract['nextDeliveryTick'])
-    assert st==before
-    assert E.customer_contract_payload(cfg,st)['active'][0]['requirements'][0]['reserved']==6
+    assert st['inventory']['farm_tomatoes']==48
+    assert st['cash']==before['cash']+22
+    assert E.customer_contract_payload(cfg,st)['active'][0]['requirements'][0]['reserved']==12
+    assert not E.fulfill_order(cfg,st,0,'chosen-delivery')['ok']
     assert E.manage_customer_contract(cfg,st,0,'downgrade',contract_id=contract['id'])['ok']
     E._tick_customer_contracts(cfg,st,contract['nextDeliveryTick'])
-    assert st['inventory']['farm_tomatoes']==54
-    assert st['cash']==before['cash']+15
+    assert st['inventory']['farm_tomatoes']==42
+    assert st['cash']==before['cash']+22+11
 
 
 def test_larger_choice_survives_reload_and_rejoin_returns_to_base_with_offer(town):
@@ -409,9 +425,9 @@ def test_larger_choice_survives_reload_and_rejoin_returns_to_base_with_offer(tow
     earned=st['customerContracts']['earned']
     assert E.manage_customer_contract(cfg,st,0,'release',contract_id=contract['id'])['ok']
     back=sign(cfg,st)
-    assert not back['largerOrder'] and back['reward']==15
+    assert not back['largerOrder'] and back['reward']==11
     assert back['deliveries']>=3
-    assert E.customer_contract_payload(cfg,st)['active'][0]['largerOffer']['reward']==33
+    assert E.customer_contract_payload(cfg,st)['active'][0]['largerOffer']['reward']==22
     assert st['customerContracts']['earned']==earned
 
 

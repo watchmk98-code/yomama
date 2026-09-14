@@ -197,7 +197,7 @@ def test_slot_priority_paused_contracts_and_duplicate_requirements(town):
     assert flow['remaining']['farm_tomatoes'] == 0
 
 
-def test_missing_one_ingredient_prevents_forecasting_any_bundle_income(town):
+def test_missing_one_finished_product_prevents_forecasting_any_bundle_income(town):
     cfg, st = town
     contract(st, 0, [('farm_eggs', 4), ('roastery_pastries', 2)], 70, 120)
     flow = R.allocate_regular_flow(cfg, st, {'farm_eggs': 8.0})
@@ -221,7 +221,7 @@ def test_real_regular_customers_improve_total_forecast_and_all_actual_cash_is_vi
     assert E.town_income(cfg, st) == pytest.approx(15.6)
     assert E.manage_customer_contract(cfg, st, 0, 'accept', customer_id='corner_grocer')['ok']
     assert E.manage_customer_contract(cfg, st, 1, 'accept', customer_id='sunrise_diner')['ok']
-    assert E.town_income(cfg, st) == pytest.approx(24.03333333333333)
+    assert E.town_income(cfg, st) == pytest.approx(20.03333333333333)
     assert st['cash'] == 0, 'A forecast must never issue money.'
     changes = []
     witnessed_regular = False
@@ -235,7 +235,7 @@ def test_real_regular_customers_improve_total_forecast_and_all_actual_cash_is_vi
         receipt = view['earnings']
         assert receipt['totalIncome'] == sum(changes[-4:])
         assert receipt['oneOffIncome'] == 0
-        assert view['incomePerMinute'] == view['potentialIncomePerMinute'] == 24.03
+        assert view['incomePerMinute'] == view['potentialIncomePerMinute'] == 20.03
         assert sum(b['incomePerMinute'] for b in view['buildings']) == view['incomePerMinute']
         assert view['buildings'][0]['earnings'] == receipt['byBuilding']['0']
         witnessed_regular |= receipt['bySource']['regularBuyers'] > 0
@@ -261,9 +261,9 @@ def test_real_cross_shop_regular_shipment_pays_once_and_attributes_each_producer
     view = engine_view(cfg, st)
     receipt = view['earnings']
     assert st['customerContracts']['deliveries'] == 1
-    assert receipt['bySource']['regularBuyers'] == 35
-    assert receipt['byBuilding']['0']['bySource']['regularBuyers'] == 10
-    assert receipt['byBuilding']['2']['bySource']['regularBuyers'] == 25
+    assert receipt['bySource']['regularBuyers'] == 25
+    assert receipt['byBuilding']['0']['bySource']['regularBuyers'] == 7
+    assert receipt['byBuilding']['2']['bySource']['regularBuyers'] == 18
     assert receipt['byBuilding']['1']['bySource']['regularBuyers'] == 0
     assert sum(b['earnings']['operatingIncome'] for b in view['buildings']) == receipt['operatingIncome']
     saved = copy.deepcopy(st)
@@ -307,8 +307,8 @@ def test_real_regular_forecast_changes_production_advice_when_buyer_is_supply_li
     assert buyer['deliveries'] >= 3
     assert E.manage_customer_contract(cfg, st, 0, 'upgrade', contract_id=buyer['id'])['ok']
     preview = E.upgrade_preview(cfg, st, 0, 'production')
-    assert preview['incomeDelta'] == pytest.approx(2.75)
-    assert preview['consequence'] == 'Est. ongoing income +2.75 YM/min'
+    assert preview['incomeDelta'] == pytest.approx(1.84)
+    assert preview['consequence'] == 'Est. ongoing income +1.84 YM/min'
 
 
 def test_real_engine_replay_and_json_chunking_preserve_identical_receipts(town):
@@ -331,7 +331,7 @@ def test_real_offline_cap_clears_window_and_resume_has_only_new_receipts():
     st = E.new_state(cfg)
     assert E.manage_customer_contract(cfg, st, 0, 'accept', customer_id='corner_grocer')['ok']
     engine_replay(cfg, st, 24)
-    assert engine_view(cfg, st)['earnings']['bySource']['regularBuyers'] == 15
+    assert engine_view(cfg, st)['earnings']['bySource']['regularBuyers'] == 11
     cash = st['cash']
     engine_replay(cfg, st, 8)
     assert st['cash'] == cash

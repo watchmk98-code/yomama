@@ -106,12 +106,17 @@ def test_capacity_uses_saved_rules_and_batch_quantities_after_reload(monkeypatch
     assert building(cfg,st)['productionCapacityPerMinute']==19.25
 
 
-def test_capacity_remains_visible_when_ingredients_limit_actual_production():
+def test_capacity_remains_visible_when_cash_blocks_actual_production():
     cfg,st=town()
-    st['tierOf'].append(2);st['b'].append(E._building(2,lv=12))
-    shop=building(cfg,st,1)
+    st['tierOf']=[2];st['b']=[E._building(2,lv=12)]
+    st['cash']=0
+    replay(cfg,st,8)
+    shop=building(cfg,st)
     assert shop['productionCapacityPerMinute']==26.25
-    assert shop['productionPerMinute']<shop['productionCapacityPerMinute']
+    assert shop['productionPerMinute']==shop['productionCapacityPerMinute']
+    assert shop['activity']['producedUnits']==0
+    assert not st['inventory'] and st['cash']==0
+    assert shop['status']=='Need cash for production'
 
 
 def test_full_shelves_explain_why_more_production_cannot_complete():
@@ -141,8 +146,8 @@ def test_production_upgrade_has_isolated_income_potential_despite_current_custom
     assert st['inventory']==saved['inventory'] and st['report']==saved['report']
 
 
-@pytest.mark.parametrize('constraint',['paused','reserved','full','ingredients','cash'])
-def test_optimized_recipe_income_ignores_current_operating_constraints(constraint):
+@pytest.mark.parametrize('constraint',['paused','reserved','full','former_supplier','cash'])
+def test_optimized_product_income_ignores_temporary_stock_cash_and_other_businesses(constraint):
     cfg,st=town()
     st['tierOf'].append(2);st['b'].append(E._building(2))
     E.business_operations.ensure(cfg,st)
@@ -152,10 +157,9 @@ def test_optimized_recipe_income_ignores_current_operating_constraints(constrain
     elif constraint=='full':
         st['inventory'].update({g['id']:E._good_capacity(cfg,st,1,g['id'])
                                 for g in cfg['tiers'][2]['goods']})
-    elif constraint=='ingredients':
+    elif constraint=='former_supplier':
         st['b'][0]['paused']=True
         st['inventory'].clear()
-        st['productionBlocked']={'roastery_pastries':dict(reason='ingredient',goodId='farm_eggs')}
     else: st['cash']=0
     saved=copy.deepcopy(st)
     preview=E.upgrade_preview(cfg,st,1,'production')
@@ -164,7 +168,7 @@ def test_optimized_recipe_income_ignores_current_operating_constraints(constrain
     assert st==saved
 
 
-def test_optimized_income_includes_only_unlocked_recipes():
+def test_optimized_income_includes_only_unlocked_products():
     cfg,st=town()
     st['tierOf'].append(3);st['b'].append(E._building(3))
     locked=E.upgrade_preview(cfg,st,1,'production')

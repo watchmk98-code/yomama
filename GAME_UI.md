@@ -9,7 +9,7 @@ section is Game; Build is its business-management screen.
 | Dash | Business overview and class standings |
 | Build | Selected business, stock, sales controls, upgrades, construction, and events |
 | Market | Orders, delivery reservations, and regular buyers |
-| Operations | Building focus trees, permanent teams, recipes, quests and Advanced HQ |
+| Operations | Building focus trees, permanent teams, products, quests and Advanced HQ |
 | Licence | Milestones, quiz, and the separate practice portfolio |
 
 ## Build reference layout
@@ -19,16 +19,42 @@ list left, selected building and goods center, upgrades/construction right,
 and four stats above. Do not replace it with the town tile gallery. Build has
 quick management controls; the detailed pages retain their specialized layouts.
 
-The selected business shows actual income, completed goods, and goods sold in
-the last 60 game seconds, plus current stock/capacity. Income and sales include
-walk-ins and regular buyers. Manual deliveries and clearance are one-off sales,
-outside these operating figures. BUILD refreshes every three seconds, highlights
+The selected business shows actual sales, operating costs and profit over the
+last 60 game seconds, their potential per-minute values, and an operating cash
+profit margin. When `operatingStatement.enabled` is true, both the global
+header and business figures use gross customer payments and the matching
+production/selling expenses from that statement. Cash remains spendable money.
+The margin tooltip explains cash accounting and the base-level target when all output is sold;
+stock building, upgrades and shipment timing can change the actual margin.
+There is no additional panel or target metric. Production and walk-in demand
+retain their capacity figures. Actual
+completed goods and goods sold in the last 60 game seconds appear below the
+capacity estimates. Income and sales include walk-ins and regular buyers.
+Manual deliveries and clearance are one-off sales, outside these operating
+figures. BUILD refreshes every three seconds, highlights
 changed values briefly, and shows per-good stock, capacity, and saved quantities beneath the operating
 figures. Hold goods pauses walk-in sales; Resume shop sales reverses it. Sell
-surplus pays the displayed clearance value while protecting recipe and delivery
+surplus pays the displayed clearance value while protecting regular-buyer and order
 supplies. Shipment details remain on Market. Class pauses freeze the clocks; reconnects
 resynchronize them with the server. Existing saves keep their progress and start
 recording goods activity on migration, with no reset or invented history.
+
+Order rewards, goal deliveries and regular-buyer cards still quote the actual
+cash received after selling fees, with production costs paid separately.
+Comparisons read “shop payout” instead of “retail” when statements are enabled.
+Both guides explain Sales, Costs, Cash and take-home rewards in one paragraph.
+Upgrade rows use gross sales and total cost changes from the before/after
+statement; the tooltip and purchase feedback retain the net profit consequence.
+Older payloads retain the previous monetary fields and comparisons.
+
+When sector rhythms are enabled, the existing Production / min container adds
+one short sector caption: Food small batches, Industry large batches, or
+Energy/Tech staggered output. The production tooltip quotes each unlocked
+product's nominal batch quantity and average interval at its current speed.
+The Build guide explains these patterns, Industry's smaller-batch fallback,
+Energy's initial delay and the 15-second stock updates. Average production
+rates remain unchanged. Market's guide reminds players that a larger batch
+can make stock jump after a wait. There are no additional panels or metrics.
 
 General orders and their quantity-specific reservation controls belong to Market, not Build. Build provides the manual sales pause alongside the selected business stock.
 There is no general Orders button or popup on Build. Breakfast Club is a
@@ -37,12 +63,12 @@ separate event, accessed from the bottom container.
 Selecting the next business updates a greyed-out image beside the construction
 controls. The image uses the selected frontier ID and existing art. Grayscale
 applies to the image, never to a grey panel background. Actual construction
-costs, ingredients, stock, timers and permissions remain server-owned.
+costs, requirements, stock, timers and permissions remain server-owned.
 
 ## Screen fit
 
 `game-fit.js` makes the four management pages fill the available viewport.
-Desktop panels stretch to the bottom. Buildings, recipes, inventories, orders,
+Desktop panels stretch to the bottom. Buildings, products, inventories, orders,
 and milestones use explicit pagination when their content exceeds available
 room. Order and regular-buyer requirements show every item at once without
 ingredient arrows. Short lists keep the current maximum type size; longer lists
@@ -62,8 +88,13 @@ selection also persists across navigation in the browser session.
 
 Inventory rows show actual item counts, reserved quantities and capacity bars.
 Market displays real prices and delivery requirements. Surplus sales protect
-recipe supplies but can sell held stock; the relevant sale note says so.
-Operations shows both raw goods and recipe dependencies. Licence removes passed
+buyer and order goods but can sell manually held stock; the relevant sale note says so.
+Operations lists the business's products without automatic recipe dependencies.
+The Build guide explains that each business makes goods independently, with no
+ingredients taken from town stock. Cash, shelf space, unlock quests and business
+pauses still govern production. The Products tab replaces the old Recipes label;
+legacy payloads retain their recipe view. Separate practice quest kitchens stay
+available, as do explicit equipment-crafting actions. Licence removes passed
 quiz cards and locked investment placeholders, with every milestone reachable
 through its pager. No fake data, filler paragraphs, or repeated order cards.
 
@@ -131,11 +162,13 @@ persistence on reload, specialty changes, free replacement feedback and all four
 variants with intercepted mutations. It writes five in-game screenshots to
 `previews/`. Viewport tests cover eight sizes including 844×390 landscape.
 
-Market now labels Standard, Large, Rare and Jackpot offers with distinct colors
-and the actual retail payout multiplier. New Order remains clickable while a
+Market labels Standard, Small, Bulk, Large, Rare and Jackpot offers with distinct
+badge colors and the actual shop-payout multiplier. The guide explains Small
+and Bulk as different stock choices. CLICK!!!! shows the server's current roll
+odds in its tooltip and remains clickable while a
 request is running; extra clicks queue and use each newly returned order ID.
-Recipe requirements paginate within a card when needed, preserving access to
-Deliver, Save and New Order on short screens. A new offer resets its ingredient
+Order requirements paginate within a card when needed, preserving access to
+Deliver, Save and New Order on short screens. A new offer resets its goods
 page to the beginning. `tests/ui_order_rolls.cjs` verifies six rapid clicks,
 correct IDs, five-product jackpot display, and four screen sizes.
 

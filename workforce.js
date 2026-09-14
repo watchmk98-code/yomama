@@ -33,7 +33,10 @@
   function population(snapshot) { var pool = (snapshot.workforce || {}).population; return pool && pool.enabled ? pool : null; }
   function panelTabs(snapshot) {
     var available = connected(snapshot) ? tabs.slice(0, 4).concat([['projects', 'Group projects']], tabs.slice(4)) : tabs;
-    return population(snapshot) ? available.map(function (item) { return item[0] === 'team' ? ['team', 'Workers'] : item; }) : available;
+    return available.map(function (item) {
+      if (item[0] === 'recipes' && snapshot.productionMode === 'independent') return ['recipes', 'Products'];
+      return item[0] === 'team' && population(snapshot) ? ['team', 'Workers'] : item;
+    });
   }
   function changeDraft(team) {
     if (!drafts[team.buildingId]) {

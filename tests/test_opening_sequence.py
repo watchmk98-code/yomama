@@ -39,7 +39,7 @@ def run_opening(seed=0, policy='baseline', decision_ticks=4, limit_minutes=60):
     st = E.new_state(cfg, seed=seed)
     cls = E.new_class(cfg)
     events, errors, opened = [], [], set(st['tierOf'])
-    if policy in ('buyers', 'buyers_upgrades'):
+    if policy in ('buyers', 'buyers_upgrades', 'buyers_pause'):
         for slot, name in enumerate(('corner_grocer', 'sunrise_diner')):
             assert E.manage_customer_contract(cfg, st, slot, 'accept', customer_id=name)['ok']
     if policy in ('other_orders', 'other_orders_recover'):
@@ -75,6 +75,13 @@ def run_opening(seed=0, policy='baseline', decision_ticks=4, limit_minutes=60):
             else:
                 order = state['contracts']['offers'][2]
                 if order.get('project') and not order.get('locked'):
+                    if policy == 'buyers_pause' and not order['canFulfill']:
+                        for customer in st['customerContracts']['active']:
+                            if not customer['paused']:
+                                assert E.manage_customer_contract(cfg,st,customer['slot'],'pause',
+                                                                  contract_id=customer['id'])['ok']
+                                events.append(dict(tick=st['tick'],action='pause_buyer',slot=customer['slot']))
+                        order=view(cfg,st)['contracts']['offers'][2]
                     if order['canFulfill']:
                         assert E.fulfill_order(cfg, st, 2, order['id'])['ok']
                         events.append(dict(tick=st['tick'], action='deliver_project', project=order['projectId']))
@@ -109,7 +116,7 @@ def run_opening(seed=0, policy='baseline', decision_ticks=4, limit_minutes=60):
                 guide=final.get('nextStep'))
 
 
-@pytest.mark.parametrize('policy', ['baseline', 'upgrades', 'buyers', 'buyers_upgrades'])
+@pytest.mark.parametrize('policy', ['baseline', 'upgrades', 'buyers_upgrades'])
 def test_opening_finishes_with_normal_tick_production_and_discretionary_spending(policy):
     result = run_opening(seed=7, policy=policy)
     assert result['completed'] and result['projectCount'] == 3
@@ -118,6 +125,19 @@ def test_opening_finishes_with_normal_tick_production_and_discretionary_spending
     assert not result['errors']
     if 'upgrades' in policy:
         assert result['upgrades'] > 0
+
+
+def test_prioritizing_regular_buyers_delays_projects_but_pausing_frees_their_goods():
+    keeping=run_opening(seed=7,policy='buyers')
+    pausing=run_opening(seed=7,policy='buyers_pause')
+    assert keeping['completed'] and pausing['completed']
+    # Regulars now take stock before projects. Keeping them active remains
+    # viable, while deliberately pausing them restores the faster opening.
+    assert pausing['minutes']<keeping['minutes']<=25
+    assert pausing['minutes']<=20
+    assert keeping['shipments']>pausing['shipments']
+    assert any(event['action']=='pause_buyer' for event in pausing['events'])
+    assert not keeping['errors'] and not pausing['errors']
 
 
 def test_all_cash_can_go_to_an_upgrade_while_fish_construction_stays_fully_funded():
@@ -266,7 +286,7 @@ def test_concurrent_project_delivery_and_grant_redemption_each_succeed_once(api_
     assert after['build']['tier'] == target and after['queue'] == []
 
 
-def test_old_roastery_without_farm_is_guided_to_its_missing_supplier():
+def test_old_roastery_can_supply_its_project_without_former_ingredient_business():
     cfg = legacy_config()
     st = E.new_state(cfg)
     roastery = tier(cfg, 'roastery')
@@ -274,9 +294,13 @@ def test_old_roastery_without_farm_is_guided_to_its_missing_supplier():
     st['b'] = [E._building(roastery)]
     payload = view(cfg, st)
     project = payload['contracts']['offers'][2]
-    assert project['locked'] and not project['canFulfill']
-    assert 'Greenfield Farm' in project['why']
+    assert not project['locked'] and not project['canFulfill']
+    assert 'Greenfield Farm' not in project['why']
+    assert E.commit_order(cfg, st, 2, project['id'], True)['ok']
     before = st['cash'], copy.deepcopy(st['inventory'])
-    assert not E.commit_order(cfg, st, 2, project['id'], True)['ok']
     assert not E.fulfill_order(cfg, st, 2, project['id'])['ok']
     assert (st['cash'], st['inventory']) == before
+    for need in project['requirements']:
+        assert E.catalog(cfg)[need['goodId']]['tier']==roastery
+        st['inventory'][need['goodId']]=need['quantity']
+    assert E.fulfill_order(cfg, st, 2, project['id'])['ok']

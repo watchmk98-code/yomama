@@ -15,7 +15,7 @@ COST_SCALE = 1000000
 STATE_KEY = 'businessOperations'
 ROLES = (
     dict(id='assistant', name='Production assistant', effect='Basic products +50% base speed'),
-    dict(id='specialist', name='Craft specialist', effect='Recipes +75% base speed'),
+    dict(id='specialist', name='Production specialist', effect='Advanced products +75% base speed'),
     dict(id='technician', name='Maintenance technician', effect='Production running costs −50%'),
 )
 
@@ -40,6 +40,12 @@ def ensure(cfg, st, new=False):
                      investmentKnown=bool(new))
         b.setdefault('paused', False)
         b.setdefault('staff', None)
+        staff = b['staff']
+        if isinstance(staff, dict) and staff.get('id') == 'specialist':
+            if staff.get('name') == 'Craft specialist':
+                staff['name'] = 'Production specialist'
+            if staff.get('effect') == 'Recipes +75% base speed':
+                staff['effect'] = 'Advanced products +75% base speed'
         b.setdefault('costRemainder', 0)
         if b.get('costRemainderScale', 100) != COST_SCALE:
             # Earlier operating saves stored hundredths of a YM. Keep that
@@ -70,6 +76,8 @@ def active_staff(cfg, b):
 def speed_bonus(cfg, b, good):
     staff = active_staff(cfg, b)
     if staff and not paused(cfg, b):
+        # Preserve existing shift coverage. Dormant recipe metadata identifies
+        # advanced products, but automatic production no longer uses inputs.
         if staff['id'] == 'assistant' and not good.get('inputs'):
             return 50
         if staff['id'] == 'specialist' and good.get('inputs'):
@@ -104,9 +112,9 @@ def effective_batch_cost(cfg, b, good, st=None):
     return _batch_cost_units(cfg, b, good, st) / COST_SCALE
 
 
-def batch_quote(cfg, b, good, st=None):
+def batch_quote(cfg, b, good, st=None, batches=1):
     remainder = b.get('costRemainder', 0) * COST_SCALE // b.get('costRemainderScale', 100)
-    amount = _batch_cost_units(cfg, b, good, st) + remainder
+    amount = _batch_cost_units(cfg, b, good, st) * batches + remainder
     return amount // COST_SCALE, amount % COST_SCALE
 
 
@@ -129,11 +137,11 @@ def prune(cfg, st, tick=None, clear=False):
     return data
 
 
-def charge_batch(cfg, st, b, good, tick):
-    """Caller has already checked capacity and ingredients; charge atomically."""
+def charge_batch(cfg, st, b, good, tick, batches=1):
+    """Caller has already checked product access and capacity; charge atomically."""
     if not enabled(cfg):
         return True
-    cost, remainder = batch_quote(cfg, b, good, st)
+    cost, remainder = batch_quote(cfg, b, good, st, batches=batches)
     if st['cash'] < cost:
         return False
     st['cash'] -= cost
@@ -193,35 +201,11 @@ def cooldown_seconds(cfg, st, tier):
     return max(0, (until - st['tick']) * cfg['global']['tick'])
 
 
-def _dependent_businesses(cfg, st, slot):
-    removed = {g['id'] for g in cfg['tiers'][st['tierOf'][slot]]['goods']}
-    affected = []
-    for tier in cfg['tiers']:
-        if any(n['goodId'] in removed for g in tier['goods'] for n in g.get('inputs', [])):
-            if cfg['tiers'].index(tier) in st['tierOf']:
-                affected.append(tier['name'])
-    return affected
-
-
-def _dependent_goods(cfg, goods):
-    affected = set(goods)
-    changed = True
-    while changed:
-        changed = False
-        for tier in cfg['tiers']:
-            for good in tier['goods']:
-                if good['id'] not in affected and any(n['goodId'] in affected for n in good.get('inputs', [])):
-                    affected.add(good['id'])
-                    changed = True
-    return affected
-
-
 def salvage_quote(cfg, st, slot):
     ensure(cfg, st)
     b = st['b'][slot]
     tier = cfg['tiers'][st['tierOf'][slot]]
     goods = {g['id'] for g in tier['goods']}
-    dependent_goods = _dependent_goods(cfg, goods)
     quantity = sum(st['inventory'].get(gid, 0) for gid in goods)
     why = ''
     if len(st['b']) <= 1 or tier['id'] == 'farm':
@@ -234,14 +218,14 @@ def salvage_quote(cfg, st, slot):
         why = 'Finish your three opening town projects first.'
     elif active_staff(cfg, b):
         why = 'Let this staff shift finish before closing the business.'
-    elif any(any(n['goodId'] in dependent_goods for n in c['requirements'])
+    elif any(any(n['goodId'] in goods for n in c['requirements'])
              for c in st.get('customerContracts', {}).get('active', [])):
         why = 'Release regular buyers that use these products first.'
-    elif any(o.get('committed') and any(n['goodId'] in dependent_goods for n in o['requirements'])
+    elif any(o.get('committed') and any(n['goodId'] in goods for n in o['requirements'])
              for o in st.get('offers') or []):
         why = 'Release or deliver saved orders that use these products first.'
     elif quantity:
-        why = 'Pause this business and clear its {} stored goods first. Pause recipes using them if needed.'.format(quantity)
+        why = 'Pause this business and clear its {} stored goods first.'.format(quantity)
     # Regular slots must remain usable after the number of buildings falls.
     remaining_slots = 4 if len(st['b']) - 1 >= 6 else 3 if len(st['b']) - 1 >= 3 else 2
     if not why and any(c['slot'] >= remaining_slots for c in st.get('customerContracts', {}).get('active', [])):
@@ -249,7 +233,7 @@ def salvage_quote(cfg, st, slot):
     invested = b.get('cashInvested', 0)
     return dict(value=invested * 45 // 100, percent=45, cashInvested=invested,
                 bookValue=b.get('bookValue', 0), canSalvage=not why, why=why,
-                cooldownSeconds=300, affectedBusinesses=_dependent_businesses(cfg, st, slot))
+                cooldownSeconds=300, affectedBusinesses=[])
 
 
 def staff_options(cfg, st, slot):
@@ -259,17 +243,16 @@ def staff_options(cfg, st, slot):
 
     b = st['b'][slot]
     goods = cfg['tiers'][st['tierOf'][slot]]['goods']
-    recipes = [good for good in goods if good.get('inputs')]
-    unlocked_recipes = [good for good in recipes if business_progression.product_unlocked(cfg, st, good['id'])]
+    advanced = [good for good in goods if good.get('inputs')]
+    unlocked_advanced = [good for good in advanced if business_progression.product_unlocked(cfg, st, good['id'])]
     base_cost = sum(base_batch_cost(cfg, g) * 60 / (g['cycleTicks'] * cfg['global']['tick']) for g in goods)
     options = []
     for role in ROLES:
         cost = max(4, int(math.ceil(base_cost * .9 * (1.25 if role['id'] == 'specialist' else 1))))
         why = 'A staff shift is already active' if active_staff(cfg, b) else (
             'Resume the business before hiring' if paused(cfg, b) else
-            'This business has no recipes' if role['id'] == 'specialist' and not recipes else
-            'Complete this business’s signature quest to unlock a recipe first' if role['id'] == 'specialist' and not unlocked_recipes else
-            'Resume recipes before hiring' if role['id'] == 'specialist' and not b.get('processing', True) else
+            'This business has no advanced products' if role['id'] == 'specialist' and not advanced else
+            'Complete this business’s signature quest to unlock an advanced product first' if role['id'] == 'specialist' and not unlocked_advanced else
             'Need {} YM more'.format(cost - st['cash']) if cost > st['cash'] else '')
         options.append(dict(role, cost=cost, durationSeconds=180, canHire=not why, why=why))
     return options
@@ -325,7 +308,7 @@ def manage(cfg, st, body):
     st['cash'] += quote['value']
     st['book'] = max(0, st['book'] - quote['bookValue'])
     for good in tier['goods']:
-        for key in ('inventory', 'productionWork', 'salesWork', 'productionBlocked'):
+        for key in ('inventory', 'productionWork', 'productionPhase', 'salesWork', 'productionBlocked'):
             st.get(key, {}).pop(good['id'], None)
     st['b'].pop(slot)
     st['tierOf'].pop(slot)

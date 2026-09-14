@@ -46,7 +46,7 @@ def test_first_minute_counts_completed_goods_and_retail_not_forecasts():
 
 def recipe_town():
     cfg, st = town((0, 2))
-    st['cash'] = 100  # Isolate ingredient/storage constraints from running cash.
+    st['cash'] = 100  # Isolate completed-batch reporting from normal cash limits.
     for tier in cfg['tiers']:
         for good in tier['goods']:
             good['cycleTicks'] = 10000
@@ -56,10 +56,13 @@ def recipe_town():
                 recipe = good
     for building in st['b']:
         building['reserve'] = True
+    # Give replaced fixture businesses their real operation identities before
+    # a test pauses one; first-time initialization otherwise sets paused=False.
+    E.business_operations.ensure(cfg, st)
     return cfg, st, recipe
 
 
-def test_completed_recipe_counts_outputs_but_never_sells_or_recredits_ingredients():
+def test_completed_batch_counts_outputs_without_consuming_or_recrediting_other_goods():
     cfg, st, recipe = recipe_town()
     st['inventory'] = {need['goodId']: need['quantity'] for need in recipe['inputs']}
     replay(cfg, st, 1)
@@ -67,22 +70,27 @@ def test_completed_recipe_counts_outputs_but_never_sells_or_recredits_ingredient
     assert shops[0]['activity']['producedUnits'] == 0
     assert shops[1]['activity']['producedUnits'] == 3
     assert st['inventory']['roastery_pastries'] == 3
-    assert all(st['inventory'][need['goodId']] == 0 for need in recipe['inputs'])
+    assert all(st['inventory'][need['goodId']] == need['quantity'] for need in recipe['inputs'])
     assert all(shop['activity']['soldUnits'] == 0 for shop in shops)
+    assert view(cfg, st)['earnings']['totalIncome'] == 0
+    assert st['cash'] == 100 - recipe['operatingCost']
 
 
-@pytest.mark.parametrize('blocked', ('ingredient', 'storage', 'paused'))
-def test_blocked_or_paused_recipe_does_not_report_an_uncompleted_output(blocked):
+@pytest.mark.parametrize('blocked', ('cash', 'storage', 'paused'))
+def test_blocked_or_paused_production_does_not_report_uncompleted_output(blocked):
     cfg, st, recipe = recipe_town()
-    if blocked != 'ingredient':
-        st['inventory'] = {need['goodId']: need['quantity'] for need in recipe['inputs']}
+    st['inventory'] = {need['goodId']: need['quantity'] for need in recipe['inputs']}
+    if blocked == 'cash':
+        st['cash'] = 0
     if blocked == 'storage':
         st['inventory'][recipe['id']] = E._good_capacity(cfg, st, 1, recipe['id'])
     if blocked == 'paused':
-        st['b'][1]['processing'] = False
+        st['b'][1]['paused'] = True
     before = copy.deepcopy(st['inventory'])
+    cash = st['cash']
     replay(cfg, st, 3)
     assert st['inventory'] == before
+    assert st['cash'] == cash
     assert all(shop['activity']['producedUnits'] == 0 for shop in view(cfg, st)['buildings'])
 
 

@@ -26,18 +26,6 @@ def town(cfg, tiers=None):
     return state
 
 
-def ancestors(goods, good_id):
-    required = set()
-    pending = [n['goodId'] for n in goods[good_id].get('inputs', [])]
-    while pending:
-        ingredient = pending.pop()
-        if ingredient in required:
-            continue
-        required.add(ingredient)
-        pending.extend(n['goodId'] for n in goods[ingredient].get('inputs', []))
-    return required
-
-
 def force_rarity(monkeypatch, rarity):
     selected = copy.deepcopy(next(r for r in E.ORDER_ROLLS if r['id'] == rarity))
     selected['chance'] = 100
@@ -58,9 +46,7 @@ def test_catalog_has_distinct_named_purposeful_bundles_for_every_product():
         assert type(recipe['breakfast']) is bool
         selected = set(recipe['goods'])
         assert len(selected) == len(recipe['goods'])
-        for good_id in selected:
-            assert not selected.intersection(ancestors(goods, good_id)), \
-                '{} reserves an ingredient required by its own output'.format(recipe['id'])
+        assert selected <= set(goods)
 
 
 @pytest.mark.parametrize('rarity,size,slot', [
@@ -102,19 +88,18 @@ def test_sparse_towns_only_receive_complete_recipes_they_can_supply(tiers):
         assert order['name'] == recipe['name'] and order['purpose'] == recipe['purpose']
         assert order['channelLabel']
         for good_id in requested:
-            chain = ancestors(goods, good_id) | {good_id}
-            assert {goods[gid]['tier'] for gid in chain} <= set(tiers)
+            assert goods[good_id]['tier'] in tiers
+            assert P.product_unlocked(cfg, state, good_id)
         seen.add(order['recipeId'])
         assert E.replace_order(cfg, state, slot, order['id'])['ok']
     assert len(seen) > 3, 'Even a small town needs more than three permanent delivery choices.'
     assert (state['cash'], state['materials']) == money
 
 
-def test_missing_supplier_of_supplier_excludes_deep_output(monkeypatch):
+def test_dormant_input_chains_do_not_exclude_owned_products(monkeypatch):
     cfg = E.load_config()
-    # Existing snapshots may have a longer chain than the current default rules.
-    # Telemetry already uses compute hours; make those depend on battery storage,
-    # which in turn requires the workshop's steel brackets.
+    # Existing snapshots retain input metadata for future manual crafting.
+    # Even a long chain with a missing former supplier cannot gate automatic goods.
     compute = next(g for t in cfg['tiers'] for g in t['goods'] if g['id'] == 'data_center_compute_hours')
     compute['inputs'] = [dict(goodId='solar_coop_battery_storage', quantity=1)]
     missing_tier = next(i for i, t in enumerate(cfg['tiers']) if t['id'] == 'workshop')
@@ -127,9 +112,10 @@ def test_missing_supplier_of_supplier_excludes_deep_output(monkeypatch):
         seen.update(n['goodId'] for n in order['requirements'])
         E.replace_order(cfg, state, 0, order['id'])
     assert 'uplink_center_satellite_bandwidth' in seen
-    assert 'solar_coop_battery_storage' not in seen
-    assert 'data_center_compute_hours' not in seen
-    assert 'uplink_center_telemetry' not in seen, 'Owning only immediate suppliers cannot make a deep chain viable.'
+    assert 'solar_coop_battery_storage' in seen
+    assert 'data_center_compute_hours' in seen
+    assert 'uplink_center_telemetry' in seen
+    assert not seen.intersection(g['id'] for g in cfg['tiers'][missing_tier]['goods'])
 
 
 def test_opening_a_business_adds_its_orders_without_resetting_saved_cards(monkeypatch):
@@ -227,15 +213,15 @@ def test_json_replay_preserves_recipe_rotation_without_spending_or_production():
     assert (original['cash'], original['materials'], original['tick'], original['inventory']) == before
 
 
-def test_committed_multichain_recipe_can_be_produced_and_delivered_atomically(monkeypatch):
+def test_committed_multibusiness_order_can_be_produced_and_delivered_atomically(monkeypatch):
     force_rarity(monkeypatch, 'jackpot')
     cfg = E.load_config()
     goods = E.catalog(cfg)
     state = town(cfg)
-    # This test isolates reservation/recipe reachability with funded operations.
+    # This test isolates reserved-order production with funded operations.
     state['cash'] = 1_000_000
     choices = [r for r in ORDER_RECIPES if len(r['goods']) == 5]
-    # Exercise a real catalog bundle with as many processed products as possible.
+    # Exercise a real catalog bundle spanning several independent businesses.
     target = max(choices, key=lambda r: (sum(bool(goods[g].get('inputs')) for g in r['goods']),
                                          len({goods[g]['tier'] for g in r['goods']})))
     for _ in range(len(choices)):
