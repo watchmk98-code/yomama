@@ -830,9 +830,9 @@
  .game-compact .game-contract-order-choice .game-small-button {min-height:27px;padding:2px 4px;font-size:14px;}
  .game-compact .game-contract-controls .k-btn,.game-compact .game-contract-controls .game-small-button,.game-compact .game-contract-controls .game-text-button {min-height:27px;font-size:15px;padding-block:2px;}
 }
-.game-opening-guide {display:flex;align-items:center;gap:12px;flex:none;padding:8px 12px;border:1px solid #d4b5ff;background:var(--bg);margin-bottom:8px;}
+.game-opening-guide {display:flex;align-items:center;gap:12px;flex:none;padding:8px 12px;border:1px solid #d4b5ff;background:var(--bg);margin-bottom:8px;box-shadow:0 0 10px rgba(212,181,255,.16),inset 0 0 8px rgba(212,181,255,.05);}
 .game-opening-guide > div {flex:1;min-width:0;}
-.game-opening-guide strong {display:block;font-size:20px;font-weight:400;color:#d4b5ff;}
+.game-opening-guide strong {display:block;font-size:20px;font-weight:400;color:#d4b5ff;text-shadow:0 0 6px rgba(212,181,255,.28);}
 .game-opening-guide small {display:block;font-size:15px;color:var(--muted);line-height:1.2;}
 .game-opening-guide .game-small-button,.game-opening-guide .k-btn {flex:0 0 auto;width:auto;font-size:16px;min-height:38px;margin:0;}
 .game-income-detail {padding:5px 10px;border-top:1px solid var(--line);font-size:16px;line-height:1.2;}
