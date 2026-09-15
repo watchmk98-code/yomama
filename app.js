@@ -1808,7 +1808,6 @@
     marioCharacters.forEach((button) => {
       button.addEventListener('click', () => {
         setActiveCharacter(button);
-        openBio(normalizeCharacterKey(button.dataset.character || ''));
       });
     });
 
@@ -1896,7 +1895,6 @@
         const selected = getSelectedCharacter() || marioCharacters[0];
         if (!selected) return;
         if (!selected.classList.contains('is-selected')) setActiveCharacter(selected, false);
-        openBio(normalizeCharacterKey(selected.dataset.character || ''));
         return;
       }
 
@@ -1930,7 +1928,6 @@
           (button) => normalizeCharacterKey(button.dataset.character || '') === resolvedCharacter,
         );
         if (matchedButton) setActiveCharacter(matchedButton, false);
-        window.requestAnimationFrame(() => openBio(resolvedCharacter));
       }
     }
   }

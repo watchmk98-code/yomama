@@ -22,6 +22,8 @@ def port(tmp_path, monkeypatch):
     teacher = A.create_session({})
     pin = str(secrets.randbelow(10000)).zfill(4)
     seats = [A.join(dict(code=teacher['code'], name=name, pin=pin)) for name in ('ALICE', 'BOB')]
+    for seat in seats:
+        set_licence(seat, True)
     provider = {'status': 'open', 'bid': 99.99, 'ask': 100.01, 'age': 0.01, 'calls': 0}
 
     def snapshot(*_, **__):
@@ -34,6 +36,15 @@ def port(tmp_path, monkeypatch):
                                                message='Test fixture quotes', asOf=now[0]))
     monkeypatch.setattr(A.alpaca_market, 'snapshot', snapshot)
     return now, teacher, seats, provider, pin
+
+
+def set_licence(seat, licensed):
+    with A.connect() as conn:
+        player = A._player_by_token(conn, seat['token'])
+        session = A._session_of(conn, player['code'])
+        town = A._load_state(player, A.econ_config(session), session)
+        town['licenceGrandfathered'] = licensed
+        conn.execute('UPDATE players SET econ=? WHERE id=?', (json.dumps(town), player['id']))
 
 
 def get(seat):
@@ -124,7 +135,7 @@ def test_bogus_auth_never_calls_provider_and_foreign_account_is_rejected(port):
     assert exc.value.status == 409
 
 
-def test_pause_and_revocation_still_block_unlicensed_port_trades(port):
+def test_pause_and_revocation_still_block_licensed_port_trades(port):
     now, teacher, seats, _, _ = port
     request = order(seats[0], get(seats[0]))
     A.teacher(dict(teacher_token=teacher['teacher_token'], action='pause'))
@@ -461,52 +472,31 @@ def chart(port, monkeypatch):
 
 
 @pytest.mark.parametrize('seat_kind', ['existing', 'future_class'])
-def test_unlicensed_seats_can_chart_buy_sell_and_settle_without_unlocking_town(port, chart, seat_kind):
+def test_unlicensed_seats_can_view_port_but_cannot_trade_until_licensed(port, chart, seat_kind):
     now, _, seats, _, _ = port
-    # First use PORT before creating another class, proving future seats need
-    # neither a one-time migration nor a pre-existing account or licence flag.
-    A.port_state({'token': seats[0]['token']})
     seat = seats[0]
     if seat_kind == 'future_class':
         teacher = A.create_session({})
         seat = A.join(dict(code=teacher['code'], name='NEW STUDENT',
                            pin=str(secrets.randbelow(10000)).zfill(4)))
-
-    def town_record():
-        with A.connect() as conn:
-            player = A._player_by_token(conn, seat['token'])
-            session = A._session_of(conn, player['code'])
-            cfg = A.econ_config(session)
-            town = A._load_state(player, cfg, session)
-            assert not E.gate_open(cfg, town)
-            return player['econ'], player['econ_meta'], player['cash']
-
-    unchanged_town = town_record()
+    set_licence(seat, False)
     initial = A.port_state({'token': seat['token']})
-    assert initial['canTrade'] is True
-    assert initial['portfolio']['account']['availableCash'] == 100000
-    assert initial['portfolio']['positions'] == {}
+    assert initial['canTrade'] is False
+    assert 'licence' in initial['blockedReason']
     assert A.port_chart({'token': seat['token'], 'symbol': 'AAPL', 'range': '1D'})['status'] == 'ok'
+    with pytest.raises(A.ApiError, match='licence'):
+        A.port_order(order(seat, initial))
+    set_licence(seat, True)
+    assert get(seat)['canTrade'] is True
     A.port_order(order(seat, initial))
+    set_licence(seat, False)
     now[0] += 1
-    assert A.process_pending_portfolios() == 1
+    A.process_pending_portfolios()
+    assert saved_portfolio(seat)['positions'] == {}
+    set_licence(seat, True)
+    now[0] += 1
+    A.process_pending_portfolios()
     assert saved_portfolio(seat)['positions']['AAPL']['quantity'] == 2
-    sell = order(seat, initial)
-    sell.update(side='sell', quantity=1)
-    A.port_order(sell)
-    now[0] += 1
-    assert A.process_pending_portfolios() == 1
-    saved = saved_portfolio(seat)
-    assert saved['positions']['AAPL']['quantity'] == 1
-    assert len(saved['ledger']['fills']) == 2
-    assert town_record() == unchanged_town
-
-    # The PORT exception does not unlock separate town/legacy trading rules.
-    for handler, fields in ((A.econ_keep, {'percent': 50}),
-                            (A.trade_equity, {'symbol': 'AAPL', 'side': 'buy', 'shares': 1})):
-        with pytest.raises(A.ApiError) as error:
-            handler(dict(token=seat['token'], **fields))
-        assert 'licence' in error.value.message.lower()
 
 
 @pytest.mark.parametrize('range_name,timeframe', [('1d', '1Min'), ('3m', '4Hour'), ('5y', '1Week')])
@@ -545,6 +535,7 @@ def test_chart_rejects_unknown_stocks_and_ranges_without_network(port, chart, fi
 def test_unlicensed_chart_remains_readable_while_class_is_paused(port, chart):
     _, teacher, seats, _, _ = port
     calls, _ = chart
+    set_licence(seats[0], False)
     query = {'token': seats[0]['token'], 'symbol': 'AAPL', 'range': '1W'}
     A.teacher(dict(teacher_token=teacher['teacher_token'], action='pause'))
     assert A.port_chart(query)['status'] == 'ok'

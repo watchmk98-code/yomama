@@ -395,7 +395,7 @@ print(json.dumps(result))
    await fit('workshop-playing');
    use('completedWorkshop');await refresh();
    assert.match(await page.locator('#game-breakfast').textContent(),/Espresso.*25%.*base.*speed/i);
-   assert.match(await page.locator('#game-breakfast').textContent(),/5 materials/);
+   assert.match(await page.locator('#game-breakfast').textContent(),/recipe/i);
    assert.equal(await page.locator('#game-breakfast [data-econ-action="breakfast:start"]').count(),0);
    await fit('workshop-completed');
    allErrors.push(...errors.map(error=>viewport.name+': '+error));

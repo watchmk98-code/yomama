@@ -30,7 +30,7 @@ def test_complete_four_orders_without_free_stock_or_town_spending(order, upgrade
                     assert now <= 900
         call(st, now, 'deliver', orderId=order_id)
         assert not B.act(st, now, dict(action='deliver', orderId=order_id))['ok']
-    assert st['materials'] == 12
+    assert st['materials'] == 7
     assert st['cash'] == 5000 and st['inventory'] == {'town_goods': 20}
     assert B.payload(st, now)['status'] == 'done'
     assert st['breakfastEvent']['coins'] == 0

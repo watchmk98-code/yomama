@@ -93,7 +93,7 @@ def test_browser_delivery_pays_only_on_arrival_counts_smoothly_and_persists(prev
     completed = A.econ_state({'token': seat['token']})
     ready = completed['contracts']['offers'][0]
     assert completed['cash'] == state['cash'] + first['reward']
-    assert completed['materials'] == state['materials'] + first['materials']
+    assert completed['materials'] == 0
     assert not ready.get('inTransit') and ready['id'] != outbound['id']
     assert ready['canReplace']
     assert ready['deliverySeconds'] == orders.quote_delivery_seconds(cfg, ready)

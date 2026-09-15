@@ -62,7 +62,7 @@ def test_single_product_terms_and_actual_payment(monkeypatch, variant, quantity,
     assert offer['requirements'] == [dict(goodId='farm_tomatoes', quantity=quantity)]
     assert offer['rewardPercent'] == percent[index]
     assert offer['reward'] == cash[index]
-    assert offer['materials'] == (materials if index == 1 else 0)
+    assert offer['materials'] == 0
     if route == 'sector':
         assert offer['sectorId'] == 'F'
     state['inventory']['farm_tomatoes'] = quantity

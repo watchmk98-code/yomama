@@ -138,6 +138,11 @@ def migrate_state(cfg, st, tick=None):
     The API records original JSON and handles clock reset for old snapshots.
     """
     if not isinstance(st,State): st=State(st)
+    st['materials']=0
+    for offer in (st.get('offers') or []) + [st.get('goalOffer')]:
+        if offer:
+            offer['materials']=0
+            if offer.get('channelLabel') == 'Building supplies': offer['channelLabel']='Sector delivery'
     crafting.ensure(st)
     st.setdefault('productionPhase',{})
     _independent_production_defaults(st)
@@ -638,11 +643,9 @@ def expand_options(cfg,st):
 
 def expansion_quote(cfg,st,ti):
     t=cfg['tiers'][ti]
-    substitute=cfg['production']['materialCashValue']
-    required=math.ceil(t['baseCost']*cfg['production']['materialPremiumPercent']/100/substitute) if t['materialCost'] else 0
-    used=min(st['materials'],required)
-    missing=required-used
-    full_cost=t['baseCost']+missing*substitute
+    # Retired material fields stay zero for older clients and class snapshots.
+    substitute=required=used=missing=0
+    full_cost=t['baseCost']
     grant=town_projects.construction_grant(cfg,st,ti)
     result=dict(baseCost=t['baseCost'],cost=0 if grant else full_cost,materialUnitValue=substitute,
                 materialCost=required,materialsCost=required,materialsUsed=0 if grant else used,
@@ -677,7 +680,7 @@ def expand(cfg,st,ti,tick):
         claimed=town_projects.consume_construction_grant(cfg,st,ti)
         if not claimed['ok']: return claimed
     installed_non_cash=result.get('fundedValue',0)+progression.get('consumedValue',0)
-    st['cash']-=result['cost'];st['book']+=result['cost']+installed_non_cash;st['materials']-=result['materialsUsed']
+    st['cash']-=result['cost'];st['book']+=result['cost']+installed_non_cash
     business_operations.reserve_construction(cfg,st,ti,result['cost'],installed_non_cash)
     if st.get('build') is None:
         st['build']=dict(i=ti,t=tick+max(1,jsround(cfg['tiers'][ti]['timerH']*3600/cfg['global']['tick'])))
@@ -1029,12 +1032,11 @@ def _make_order(cfg,st,index):
         slot=st['tierOf'].index(goods[good['id']]['tier'])
         qty=min(qty,_good_capacity(cfg,st,slot,good['id']))
         requirements.append(dict(goodId=good['id'],quantity=qty));value+=qty*good['unitPrice']
-    material_value=cfg['production']['materialCashValue']
-    materials=max(1,jsround(value*.25/material_value)) if index == 1 else 0
+    materials=0
     reward_percent=jsround([125,110,115][index]*rarity['payoutPercent']/100)
     breakfast=index==2 and recipe['breakfast'] and not business_progression.connected_enabled(cfg)
     order=dict(id=f'order-{st.get("rngState",1)}-{serial}',name=recipe['name'],recipeId=recipe['id'],purpose=recipe['purpose'],
-                channelLabel=['Quick cash','Building supplies','Product deliveries' if business_progression.connected_enabled(cfg) else 'Breakfast regulars' if breakfast else 'Town deliveries'][index],
+                channelLabel=['Quick cash','Sector delivery','Product deliveries' if business_progression.connected_enabled(cfg) else 'Breakfast regulars' if breakfast else 'Town deliveries'][index],
                 requirements=requirements,reward=jsround(value*reward_percent/100),materials=materials,
                 customer='breakfast' if breakfast else None,committed=False,
                 rarity=rarity['id'],rarityLabel=rarity['label'],rewardPercent=reward_percent,retailValue=value)
@@ -1105,7 +1107,7 @@ def _settle_order(cfg,st,order):
     for need in order['requirements']: st['inventory'][need['goodId']]-=need['quantity']
     operating_margins.pay(cfg,st,'orders',order['reward'],order['requirements'],
                           terms=order.get('sellingTerms'))
-    st['materials']+=order['materials']
+    order['materials']=0  # Ignore rewards embedded in pre-removal saves.
     business_progression.record_sale(cfg,st,order['requirements'],'orders')
     if not order.get('project'):
         town_projects.record_delivery(cfg,st,order['requirements'],order['id'])
@@ -1487,10 +1489,10 @@ def payload(cfg,st,cls,session,behind=False):
                 connectedProgression=business_progression.connected_enabled(cfg),groupProjects=group,
                 townProjects=project,nextStep=step,earnings=receipts,potentialIncomePerMinute=round(town_income(cfg,st),2),regularDeliveries=st.get('regularDeliveries',0),regularTarget=3,
                 customerContracts=customer_contract_payload(cfg,st),
-                customerUnitsSold=st['report'].get('unitsSold',0),customerUnitsNeeded=100,materialUnitValue=cfg['production']['materialCashValue'],
+                customerUnitsSold=st['report'].get('unitsSold',0),customerUnitsNeeded=100,materialUnitValue=0,
                 netWorth=net_worth(st),book=st['book'],taxPaid=st['taxPaid'],taxRate=0,
                 incomePerMinute=income,productionPerMinute=prod,revenuePerTick=jsround(income*g['tick']/60),
-                revenuePerDay=jsround(town_income(cfg,st)*1440),materials=st['materials'],buildings=buildings,buildingsOwned=len(buildings),
+                revenuePerDay=jsround(town_income(cfg,st)*1440),materials=0,buildings=buildings,buildingsOwned=len(buildings),
                 frontier=frontier,build=build,queue=[dict(tier=i,name=cfg['tiers'][i]['name']) for i in st['queue']],queueDepth=g['queueDepth'],
                 warehouseCap=capacity,warehouseStored=stored,warehouseValue=sum(st['pend'].values()),
                 warehouseFillPercent=round(stored/capacity*100,1) if capacity else 0,

@@ -458,11 +458,7 @@ function expandOptions(st) {
 }
 
 function expansionQuote(st, ti) {
-  const t = cfg.tiers[ti], required = t.materialCost;
-  const used = Math.min(st.materials, required), missing = required - used;
-  const substitute = Math.max(P().materialCashValue,
-    Math.ceil(t.baseCost * P().materialPremiumPercent / 100 / Math.max(1, required)));
-  return { cost: t.baseCost + missing * substitute, materialsUsed: used };
+  return { cost: cfg.tiers[ti].baseCost };
 }
 
 function canExpand(st, ti) {
@@ -475,7 +471,7 @@ function canExpand(st, ti) {
 function expand(st, ti, k) {
   const quote = canExpand(st, ti);
   if (!quote) return false;
-  st.cash -= quote.cost; st.book += quote.cost; st.materials -= quote.materialsUsed;
+  st.cash -= quote.cost; st.book += quote.cost;
   if (st.build === null) st.build = { i: ti, t: k + Math.max(1, jsround(cfg.tiers[ti].timerH * 3600 / TICK)) };
   else st.queue.push(ti);
   return true;
@@ -504,7 +500,7 @@ function makeOrder(st, index) {
     name: ['Quick delivery', 'Town delivery', 'Building supplies'][index],
     requirements,
     reward: jsround(value * P().orderRewardPercent[index] / 100),
-    materials: P().orderMaterials[index]
+    materials: 0
   };
 }
 
@@ -517,7 +513,6 @@ function fulfillOrder(st, index) {
   for (const need of order.requirements) if ((st.inventory[need.goodId] || 0) < need.quantity) return false;
   for (const need of order.requirements) st.inventory[need.goodId] -= need.quantity;
   st.cash += order.reward;
-  st.materials += order.materials;
   st.cStats.accepted += 1; st.cStats.done += 1;
   const raw = order.requirements.reduce((s, n) => s + CAT[n.goodId].unitPrice * n.quantity, 0);
   st.cStats.net += order.reward - raw;
@@ -950,7 +945,6 @@ function renderDetail() {
     '<dt>Stock value</dt><dd>' + ym(storedValue(st)) + ' YM · ' + Object.values(st.inventory).reduce((a, b) => a + b, 0) + ' items</dd>' +
     '<dt>Net worth</dt><dd>' + ym(netWorth(st)) + ' YM</dd>' +
     '<dt>Customer income</dt><dd>' + ym(incomePerMin(st)) + ' YM/min · earned ' + ym(st.report.retailEarned) + ' total</dd>' +
-    '<dt>Materials</dt><dd>' + st.materials + '</dd>' +
     '<dt>Construction</dt><dd>' + building + '</dd>' +
     '<dt>Offline ticks skipped</dt><dd>' + st.report.offlineTicksSkipped + ' <span class="faint">(past the ' + cfg.runtime.offlineHours + 'h cap)</span></dd>' +
     '</dl>' +

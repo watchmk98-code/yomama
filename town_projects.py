@@ -383,7 +383,7 @@ def construction_grant(cfg, st, tier):
         return None
     return dict(buildingId=target, tier=tier, fullCost=True,
                 label=_building_name(cfg, target) + ' construction grant',
-                description='Construction is fully funded. Your cash and materials stay in your town.')
+                description='Construction is fully funded. Your cash stays in your town.')
 
 
 def consume_construction_grant(cfg, st, tier):

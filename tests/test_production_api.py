@@ -74,7 +74,7 @@ def test_breakfast_persists_isolated_and_awards_only_once(town):
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(deliver, range(2)))
     assert sum(r is not None for r in results) == 1
-    assert state(token)['materials'] == before + 5
+    assert state(token)['materials'] == before
     event('start')
     assert state(token)['breakfastEvent']['status'] == 'done'
 

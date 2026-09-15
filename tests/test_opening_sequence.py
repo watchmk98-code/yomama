@@ -282,7 +282,7 @@ def test_concurrent_project_delivery_and_grant_redemption_each_succeed_once(api_
         results = list(pool.map(expand, range(2)))
     assert sum(result is not None for result in results) == 1
     after = A.econ_state({'token': [token]})
-    assert after['cash'] == 0 and after['materials'] == 17
+    assert after['cash'] == 0 and after['materials'] == 0
     assert after['build']['tier'] == target and after['queue'] == []
 
 

@@ -1,7 +1,7 @@
 """Persistent batch-planning workshop. All time and rewards are server-owned.
 
 Workshop supplies and practice coins are isolated from the town. Completion
-grants town materials and a chosen roastery recipe improvement, once. Supply
+grants a chosen roastery recipe improvement, once. Supply
 catches up arithmetically when no jobs remain. Existing workshops stay open.
 """
 import copy
@@ -61,10 +61,10 @@ def _description(st, cfg):
         coinsLabel='Practice coins',
         suppliesDescription='Separate from town inventory. Ingredients refill up to 12; only batches already started or queued can finish while you are away.',
         coinsDescription='Earned and spent only in this workshop. They never spend or become town cash.',
-        reward=5,
+        reward=0,
         townPerk=perk,
-        rewardDescription=('Earned once: 5 town materials and ' + perk + '.' if e.get('stage') == 5 else
-                           'Complete four orders to earn 5 town materials and a permanent recipe improvement: ' + perk + '.'),
+        rewardDescription=('Earned once: ' + perk + '.' if e.get('stage') == 5 else
+                           'Complete four orders to earn a permanent recipe improvement: ' + perk + '.'),
         specializations={name: dict(choice,
             townPerk=choice['townRecipe'] + ' +25% of base production speed at your roastery',
             workshopPerk='Double batch output and ingredients; cooking time stays the same.')
@@ -193,9 +193,8 @@ def act(st, now, body, cfg=None):
         e['stage'] += 1
         message = 'Served! +' + str(order[3]) + ' Practice coins'
         if e['stage'] == 5:
-            st['materials'] += 5
             e['coins'] = 0
             e['finished'] = now
             e['active'] = e['queued'] = None
-            message = 'Workshop complete! +5 town materials and ' + _description(st, cfg)['townPerk']
+            message = 'Workshop complete! ' + _description(st, cfg)['townPerk']
     return dict(ok=True, kind='breakfast', message=message)

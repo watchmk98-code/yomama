@@ -191,16 +191,16 @@ def test_breakfast_upgrade_changes_town_recipe_and_survives_reload():
     assert E.product_speed(cfg,st,st['b'][1],cfg['tiers'][2]['goods'][2])==100
 
 
-def test_material_value_is_same_for_early_and_late_buildings():
+def test_materials_neither_discount_buildings_nor_pay_out():
     cfg,st=setup();st['materials']=1
     for ti in (1,2,14):
         with_material=E.expansion_quote(cfg,st,ti)
         no_material=copy.deepcopy(st);no_material['materials']=0
-        assert E.expansion_quote(cfg,no_material,ti)['cost']-with_material['cost']==15
+        assert E.expansion_quote(cfg,no_material,ti)['cost']==with_material['cost']==cfg['tiers'][ti]['baseCost']
     for _ in range(20):
         o=E._make_order(cfg,st,1)
         value=sum(n['quantity']*E.catalog(cfg)[n['goodId']]['unitPrice'] for n in o['requirements'])
-        assert abs(o['materials']*15-value*.25)<=15
+        assert o['materials']==0
 
 
 def test_retail_is_a_real_alternative_to_required_deliveries():
@@ -252,3 +252,23 @@ def test_api_focus_is_validated_and_fake_allocation_is_rejected(town):
     cash=state(token)['cash']
     with pytest.raises(A.ApiError):A.econ_keep(dict(token=token,percent=50))
     assert state(token)['cash']==cash
+
+
+def test_old_material_rewards_retire_in_place_without_rerolling_orders():
+    cfg, st = setup()
+    st['materials'] = 23
+    E.offer_contracts(cfg, st, st['tick'])
+    for offer in st['offers']:
+        offer['materials'] = 9
+    st['offers'][1]['channelLabel'] = 'Building supplies'
+    st['offers'][0].update(inTransit=True, committed=True)
+    before = copy.deepcopy(st)
+    loaded = E.migrate_state(cfg, st)
+    assert loaded['materials'] == 0
+    assert all(offer['materials'] == 0 for offer in loaded['offers'])
+    assert loaded['offers'][1]['channelLabel'] == 'Sector delivery'
+    for key in ('cash', 'book', 'inventory', 'b', 'tierOf', 'tick'):
+        assert loaded[key] == before[key]
+    assert [o['id'] for o in loaded['offers']] == [o['id'] for o in before['offers']]
+    assert loaded['offers'][0]['inTransit'] and loaded['offers'][0]['committed']
+    assert E.migrate_state(cfg, copy.deepcopy(loaded)) == loaded

@@ -1,4 +1,4 @@
-/* PORT reads each student's portfolio from the game server. The paper engine
+/* Port reads each student's portfolio from the game server. The paper engine
  * supplies read-only presentation helpers. The old browser sample is available
  * only with ?demo=1 and is never imported into a student's game account. */
 (function () {
@@ -285,7 +285,7 @@
 
   function serverRequest(method, path, body) {
     var token = seatToken();
-    if (!token) { var absent = new Error('Sign in to load your PORT account.'); absent.status = 401; return Promise.reject(absent); }
+    if (!token) { var absent = new Error('Sign in to load your Port account.'); absent.status = 401; return Promise.reject(absent); }
     var controller = typeof AbortController === 'function' ? new AbortController() : null;
     var timeout = controller ? setTimeout(function () { controller.abort(); }, 12000) : null;
     var options = { method: method, cache: 'no-store', credentials: 'same-origin', headers: {} };
@@ -327,7 +327,7 @@
     if (pendingRequest) {
       if (pendingRequest.body.accountId !== state.accountId) {
         pendingRequest = null;
-        feedback = 'Your PORT account was reset. Review the new balance before placing an order.';
+        feedback = 'Your Port account was reset. Review the new balance before placing an order.';
         feedbackError = true;
       } else {
         var order = state.ledger.orders.find(function (item) {
@@ -463,7 +463,7 @@
     contestConfig = engine.createContestConfig();
     paperState = engine.createPaperState({ contestId: 'contest_yport_preview', participantId: 'student_yport_07',
       alias: 'YPORT Student 07', benchmarkSymbol: contestConfig.benchmarkSymbol });
-    // Preserve the original PORT demonstration portfolio and engine actions.
+    // Preserve the original Port demonstration portfolio and engine actions.
     [
       { symbol: 'AAPL', side: 'buy', type: 'market', quantity: 120, referencePrice: 184.5, fill: 184.5 },
       { symbol: 'NVDA', side: 'buy', type: 'market', quantity: 30, referencePrice: 902, fill: 902 },

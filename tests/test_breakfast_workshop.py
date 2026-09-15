@@ -77,7 +77,7 @@ def test_workshop_describes_its_separate_resources_and_unselected_reward():
     assert p['suppliesLabel'] == 'Workshop supplies'
     assert p['coinsLabel'] == 'Practice coins'
     assert 'queued batch' in p['purpose']
-    assert p['reward'] == 5 and 'four orders' in p['rewardDescription']
+    assert p['reward'] == 0 and 'four orders' in p['rewardDescription']
     assert p['townPerk'].startswith('Choose espresso or pastries')
     assert p['specializations']['coffee']['goodId'] == 'roastery_espresso_shots'
     assert p['specializations']['pastry']['goodId'] == 'roastery_pastries'
@@ -109,7 +109,7 @@ def test_complete_workshop_preserves_town_resources_and_improves_only_chosen_rec
                     assert now <= 900
         call(cfg, st, now, 'deliver', orderId=order_id)
     assert st['cash'] == 1000 and st['inventory'] == before_inventory
-    assert st['materials'] == 12
+    assert st['materials'] == 7
     p = B.payload(st, now, cfg=cfg)
     assert p['status'] == 'done' and not p['locked']
     assert p['coins'] == 0 and p['rewardDescription'].startswith('Earned once:')
@@ -136,7 +136,7 @@ def test_old_started_workshop_keeps_progress_without_roastery_and_rewards_once()
     assert st == before
     assert not B.payload(st, 100, cfg=cfg)['locked']
     call(cfg, st, 100, 'deliver', orderId='final')
-    assert st['materials'] == 5
+    assert st['materials'] == 0
     restored = E.State(json.loads(json.dumps(st)))
     saved = copy.deepcopy(restored)
     call(cfg, restored, 200, 'start')

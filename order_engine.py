@@ -133,9 +133,9 @@ def _sector_order(cfg, state):
     state['orderEngine']['lastSector'] = sector
     return _label(dict(id='order-{}-{}'.format(state.get('rngState', 1), serial),
                        name=recipe['name'], recipeId=recipe['id'], purpose=recipe['purpose'],
-                       channelLabel='Building supplies', requirements=requirements,
+                       channelLabel='Sector delivery', requirements=requirements,
                        reward=economy.jsround(value * reward_percent / 100),
-                       materials=max(1, economy.jsround(value * .25 / cfg['production']['materialCashValue'])),
+                       materials=0,
                        customer=None, committed=False, rarity=rarity['id'], rarityLabel=rarity['label'],
                        rewardPercent=reward_percent, retailValue=value,
                        sectorId=sector, sectorLabel=cfg['families'][sector]['name']), 1)

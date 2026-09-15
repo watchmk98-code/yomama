@@ -1066,11 +1066,14 @@ def _port_payload(p, s, state, feed, permitted, reason):
 
 def _port_request(data, action=None):
     # The outer wrapper supplies trusted quotes before taking the class lock.
-    # Recheck the seat and class in the transaction saving the account. PORT is
-    # available independently of town licence/progression, including new seats.
+    # Recheck the seat, class and earned licence before portfolio execution.
     with _db_lock, connect() as conn:
         p, s = _auth(conn, data)
-        reason = 'The class is paused.' if s['paused'] else ''
+        cfg = econ_config(s)
+        town = _load_state(p, cfg, s)
+        licensed = economy.gate_open(cfg, town)
+        reason = ('Earn your licence to unlock Port.' if not licensed else
+                  'The class is paused.' if s['paused'] else '')
         permitted = not reason
         now = time.time()
         feed = alpaca_market.execution_feed(data['_server_port_feed'], now)

@@ -375,7 +375,7 @@ def test_sector_preserves_live_quantity_cash_and_material_terms(town, monkeypatc
     assert offer['requirements'] == [dict(goodId=good['id'], quantity=quantity)]
     assert offer['rarity'] == rarity_id and offer['rewardPercent'] == percent
     assert offer['reward'] == economy.jsround(value * percent / 100)
-    assert offer['materials'] == max(1, economy.jsround(value * .25 / cfg['production']['materialCashValue']))
+    assert offer['materials'] == 0
 
 
 @pytest.mark.parametrize('reward, seconds', [(0, 30), (1, 30), (75, 30), (300, 60),

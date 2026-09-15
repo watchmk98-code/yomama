@@ -1,11 +1,11 @@
-/* PORT is available to every signed-in seat in the GAME navigation. */
+/* Port stays visible from the start; trading requires the earned licence. */
 (function(){
   'use strict';
   var port=location.pathname.endsWith('/port_trading.html');
   var hasSeat=false;
   try{hasSeat=!!(JSON.parse(localStorage.getItem('yomama_session_v1')||'null')||{}).token;}catch(_){}
   // Also cover older static headers on pages that do not load app.js.
-  document.querySelectorAll('.hero .tabs a[href*="port_trading.html"]').forEach(function(a){a.remove();});
+  document.querySelectorAll('.hero .tabs a[href="./port_trading.html"]').forEach(function(a){a.remove();});
   if(port){
     document.querySelectorAll('.hero .tabs a[href*="buildings.html"]').forEach(function(a){
       a.classList.add('active');a.setAttribute('aria-current','page');
@@ -27,10 +27,10 @@
       craftLink.prepend(craftIcon);
     }
     if(location.pathname.endsWith('/craft.html'))craftLink.setAttribute('aria-current','page');
-    var portLink=nav.querySelector('a[href*="port_trading.html"]');
+    var portLink=nav.querySelector('a[href="./port_trading.html"]');
     if(!portLink){
       portLink=document.createElement('a');portLink.href='./port_trading.html';
-      portLink.innerHTML='<span>PORT</span>';
+      portLink.innerHTML='<span>Port</span>';
     }
     craftLink.after(portLink);
     portLink.hidden=!hasSeat;
@@ -50,10 +50,17 @@
     document.head.appendChild(craftNavStyle);
   }
   document.querySelectorAll('a[href*="produce.html"],a[href*="collect.html"],a[href*="focus-tree.html"]').forEach(function(a){a.hidden=true;});
-  document.querySelectorAll('a[href*="port_trading.html"]').forEach(function(a){
+  document.querySelectorAll('a[href="./port_trading.html"]').forEach(function(a){
     a.hidden=!hasSeat;
     a.removeAttribute('data-econ-gate');
-    a.title='Open PORT';
+    a.title='Port · earn your licence to trade';
+  });
+  window.addEventListener('yomama:econ',function(event){
+    document.querySelectorAll('a[href="./port_trading.html"]').forEach(function(a){
+      a.hidden=!hasSeat;
+      a.title=event.detail.gateOpen?'Open Port':'Port · earn your licence to trade';
+      a.classList.toggle('is-locked',!event.detail.gateOpen);
+    });
   });
   document.querySelectorAll('.game-nav[data-craft-nav]').forEach(function(nav){
     var count=Array.from(nav.querySelectorAll('a')).filter(function(a){return !a.hidden;}).length;

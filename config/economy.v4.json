@@ -159,7 +159,7 @@
         }
       ],
       "upgradeBase": 48,
-      "materialCost": 1,
+      "materialCost": 0,
       "capacity": 210
     },
     {
@@ -218,7 +218,7 @@
         }
       ],
       "upgradeBase": 160,
-      "materialCost": 3,
+      "materialCost": 0,
       "capacity": 240
     },
     {
@@ -268,7 +268,7 @@
         }
       ],
       "upgradeBase": 650,
-      "materialCost": 8,
+      "materialCost": 0,
       "capacity": 270
     },
     {
@@ -318,7 +318,7 @@
         }
       ],
       "upgradeBase": 1900,
-      "materialCost": 15,
+      "materialCost": 0,
       "capacity": 300
     },
     {
@@ -368,7 +368,7 @@
         }
       ],
       "upgradeBase": 5000,
-      "materialCost": 25,
+      "materialCost": 0,
       "capacity": 330
     },
     {
@@ -422,7 +422,7 @@
         }
       ],
       "upgradeBase": 11000,
-      "materialCost": 40,
+      "materialCost": 0,
       "capacity": 360
     },
     {
@@ -476,7 +476,7 @@
         }
       ],
       "upgradeBase": 22000,
-      "materialCost": 60,
+      "materialCost": 0,
       "capacity": 390
     },
     {
@@ -526,7 +526,7 @@
         }
       ],
       "upgradeBase": 45000,
-      "materialCost": 85,
+      "materialCost": 0,
       "capacity": 420
     },
     {
@@ -576,7 +576,7 @@
         }
       ],
       "upgradeBase": 90000,
-      "materialCost": 115,
+      "materialCost": 0,
       "capacity": 450
     },
     {
@@ -626,7 +626,7 @@
         }
       ],
       "upgradeBase": 160000,
-      "materialCost": 150,
+      "materialCost": 0,
       "capacity": 480
     },
     {
@@ -680,7 +680,7 @@
         }
       ],
       "upgradeBase": 270000,
-      "materialCost": 190,
+      "materialCost": 0,
       "capacity": 510
     },
     {
@@ -734,7 +734,7 @@
         }
       ],
       "upgradeBase": 450000,
-      "materialCost": 235,
+      "materialCost": 0,
       "capacity": 540
     },
     {
@@ -784,7 +784,7 @@
         }
       ],
       "upgradeBase": 700000,
-      "materialCost": 285,
+      "materialCost": 0,
       "capacity": 570
     },
     {
@@ -838,7 +838,7 @@
         }
       ],
       "upgradeBase": 1000000,
-      "materialCost": 340,
+      "materialCost": 0,
       "capacity": 600
     }
   ],
@@ -901,11 +901,11 @@
     "sectorRhythms": true,
     "storagePerLevel": 0.5,
     "clearStockPercent": 60,
-    "materialCashValue": 15,
+    "materialCashValue": 0,
     "maxLevel": 12,
     "chainBufferBatches": 2,
     "upgradeGrowth": 1.55,
-    "materialPremiumPercent": 15,
+    "materialPremiumPercent": 0,
     "orderMinutes": [
       1.5,
       4,
