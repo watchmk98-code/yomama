@@ -776,9 +776,11 @@
   function openingGuide(s) {
     var n=s.nextStep;
     if(s.build)n={title:s.build.name+' is being built',detail:s.build.remainingSec+'s remaining. Your other businesses keep working.'};
-    if(!n || (!s.build && !(n.action && n.action.indexOf('expand:')===0)))return '';
+    if(!n || (!s.build && !(n.action && n.action.indexOf('expand:')===0)))n=Number(s.buildingsOwned || (s.buildings || []).length)>=15?
+      {title:'Business network complete',detail:'All 15 businesses are open. Keep improving them through upgrades and quests.'}:
+      {title:'Choose your next business',detail:'Build when you have enough cash and Prestige. Your open businesses keep working.'};
     var control=n.action?bigButton(n.action,n.actionLabel || 'Continue','',!!n.disabled || s.paused,' k-btn--alt'):'';
-    return '<section class="game-opening-guide" aria-label="Next goal"><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.detail)+'</small></div>'+control+'</section>';
+    return '<section class="game-opening-guide" aria-label="Business status"><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.detail)+'</small></div>'+control+'</section>';
   }
 
   function focusMarkup(b) {
