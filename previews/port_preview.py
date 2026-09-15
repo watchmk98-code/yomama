@@ -1,4 +1,4 @@
-"""Isolated PORT account with a licence-open seat; never uses game.db.
+"""Isolated PORT account with a fresh student seat; never uses game.db.
 
     python3 previews/port_preview.py 3014
     python3 previews/port_preview.py 3014 --fixture-quotes
@@ -28,12 +28,6 @@ def main():
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='yomama-port-preview-') as directory:
         token = solo_seat(Path(directory) / 'port-preview.db', 'PORT TEST PLAYER')
-        with A.connect() as conn:
-            p, s = A._auth(conn, {'token': token})
-            cfg = A.econ_config(s)
-            state = A._load_state(p, cfg, s)
-            state['licenceGrandfathered'] = True
-            A._save_state(conn, p['id'], cfg, state)
         if args.fixture_quotes:
             def fixture(symbols, **_):
                 now = time.time()

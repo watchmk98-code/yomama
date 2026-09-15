@@ -15,7 +15,8 @@ if(!['127.0.0.1','localhost'].includes(url.hostname)||url.port==='3000')throw Er
    const page=await context.newPage();
    page.on('pageerror',e=>errors.push(e.message));
    await page.route('https://**/*',r=>r.abort());
-   await page.goto(base+'/port_trading.html');
+   await page.goto(base+'/buildings.html');
+   await page.locator('.game-nav a[href*="port_trading.html"]').click();
    await page.getByText('Saved to your student seat',{exact:true}).waitFor();
    return {context,page};
   }
@@ -27,6 +28,12 @@ if(!['127.0.0.1','localhost'].includes(url.hostname)||url.port==='3000')throw Er
    });
   }
   const initial=await portfolio(first.page);
+  const licenceOpen=await first.page.evaluate(async()=>{
+   const {token}=JSON.parse(localStorage.getItem('yomama_session_v1'));
+   return (await (await fetch('/api/game/econ/state?token='+encodeURIComponent(token))).json()).gateOpen;
+  });
+  assert.equal(licenceOpen,false,'a fresh student uses PORT without earning an analyst licence');
+  assert.equal(initial.canTrade,true,'fresh students can trade during the regular test session');
   assert.equal(initial.market.source,'local_test_fixture','requires explicit temporary fixture feed');
   assert.equal(initial.portfolio.account.availableCash,100000);
   assert.deepEqual(initial.portfolio.positions,{});
@@ -80,6 +87,6 @@ if(!['127.0.0.1','localhost'].includes(url.hostname)||url.port==='3000')throw Er
   assert.equal(unattended.positions.AAPL.quantity,2);
   assert.equal(unattended.account.availableCash,99799.96);
   assert.deepEqual(errors,[]);
-  console.log('PASS: real server buy/sell, cross-device persistence, history, sample isolation, background fill with all browsers closed');
+  console.log('PASS: fresh unlicensed student opens PORT from Build, real server buy/sell, cross-device persistence, history, sample isolation, background fill with all browsers closed');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

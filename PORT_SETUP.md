@@ -6,8 +6,9 @@ creates $100,000 cash, empty holdings and an opening cash entry. Browser sample
 accounts are never imported. The original sample terminal is available only
 at `port_trading.html?demo=1` and remains browser-local.
 
-Open **GAME → PORT**, beside Craft in the business navigation, once the licence
-is unlocked. The chart stays visible in its panel. The order ticket uses green
+Open **GAME → PORT**, beside Craft in the business navigation. PORT is available
+to every signed-in student, including fresh and reset seats, without an analyst
+licence. The chart stays visible in its panel. The order ticket uses green
 text and borders for Buy and red for Sell.
 
 The existing town wallet, town net worth and standings retain their rules.
@@ -62,7 +63,7 @@ and [US market calendar](https://docs.alpaca.markets/us/reference/legacycalendar
   worker compares its receipt time with the quote timestamp: an eligible
   earlier quote may still fill the order; a quote at or after cancellation
   cannot. Closed-market cancellations complete on the next server cycle.
-- New orders require an open licence, an active/unpaused class, and regular US
+- New orders require a signed-in seat, an active/unpaused class, and regular US
   market hours. Class pauses freeze portfolio transitions, while real-time
   market-order deadlines keep advancing. After resume, fills require a quote
   timestamped at or after resume. The worker does not count as town activity.
@@ -96,7 +97,7 @@ wall-clock changes.
 
 Authenticated `GET /api/game/port/chart?symbol=AAPL&range=1W&token=...` returns
 split-adjusted historical bars, including available extended-hours activity.
-The server checks the seat and licence before and after provider requests.
+The server checks the seat and active class before and after provider requests.
 No Alpaca credentials reach browser assets or requests.
 
 | Toolbar interval | API range | Loaded history | History refresh |
@@ -120,7 +121,7 @@ graph. Vendored chart software retains its upstream LICENSE and NOTICE under
 
 ## Preview and verification
 
-An isolated, licence-open seat, using the configured Alpaca feed:
+An isolated, fresh student seat, using the configured Alpaca feed:
 
 ```sh
 python3 previews/port_preview.py 3015
@@ -147,6 +148,8 @@ Fixture quotes are labelled and never enabled by a public server setting.
 Deploying adds the new column automatically. Existing seats,
 towns and class configurations remain intact; **no class reset is required**.
 The existing teacher/student and class-reset operations also reset PORT.
+PORT access is independent of the analyst licence for existing and future
+seats; other licence requirements retain their rules.
 
 The code and Alpaca environment variables must reach Render before students
 can use this version. Render has automatic deployment disabled: **needs

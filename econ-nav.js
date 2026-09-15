@@ -1,7 +1,9 @@
-/* Navigation and Part 2 access depend on the authoritative licence. */
+/* PORT is available to every signed-in seat in the GAME navigation. */
 (function(){
   'use strict';
   var port=location.pathname.endsWith('/port_trading.html');
+  var hasSeat=false;
+  try{hasSeat=!!(JSON.parse(localStorage.getItem('yomama_session_v1')||'null')||{}).token;}catch(_){}
   // Also cover older static headers on pages that do not load app.js.
   document.querySelectorAll('.hero .tabs a[href*="port_trading.html"]').forEach(function(a){a.remove();});
   if(port){
@@ -31,7 +33,8 @@
       portLink.innerHTML='<span>PORT</span>';
     }
     craftLink.after(portLink);
-    portLink.hidden=true;
+    portLink.hidden=!hasSeat;
+    portLink.removeAttribute('data-econ-gate');
     if(!portLink.querySelector('.port-nav-icon')){
       var portIcon=document.createElement('img');portIcon.className='port-nav-icon';
       portIcon.src='./assets/game-art/nav/port.svg';portIcon.alt='';
@@ -39,7 +42,7 @@
       portLink.prepend(portIcon);
     }
     if(port)portLink.setAttribute('aria-current','page');
-    nav.style.setProperty('--game-nav-columns','5');
+    nav.style.setProperty('--game-nav-columns','6');
   });
   if(document.querySelector('.game-nav[data-craft-nav]')){
     var craftNavStyle=document.createElement('style');
@@ -47,21 +50,13 @@
     document.head.appendChild(craftNavStyle);
   }
   document.querySelectorAll('a[href*="produce.html"],a[href*="collect.html"],a[href*="focus-tree.html"]').forEach(function(a){a.hidden=true;});
-  var links=Array.from(document.querySelectorAll('a[href*="port_trading.html"]'));
-  links.forEach(function(a){a.hidden=true;});
-  function apply(s){
-    links.forEach(function(a){a.hidden=!s.gateOpen;});
-    document.querySelectorAll('.game-nav[data-craft-nav]').forEach(function(nav){
-      var count=Array.from(nav.querySelectorAll('a')).filter(function(a){return !a.hidden;}).length;
-      nav.style.setProperty('--game-nav-columns',String(count));
-    });
-  }
-  window.addEventListener('yomama:econ',function(e){apply(e.detail);});
-  if(!port && document.querySelector('[id^="econ-"]'))return;
-  var token='';try{token=(JSON.parse(localStorage.getItem('yomama_session_v1')||'null')||{}).token||'';}catch(_){}
-  var overlay;
-  if(port){overlay=document.createElement('dialog');overlay.textContent='Checking your analyst licence…';document.body.appendChild(overlay);overlay.showModal();}
-  fetch('/api/game/econ/state?token='+encodeURIComponent(token)).then(function(r){if(!r.ok)throw Error('Unable to check your licence');return r.json();}).then(function(s){
-    apply(s);if(port){if(!s.gateOpen)location.replace('./license.html');else overlay.remove();}
-  }).catch(function(){if(overlay)overlay.textContent='Cannot reach the class server. Reload to check your licence.';});
+  document.querySelectorAll('a[href*="port_trading.html"]').forEach(function(a){
+    a.hidden=!hasSeat;
+    a.removeAttribute('data-econ-gate');
+    a.title='Open PORT';
+  });
+  document.querySelectorAll('.game-nav[data-craft-nav]').forEach(function(nav){
+    var count=Array.from(nav.querySelectorAll('a')).filter(function(a){return !a.hidden;}).length;
+    nav.style.setProperty('--game-nav-columns',String(count));
+  });
 }());

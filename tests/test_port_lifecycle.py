@@ -15,8 +15,7 @@ def cancellation(seat, state, order_id):
     }
 
 
-@pytest.mark.parametrize("barrier", ["pause", "licence"])
-def test_blocked_class_does_not_fill_expire_cancel_or_remark_portfolio(port, barrier):
+def test_paused_class_does_not_fill_expire_cancel_or_remark_portfolio(port):
     now, teacher, seats, provider, _ = port
     alice = seats[0]
     first = get(alice)
@@ -30,16 +29,7 @@ def test_blocked_class_does_not_fill_expire_cancel_or_remark_portfolio(port, bar
     pending = A.port_order(limit)
     before = A.port_cancel(cancellation(alice, pending, limit["clientOrderId"]))
     assert before["portfolio"]["ledger"]["orders"][-1]["cancellationRequestedAt"]
-    if barrier == "pause":
-        A.teacher({"teacher_token": teacher["teacher_token"], "action": "pause"})
-    else:
-        with A.connect() as conn:
-            p = A._player_by_token(conn, alice["token"])
-            session = A._session_of(conn, p["code"])
-            cfg = A.econ_config(session)
-            town = A._load_state(p, cfg, session)
-            town.pop("licenceGrandfathered", None)
-            A._save_state(conn, p["id"], cfg, town)
+    A.teacher({"teacher_token": teacher["teacher_token"], "action": "pause"})
     now[0] += 60
     provider.update(bid=89, ask=90)
     after = get(alice)

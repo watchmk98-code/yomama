@@ -1,10 +1,10 @@
 /* PORT's server adapter against a controlled HTTP contract. Run on an isolated
-   licence-open preview. The mock owns all balances; no game account is changed.
+   preview. The mock owns all balances; no game account is changed.
    node tests/ui_port_server.cjs http://127.0.0.1:3012 */
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const base=process.argv[2];
-if(!base)throw new Error('Provide an isolated, licence-open preview URL');
+if(!base)throw new Error('Provide an isolated preview URL');
 const target=new URL(base);
 if(!['localhost','127.0.0.1','[::1]'].includes(target.hostname)||target.port==='3000')throw new Error('Use an isolated local preview');
 const oldKey='yport.paperState.v1';
@@ -126,7 +126,7 @@ async function sameCanvas(page,canvas,message){
   assert.equal(await first.locator('.hero .tabs a[href*="port_trading.html"]').count(),0,'server PORT lives under GAME');
   assert.equal(await first.locator('.hero .tabs a[href="./buildings.html"]').getAttribute('aria-current'),'page');
   const portNav=first.locator('.game-nav a[href*="port_trading.html"]');
-  assert(await portNav.isVisible(),'the signed-in licence exposes the business PORT link');
+  assert(await portNav.isVisible(),'every signed-in seat sees the business PORT link');
   assert.equal(await portNav.getAttribute('aria-current'),'page');
   assert(await portNav.evaluate(link=>link.previousElementSibling?.getAttribute('href').includes('craft.html')),'PORT follows Craft');
   assert.match(await first.locator('#port-portfolio-positions').textContent(),/first filled buy/);

@@ -1,4 +1,4 @@
-/* Practice trading interactions against an isolated, licence-open preview.
+/* Practice trading interactions against an isolated preview.
    node tests/ui_port_terminal.cjs http://127.0.0.1:3012
    All trading state stays in a fresh browser context; no server writes. */
 const {chromium}=require('playwright');
@@ -7,7 +7,7 @@ const fs=require('node:fs/promises');
 const path=require('node:path');
 
 const base=process.argv[2];
-if(!base)throw new Error('Provide an isolated, licence-open preview URL');
+if(!base)throw new Error('Provide an isolated preview URL');
 const target=new URL(base);
 if(!['localhost','127.0.0.1','[::1]'].includes(target.hostname)||target.port==='3000'){
  throw new Error('Use an isolated local preview, not the regular development or live server');
@@ -28,7 +28,7 @@ const equity=state=>state.account.availableCash+state.account.reservedCash+
   async function ready(){
    await page.locator('.port-stock-row[data-symbol="AAPL"]').waitFor();
    await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-   assert(new URL(page.url()).pathname.endsWith('/port_trading.html'),'preview seat must have an open analyst licence');
+   assert(new URL(page.url()).pathname.endsWith('/port_trading.html'),'PORT stays accessible without an analyst licence');
   }
   async function saved(){
    return page.evaluate(key=>JSON.parse(localStorage.getItem(key)),storageKey);
@@ -50,7 +50,7 @@ const equity=state=>state.account.availableCash+state.account.reservedCash+
   assert.equal(await page.locator('.hero .tabs a[href*="port_trading.html"]').count(),0,'PORT belongs to the business menu');
   assert.equal(await page.locator('.hero .tabs a[href="./buildings.html"]').getAttribute('aria-current'),'page','GAME stays active while using PORT');
   const portNav=page.locator('.game-nav a[href*="port_trading.html"]');
-  assert(await portNav.isVisible(),'an unlocked licence exposes PORT in the business menu');
+  assert(await portNav.isVisible(),'PORT is visible in every student business menu');
   assert.equal(await portNav.getAttribute('aria-current'),'page');
   assert(await portNav.evaluate(link=>link.previousElementSibling?.getAttribute('href').includes('craft.html')),'PORT follows Craft');
   assert(await portNav.evaluate(link=>{
@@ -105,9 +105,10 @@ const equity=state=>state.account.availableCash+state.account.reservedCash+
      columns:getComputedStyle(nav).gridTemplateColumns.split(/\s+/).length,
      documentWidth:document.documentElement.scrollWidth,viewport:innerWidth
     }));
-    assert.equal(menu.links.length,gateOpen?6:5,'business menu only adds PORT for an unlocked licence');
-    assert.equal(menu.columns,gateOpen?6:5,'mobile business columns follow licence access');
-    assert.equal(menu.links.some(href=>href.includes('port_trading.html')),gateOpen);
+    assert.equal(menu.links.length,6,'business menu keeps PORT discoverable before the licence is earned');
+    assert.equal(menu.columns,6,'mobile business columns include PORT for every licence state');
+    assert(menu.links.some(href=>href.includes('port_trading.html')),'PORT remains visible after a reset');
+    assert.equal(await buildingsPage.locator('.game-nav a[href*="port_trading.html"]').getAttribute('title'),'Open PORT');
     assert(menu.documentWidth<=menu.viewport+1,'business navigation fits320px');
    }
   }finally{

@@ -1066,18 +1066,11 @@ def _port_payload(p, s, state, feed, permitted, reason):
 
 def _port_request(data, action=None):
     # The outer wrapper supplies trusted quotes before taking the class lock.
-    # Recheck the seat, class and licence in the transaction saving the account.
+    # Recheck the seat and class in the transaction saving the account. PORT is
+    # available independently of town licence/progression, including new seats.
     with _db_lock, connect() as conn:
         p, s = _auth(conn, data)
-        if action == 'settle':
-            # A background stock order is not student activity. Reading the
-            # saved licence must not renew the town's offline production budget.
-            cfg = econ_config(s)
-            town, behind = _load_state(p, cfg, s), False
-        else:
-            cfg, book, town, behind = _player_econ(conn, p, s, fast=True)
-        reason = ('The class is paused.' if s['paused'] else
-                  'The licence is not open yet.' if behind or not economy.gate_open(cfg, town) else '')
+        reason = 'The class is paused.' if s['paused'] else ''
         permitted = not reason
         now = time.time()
         feed = alpaca_market.execution_feed(data['_server_port_feed'], now)
@@ -1094,13 +1087,13 @@ def _port_request(data, action=None):
                 return None
             if action == 'order':
                 if not permitted:
-                    raise ApiError(reason, 409 if s['paused'] else 403)
+                    raise ApiError(reason, 409)
                 state = port_portfolio.submit_order(state, data, feed['quotes'], now,
                                                     market_open=market_open, **bounds,
                                                     received_at=data['_server_received_at'], defer_execution=True)
             elif action == 'cancel':
                 if not permitted:
-                    raise ApiError(reason, 409 if s['paused'] else 403)
+                    raise ApiError(reason, 409)
                 # Record cancellation before remote I/O. The worker orders this
                 # intent against its next observed event; no request can fill it.
                 state = port_portfolio.cancel_order(state, data, {}, now,
@@ -1141,7 +1134,7 @@ def process_pending_portfolios():
     """Settle every eligible saved portfolio on one shared server quote cycle.
 
     Scanning and provider calls hold no class lock. Each mutation rechecks the
-    seat, class, licence and account generation under its usual class lock.
+    seat, class and account generation under its usual class lock.
     GET/POST requests cannot accelerate this execution timeline.
     """
     with _db_lock, connect() as conn:
@@ -1168,16 +1161,13 @@ def process_pending_portfolios():
                           '_server_port_account_id': account_id})
             settled += 1
         except ApiError:
-            continue  # Revocation/kick/licence changes during provider I/O win.
+            continue  # Revocation/kick changes during provider I/O win.
     return settled
 
 
 def _port_chart_access(data):
     with _db_lock, connect() as conn:
-        p, s = _auth(conn, data)
-        cfg, book, town, behind = _player_econ(conn, p, s, fast=True)
-        if behind or not economy.gate_open(cfg, town):
-            raise ApiError('The licence is not open yet.', 403)
+        _auth(conn, data)
 
 
 def port_chart(query) -> dict:

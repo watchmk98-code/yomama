@@ -22,14 +22,6 @@ def port(tmp_path, monkeypatch):
     teacher = A.create_session({})
     pin = str(secrets.randbelow(10000)).zfill(4)
     seats = [A.join(dict(code=teacher['code'], name=name, pin=pin)) for name in ('ALICE', 'BOB')]
-    for seat in seats:
-        with A.connect() as conn:
-            p = A._player_by_token(conn, seat['token'])
-            s = A._session_of(conn, p['code'])
-            cfg = A.econ_config(s)
-            st = A._load_state(p, cfg, s)
-            st['licenceGrandfathered'] = True
-            A._save_state(conn, p['id'], cfg, st)
     provider = {'status': 'open', 'bid': 99.99, 'ask': 100.01, 'age': 0.01, 'calls': 0}
 
     def snapshot(*_, **__):
@@ -132,7 +124,7 @@ def test_bogus_auth_never_calls_provider_and_foreign_account_is_rejected(port):
     assert exc.value.status == 409
 
 
-def test_pause_revoke_and_licence_block_trades(port):
+def test_pause_and_revocation_still_block_unlicensed_port_trades(port):
     now, teacher, seats, _, _ = port
     request = order(seats[0], get(seats[0]))
     A.teacher(dict(teacher_token=teacher['teacher_token'], action='pause'))
@@ -140,22 +132,14 @@ def test_pause_revoke_and_licence_block_trades(port):
     with pytest.raises(A.ApiError):
         A.port_order(request)
     A.teacher(dict(teacher_token=teacher['teacher_token'], action='resume'))
-    with A.connect() as conn:
-        p = A._player_by_token(conn, seats[0]['token'])
-        s = A._session_of(conn, p['code'])
-        cfg = A.econ_config(s)
-        st = A._load_state(p, cfg, s)
-        st.pop('licenceGrandfathered', None)
-        A._save_state(conn, p['id'], cfg, st)
-    assert not get(seats[0])['canTrade']
-    with pytest.raises(A.ApiError) as exc:
-        A.port_order(request)
-    assert exc.value.status == 403
+    assert get(seats[0])['canTrade']
+    A.port_order(request)
     with A.connect() as conn:
         conn.execute('UPDATE sessions SET active=0 WHERE code=?', (teacher['code'],))
-    with pytest.raises(A.ApiError) as exc:
-        get(seats[0])
-    assert exc.value.status == 403
+    for handler in (A.port_state, A.port_order, A.port_cancel):
+        with pytest.raises(A.ApiError) as exc:
+            handler(request)
+        assert exc.value.status == 403
 
 
 @pytest.mark.parametrize('status', ['unconfigured', 'unavailable', 'closed'])
@@ -476,6 +460,55 @@ def chart(port, monkeypatch):
     return calls, payload
 
 
+@pytest.mark.parametrize('seat_kind', ['existing', 'future_class'])
+def test_unlicensed_seats_can_chart_buy_sell_and_settle_without_unlocking_town(port, chart, seat_kind):
+    now, _, seats, _, _ = port
+    # First use PORT before creating another class, proving future seats need
+    # neither a one-time migration nor a pre-existing account or licence flag.
+    A.port_state({'token': seats[0]['token']})
+    seat = seats[0]
+    if seat_kind == 'future_class':
+        teacher = A.create_session({})
+        seat = A.join(dict(code=teacher['code'], name='NEW STUDENT',
+                           pin=str(secrets.randbelow(10000)).zfill(4)))
+
+    def town_record():
+        with A.connect() as conn:
+            player = A._player_by_token(conn, seat['token'])
+            session = A._session_of(conn, player['code'])
+            cfg = A.econ_config(session)
+            town = A._load_state(player, cfg, session)
+            assert not E.gate_open(cfg, town)
+            return player['econ'], player['econ_meta'], player['cash']
+
+    unchanged_town = town_record()
+    initial = A.port_state({'token': seat['token']})
+    assert initial['canTrade'] is True
+    assert initial['portfolio']['account']['availableCash'] == 100000
+    assert initial['portfolio']['positions'] == {}
+    assert A.port_chart({'token': seat['token'], 'symbol': 'AAPL', 'range': '1D'})['status'] == 'ok'
+    A.port_order(order(seat, initial))
+    now[0] += 1
+    assert A.process_pending_portfolios() == 1
+    assert saved_portfolio(seat)['positions']['AAPL']['quantity'] == 2
+    sell = order(seat, initial)
+    sell.update(side='sell', quantity=1)
+    A.port_order(sell)
+    now[0] += 1
+    assert A.process_pending_portfolios() == 1
+    saved = saved_portfolio(seat)
+    assert saved['positions']['AAPL']['quantity'] == 1
+    assert len(saved['ledger']['fills']) == 2
+    assert town_record() == unchanged_town
+
+    # The PORT exception does not unlock separate town/legacy trading rules.
+    for handler, fields in ((A.econ_keep, {'percent': 50}),
+                            (A.trade_equity, {'symbol': 'AAPL', 'side': 'buy', 'shares': 1})):
+        with pytest.raises(A.ApiError) as error:
+            handler(dict(token=seat['token'], **fields))
+        assert 'licence' in error.value.message.lower()
+
+
 @pytest.mark.parametrize('range_name,timeframe', [('1d', '1Min'), ('3m', '4Hour'), ('5y', '1Week')])
 def test_chart_is_authenticated_and_exposes_true_provider_ohlc_without_account_mutation(port, chart, range_name, timeframe):
     _, _, seats, _, _ = port
@@ -509,7 +542,7 @@ def test_chart_rejects_unknown_stocks_and_ranges_without_network(port, chart, fi
     assert not calls
 
 
-def test_chart_enforces_licence_before_request_but_remains_readable_while_paused(port, chart):
+def test_unlicensed_chart_remains_readable_while_class_is_paused(port, chart):
     _, teacher, seats, _, _ = port
     calls, _ = chart
     query = {'token': seats[0]['token'], 'symbol': 'AAPL', 'range': '1W'}
@@ -521,11 +554,7 @@ def test_chart_enforces_licence_before_request_but_remains_readable_while_paused
         session = A._session_of(conn, player['code'])
         cfg = A.econ_config(session)
         town = A._load_state(player, cfg, session)
-        town.pop('licenceGrandfathered', None)
-        A._save_state(conn, player['id'], cfg, town)
-    with pytest.raises(A.ApiError) as error:
-        A.port_chart(query)
-    assert error.value.status == 403 and len(calls) == 1
+        assert not E.gate_open(cfg, town)
 
 
 def test_chart_rechecks_class_access_after_remote_request(port, chart, monkeypatch):
