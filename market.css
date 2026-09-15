@@ -1,10 +1,11 @@
 /* Readable Market cards stay inside the same fixed screen as the game. */
+.game-orders-notice {margin:0;}
 #econ-market {--market-product-size:24px;--market-icon-size:56px;--market-goods-row:64px;--muted:#b8bcc2;font-size:20px;line-height:1.2;}
 #econ-market .game-market-orders,
 #econ-market .game-customer-contracts {display:flex;flex-direction:column;min-height:0;gap:0;}
 #econ-market .game-customer-contracts {border:0;background:none;}
 #econ-market .game-panel-head {flex:none;height:40px;padding:4px 10px 8px;gap:8px;border:0;background:none;}
-#econ-market .game-panel-head h2 {font-size:24px;line-height:1;}
+#econ-market .game-panel-head h2 {font-size:24px;line-height:1;color:var(--amber);}
 #econ-market .game-panel-head > span {font-size:16px;line-height:1.1;}
 #econ-market .game-market-orders > .game-panel-head {padding-left:0;}
 #econ-market .game-order-grid {grid-template-columns:repeat(var(--market-order-columns,3),minmax(0,1fr));gap:10px;}
