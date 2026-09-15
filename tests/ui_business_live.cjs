@@ -78,13 +78,15 @@ const output=path.resolve('.checks/business-live');
    }
   }
   async function values(b,label){
-   assert.equal(await panel.locator('[data-business-metric]').count(),6,label+' displays four finance metrics and two capacity metrics');
+   assert.equal(await panel.locator('[data-business-metric]').count(),6,label+' displays four finance metrics and two asset accounting cards');
    assert.equal((await metric('income').textContent()).trim(),rate(b.operatingStatement.sales)+' YM',label+' actual customer sales');
    assert.equal((await metric('cost').textContent()).trim(),'−'+rate(b.operatingStatement.costs)+' YM',label+' actual costs');
    assert.equal((await metric('profit').textContent()).trim(),rate(b.operatingStatement.profit)+' YM',label+' actual profit');
    assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),rate(state.operatingStatement.sales)+'YM',label+' town customer sales');
-   assert.equal((await metric('produced').textContent()).trim(),rate(b.productionCapacityPerMinute),label+' current production capacity');
-   assert.equal((await metric('sold').textContent()).trim(),rate(b.customerCapacityPerMinute),label+' current customer demand');
+   assert.equal((await metric('depreciation').textContent()).trim(),'—',label+' depreciation has no configured amount');
+   assert.equal(await panel.locator('[data-business-metric=depreciation] dt').textContent(),'Depreciation');
+   assert.equal((await metric('amortization').textContent()).trim(),'—',label+' amortization has no configured amount');
+   assert.equal(await panel.locator('[data-business-metric=amortization] dt').textContent(),'Amortization');
    assert.equal(await panel.locator('.game-live-rate').count(),0,label+' omits recorded-history captions');
    assert.equal(await panel.locator('[data-business-metric="stock"]').count(),0,label+' stock stays in its separate table');
    assert.deepEqual(await stock.locator('[data-stock-count]').allTextContents(),b.goods.map(g=>number(g.quantity)+' / '+number(g.capacity || 0)),label+' actual stock per product');

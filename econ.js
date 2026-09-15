@@ -539,7 +539,10 @@
       ['stock','Stock / capacity',units(b.stored)+' / '+units(b.capacity),'Goods currently stored in this business']
     ];
     var withCosts=s.operations && s.operations.enabled;
-    if(withCosts)metrics=metrics.filter(function(m){return m[0]==='produced' || m[0]==='sold';});
+    if(withCosts)metrics=[
+      ['depreciation','Depreciation','—','Cost of tangible assets spread over their useful lives. No depreciation amount recorded yet.'],
+      ['amortization','Amortization','—','Cost of intangible assets spread over their useful lives. No amortization amount recorded yet.']
+    ];
     var note=activity.observedSeconds!=null && activity.observedSeconds<60?units(activity.observedSeconds)+'s recorded':'stock now';
     return '<div class="game-business-numbers"><div class="game-live-heading">'+(withCosts?'':'<span class="game-live-title">Live rates <small>· '+note+'</small></span>')+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
       var capacity=m[0]==='produced'?b.productionCapacityPerMinute:m[0]==='sold'?b.customerCapacityPerMinute:null;
