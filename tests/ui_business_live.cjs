@@ -76,16 +76,14 @@ const output=path.resolve('.checks/business-live');
    assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),rate(state.incomePerMinute)+'YM',label+' town earning rate');
    assert.equal((await metric('produced').textContent()).trim(),rate(b.productionCapacityPerMinute),label+' current production capacity');
    assert.equal((await metric('sold').textContent()).trim(),rate(b.customerCapacityPerMinute),label+' current customer demand');
-   const produced=b.activity?number(b.activity.producedUnits):'—',sold=b.activity?number(b.activity.soldUnits):'—';
-   assert.match(await panel.locator('[data-business-metric="produced"] .game-live-rate').textContent(),new RegExp('Actual '+produced+' produced.*last 60s','i'),label+' recorded production');
-   assert.match(await panel.locator('[data-business-metric="sold"] .game-live-rate').textContent(),new RegExp('Actual '+sold+' sold.*last 60s','i'),label+' recorded sales');
+   assert.equal(await panel.locator('.game-live-rate').count(),0,label+' omits recorded-history captions');
    assert.equal((await metric('stock').textContent()).trim(),number(b.stored)+' / '+number(b.capacity),label+' actual stock');
    assert.equal(await panel.locator('.game-production-loop,.game-income-detail').count(),0,label+' does not retain tutorial or forecast');
    assert.equal(await panel.locator('.k-art img').count(),1,label+' retains upgraded business sprite');
   }
   await page.goto(base+'/buildings.html');await panel.waitFor();await select(0);
   await values(farm,'Initial');
-  assert.match(await panel.textContent(),/last 60s/i);
+  assert.equal((await panel.locator('.game-live-title').textContent()).trim(),'AUTO-SALES');
   assert.equal(await panel.locator('.game-building-stock').count(),1,'Stock occupies the desktop space below metrics');
   assert.equal(await page.locator('.game-business-shipment,.game-business-limit').count(),0,'Obsolete shipment and status sections are removed');
   assert.deepEqual(await stock.locator('[data-stock-good]').evaluateAll(rows=>rows.map(row=>row.dataset.stockGood)),farm.goods.map(g=>g.goodId),'Only selected-business goods appear');
@@ -130,10 +128,9 @@ const output=path.resolve('.checks/business-live');
   await page.waitForFunction(()=>document.querySelector('[data-business-metric="income"] .game-live-value')?.textContent.trim()==='120.05 YM',null,{timeout:6500});
   assert(stateReads>readsBefore,'BUILD polls automatically within a few seconds');
   await values(farm,'Polled changes');
-  // Large live values react to capacity changes; the small actual totals react
-  // only to completed activity, not the render cadence.
+  // Large live values react to capacity changes.
   assert.equal(await panel.locator('.game-live-value.is-updated').count(),4,'Each changed metric highlights');
-  assert.equal(await panel.locator('.game-live-rate.is-updated').count(),2,'Each changed actual total highlights');
+  assert.equal(await panel.locator('.game-live-rate.is-updated').count(),0,'Removed history captions do not reappear');
   await refresh();
   assert.equal(await panel.locator('.game-live-value.is-updated').count(),0,'Unchanged poll does not highlight values');
   await select(1);await values(other,'Other business');
@@ -200,6 +197,6 @@ const output=path.resolve('.checks/business-live');
   }
   assert.deepEqual(mutations,[]);assert.deepEqual(errors,[]);
   assert.deepEqual(fitProblems,[],'Metrics, stock rows and controls fit every panel and viewport');
-  console.log(JSON.stringify({result:'passed',metrics:4,pollReads:stateReads,viewports:8,layouts:sizes.length,checks:['current business and town income rates','actual goods totals','polling','change highlights','selection','missing history','income before first receipt','individual stock','class pause','reconnect recovery','visibility recovery','reduced motion']},null,2));
+  console.log(JSON.stringify({result:'passed',metrics:4,pollReads:stateReads,viewports:8,layouts:sizes.length,checks:['AUTO-SALES heading','current business and town income rates','polling','change highlights','selection','missing history','income before first receipt','individual stock','class pause','reconnect recovery','visibility recovery','reduced motion']},null,2));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

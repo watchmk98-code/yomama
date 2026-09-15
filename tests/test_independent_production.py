@@ -169,6 +169,7 @@ def test_quest_locks_and_business_pause_still_control_production():
 
 def test_roastery_project_no_longer_requires_a_farm_or_lists_ingredient_suppliers():
     cfg = economy.load_config()
+    cfg['businessDesign']['groupProjectsEnabled'] = True
     state = independent_town(cfg, [2])
     state['townProjects']['completed'] = 2
     project = economy.town_projects.current_order(cfg, state)

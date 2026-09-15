@@ -11,6 +11,7 @@ import town_projects as P
 def town(connected=True):
     cfg = E.load_config()
     cfg.setdefault('businessDesign', {})['connectedProgression'] = connected
+    cfg['businessDesign']['groupProjectsEnabled'] = connected
     return cfg, E.new_state(cfg, seed=37)
 
 
@@ -26,6 +27,16 @@ def delivery(cfg, st, order_id, **goods):
     return P.record_delivery(cfg, st,
                              [dict(goodId=gid, quantity=quantity) for gid, quantity in goods.items()],
                              order_id)
+
+
+def test_group_projects_are_disabled_in_the_live_rules():
+    cfg = E.load_config()
+    st = E.new_state(cfg, seed=37)
+    assert not P.connected(cfg)
+    assert not P.record_delivery(cfg, st, [dict(goodId='farm_tomatoes', quantity=99)], 'ordinary')['recorded']
+    assert P.group_payload(cfg, st) == dict(enabled=False, completed=0, total=P.TOTAL,
+                                            current=None, projects=[])
+    assert 'goalOffer' not in st and 'legacyProjectOffer' not in st
 
 
 def test_inventory_never_counts_and_order_progress_is_cumulative_and_idempotent():
@@ -125,6 +136,7 @@ def test_json_reload_keeps_progress_and_migration_does_not_pay_or_rewrite_saved_
     own(cfg, st, 'fish_stall')
     before = copy.deepcopy(st)
     cfg['businessDesign']['connectedProgression'] = True
+    cfg['businessDesign']['groupProjectsEnabled'] = True
     data = P.migrate(cfg, st)
     assert data['completed'] == 1 and data['grants']['fish_stall'] == 'used'
     for key in ('offers', 'cash', 'materials', 'inventory', 'b', 'tierOf'):
@@ -149,6 +161,7 @@ def test_legacy_project_settlement_and_completed_perk_cannot_be_claimed_again():
     P.migrate(cfg, st)
     before = copy.deepcopy(st)
     cfg['businessDesign']['connectedProgression'] = True
+    cfg['businessDesign']['groupProjectsEnabled'] = True
     assert P.group_payload(cfg, st)['completed'] == 3
     assert not P.claim(cfg, st, 'cafe_opening')['ok']
     for key, value in before.items():

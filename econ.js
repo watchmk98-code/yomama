@@ -54,7 +54,6 @@
   var growthContext = null;
   var growthEquipment = null;
   var activitiesPurpose = null;
-  var groupHashOpened = false;
   var pendingRerolls = [];
   var customerSlot = Math.max(0,Number(new URLSearchParams(window.location.search).get('customer')) || 0);
   var customerChoices = {};
@@ -115,7 +114,7 @@
   function materialAmount(value) { return units(value) + ' material' + (Number(value) === 1 ? '' : 's'); }
 
   function orderOffers(s) { return ((s.orders || s.contracts || {}).offers || []); }
-  function goalOrder(s) { return s.goalOrder || orderOffers(s).find(function(o){return o.goalOrder || o.goal;}) || null; }
+  function goalOrder() { return null; }
   function orderAt(s,index) { var goal=goalOrder(s);return goal && index===(goal.offerIndex==null?3:goal.offerIndex)?goal:orderOffers(s)[index]; }
 
   function mult(value) { return (Number(value) || 0).toFixed(2); }
@@ -286,7 +285,7 @@
       tone = statusMessage.tone === 'error' ? ' k-status--bad'
         : (statusMessage.tone === 'success' ? ' k-status--good' : '');
     }
-    return '<div class="k-status' + tone + '" data-econ-status role="status" aria-live="polite">' +
+    return '<div class="k-status' + tone + (statusMessage && statusMessage.tone === 'success' ? ' game-visually-hidden' : '') + '" data-econ-status role="status" aria-live="polite">' +
       (statusMessage ? esc(statusMessage.text) : '') + '</div>';
   }
 
@@ -508,7 +507,7 @@
     var b=selectedBuilding(s);
     if (productionModel(s) && s.workforce && s.workforce.enabled && window.YomamaWorkforce) {
       el.innerHTML=notice(s)+businessPicker(s,b)+window.YomamaWorkforce.render(s,b,{
-        recipePanel:recipePanel,questsPanel:questsPanel,projectsPanel:groupProjectsPanel,focusMarkup:focusMarkup,
+        recipePanel:recipePanel,questsPanel:questsPanel,focusMarkup:focusMarkup,
         esc:esc,ym:ym,duration:duration,act:act,render:render
       })+statusLine();
       return;
@@ -544,11 +543,10 @@
     var withCosts=s.operations && s.operations.enabled;
     if(withCosts)metrics=metrics.filter(function(m){return m[0]==='produced' || m[0]==='sold';});
     var note=activity.observedSeconds!=null && activity.observedSeconds<60?units(activity.observedSeconds)+'s recorded':'stock now';
-    return '<div class="game-business-numbers"><div class="game-live-heading"><span>'+(withCosts?'Customer cashflow':'Live rates')+' <small>· '+(withCosts?'last 60 game seconds':note)+'</small></span><span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
+    return '<div class="game-business-numbers"><div class="game-live-heading"><span class="game-live-title">'+(withCosts?'AUTO-SALES':'Live rates')+(withCosts?'':' <small>· '+note+'</small>')+'</span><span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
       var capacity=m[0]==='produced'?b.productionCapacityPerMinute:m[0]==='sold'?b.customerCapacityPerMinute:null;
-      var actualText=m[0]==='produced'?'Actual '+m[2]+' produced / last 60s':m[0]==='sold'?'Actual '+m[2]+' sold / last 60s':'';
       var value=capacity==null?m[2]:rateUnits(capacity);
-      return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+'">'+value+'</dd>'+(m[0]==='produced' && rhythm?'<dd class="game-live-rate game-production-rhythm">'+esc(rhythm.shortLabel)+'</dd>':'')+(capacity==null?'':'<dd class="game-live-rate'+(changes[m[0]+'Actual']?' is-updated':'')+'">'+actualText+'</dd>')+'</div>';
+      return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+'">'+value+'</dd></div>';
     }).join('')+'</dl>'+(withCosts && b.savingForOrders?'<p class="game-cashflow-note">Saving goods: production costs continue. Cash arrives after delivery.</p>':'')+'</div>';
   }
 
@@ -625,24 +623,22 @@
   }
 
   function buildingProjects(b,s) {
-    if(connectedProgression(s))return ((s.groupProjects || {}).projects || []);
+    if(connectedProgression(s))return [];
     return ((s.townProjects || {}).projects || []).filter(function(p){return p.buildingId===b.id;});
   }
 
   function buildingActivityStrips(b,s) {
-    return ['quests','projects'].map(function(kind){
+    return ['quests'].map(function(kind){
       var items=kind==='quests'?buildingQuests(b,s):buildingProjects(b,s);
-      var group=kind==='projects' && connectedProgression(s), current=group && (s.groupProjects || {}).current;
-      var summary=current?(current.name || current.title)+' · '+units(current.progressPercent || 0)+'%':items.map(function(item){return item.title || item.name;}).join(' · ') || 'No '+kind+' for this business yet';
-      return '<section class="game-building-activity" data-activity-kind="'+kind+'" data-activity-building="'+esc(b.id)+'" aria-label="'+esc(group?'Group projects':b.name+' '+kind)+'"><div class="game-activity-copy"><strong>'+ (kind==='quests'?'Quests':group?'Group projects':'Projects')+'</strong><small title="'+esc(summary)+'">'+esc(summary)+'</small></div><button id="game-activity-open-'+kind+'" type="button" class="game-small-button" data-building-activities="'+kind+'" aria-label="View '+esc(group?'group projects':b.name+' '+kind)+'">View →</button></section>';
+      var summary=items.map(function(item){return item.title || item.name;}).join(' · ') || 'No '+kind+' for this business yet';
+      return '<section class="game-building-activity" data-activity-kind="'+kind+'" data-activity-building="'+esc(b.id)+'" aria-label="'+esc(b.name+' '+kind)+'"><div class="game-activity-copy"><strong>Quests</strong><small title="'+esc(summary)+'">'+esc(summary)+'</small></div><button id="game-activity-open-'+kind+'" type="button" class="game-small-button" data-building-activities="'+kind+'" aria-label="View '+esc(b.name+' '+kind)+'">View →</button></section>';
     }).join('');
   }
 
   function activitiesMarkup(s) {
     var b=selectedBuilding(s), isQuest=activitiesKind==='quests';
     var items=isQuest?buildingQuests(b,s):buildingProjects(b,s);
-    document.getElementById('game-activities-title').textContent=!isQuest && connectedProgression(s)?'Conglomerate · Group projects':b.name+' · '+(isQuest?'Quests':'Projects');
-    if(!isQuest && connectedProgression(s))return groupProjectsPanel(b,s);
+    document.getElementById('game-activities-title').textContent=b.name+' · '+(isQuest?'Quests':'Projects');
     var purpose='';
     if(isQuest && activitiesPurpose){
       if(!researchEnabled(s))activitiesPurpose='prestige';
@@ -654,35 +650,6 @@
       var label=done?'Completed':item.status==='locked'?'Preview':isQuest?'Open quest':'Open project';
       return '<article class="game-panel game-activity-card"><h3>'+esc(item.title)+(done?' <span class="k-good">✓</span>':'')+'</h3><p>'+esc(item.summary || item.description)+'</p><p class="game-quest-reward">'+esc(item.rewardText)+'</p>'+(item.status==='locked'?'<p class="game-hint">'+esc(item.unlockText)+'</p>':'')+'<button id="game-activity-'+(isQuest?'quest':'project')+'-'+esc(item.id)+'" type="button" class="game-small-button" '+(item.legacyEvent?'data-game-breakfast':'data-game-'+(isQuest?'quest':'project')+'="'+esc(item.id)+'"')+'>'+label+' →</button></article>';
     }).join(''):'<p class="game-hint">No '+(isQuest?'quests':'projects')+' for this business yet.</p>')+'</div>';
-  }
-
-  function groupProjectMarkup(project,s) {
-    var done=project.completed || project.status==='completed';
-    var html='<article class="game-group-project" data-group-project="'+esc(project.projectId || project.id)+'"><div class="game-quest-intro"><span class="game-eyebrow">Conglomerate · Group project</span><h3>'+esc(project.title || project.name)+'</h3><p>'+esc(project.description || project.purpose)+'</p><p class="game-quest-reward">'+(project.cashReward?'+'+ym(project.cashReward)+' · ':'')+esc(project.rewardText)+'</p></div>';
-    if((project.suppliers || []).length)html+='<div class="game-group-suppliers" aria-label="Contributing businesses">'+project.suppliers.map(function(supplier){return '<span class="'+(supplier.owned?'k-good':'')+'">'+esc(supplier.name)+' · '+esc(supplier.role)+'</span>';}).join('')+'</div>';
-    if(done)return html+'<p class="k-good">✓ Project complete</p></article>';
-    html+='<div class="game-connected-objectives">'+(project.requirements || []).map(function(g){var delivered=Number(g.delivered || 0);return '<div class="game-workshop-goal" data-group-objective="'+esc(g.goodId)+'"><span>Deliver '+esc(g.name)+'</span><strong class="'+(delivered>=g.quantity?'k-good':'')+'">'+units(Math.min(delivered,g.quantity))+' / '+units(g.quantity)+'</strong></div>';}).join('')+'</div>';
-    if(project.status==='locked')return html+why(project.why || project.unlockText || 'Complete the preceding group project.')+'</article>';
-    var ready=project.canClaim==null?project.ready:project.canClaim, legacy=(s.groupProjects || {}).legacyDelivery;
-    if(document.getElementById('econ-building')){
-      var goal=goalOrder(s);
-      if(!legacy && !ready && goal && goal.projectId===(project.projectId || project.id))html+=openingDeliveryMarkup(goal,s);
-      return html+(!legacy && ready?'<div class="game-confirm-actions">'+bigButton('group_project_claim:'+encodeURIComponent(project.projectId || project.id),'Claim project reward','',s.paused)+'</div>':'')+(!ready && project.why?why(project.why):'')+'</article>';
-    }
-    return html+'<p class="game-hint">Deliver these products through Market orders. Completed deliveries count toward this project.</p><div class="game-confirm-actions">'+(!legacy?bigButton('group_project_claim:'+encodeURIComponent(project.projectId || project.id),'Claim project reward','',!ready || s.paused):'')+linkButton('./marketplace.html','Open orders →',' k-btn--alt')+'</div>'+(!ready && project.why?why(project.why):'')+'</article>';
-  }
-
-  function openingDeliveryMarkup(goal,s) {
-    var index=goal.offerIndex==null?3:goal.offerIndex;
-    return '<section class="game-panel game-opening-delivery"><div class="game-panel-body"><h3>Goal order</h3><p class="game-hint">Deliver the remaining goods here to finish this project.</p><div class="game-workshop-goals">'+(goal.requirements || []).map(function(g){return '<div class="game-workshop-goal"><span>'+esc(g.name)+'</span><strong class="'+(g.owned>=g.quantity?'k-good':'')+'">'+units(g.owned || 0)+' / '+units(g.quantity)+'</strong></div>';}).join('')+'</div>'+orderEta(goal)+'<p class="game-quest-reward">Delivery reward: '+ym(goal.reward)+'</p><div class="game-confirm-actions">'+bigButton('fulfill:'+index+':'+goal.id,'Deliver goal order',goal.canFulfill?'Ready':goal.why || 'Waiting for goods',!goal.canFulfill || s.paused)+'<button id="game-project-goal-save" type="button" class="game-small-button" data-econ-action="commit:'+index+':'+esc(goal.id)+'" aria-pressed="'+!!goal.committed+'"'+(s.paused || (!goal.committed && goal.canCommit===false)?' disabled':'')+'>'+ (goal.committed?'Release goods':'Save for this order')+'</button></div><p class="game-hint">'+esc(goal.canCommit===false?goal.commitWhy || 'Finish or release another saved order to make room.':'Regular buyers get goods first. Save the rest for this order. No deadline.')+'</p></div></section>';
-  }
-
-  function groupProjectsPanel(b,s) {
-    var group=s.groupProjects;
-    if(!group || !group.enabled)return '<p class="game-hint">Group projects are unavailable.</p>';
-    var current=group.current, legacy=group.legacyDelivery, saved='';
-    if(legacy)saved='<article class="game-group-project game-legacy-project" data-legacy-project="'+esc(legacy.id)+'"><h3>'+esc(legacy.name || 'Saved project delivery')+'</h3><p class="game-hint">Your saved delivery keeps its original goods and reward.</p><div class="game-connected-objectives">'+(legacy.requirements || []).map(function(g){return '<div class="game-workshop-goal"><span>'+esc(g.name)+'</span><strong>'+units(g.owned || 0)+' / '+units(g.quantity)+'</strong></div>';}).join('')+'</div><p class="game-quest-reward">'+ym(legacy.reward)+(legacy.rewardText?' · '+esc(legacy.rewardText):'')+'</p>'+bigButton('legacy_project_deliver:'+encodeURIComponent(legacy.id),'Deliver saved project','',!legacy.canFulfill || s.paused)+(!legacy.canFulfill?why(legacy.why || 'Waiting for goods'):'')+'</article>';
-    return '<section class="game-panel game-group-projects">'+panelHead('Group projects',units(group.completed)+' / '+units(group.total))+'<div class="game-panel-body">'+saved+(current?groupProjectMarkup(current,s):'<div class="game-quest-complete"><strong class="k-good">✓ Group projects complete</strong><p>Your conglomerate has completed its opening projects.</p></div>')+'</div></section>';
   }
 
   function connectedQuestMarkup(q,s) {
@@ -698,7 +665,6 @@
   function projectMarkup(s) {
     var b=selectedBuilding(s), project=buildingProjects(b,s).find(function(p){return p.id===selectedProject;});
     if(!project)return '<p class="game-hint">Choose a project for this business.</p>';
-    if(connectedProgression(s))return groupProjectMarkup(project,s);
     var html='<div class="game-quest-intro"><span class="game-eyebrow">'+esc(b.name)+'</span><h3>'+esc(project.title)+'</h3><p>'+esc(project.description)+'</p><p class="game-quest-reward">'+esc(project.rewardText)+'</p></div>';
     if(project.status==='completed')return html+'<p class="k-good">✓ Project complete</p>';
     html+='<div class="game-workshop-goals">'+(project.requirements || []).map(function(g){return '<div class="game-workshop-goal"><span>'+esc(g.name)+'</span><strong class="'+(g.owned>=g.quantity?'k-good':'')+'">'+units(g.owned)+' / '+units(g.quantity)+'</strong></div>';}).join('')+'</div>';
@@ -783,13 +749,6 @@
     document.getElementById(id+'-close').focus({preventScroll:true});
   }
 
-  function openGroupHash() {
-    if(groupHashOpened || !snapshot || !connectedProgression(snapshot) || location.hash!=='#group-projects' || !document.getElementById('econ-building'))return;
-    activitiesKind='projects';activitiesPurpose=null;groupHashOpened=true;
-    openBusinessDialog('game-activities',document.getElementById('game-activity-open-projects'));
-  }
-  window.addEventListener('hashchange',function(){groupHashOpened=false;openGroupHash();});
-
   function focusGrowthTarget(kind,id) {
     var target=document.getElementById('game-growth-'+kind+'-'+id);
     if(target)target.focus({preventScroll:false});
@@ -814,30 +773,11 @@
     focusGrowthTarget(growthTab,need.id);
   }
 
-  function openingReward(project) {
-    return {farm_neighbors:'earn your fish stall',harbor_lunch:'earn your roastery',cafe_opening:'earn +20% café customers'}[project.projectId || project.id] || project.rewardText || 'earn your reward';
-  }
-
   function openingGuide(s) {
-    var n=s.nextStep, group=s.groupProjects || {}, project=group.current, goal=goalOrder(s);
+    var n=s.nextStep;
     if(s.build)n={title:s.build.name+' is being built',detail:s.build.remainingSec+'s remaining. Your other businesses keep working.'};
-    var buildStep=s.build || group.legacyDelivery || n && n.action && n.action.indexOf('expand:')===0;
-    if(project && !buildStep){
-      var ready=project.canClaim==null?project.ready:project.canClaim;
-      var requirements=project.requirements || [], list=requirements.map(function(g){return units(g.quantity)+' '+g.name.toLowerCase();}).join(' + ');
-      var progress=requirements.map(function(g){return '<span data-opening-good="'+esc(g.goodId)+'">'+units(Math.min(Number(g.delivered || 0),g.quantity))+' / '+units(g.quantity)+' '+esc(g.name.toLowerCase())+'</span>';}).join('<span aria-hidden="true"> · </span>');
-      if(goal && !ready){
-        var waiting=goal.requirements || [], need=waiting.reduce(function(total,g){return total+Number(g.quantity || 0);},0);
-        var stocked=waiting.reduce(function(total,g){return total+Math.min(Number(g.owned || 0),Number(g.quantity || 0));},0);
-        var stockText=goal.canFulfill?'Ready to deliver':(goal.committed?'Saved ':'In stock ')+units(stocked)+' / '+units(need)+' for this order';
-        if(need>0)progress+='<span aria-hidden="true"> · </span><span class="game-opening-stock'+(goal.canFulfill?' k-good':'')+'" data-opening-stock>'+esc(stockText)+'</span>';
-      }
-      var action=ready?bigButton('group_project_claim:'+encodeURIComponent(project.projectId || project.id),'Claim reward','',s.paused,' k-btn--alt'):'<button id="game-next-goal-order" type="button" class="game-small-button" data-building-activities="projects" aria-haspopup="dialog">'+(goal && goal.canFulfill?'Deliver goal order':'View goal order')+' →</button>';
-      return '<section class="game-opening-guide game-opening-goal" aria-label="Next goal" data-opening-project="'+esc(project.projectId || project.id)+'"><div><strong>'+(ready?'Delivery complete → ': 'Deliver '+esc(list)+' → ')+esc(openingReward(project))+'</strong><div class="game-opening-progress" aria-label="Delivered progress">Delivered '+progress+(ready?' · Reward ready':'')+'</div></div>'+action+'</section>';
-    }
-    if(!n && (group.enabled && group.total>0 && group.completed>=group.total || (s.townProjects || {}).completed>=3))n={title:'Opening goals complete',detail:'Your rewards are earned. Keep growing your businesses with upgrades and quests.'};
-    if(!n)return '';
-    var control=n.action?bigButton(n.action,n.actionLabel || 'Continue','',!!n.disabled || s.paused,' k-btn--alt'):n.href?'<button id="game-next-goal-order" type="button" class="game-small-button" data-building-activities="projects" aria-haspopup="dialog">View project →</button>':'';
+    if(!n || (!s.build && !(n.action && n.action.indexOf('expand:')===0)))return '';
+    var control=n.action?bigButton(n.action,n.actionLabel || 'Continue','',!!n.disabled || s.paused,' k-btn--alt'):'';
     return '<section class="game-opening-guide" aria-label="Next goal"><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.detail)+'</small></div>'+control+'</section>';
   }
 
@@ -863,11 +803,11 @@
         var questId=unlockQuestId(b,s), quest=buildingQuests(b,s).find(function(q){return q.id===questId;});
         var unlockText=quest?'Complete '+quest.title+' to unlock '+g.name:g.unlockText || 'Complete this business’s unlock quest';
         return '<div class="game-inventory-row'+(g.locked?' is-locked':'')+'" data-stock-good="'+esc(g.goodId)+'" data-stock-locked="'+!!g.locked+'"><span class="game-inventory-good">'+goodIcon(b,g,false)+'<span><strong>'+esc(g.name)+'</strong>'+(g.locked?'<button id="game-stock-unlock-'+esc(g.goodId)+'" type="button" class="game-stock-unlock" title="'+esc(unlockText)+'" aria-label="'+esc(unlockText)+'" data-game-quest="'+esc(unlockQuestId(b,s))+'">Locked · Unlock →</button>':'')+bar(g.capacity?g.quantity/g.capacity*100:0)+'</span></span><span data-stock-count>'+units(g.quantity)+'<small> / '+units(g.capacity || 0)+'</small></span><span data-stock-saved title="'+(independent?'Held for regular buyers, saved orders, or paused shop sales':'Held for recipes, deliveries, or paused shop sales')+'">'+units(g.reserved || 0)+'</span></div>';
-      }).join('')+'</div><div class="game-stock-controls"><button type="button" class="game-small-button game-reserve'+(b.reserve?' is-active':'')+'" data-econ-action="reserve:'+b.slot+':'+(!b.reserve)+'" aria-pressed="'+!!b.reserve+'" title="Pause walk-in sales for this business. '+(independent?'Deliveries can still use their goods.':'Recipes and deliveries keep using their supplies.')+'">'+(b.reserve?'Resume shop sales':'Hold goods')+'</button><button type="button" class="game-small-button game-stock-sell" data-econ-action="sell:'+b.slot+'"'+(!canSell?' disabled':'')+' title="'+(canSell?saleNote:'No surplus yet. '+protectedNote)+'">Sell surplus · '+ym(b.clearStockValue || 0)+'</button><p class="game-hint">'+saleNote+(b.reserve?' Manually held surplus can be sold.':'')+'</p></div></section>';
+      }).join('')+'</div><div class="game-stock-controls"><button type="button" class="game-small-button game-reserve'+(b.reserve?' is-active':'')+'" data-econ-action="reserve:'+b.slot+':'+(!b.reserve)+'" aria-pressed="'+!!b.reserve+'" title="Pause walk-in sales for this business. '+(independent?'Deliveries can still use their goods.':'Recipes and deliveries keep using their supplies.')+'">'+(b.reserve?'Resume shop sales':'Hold goods')+'</button><button type="button" class="game-small-button game-stock-sell" data-econ-action="sell:'+b.slot+'"'+(!canSell?' disabled':'')+' title="'+(canSell?saleNote:'No surplus yet. '+protectedNote)+'">Sell surplus · '+ym(b.clearStockValue || 0)+'</button></div></section>';
   }
 
   function operationsPanel(b, s) {
-    return '<section class="game-panel game-operations">'+panelHead('Upgrades',(connectedProgression(s)?s.groupProjects:s.townProjects) && (connectedProgression(s)?s.groupProjects:s.townProjects).completed<3?'Optional · grants stay safe':'')+upgradeRows(b,['production','sales','storage'])+'</section>';
+    return '<section class="game-panel game-operations">'+panelHead('Upgrades','')+upgradeRows(b,['production','sales','storage'])+'</section>';
   }
 
   function rateUnits(value) {
@@ -1001,20 +941,19 @@
   }
 
   function ordersMarkup(s) {
-    var goal=goalOrder(s), indexed=orderOffers(s).map(function(o,i){return {order:o,index:i};});
+    var indexed=orderOffers(s).map(function(o,i){return {order:o,index:i};});
     if(goal && !indexed.some(function(entry){return entry.order.id===goal.id;}))indexed.push({order:goal,index:goal.offerIndex==null?3:goal.offerIndex});
     var rolls=(s.contracts || {}).rolls;
     var rollTip='Free reroll · '+(Array.isArray(rolls)?rolls.map(function(r){return r.label+' '+r.chance+'%';}).join(', '):'Standard 65%, Large 25%, Rare 8%, Jackpot 2%')+' · Rewards require delivery';
     indexed.sort(function(a,b){return Number(b.order===goal)*2+Number(!!b.order.project && (!b.order.completed || !!orderReactions[b.index]))-Number(a.order===goal)*2-Number(!!a.order.project && (!a.order.completed || !!orderReactions[a.index]));});
     return '<div class="game-card-grid game-order-grid" data-keep-scroll="orders">'+indexed.map(function(entry){
       var o=entry.order,i=entry.index;if(o.project)return projectCard(o,i,s);
-      var isGoal=o===goal, relationship=o.customer==='breakfast';
-      var note=relationship ? 'Saved delivery · original reward preserved; your next card shows town projects' : o.materials?'Materials reduce future construction costs':'';
-      var channel=isGoal?'Next goal · '+openingReward((s.groupProjects || {}).current || o):relationship?'Saved town delivery':(goal?'Optional · ':'')+(o.channelLabel || (o.materials?'Building supplies':'Quick cash'));
+      var isGoal=false, relationship=o.customer==='breakfast';
+      var channel=relationship?'Saved town delivery':(o.channelLabel || (o.materials?'Building supplies':'Quick cash'));
       var rarity=['standard','small','bulk','large','rare','jackpot'].includes(o.rarity)?o.rarity:'standard';
       var label=isGoal?'Goal order':o.rarityLabel || 'Standard';
       var typeHint=rarity==='small'?'A few units of one product. A small, easy-to-fill shopping list.':rarity==='bulk'?'Many units of one product. Sell spare stock at a lower price per item than a standard order.':'';
-      return '<section '+(isGoal?'id="goal-order" ':'')+'class="k-card game-order'+(isGoal?' game-goal-order':'')+'" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3><span class="game-order-name">'+esc(o.name || channel)+'</span><small class="game-order-tier"'+(typeHint?' title="'+esc(typeHint)+'"':'')+'>'+esc(label)+'</small></h3><div class="game-order-context"><span class="game-order-channel">'+esc(channel)+'</span>'+(o.purpose?'<p class="game-order-purpose">'+esc(o.purpose)+'</p>':'')+(note?'<p class="game-order-progress">'+esc(note)+'</p>':'')+orderEta(o)+'</div><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){
+      return '<section '+(isGoal?'id="goal-order" ':'')+'class="k-card game-order'+(isGoal?' game-goal-order':'')+'" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+orderReactionMarkup(i)+'<h3><span class="game-order-name">'+esc(o.name || channel)+'</span><small class="game-order-tier"'+(typeHint?' title="'+esc(typeHint)+'"':'')+'>'+esc(label)+'</small></h3><div class="game-order-context"><span class="game-order-channel">'+esc(channel)+'</span></div><div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){
         var building=s.buildings.find(function(b){return b.id===g.buildingId;}) || {id:g.buildingId};
         return '<div class="econ-good-line"><span class="econ-good-name">'+goodIcon(building,g,false)+'<span>'+esc(g.name)+'</span></span><span class="'+(g.owned>=g.quantity?'k-good':'k-money')+'">'+units(g.owned)+' / '+units(g.quantity)+'</span></div>';
       }).join('')+'</div></div><div class="game-order-reward"><span title="Paid after you deliver all requested goods">'+ym(o.reward)+'</span>'+(o.rewardPercent?'<small>'+mult(o.rewardPercent/100)+(operatingStatement(s)?'× shop payout':'× retail')+'</small>':'')+(o.materials?'<span>+'+materialAmount(o.materials)+'</span>':'')+'</div><div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,isGoal?'Deliver goal order':'Deliver',o.canFulfill?'Ready':o.why || 'Waiting for goods',!o.canFulfill || s.paused)+(s.rulesRevision>=2?'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'"'+(!o.committed && o.canCommit===false || s.paused?' disabled':'')+' title="'+(independentProduction(s)?'Regular buyers get goods first. Save the rest for this order; walk-ins and other orders cannot use it.':'Regular buyers and their recipes get goods first. Save the rest for this order; other recipes and walk-ins cannot use it.')+'">'+(o.committed?'Release goods':'Save for this order')+'</button>':'')+'</div>'+(isGoal?'<p class="game-order-goal-note">Sized for your remaining goal. No deadline.</p>':'<button class="game-text-button" type="button" data-econ-action="replace:'+i+':'+esc(o.id)+'" title="'+esc(rollTip)+'">CLICK!!!!</button>')+'</section>';
@@ -1360,7 +1299,7 @@
     document.querySelectorAll('[data-econ-status]').forEach(function (el) {
     {
       el.textContent = text || '';
-      el.className = 'k-status' + (tone === 'error' ? ' k-status--bad' : (tone === 'success' ? ' k-status--good' : ''));
+      el.className = 'k-status' + (tone === 'error' ? ' k-status--bad' : (tone === 'success' ? ' k-status--good game-visually-hidden' : ''));
     }
     });
     if(text && tone==='success') statusTimer=window.setTimeout(function(){setStatus('', '');},8000);
@@ -1438,7 +1377,6 @@
     trackCustomerDeliveries(snapshot,payload);
     snapshot = payload;
     render();
-    openGroupHash();
     window.dispatchEvent(new CustomEvent('yomama:econ',{detail:payload}));
     if(payload.overnightReport) showOvernight(payload.overnightReport);
 
@@ -1492,9 +1430,6 @@
       try { body=JSON.parse(decodeURIComponent(workforceBits.slice(2).join(':'))); }
       catch (_) { setStatus('Refresh Operations and try again','error');return; }
       body.action=workforceBits[1];
-    } else if (/^(group_project_claim|legacy_project_deliver):/.test(name)) {
-      var projectBits=name.split(':');path='/api/game/progression';body={action:projectBits[0]};
-      body[body.action==='group_project_claim'?'projectId':'id']=decodeURIComponent(projectBits.slice(1).join(':'));
     } else if (name.indexOf('business:')===0) {
       var businessBits=name.split(':');path='/api/game/business';body={action:businessBits[1],buildingId:decodeURIComponent(businessBits[2])};
       if(businessBits[3])body.staffId=decodeURIComponent(businessBits[3]);
@@ -1573,7 +1508,6 @@
       if(name.indexOf('customer:')===0){var nextCustomerControl=document.getElementById(body.action==='release'?'game-customer-choice':body.action==='upgrade' || body.action==='downgrade'?'game-customer-size':'game-customer-toggle');if(nextCustomerControl)nextCustomerControl.focus({preventScroll:true});}
       if (productionModel(payload)) {
         if(name.indexOf('workforce:')===0) setStatus(receipt && receipt.message || 'Workforce updated','success');
-        else if(/^(group_project_claim|legacy_project_deliver):/.test(name)) setStatus(receipt && receipt.message || (body.action==='group_project_claim'?'Group project reward claimed':'Saved project delivered'),'success');
         else if(name.indexOf('business:')===0 || name.indexOf('progression:')===0) setStatus(receipt && receipt.message || ({pause:'Production paused · no new production costs',resume:'Business resumed',hire:'Shift started',salvage:'Business closed · salvage paid',research:'Research learned',craft:'Equipment crafted',quest_plan:'Plan selected',quest_batch:'Practice batch complete',quest_finish:'Quest complete · reward unlocked',quest_reset:'Practice supplies restored'}[body.action]) || 'Saved','success');
         else if (name.indexOf('customer:')===0) setStatus(receipt && receipt.message || ({accept:'Customer signed · automatic shipments start after the first interval',switch:'Customer switched · a new shipment timer has started',pause:'Customer paused · held goods released',resume:'Customer resumed · a new shipment timer has started',release:'Customer released · slot and goods available',upgrade:'Larger order accepted · a new shipment timer has started',downgrade:'Smaller order restored · a new shipment timer has started'}[body.action]),'success');
         else if (receipt && receipt.kind === 'breakfast') setStatus(receipt.message,'success');

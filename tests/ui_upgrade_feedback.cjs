@@ -174,11 +174,8 @@ print(json.dumps(result))
     assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),incomeRate(state.earnings.operatingIncome).replace(/\s+/g,''),'Town HUD shows actual customer receipts');
     assert.equal((await metric('produced').locator('.game-live-value').textContent()).trim(),units(b.productionCapacityPerMinute));
     assert.equal((await metric('sold').locator('.game-live-value').textContent()).trim(),units(b.customerCapacityPerMinute));
-    const production=(await metric('produced').locator('.game-live-rate:not(.game-production-rhythm)').textContent()).trim();
-    const demand=(await metric('sold').locator('.game-live-rate:not(.game-production-rhythm)').textContent()).trim();
-    assert.match(production,new RegExp('Actual '+b.activity.producedUnits+' produced.*last 60s','i'));
-    assert.match(demand,new RegExp('Actual '+b.activity.soldUnits+' sold.*last 60s','i'));
-    assert.match(await page.locator('.game-live-heading').textContent(),/Live rates|Customer cashflow/i);
+    assert.equal(await page.locator('.game-live-rate').count(),0);
+    assert.equal((await page.locator('.game-live-title').textContent()).trim(),'AUTO-SALES');
    }
    async function fit(label){
     currentLabel=viewport.name+'-'+label;

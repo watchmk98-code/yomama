@@ -14,6 +14,12 @@ import town_projects as G
 from test_production_api import town, state, edit  # noqa: F401
 
 
+def connected_config():
+    cfg = E.load_config()
+    cfg['businessDesign']['groupProjectsEnabled'] = True
+    return cfg
+
+
 def ticks(cfg, st, count):
     for _ in range(count):
         E.player_tick(cfg, {}, st, st['tick'])
@@ -24,7 +30,7 @@ def quest(cfg, st, quest_id='farm-plan'):
 
 
 def test_actual_production_and_shopping_complete_quest_without_spending_stock_twice():
-    cfg = E.load_config()
+    cfg = connected_config()
     st = E.new_state(cfg)
     assert P.act(cfg, st, dict(action='quest_plan', questId='farm-plan', choice='regulars'))['ok']
     assert not quest(cfg, st)['ready']
@@ -40,7 +46,7 @@ def test_actual_production_and_shopping_complete_quest_without_spending_stock_tw
 
 
 def test_failed_delivery_does_not_credit_quests_or_group_then_one_payment_counts_for_both():
-    cfg = E.load_config()
+    cfg = connected_config()
     st = E.new_state(cfg)
     st['offers'][0] = dict(id='integration-order', name='Tomato delivery', requirements=[
         dict(goodId='farm_tomatoes', quantity=6)], reward=19, materials=0, committed=False)
@@ -67,7 +73,7 @@ def test_failed_delivery_does_not_credit_quests_or_group_then_one_payment_counts
 
 @pytest.mark.parametrize('channel', ['regularBuyers', 'clearance'])
 def test_automatic_buyers_and_clearance_count_sales_but_not_group_order_deliveries(channel):
-    cfg = E.load_config()
+    cfg = connected_config()
     st = E.new_state(cfg)
     if channel == 'regularBuyers':
         assert E.manage_customer_contract(cfg, st, 0, 'accept', 'corner_grocer')['ok']
@@ -83,7 +89,7 @@ def test_automatic_buyers_and_clearance_count_sales_but_not_group_order_deliveri
 
 
 def test_forecasts_and_saved_inventory_do_not_invent_activity():
-    cfg = E.load_config()
+    cfg = connected_config()
     st = E.new_state(cfg)
     st['inventory'] = {g['id']: 100 for g in cfg['tiers'][0]['goods']}
     for _ in range(3):
@@ -94,7 +100,7 @@ def test_forecasts_and_saved_inventory_do_not_invent_activity():
 
 
 def test_disabled_business_design_does_not_partially_enable_group_tracking():
-    cfg = E.load_config()
+    cfg = connected_config()
     cfg['businessDesign']['enabled'] = False
     st = E.new_state(cfg)
     assert st['offers'][2]['project']
@@ -105,13 +111,13 @@ def test_disabled_business_design_does_not_partially_enable_group_tracking():
 
 
 def test_legacy_fixed_delivery_migrates_outside_three_active_containers_and_keeps_terms():
-    legacy = E.load_config()
+    legacy = connected_config()
     legacy['businessDesign'].pop('connectedProgression')
     st = E.new_state(legacy)
     saved = copy.deepcopy(st['offers'][2])
     assert E.commit_order(legacy, st, 2, saved['id'], True)['ok']
     saved['committed'] = True
-    cfg = E.load_config()
+    cfg = connected_config()
     st = E.migrate_state(cfg, st)
     assert len(st['offers']) == 3 and not any(o.get('project') for o in st['offers'])
     assert st['legacyProjectOffer'] == saved
@@ -132,7 +138,7 @@ def test_legacy_fixed_delivery_migrates_outside_three_active_containers_and_keep
 
 
 def test_new_board_has_three_rerollable_product_orders_without_legacy_loyalty_credit():
-    cfg = E.load_config()
+    cfg = connected_config()
     st = E.new_state(cfg)
     for index in range(3):
         order = st['offers'][index]
@@ -191,7 +197,7 @@ def test_api_simultaneous_focus_purchases_share_scarce_prestige_across_branches(
     assert state(other)['progression']['prestige'] == 0
 
 
-def test_api_group_claim_retries_pay_once_and_other_seat_is_unchanged(town):
+def test_api_group_claim_is_unavailable_and_other_seat_is_unchanged(town):
     _, _, players = town
     token, other = [p['token'] for p in players]
     def prepare(cfg, st):
@@ -208,10 +214,10 @@ def test_api_group_claim_retries_pay_once_and_other_seat_is_unchanged(town):
             return None
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(claim, range(2)))
-    assert sum(r is not None for r in results) == 1
+    assert all(r is None for r in results)
     A._book_cache.clear()
     after = state(token)
-    assert after['cash'] == before['cash'] + 15
-    assert after['groupProjects']['completed'] == 1
-    assert state(other)['groupProjects']['completed'] == 0
+    assert after['cash'] == before['cash']
+    assert not after['groupProjects']['enabled']
+    assert not state(other)['groupProjects']['enabled']
     assert len(after['contracts']['offers']) == 3

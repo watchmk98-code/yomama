@@ -59,6 +59,7 @@ def money_and_stock_are_valid(state):
 
 def test_first_sale_and_affordable_first_choices():
     cfg = config()
+    cfg['businessDesign']['groupProjectsEnabled'] = True
     state = E.new_state(cfg)
     assert state['cash'] == 0 and len(state['b']) == 1
     upgrade_price = E.upgrade_cost(cfg, state, 0, 'production')

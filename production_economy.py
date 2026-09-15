@@ -987,6 +987,10 @@ def _project_order(cfg,st):
 def _sync_project_offer(cfg,st):
     offers=st.get('offers') or []
     if business_progression.connected_enabled(cfg):
+        if not town_projects.connected(cfg):
+            st.pop('goalOffer',None)
+            st.pop('legacyProjectOffer',None)
+            return
         if len(offers)>2 and offers[2].get('project'):
             # A saved fixed delivery retains its exact terms outside the three
             # active containers. Already completed cards promise no more reward.
@@ -1427,8 +1431,9 @@ def payload(cfg,st,cls,session,behind=False):
                              productionPerMinute=round(sum(60/(x['cycleTicks']*g['tick']) for x in t['goods']),2),
                              timerH=t['timerH'],affordable=st['cash']>=quote['cost'],canExpand=check['ok'],why=check.get('why','')))
     orders=[]
-    saved_legacy=st.get('legacyProjectOffer') if business_progression.connected_enabled(cfg) else None
-    saved_goal=st.get('goalOffer')
+    group_projects_enabled=town_projects.connected(cfg)
+    saved_legacy=st.get('legacyProjectOffer') if group_projects_enabled else None
+    saved_goal=st.get('goalOffer') if group_projects_enabled else None
     visible_orders=list(st.get('offers') or [])+([saved_goal] if saved_goal else [])+([saved_legacy] if saved_legacy else [])
     for order in visible_orders:
         held=delivery_reservations(cfg,st,exclude=order['id'])

@@ -220,6 +220,7 @@ def test_prototype_dispatch_freezes_invoice_and_completes_exactly_once():
 def test_fixed_project_and_goal_invoices_are_frozen_before_saving_and_reload(connected):
     cfg = economy.load_config()
     cfg['businessDesign']['connectedProgression'] = connected
+    cfg['businessDesign']['groupProjectsEnabled'] = connected
     state = economy.new_state(cfg, seed=71)
     economy._sync_project_offer(cfg, state)
     index = 3 if connected else 2

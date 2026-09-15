@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var tabs = [['focus', 'Focus tree'], ['team', 'Team'], ['recipes', 'Recipes'], ['quests', 'Quests'], ['hq', 'Advanced HQ']];
-  var tab = { '#team': 'team', '#workers': 'team', '#quests': 'quests', '#projects': 'projects', '#hq': 'hq', '#recipes': 'recipes' }[location.hash] || 'focus';
+  var tab = { '#team': 'team', '#workers': 'team', '#quests': 'quests', '#hq': 'hq', '#recipes': 'recipes' }[location.hash] || 'focus';
   var drafts = {}, current = null, helpers = null, selectedNode = 'orientation', teamView = location.hash==='#workers'?'assignments':'recruitment', hqView = 'academy', listPages = {};
   var branches = [['production', 'Production', 'Make goods'], ['sales', 'Customers', 'Find buyers'], ['efficiency', 'Efficiency', 'Lower costs']];
 
@@ -32,8 +32,7 @@
   function connected(snapshot) { return !!(snapshot.progression && snapshot.progression.mode === 'connected'); }
   function population(snapshot) { var pool = (snapshot.workforce || {}).population; return pool && pool.enabled ? pool : null; }
   function panelTabs(snapshot) {
-    var available = connected(snapshot) ? tabs.slice(0, 4).concat([['projects', 'Group projects']], tabs.slice(4)) : tabs;
-    return available.map(function (item) {
+    return tabs.map(function (item) {
       if (item[0] === 'recipes' && snapshot.productionMode === 'independent') return ['recipes', 'Products'];
       return item[0] === 'team' && population(snapshot) ? ['team', 'Workers'] : item;
     });
@@ -122,7 +121,7 @@
     var availableTabs = panelTabs(snapshot);
     if (!availableTabs.some(function (item) { return item[0] === tab; })) tab = 'focus';
     var nav = '<div class="wf-tabs" role="tablist" aria-label="Operations panels">' + availableTabs.map(function (item) { return '<button id="game-wf-tab-' + item[0] + '" type="button" role="tab" aria-selected="' + (tab === item[0]) + '" aria-controls="game-wf-panel" tabindex="' + (tab === item[0] ? '0' : '-1') + '" data-wf-tab="' + item[0] + '">' + item[1] + '</button>'; }).join('') + '</div>';
-    var body = tab === 'focus' ? focusTree(team, snapshot) : tab === 'team' ? teamPanel(team, building, snapshot) : tab === 'hq' ? headquarters(snapshot) : tab === 'projects' ? helpers.projectsPanel(building, snapshot) : tab === 'recipes' ? '<div class="wf-recipes">' + helpers.recipePanel(building, snapshot) + helpers.focusMarkup(building) + '</div>' : helpers.questsPanel(building, snapshot) || note('Business quests become available as your businesses develop.');
+    var body = tab === 'focus' ? focusTree(team, snapshot) : tab === 'team' ? teamPanel(team, building, snapshot) : tab === 'hq' ? headquarters(snapshot) : tab === 'recipes' ? '<div class="wf-recipes">' + helpers.recipePanel(building, snapshot) + helpers.focusMarkup(building) + '</div>' : helpers.questsPanel(building, snapshot) || note('Business quests become available as your businesses develop.');
     requestAnimationFrame(fit);
     return '<div class="wf-workspace'+(connected(snapshot)?' is-connected':'')+'">' + nav + (tab !== 'hq' ? summary(team, snapshot) : '') + '<div id="game-wf-panel" class="wf-scroll" role="tabpanel" aria-labelledby="game-wf-tab-' + tab + '" tabindex="0" data-keep-scroll="workforce-' + building.buildingId + '-' + tab + '">' + body + '</div></div>';
   }

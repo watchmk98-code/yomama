@@ -127,6 +127,7 @@
  .econ-kid .game-surplus-sale .k-btn {min-width:130px;}
 }
 .game-build-bottom { display:grid; grid-template-columns:minmax(0,1fr) minmax(310px,.8fr); gap:10px; align-items:stretch; margin-top:8px; }
+.game-build-bottom:has(> .game-building-activity:only-child) {grid-template-columns:minmax(0,1fr);}
 .game-build-bottom .game-footer { margin:0; flex-wrap:wrap; }
 .game-event-strip { display:flex; gap:10px; align-items:center; padding:7px 12px; border:1px solid var(--amber); background:var(--bg); }
 .game-event-strip strong { display:block; color:var(--amber); font-size:21px; font-weight:400; }
@@ -573,8 +574,8 @@
  .game-compact .game-licence-summary {display:none;}
 }
 .game-next-art {display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1/span 8;}
-.econ-kid .game-next-art .k-art {width:84px;height:84px;flex-basis:84px;filter:grayscale(1);opacity:.55;}
-.game-expansion-body:has(.game-next-art) {grid-template-columns:84px minmax(0,1fr);column-gap:8px;}
+.econ-kid .game-next-art .k-art {width:132px;height:132px;flex-basis:132px;filter:grayscale(.68) contrast(1.15) brightness(1.12) drop-shadow(0 0 8px rgba(168,155,255,.34));opacity:.82;}
+.game-expansion-body:has(.game-next-art) {grid-template-columns:132px minmax(0,1fr);column-gap:14px;}
 .game-expansion-body:has(.game-next-art) > :not(.game-next-art) {grid-column:2;}
 .game-build-page .game-inventory-actions {justify-content:flex-end;}
 .game-compact .game-expansion-body:has(.game-next-art) {grid-template-columns:minmax(90px,.8fr) minmax(0,1fr);}
@@ -620,7 +621,7 @@
 }
 .game-next-art {grid-row:1/span 5;min-height:0;}
 @media(max-height:650px){
- .game-compact .game-next-art .k-art {width:80px;height:80px;flex-basis:80px;}
+ .game-compact .game-next-art .k-art {width:104px;height:104px;flex-basis:104px;}
 }
 @media(max-height:650px) and (min-width:600px){
  .game-compact .game-order {display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:4px 12px;padding:8px;}
@@ -1245,6 +1246,8 @@
 .game-panel-head .game-growth-heading {font-size:14px;min-height:24px;padding:0;}
 .game-expansion-requirements {margin:0;font-size:14px;line-height:1.1;gap:3px;}
 .game-workspace .game-expansion-body:has(.game-expansion-requirements) {gap:4px;padding-block:6px;}
+.game-live-title {color:var(--amber);font-size:24px;letter-spacing:.08em;line-height:1;}
+.game-live-title small {color:var(--muted);font-size:15px;letter-spacing:0;}
 
 /* Locked stock remains readable, with a direct route to its unlock quest. */
 .game-inventory-row.is-locked {color:var(--muted);}
@@ -1302,6 +1305,7 @@
  .wf-workspace.is-connected.wf-medium .wf-map-branch h3 {font-size:14px;}
 }
 #econ-building .game-build-bottom:has(.game-building-activity) {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;flex:none;}
+#econ-building .game-build-bottom:has(> .game-building-activity:only-child) {grid-template-columns:minmax(0,1fr);}
 .game-building-activity {display:flex;align-items:center;gap:10px;min-width:0;min-height:56px;padding:6px 10px;border:1px solid var(--amber);background:var(--bg);}
 .game-building-activity .game-activity-copy {flex:1;min-width:0;}
 .game-building-activity strong {display:block;color:var(--amber);font-size:20px;font-weight:400;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1380,7 +1384,7 @@
  .game-page #econ-market .game-order-reward {font-size:20px;line-height:1.05;}
  .game-page #econ-market .game-order > .game-text-button {min-height:24px;padding-block:1px;}
  .game-compact.game-build-page:not([data-fit-build-view="0"]) #econ-building .game-build-bottom:has(.game-building-activity) {display:none;}
- .game-compact #econ-building:has(> .k-status:not(:empty)) .game-build-bottom:has(.game-building-activity) {display:none;}
+ .game-compact #econ-building:has(> .k-status--bad:not(:empty)) .game-build-bottom:has(.game-building-activity) {display:none;}
  .game-compact .game-business-overview {grid-template-columns:80px minmax(0,1fr);gap:6px;padding:4px;}
  .game-compact .game-business-numbers:has(.game-cashflow-note) > .game-live-heading {display:none;}
  .game-compact .game-cashflow-note {font-size:11px;line-height:1.1;padding:3px 4px;}

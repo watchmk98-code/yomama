@@ -14,6 +14,7 @@ import town_projects as P
 def town():
     cfg = E.load_config()
     cfg['businessDesign']['connectedProgression'] = True
+    cfg['businessDesign']['groupProjectsEnabled'] = True
     return cfg, E.new_state(cfg, seed=193)
 
 

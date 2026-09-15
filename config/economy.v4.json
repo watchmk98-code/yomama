@@ -945,6 +945,7 @@
   "businessDesign": {
     "enabled": true,
     "connectedProgression": true,
+    "groupProjectsEnabled": false,
     "version": 1,
     "prestigeExpansion": true,
     "questsPerBuilding": 2,

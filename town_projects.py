@@ -88,7 +88,8 @@ def enabled(cfg):
 
 def connected(cfg):
     design = cfg.get('businessDesign', {})
-    return bool(design.get('enabled') and design.get('connectedProgression')) and enabled(cfg)
+    return bool(design.get('enabled') and design.get('connectedProgression')
+                and design.get('groupProjectsEnabled')) and enabled(cfg)
 
 
 def _grant(data, cfg, st, building_id):

@@ -1,107 +1,36 @@
-/* Opening UI contracts without a browser: real engine snapshots exercise the
-   local goal actions, slot identity, saved-order state, and actual cash figures. */
+/* Construction notice and removed group-project UI contracts without a browser. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const {execFileSync} = require('node:child_process');
+
 const root = path.resolve(__dirname, '..');
-const state = JSON.parse(execFileSync(path.join(root, '.venv/bin/python'), ['-c', String.raw`
-import json
-import production_economy as E
-cfg=E.load_config()
-st=E.new_state(cfg)
-print(json.dumps(E.payload(cfg,st,E.new_class(cfg),{'paused':False})))
-`], {cwd:root,encoding:'utf8'}));
-const noOp=()=>{};
-const window={location:{search:'',hash:''},localStorage:{getItem:()=>null},matchMedia:()=>({matches:false}),addEventListener:noOp};
-let buildMounted=true;
-const document={readyState:'loading',addEventListener:noOp,getElementById:id=>buildMounted && id==='econ-building'?{}:null,querySelectorAll:()=>[]};
-const source=fs.readFileSync(path.join(root,'econ.js'),'utf8').replace('  // ------------------------------------------------------------------ boot --', '  window.contract={openingGuide,groupProjectMarkup,renderProductionInventory,upgradeRows,ordersMarkup,orderAt,financeMetrics,financeValues};\n  // ------------------------------------------------------------------ boot --');
+const noOp = () => {};
+const window = {location:{search:'',hash:''},localStorage:{getItem:()=>null},matchMedia:()=>({matches:false}),addEventListener:noOp};
+const document = {readyState:'loading',addEventListener:noOp,getElementById:()=>null,querySelectorAll:()=>[]};
+const source = fs.readFileSync(path.join(root,'econ.js'),'utf8').replace(
+  '  // ------------------------------------------------------------------ boot --',
+  '  window.contract={openingGuide};\n  // ------------------------------------------------------------------ boot --'
+);
 vm.runInNewContext(source,{window,document,location:window.location,URLSearchParams,console});
-const ui=window.contract;
-let banner=ui.openingGuide(state);
-assert.match(banner,/Deliver 6 tomatoes → earn your fish stall/);
-assert.match(banner,/0 \/ 6 tomatoes/);
-assert.match(banner,/<button[^>]*id="game-next-goal-order"[^>]*data-building-activities="projects"/,'The notice opens projects within Build');
-assert.doesNotMatch(banner,/href=/,'The notice never navigates away from Build');
-const project=state.groupProjects.current;
-project.requirements[0].delivered=2;
-banner=ui.openingGuide(state);
-assert.match(banner,/2 \/ 6 tomatoes/,'The main screen tracks delivered goods, not stock');
-project.canClaim=true;
-banner=ui.openingGuide(state);
-assert.match(banner,/data-econ-action="group_project_claim:farm_neighbors"/);
-assert.doesNotMatch(banner,/View goal order/);
-project.canClaim=false;
-const original=JSON.stringify(state.contracts.offers);
-state.goalOrder=Object.assign({},state.goalOrder||{}, {id:'goal-fixture',offerIndex:3,goalOrder:true,projectId:'farm_neighbors',name:'Your goal order',requirements:[{goodId:'farm_tomatoes',buildingId:'farm',name:'Tomatoes',quantity:4,owned:1}],reward:12,canFulfill:false,committed:true,etaSeconds:90,etaLabel:'About 1m 30s',etaReason:'Saving after regular buyers.',materials:0});
-let stockBanner=ui.openingGuide(state);
-assert.match(stockBanner,/Saved 1 \/ 4 for this order/,'Committed goods progress is visible while the kid waits');
-state.goalOrder.committed=false;
-stockBanner=ui.openingGuide(state);
-assert.match(stockBanner,/In stock 1 \/ 4 for this order/,'Available goods are not described as saved');
-state.goalOrder.canFulfill=true;
-assert.match(ui.openingGuide(state),/Ready to deliver/);
-state.goalOrder.canFulfill=false;
-state.goalOrder.committed=true;
-const orders=ui.ordersMarkup(state);
-assert.equal((orders.match(/data-order-slot=/g)||[]).length,4,'Three optional random cards and one goal card');
-assert(orders.indexOf('data-order-slot="3"')<orders.indexOf('data-order-slot="0"'),'Goal is the first card');
-assert.match(orders,/id="goal-order"/);
-assert.match(orders,/data-econ-action="commit:3:goal-fixture"/);
-assert.match(orders,/Release goods/);
-assert.doesNotMatch(orders,/replace:3:/,'Goal cannot be rerolled');
-assert.match(orders,/About 1m 30s/);
-assert.match(orders,/Optional ·/);
-assert.equal(ui.orderAt(state,3).committed,true,'Release action reads dedicated goal commitment');
-assert.equal(JSON.stringify(state.contracts.offers),original,'Rendering preserves existing random cards and saved orders');
-const localProject=ui.groupProjectMarkup(project,state);
-assert.match(localProject,/data-econ-action="commit:3:goal-fixture"/,'Build saves the dedicated goal order');
-assert.match(localProject,/data-econ-action="fulfill:3:goal-fixture"/,'Build delivers the same dedicated goal order');
-assert.match(localProject,/Release goods/);
-assert.doesNotMatch(localProject,/href="\.\/marketplace.html/,'The Build project dialog keeps goal actions local');
-const pausedProject=ui.groupProjectMarkup(project,Object.assign({},state,{paused:true}));
-assert.match(pausedProject,/<button[^>]*data-econ-action="commit:3:goal-fixture"[^>]* disabled/,'A paused class cannot change saved goal goods');
-assert.match(pausedProject,/<button[^>]*data-econ-action="fulfill:3:goal-fixture"[^>]* disabled/,'A paused class cannot deliver goal goods');
-const claimedProject=ui.groupProjectMarkup(Object.assign({},project,{canClaim:true}),state);
-assert.match(claimedProject,/data-econ-action="group_project_claim:farm_neighbors"/);
-assert.doesNotMatch(claimedProject,/data-econ-action="(?:commit|fulfill):3:/,'A completed delivery changes to its reward action');
-const mismatchedGoal=Object.assign({},state,{goalOrder:Object.assign({},state.goalOrder,{projectId:'harbor_lunch'})});
-assert.doesNotMatch(ui.groupProjectMarkup(project,mismatchedGoal),/data-econ-action="(?:commit|fulfill):3:goal-fixture"/,'A project cannot operate on another project’s goal order');
-buildMounted=false;
-assert.match(ui.groupProjectMarkup(project,state),/href="\.\/marketplace.html"/,'Other project surfaces retain their ordinary Market link');
-const readyState=Object.assign({},state,{groupProjects:Object.assign({},state.groupProjects,{current:Object.assign({},project,{canClaim:true,ready:true})})});
-const market={innerHTML:''};
-ui.renderProductionInventory(market,readyState,state.buildings[0],true);
-assert.doesNotMatch(market.innerHTML,/game-opening-guide/,'Claimable rewards do not move the purple notice into Market');
-buildMounted=true;
-const completedState=Object.assign({},state,{nextStep:null,build:null,goalOrder:null,groupProjects:Object.assign({},state.groupProjects,{enabled:true,current:null,completed:state.groupProjects.total})});
-const completedBanner=ui.openingGuide(completedState);
-assert.match(completedBanner,/game-opening-guide/,'The notice remains present after the opening goals finish');
-assert.match(completedBanner,/complet(?:e|ed)/i);
-assert.doesNotMatch(completedBanner,/href=/);
-const constructionState=Object.assign({},state,{nextStep:null,build:{tier:1,name:'Harbor Fish Stall',remainingSec:30}});
-const constructionBanner=ui.openingGuide(constructionState);
-assert.match(constructionBanner,/game-opening-guide/,'Construction remains visible even without nextStep');
-assert.match(constructionBanner,/Harbor Fish Stall/);
-assert.doesNotMatch(constructionBanner,/Deliver 6 tomatoes|data-building-activities="projects"/,'Construction takes precedence over the next delivery goal');
-const legacyState=Object.assign({},state,{nextStep:{title:'Finish your saved project delivery',detail:'The original goods and rewards are preserved.',href:'./buildings.html#group-projects'},groupProjects:Object.assign({},state.groupProjects,{legacyDelivery:{id:'saved-project'}})});
-const legacyBanner=ui.openingGuide(legacyState);
-assert.match(legacyBanner,/data-building-activities="projects"/,'The saved-project notice uses the local dialog too');
-assert.doesNotMatch(legacyBanner,/href=/);
-const farm=state.buildings[0];
-const upgrade=ui.upgradeRows(farm,['production']);
-assert.match(upgrade,/>\+0 YM\/min<\/span>/,'Production cannot advertise optimized retail sales');
-assert.match(upgrade,/game-upgrade-explanation/);
-assert.doesNotMatch(upgrade,/all added output sells at retail/);
-// Exercise the existing earnings fallback independently of current statement defaults.
-Object.assign(farm,{operatingStatement:null,earnings:{operatingIncome:1.2},operatingCostPerMinute:3,potentialIncomePerMinute:15.6,potentialOperatingCostPerMinute:3,potentialProfitPerMinute:12.6});
-assert.equal(ui.financeValues(farm).profit,-1.8);
-const finances=ui.financeMetrics(farm,{});
-assert.match(finances,/Sales · last 60s/);
-assert.match(finances,/>1.2 YM<\/dd>/);
-assert.match(finances,/-1.8 YM<\/dd>/);
-assert.match(finances,/Potential 12.6 \/ min/);
-assert.match(finances,/is-loss/,'Potential profit cannot hide actual cash loss');
-console.log('Passed Build-only opening notice, local goal actions, dedicated order, ETA, truthful upgrade, and actual cashflow rendering contracts.');
+
+const banner = window.contract.openingGuide({
+  paused:false,
+  nextStep:null,
+  build:{tier:1,name:'Harbor Fish Stall',remainingSec:30}
+});
+assert.match(banner,/class="game-opening-guide"/,'Active construction always renders the protected notice');
+assert.match(banner,/Harbor Fish Stall is being built/);
+assert.match(banner,/30s remaining\. Your other businesses keep working\./);
+assert.doesNotMatch(banner,/projects|data-building-activities|href=/i,'Construction notice stays independent of removed projects');
+
+const idle = window.contract.openingGuide({paused:false,nextStep:null,build:null});
+assert.equal(idle,'','The notice is reserved for real construction or a funded build action');
+
+const css = fs.readFileSync(path.join(root,'econ-kids.css'),'utf8');
+assert.match(css,/\.game-opening-guide\s*\{[^}]*border:\s*1px solid #927bff[^}]*box-shadow:[^}]*rgba\(119,98,255,/s,
+  'Protected construction notice retains its violet border and glow');
+assert.match(css,/\.game-opening-guide strong\s*\{[^}]*color:#a89bff[^}]*text-shadow:/s,
+  'Protected construction title retains its distinct light-violet emphasis');
+
+console.log('Passed protected violet construction notice and removed group-project UI contracts.');

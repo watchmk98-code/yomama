@@ -13,6 +13,7 @@ import town_projects as P
 def run_connected_opening(seed):
     """Use each Market slot for one milestone, without gifts or forced rarity."""
     cfg = E.load_config()
+    cfg['businessDesign']['groupProjectsEnabled'] = True
     assert P.connected(cfg), 'This scenario covers the default connected rules.'
     st = E.new_state(cfg, seed=seed)
     cls = E.new_class(cfg)
