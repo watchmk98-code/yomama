@@ -101,6 +101,10 @@ def test_migration_retires_recipe_pause_and_warnings_without_repricing_saved_sta
     expected['b'][1]['processing'] = True
     expected['productionBlocked'].pop('roastery_pastries')
     migrated = economy.migrate_state(cfg, economy.State(json.loads(json.dumps(state))))
+    # Untracked stock gets reporting-only opening cost estimates on load.
+    assert migrated['inventoryCosts']['openingEstimates']['farm_eggs']['quantity'] == 3
+    assert migrated['inventoryCosts']['openingEstimates']['roastery_pastries']['quantity'] == 2
+    expected['inventoryCosts'] = copy.deepcopy(migrated['inventoryCosts'])
     assert migrated == expected
     assert economy.migrate_state(cfg, migrated) == expected
 

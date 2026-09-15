@@ -72,9 +72,8 @@ def test_all_products_match_the_reference_sold_unit_target_without_forcing_curre
     rates = economy.flow_rates(cfg, state)
     before = margins.statement(cfg, state, 3, rates, 100, 10)
     overproducing = margins.statement(cfg, state, 3, rates, 100, 150)
-    assert before['potentialProfit'] == 90
-    assert overproducing['potentialProfit'] == -50
-    assert overproducing['potentialMargin'] < 0
+    assert before['potentialProfit'] == overproducing['potentialProfit']
+    assert before['potentialCosts'] == overproducing['potentialCosts']
     assert overproducing['potentialMargin'] != overproducing['targetMarginPercent']
 
 
@@ -126,9 +125,12 @@ def test_forecast_preserves_existing_profit_before_rounding_individual_component
         cost = operations.forecast_cost(cfg, state, slot, rates)
         old = operations.building_payload(cfg, state, slot, 0, income, rates)
         view = margins.statement(cfg, state, slot, rates, income, cost)
-        assert view['potentialProfit'] == old['potentialProfitPerMinute']
+        matched = sum((rates[g['id']]['retail'] + rates[g['id']].get('regulars', 0))
+                      / g['quantity'] * operations.effective_batch_cost(cfg, building, g, state)
+                      for g in cfg['tiers'][building['tier']]['goods'])
+        assert view['potentialProfit'] == round(income - matched, 2)
         assert round(view['potentialSales'] - view['potentialCosts'], 2) == view['potentialProfit']
-        assert view['potentialProductionCosts'] == cost
+        assert view['potentialProductionCosts'] == pytest.approx(matched)
 
 
 def test_missing_old_flag_migrates_without_inventing_previous_invoices():
@@ -146,7 +148,7 @@ def test_missing_old_flag_migrates_without_inventing_previous_invoices():
     assert migrated['operatingMargins']['buckets'] == []
     assert migrated['operatingMargins']['totals']['grossSales'] == 0
     view = margins.statement(cfg, migrated, 0, economy.flow_rates(cfg, migrated), 15.6, 3)
-    assert view['sales'] == 8 and view['sellingCosts'] == 0
+    assert view['sales'] == 0 and view['sellingCosts'] == 0  # Old receipts have no matched cost history.
     reloaded = economy.migrate_state(cfg, economy.State(json.loads(json.dumps(migrated))))
     assert reloaded == migrated
 
@@ -176,7 +178,8 @@ def test_removed_business_receipts_and_production_costs_still_reconcile_at_town_
     building = state['b'][1]
     building.update(investmentKnown=True, cashInvested=100, bookValue=100)
     requirement = [dict(goodId='garage_repairs', quantity=1)]
-    receipt = margins.pay(cfg, state, 'walkIns', 12, requirement)
+    receipt = margins.pay(cfg, state, 'walkIns', 12, requirement,
+                          costed={building['buildingId']: dict(costMicros=1_000_000)})
     good = cfg['tiers'][3]['goods'][0]
     assert operations.charge_batch(cfg, state, building, good, state['tick'])
     fee = receipt['sellingCosts']

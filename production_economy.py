@@ -15,6 +15,7 @@ import business_activity
 import business_operations
 import business_progression
 import business_rhythms
+import inventory_costs
 import operating_margins
 import earnings
 import rules_tables
@@ -113,6 +114,7 @@ def new_state(cfg, start_tick=0, seed=1):
     business_activity.ensure(st)
     business_operations.ensure(cfg,st,new=True)
     operating_margins.ensure(cfg,st)
+    inventory_costs.migrate(cfg,st)
     workforce.ensure(cfg,st)
     business_progression.ensure(cfg,st)
     town_projects.default(cfg,st)
@@ -156,6 +158,7 @@ def migrate_state(cfg, st, tick=None):
         workforce.ensure(cfg,st)
         business_operations.ensure(cfg,st)
         operating_margins.ensure(cfg,st)
+        inventory_costs.migrate(cfg,st)
         business_progression.ensure(cfg,st,migrating=True)
         town_projects.migrate(cfg,st)
         _sync_project_offer(cfg,st)
@@ -195,6 +198,7 @@ def migrate_state(cfg, st, tick=None):
     business_operations.ensure(cfg,st)
     business_progression.ensure(cfg,st,migrating=True)
     operating_margins.prune(cfg,st,clear=True)
+    inventory_costs.migrate(cfg,st)
     offer_contracts(cfg,st,st.get('tick',0))
     _sync_project_offer(cfg,st)
     return st
@@ -446,10 +450,12 @@ def _produce(cfg,st,tick=None):
                     batches=1  # A small budget must not make an otherwise viable shop stall.
                 required_work=base_work*batches
                 if work<required_work: break
+                cash_before=st['cash']
                 if not business_operations.charge_batch(cfg,st,b,good,st.get('tick',0) if tick is None else tick,batches=batches):
                     st['productionBlocked'][gid]=dict(reason='cash')
                     work=min(work,base_work*multiplier);break
                 quantity=good['quantity']*batches
+                inventory_costs.produce(cfg,st,gid,quantity,cash_before-st['cash'])
                 inv[gid]=inv.get(gid,0)+quantity
                 business_progression.record_production(cfg,st,gid,quantity)
                 made+=quantity;value+=quantity*good['unitPrice'];work-=required_work
@@ -461,7 +467,7 @@ def _produce(cfg,st,tick=None):
 
 def _retail(cfg,st,tick=None,protected=None):
     inv=st['inventory'];earned=sold=0;by_building={};units_by_building={}
-    delivered=[]
+    delivered=[];costed={}
     if protected is None: protected=protected_stock(cfg,st)
     for slot,b in enumerate(st['b']):
         slot_income=0
@@ -476,6 +482,11 @@ def _retail(cfg,st,tick=None,protected=None):
             available=max(0,inv.get(gid,0)-protected.get(gid,0))
             take=min(available,int(work//denom))
             if take:
+                costs=inventory_costs.consume(cfg,st,[dict(goodId=gid,quantity=take)])
+                for identity,row in costs.items():
+                    target=costed.setdefault(identity,dict(costMicros=0,estimated=False))
+                    target['costMicros']+=row['costMicros']
+                    target['estimated']=target['estimated'] or row['estimated']
                 inv[gid]-=take;gross=take*good['unitPrice']
                 delivered.append(dict(goodId=gid,quantity=take))
                 business_progression.record_sale(cfg,st,[dict(goodId=gid,quantity=take)],'walkIns')
@@ -487,7 +498,7 @@ def _retail(cfg,st,tick=None,protected=None):
         history.append(slot_income)
         del history[:-max(1,round(60/cfg['global']['tick']))]
     st['report']['retailEarned']+=earned;st['report']['unitsSold']+=sold
-    operating_margins.pay(cfg,st,'walkIns',earned,delivered,tick=tick)
+    operating_margins.pay(cfg,st,'walkIns',earned,delivered,tick=tick,costed=costed)
     business_activity.record(cfg,st,'walkIns',units_by_building,tick=tick)
 
 
@@ -624,9 +635,10 @@ def sell_one(cfg,st,bi,price=1,manual=True):
         if quantity: removed.append((g['id'],quantity));value+=quantity*g['unitPrice'];units+=quantity
     if not units: return dict(ok=False,why='No spare stock')
     gross=value*cfg['production']['clearStockPercent']//100
+    costed=inventory_costs.consume(cfg,st,[dict(goodId=gid,quantity=q) for gid,q in removed])
     for gid,q in removed: st['inventory'][gid]-=q
     business_progression.record_sale(cfg,st,[dict(goodId=gid,quantity=q) for gid,q in removed],'clearance')
-    operating_margins.pay(cfg,st,'clearance',gross,
+    operating_margins.pay(cfg,st,'clearance',gross,costed=costed,requirements=
                           [dict(goodId=gid,quantity=q) for gid,q in removed])
     _sync_pools(cfg,st)
     return dict(ok=True,gross=gross,net=gross,tax=0,quantity=units,discountPercent=100-cfg['production']['clearStockPercent'])
@@ -891,8 +903,9 @@ def _tick_customer_contracts(cfg,st,tick,transit=None,paused_goods=None):
         if any(stock.get(n['goodId'],0)<n['quantity'] for n in contract['requirements']): continue
         _freeze_selling_terms(cfg,st,contract)
         # Debit every item together; shortages never receive partial payments.
+        costed=inventory_costs.consume(cfg,st,contract['requirements'])
         for need in contract['requirements']: st['inventory'][need['goodId']]-=need['quantity']
-        operating_margins.pay(cfg,st,'regularBuyers',contract['reward'],contract['requirements'],
+        operating_margins.pay(cfg,st,'regularBuyers',contract['reward'],contract['requirements'],costed=costed,
                               tick=tick,terms=contract.get('sellingTerms'))
         business_activity.record_regular_shipment(cfg,st,contract['requirements'],tick=tick)
         business_progression.record_sale(cfg,st,contract['requirements'],'regularBuyers')
@@ -1104,8 +1117,9 @@ def _settle_order(cfg,st,order):
         if st['inventory'].get(need['goodId'],0)-held.get(need['goodId'],0)<need['quantity']:
             return dict(ok=False,why='Need unreserved '+goods[need['goodId']]['name'])
     _freeze_selling_terms(cfg,st,order)
+    costed=inventory_costs.consume(cfg,st,order['requirements'])
     for need in order['requirements']: st['inventory'][need['goodId']]-=need['quantity']
-    operating_margins.pay(cfg,st,'orders',order['reward'],order['requirements'],
+    operating_margins.pay(cfg,st,'orders',order['reward'],order['requirements'],costed=costed,
                           terms=order.get('sellingTerms'))
     order['materials']=0  # Ignore rewards embedded in pre-removal saves.
     business_progression.record_sale(cfg,st,order['requirements'],'orders')

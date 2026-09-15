@@ -596,6 +596,8 @@ def _act(cfg, st, body):
             return fail('Unknown equipment')
         if not row['ready']:
             return fail(row['why'])
+        import inventory_costs
+        inventory_costs.consume(cfg, st, row['inputs'])
         for need in row['inputs']:
             st['inventory'][need['goodId']] -= need['quantity']
         p['equipment'][row['id']] = p['equipment'].get(row['id'], 0) + 1

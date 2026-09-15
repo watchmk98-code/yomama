@@ -366,7 +366,7 @@
         ['cash','Cash',s.cash,'Available to spend'],
         ['net-worth','Net worth',s.netWorth,'Cash + recoverable stock value + business value'],
         ['income',actualSales!=null?'Sales · last 60s':'Potential sales/min',actualSales==null?s.incomePerMinute:actualSales,statement?'What walk-ins and regular buyers paid before selling fees in the last 60 game seconds. Order rewards are separate.':'Cash from walk-ins and regular buyers in the last 60 game seconds. Order payouts are separate.'],
-        ['cost','Costs · last 60s',costRate,statement?'Production costs plus supplies and selling fees paid from customer sales in the last 60 game seconds. Upfront purchases are separate.':'Production costs paid in the last 60 game seconds across all businesses. Upfront purchases are separate.']
+        ['cost','Costs · last 60s',costRate,statement?'Recorded production cost of goods sold to shops and regular buyers, plus their selling fees, in the last 60 game seconds. Manual orders, clearance and unsold stock are excluded.':'Production costs paid in the last 60 game seconds across all businesses. Upfront purchases are separate.']
       ];
       var crew=s.workforce && s.workforce.enabled?workerOverview(s):null;
       if(crew)metrics[4]=['workers','Workers',crew.workers,crew.population?units(crew.workers)+' workers in your conglomerate. Population only; no gameplay effects yet.':units(crew.workers)+' trained workers across your owned businesses; '+units(crew.unassigned)+' unassigned.'];
@@ -544,11 +544,11 @@
       ['amortization','Amortization','—','Cost of intangible assets spread over their useful lives. No amortization amount recorded yet.']
     ];
     var note=activity.observedSeconds!=null && activity.observedSeconds<60?units(activity.observedSeconds)+'s recorded':'stock now';
-    return '<div class="game-business-numbers"><div class="game-live-heading">'+(withCosts?'':'<span class="game-live-title">Live rates <small>· '+note+'</small></span>')+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
+    return '<div class="game-business-numbers"><div class="game-live-heading">'+(withCosts?'<span class="game-report-period">Last 60 game seconds</span>':'<span class="game-live-title">Live rates <small>· '+note+'</small></span>')+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
       var capacity=m[0]==='produced'?b.productionCapacityPerMinute:m[0]==='sold'?b.customerCapacityPerMinute:null;
       var value=capacity==null?m[2]:rateUnits(capacity);
       return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+'">'+value+'</dd></div>';
-    }).join('')+'</dl>'+(withCosts && b.savingForOrders?'<p class="game-cashflow-note">Saving goods: production costs continue. Cash arrives after delivery.</p>':'')+'</div>';
+    }).join('')+'</dl>'+(withCosts && b.savingForOrders?'<p class="game-cashflow-note">Manual orders and their goods costs are separate from these shop results.</p>':'')+'</div>';
   }
 
   function financeValues(b) {
@@ -561,16 +561,17 @@
 
   function financeMetrics(b,changes) {
     var values=financeValues(b), statement=values.statement;
-    var marginTip='Operating cash margin over the last 60 game seconds: customer sales minus production and selling costs, divided by sales. Making stock can lower it. Order rewards and upfront purchases are separate.';
+    var marginTip='Shop and regular-buyer profit divided by their revenue over the last 60 game seconds. Manual orders, clearance and unsold stock are excluded. This is not total business EBITDA.';
     if(statement && Number.isFinite(statement.targetMarginPercent))marginTip+=' Base-level target (all output sold): '+rateUnits(statement.targetMarginPercent)+'%. Actual results can be higher, lower or negative.';
-    return '<div class="game-margin-row" aria-label="Actual customer cashflow in the last 60 game seconds">'+[
-      ['income','Sales · last 60s',values.sales,statement?'What walk-ins and regular buyers paid before selling fees. Order rewards are separate.':'Cash actually received from walk-ins and regular buyers. Order payouts are separate.',statement?statement.potentialSales:b.potentialIncomePerMinute],
-      ['cost','Costs · last 60s',values.cost,statement?'Production costs paid, including unsold stock, plus supplies and selling fees taken from customer sales. Hiring and upgrades are separate.':'Production costs actually paid, including goods kept in stock. Hiring and upgrades are paid separately.',statement?statement.potentialCosts:b.potentialOperatingCostPerMinute],
-      ['profit','Profit · last 60s',values.profit,statement?'Customer sales minus production and selling costs paid. Saving stock can make this negative. Order rewards add to Cash separately.':'Customer cash received minus production costs paid. Saving stock can make this negative. Order rewards add to Cash separately.',statement?statement.potentialProfit:b.potentialProfitPerMinute],
+    return '<div class="game-margin-row" aria-label="Shop and regular-buyer results in the last 60 game seconds">'+[
+      ['income','Shop & regular-buyer revenue',values.sales,statement?'What walk-ins and regular buyers paid before selling fees. Order rewards are separate.':'Cash actually received from walk-ins and regular buyers. Order payouts are separate.',statement?statement.potentialSales:b.potentialIncomePerMinute],
+      ['cost','Shop & regular-buyer costs',values.cost,statement?'Recorded production cost of goods sold through shops and regular buyers, plus their selling fees, in the last 60 game seconds. Unsold stock and manual-order costs are excluded.':'Production costs actually paid, including goods kept in stock. Hiring and upgrades are paid separately.',statement?statement.potentialCosts:b.potentialOperatingCostPerMinute],
+      ['profit','Shop & regular-buyer profit',values.profit,statement?'Shop and regular-buyer revenue minus the recorded production cost of those goods and their selling fees. Manual orders and clearance are separate.':'Customer cash received minus production costs paid. Saving stock can make this negative. Order rewards add to Cash separately.',statement?statement.potentialProfit:b.potentialProfitPerMinute],
       ['margin','Profit margin',values.margin,statement?marginTip:'Profit divided by actual customer sales, as a percentage. Order payouts and upfront purchases are separate.',null]
     ].map(function(m){
       var value=m[0]==='margin'?(m[2]==null?'—':Number(m[2].toFixed(1)).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'):(m[0]==='cost'?'−':'')+incomeRate(m[2]);
-      var potential=m[4]==null?'':'<dd class="game-finance-potential" title="Potential with current production and customers; saved goods and shipment timing can reduce actual cash received.">Potential '+rateUnits(m[4])+' / min</dd>';
+      if(m[0]==='cost' && statement && statement.estimatedCostBasis)m[3]+=' Includes estimated production costs for stock from an earlier save.';
+      var potential=m[4]==null?'':'<dd class="game-finance-potential" title="Forecast for shops and regular buyers only, at current production costs and sales capacity. Actual stock costs and shipment timing can differ.">Forecast '+rateUnits(m[4])+' / min</dd>';
       return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+((m[0]==='profit' || m[0]==='margin') && Number(m[2])<0?' is-loss':'')+(m[0]==='margin' && m[2]==null?' is-unavailable':'')+'">'+value+'</dd>'+potential+'</div>';
     }).join('')+'</div>';
   }

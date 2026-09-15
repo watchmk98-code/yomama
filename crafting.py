@@ -515,6 +515,9 @@ def act(cfg, st, body):
         economy._sync_pools(cfg, st)
         before_goods = sum(st['pend'].values())
         transferred = 0
+        import inventory_costs
+        inventory_costs.consume(cfg, st, [dict(goodId=i['id'], quantity=i['quantity'])
+                                         for i in ingredients if i['kind'] != 'supply'])
         for ingredient in ingredients:
             gid, quantity = ingredient['id'], ingredient['quantity']
             if ingredient['kind'] == 'supply':
