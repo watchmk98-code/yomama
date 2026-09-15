@@ -543,7 +543,7 @@
     var withCosts=s.operations && s.operations.enabled;
     if(withCosts)metrics=metrics.filter(function(m){return m[0]==='produced' || m[0]==='sold';});
     var note=activity.observedSeconds!=null && activity.observedSeconds<60?units(activity.observedSeconds)+'s recorded':'stock now';
-    return '<div class="game-business-numbers"><div class="game-live-heading"><span class="game-live-title">'+(withCosts?'AUTO-SALES':'Live rates')+(withCosts?'':' <small>· '+note+'</small>')+'</span><span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
+    return '<div class="game-business-numbers"><div class="game-live-heading">'+(withCosts?'':'<span class="game-live-title">Live rates <small>· '+note+'</small></span>')+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
       var capacity=m[0]==='produced'?b.productionCapacityPerMinute:m[0]==='sold'?b.customerCapacityPerMinute:null;
       var value=capacity==null?m[2]:rateUnits(capacity);
       return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+'">'+value+'</dd></div>';

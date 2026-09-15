@@ -574,8 +574,8 @@
  .game-compact .game-licence-summary {display:none;}
 }
 .game-next-art {display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1/span 8;}
-.econ-kid .game-next-art .k-art {width:132px;height:132px;flex-basis:132px;filter:grayscale(.68) contrast(1.15) brightness(1.12) drop-shadow(0 0 8px rgba(168,155,255,.34));opacity:.82;}
-.game-expansion-body:has(.game-next-art) {grid-template-columns:132px minmax(0,1fr);column-gap:14px;}
+.econ-kid .game-next-art .k-art {width:84px;height:84px;flex-basis:84px;filter:grayscale(1);opacity:.55;}
+.game-expansion-body:has(.game-next-art) {grid-template-columns:84px minmax(0,1fr);column-gap:8px;}
 .game-expansion-body:has(.game-next-art) > :not(.game-next-art) {grid-column:2;}
 .game-build-page .game-inventory-actions {justify-content:flex-end;}
 .game-compact .game-expansion-body:has(.game-next-art) {grid-template-columns:minmax(90px,.8fr) minmax(0,1fr);}
@@ -621,7 +621,7 @@
 }
 .game-next-art {grid-row:1/span 5;min-height:0;}
 @media(max-height:650px){
- .game-compact .game-next-art .k-art {width:104px;height:104px;flex-basis:104px;}
+ .game-compact .game-next-art .k-art {width:80px;height:80px;flex-basis:80px;}
 }
 @media(max-height:650px) and (min-width:600px){
  .game-compact .game-order {display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:4px 12px;padding:8px;}
@@ -1248,6 +1248,7 @@
 .game-workspace .game-expansion-body:has(.game-expansion-requirements) {gap:4px;padding-block:6px;}
 .game-live-title {color:var(--amber);font-size:24px;letter-spacing:.08em;line-height:1;}
 .game-live-title small {color:var(--muted);font-size:15px;letter-spacing:0;}
+.game-live-heading > [data-business-feed]:only-child {margin-left:auto;}
 
 /* Locked stock remains readable, with a direct route to its unlock quest. */
 .game-inventory-row.is-locked {color:var(--muted);}

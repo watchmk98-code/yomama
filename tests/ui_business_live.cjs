@@ -93,7 +93,8 @@ const output=path.resolve('.checks/business-live');
   }
   await page.goto(base+'/buildings.html');await panel.waitFor();await select(0);
   await values(farm,'Initial');
-  assert.equal((await panel.locator('.game-live-title').textContent()).trim(),'AUTO-SALES');
+  assert.equal(await panel.locator('.game-live-title').count(),0,'Cashflow heading is removed');
+  assert.doesNotMatch(await panel.locator('.game-live-heading').textContent(),/Customer cashflow|last 60 game seconds|AUTO-SALES/);
   assert.equal(await panel.locator('.game-building-stock').count(),1,'Stock occupies the desktop space below metrics');
   assert.equal(await page.locator('.game-business-shipment,.game-business-limit').count(),0,'Obsolete shipment and status sections are removed');
   assert.deepEqual(await stock.locator('[data-stock-good]').evaluateAll(rows=>rows.map(row=>row.dataset.stockGood)),farm.goods.map(g=>g.goodId),'Only selected-business goods appear');
@@ -207,6 +208,6 @@ const output=path.resolve('.checks/business-live');
   }
   assert.deepEqual(mutations,[]);assert.deepEqual(errors,[]);
   assert.deepEqual(fitProblems,[],'Metrics, stock rows and controls fit every panel and viewport');
-  console.log(JSON.stringify({result:'passed',metrics:6,pollReads:stateReads,viewports:8,layouts:sizes.length,checks:['AUTO-SALES heading','actual business and town sales','polling','change highlights','selection','missing history','zero receipts','individual stock','class pause','reconnect recovery','visibility recovery','reduced motion']},null,2));
+  console.log(JSON.stringify({result:'passed',metrics:6,pollReads:stateReads,viewports:8,layouts:sizes.length,checks:['cashflow heading removed','actual business and town sales','polling','change highlights','selection','missing history','zero receipts','individual stock','class pause','reconnect recovery','visibility recovery','reduced motion']},null,2));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
