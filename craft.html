@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./styles.css?v=20260912-live2" />
   <link rel="stylesheet" href="./econ-kids.css?v=20260915-business-ui-2" />
   <link rel="stylesheet" href="./idle-ui.css?v=20260913-upgrade-feedback" />
-  <link rel="stylesheet" href="./craft.css?v=8" />
+  <link rel="stylesheet" href="./craft.css?v=9" />
   <link rel="stylesheet" href="./craft-dialog-fit.css?v=1" />
 </head>
 <body class="motion-paused game-page game-craft-page">
@@ -57,7 +57,8 @@
       </nav></div>
       <div id="game-hud" class="econ-kid"></div>
       <div id="econ-craft" class="craft-content" aria-busy="true">
-        <p class="craft-intro"><span>Choose an item to see its ingredients.</span><span id="craft-catalog-count"></span></p>
+        <div class="craft-tabs" role="group" aria-label="Catalog"><button type="button" data-craft-section="items" aria-pressed="true">Craft items</button><button type="button" data-craft-section="businessAssets" aria-pressed="false">Business assets · 45</button></div>
+        <p class="craft-intro"><span id="craft-intro-text">Choose an item to see its ingredients.</span><span id="craft-catalog-count"></span></p>
         <p id="craft-notice" class="craft-notice" role="status">Opening your workshop…</p>
         <div id="craft-grid" class="craft-grid" aria-label="Craftable items"></div>
       </div>
@@ -71,6 +72,7 @@
     </div>
     <div class="craft-dialog-art"><span id="craft-large-icon" class="craft-sprite" aria-hidden="true"></span></div>
     <p id="craft-makes" class="craft-makes">Makes 1</p>
+    <div id="craft-asset-detail" hidden></div>
     <table class="craft-ingredients">
       <thead><tr><th scope="col">Ingredients</th><th scope="col">Need</th><th scope="col">Have</th></tr></thead>
       <tbody id="craft-ingredient-rows"></tbody>
@@ -88,8 +90,8 @@
   <script src="./account.js?v=1"></script>
   <script src="./econ-nav.js?v=4"></script>
   <script src="./game-fit.js?v=20260915-operating-statements"></script>
-  <script src="./craft-art.js?v=3"></script>
-  <script src="./craft.js?v=8"></script>
+  <script src="./craft-art.js?v=4"></script>
+  <script src="./craft.js?v=9"></script>
   <script src="./craft-dialog-fit.js?v=1"></script>
 </body>
 </html>

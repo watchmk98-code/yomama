@@ -429,6 +429,7 @@ def _ingredients(cfg, st, needs, held):
 
 
 def payload(cfg, st):
+    import business_assets
     import production_economy as economy
     saved = st.get('crafting', {})
     held = economy.protected_stock(cfg, st)
@@ -444,7 +445,7 @@ def payload(cfg, st):
                      quantity=saved.get('supplies', {}).get(sid, {}).get('quantity', 0))
                 for sid, row in SUPPLIES.items()]
     return dict(enabled=True, revision=saved.get('revision', 0), items=items,
-                supplies=supplies, totalOwned=sum(row['owned'] for row in items))
+                businessAssets=business_assets.catalog(), supplies=supplies, totalOwned=sum(row['owned'] for row in items))
 
 
 def _add(group, key, quantity, value):

@@ -15,6 +15,7 @@
   var refreshing = null;
   var lastOp = null;
   var gridKey = '';
+  var section = 'items';
   var session = {};
   try { session = JSON.parse(localStorage.getItem('yomama_session_v1') || '{}') || {}; } catch (_) {}
 
@@ -22,11 +23,11 @@
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function amount(value) { return (Number(value) || 0).toLocaleString('en-US', {maximumFractionDigits:1}); }
   function money(value) { return amount(Math.round(Number(value) || 0)) + ' YM'; }
-  function catalog() { return snapshot && snapshot.crafting && snapshot.crafting.items || []; }
+  function catalog() { return snapshot && snapshot.crafting && snapshot.crafting[section] || []; }
   function selected() { return catalog().find(function (item) { return item.id === selectedId; }); }
   function status(message, tone) { el('craft-status').textContent = message || ''; el('craft-status').dataset.tone = tone || 'success'; }
   function sprite(node, index) {
-    node.style.cssText = spriteStyle('items', index);
+    node.style.cssText = spriteStyle(section, index);
   }
   function spriteStyle(kind, index) {
     var sheets = window.YomamaCraftArt[kind];
@@ -78,6 +79,7 @@
       items.forEach(function (item) {
         var button = document.createElement('button'); button.type = 'button'; button.className = 'craft-item';
         button.id = 'craft-item-' + item.id; button.dataset.craftItem = item.id;
+        if (item.assetType) button.dataset.assetType = item.assetType;
         button.title = item.name; button.setAttribute('aria-label', item.name);
         button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-expanded', 'false');
         var icon = document.createElement('span'); icon.className = 'craft-sprite'; icon.setAttribute('aria-hidden', 'true'); sprite(icon, item.iconIndex);
@@ -85,9 +87,11 @@
         button.append(icon, name); grid.appendChild(button);
       });
     }
+    grid.dataset.section = section;
     fit();
   }
   function fit() {
+    if (section === 'businessAssets') return;
     var count = catalog().length;
     if (!count || !grid.clientWidth || !grid.clientHeight) return;
     var width = grid.clientWidth, height = grid.clientHeight;
@@ -123,6 +127,20 @@
     var scroll = dialog.scrollTop;
     el('craft-dialog-title').textContent = item.name;
     sprite(el('craft-large-icon'), item.iconIndex);
+    var asset = !!item.assetType;
+    dialog.dataset.assetType = item.assetType || '';
+    dialog.querySelector('.craft-ingredients').hidden = asset;
+    el('craft-owned').hidden = asset;
+    submit.hidden = asset;
+    el('craft-asset-detail').hidden = !asset;
+    if (asset) {
+      el('craft-makes').textContent = item.businessName;
+      el('craft-asset-detail').innerHTML = '<p class="asset-kind">' + (item.assetType === 'tangible' ? 'Tangible asset · Equipment' : 'Intangible asset · Software or rights') + '</p><p><strong>' + esc(item.accounting) + '</strong> spreads the recorded cost over the asset’s useful life.</p><p class="asset-pending">Asset preview · Recipe, value and useful life are not set yet. No costs or bonuses are applied.</p>';
+      el('craft-reason').textContent = '';
+      submit.disabled = true;
+      if (dialog.open && window.YomamaCraftFitDialog) window.YomamaCraftFitDialog.fit();
+      return;
+    }
     el('craft-makes').textContent = 'Makes 1 ' + item.name;
     el('craft-owned').textContent = 'Owned: ' + amount(item.owned);
     el('craft-ingredient-rows').innerHTML = item.ingredients.map(function (row) {
@@ -187,6 +205,16 @@
       status(error.status ? error.message : 'Could not confirm the request. Try again to check it safely.', 'error');
     }).finally(function () { busy = false; renderDetail(); refresh(); });
   }
+  document.querySelectorAll('[data-craft-section]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      section = button.dataset.craftSection;
+      document.querySelectorAll('[data-craft-section]').forEach(function (tab) { tab.setAttribute('aria-pressed', String(tab === button)); });
+      el('craft-intro-text').textContent = section === 'items' ? 'Choose an item to see its ingredients.' : 'Teal: equipment · Violet: software & rights. Choose an asset to learn more.';
+      grid.setAttribute('aria-label', section === 'items' ? 'Craftable items' : 'Business assets');
+      grid.scrollTop = 0;
+      if (snapshot) { renderHeader(); renderGrid(); }
+    });
+  });
   grid.addEventListener('click', function (event) {
     var card = event.target.closest('[data-craft-item]'); if (card) openItem(card.dataset.craftItem);
   });

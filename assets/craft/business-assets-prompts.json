@@ -1,0 +1,68 @@
+[
+  {
+    "file": "business-assets-01.png",
+    "prompt": "Use case: stylized-concept. Create one production sprite atlas for a pixel-art business game: exactly 3 columns and 5 rows, 15 separate icons, row-major order. Pure black #000 background, no text, no borders, no grid lines. Equal cells, wide black gutters, center each icon with generous inset. Crisp chunky 16-bit pixel art, visible square pixels, dark outlines, limited color ramps, slight three-quarter view, colorful equipment. For intangible rights/licences use a violet document or software disc with a distinctive pictogram of its industry (not a physical machine). Each cell contains exactly the subject listed. Row order:\n1: Irrigation system | Greenhouse equipment | Crop-management software licence\n2: Refrigerated display counter | Ice-making machine | Cold-chain tracking software licence\n3: Coffee roasting machine | Commercial espresso machine | Exclusive coffee-blend licence\n4: Vehicle lift | Diagnostic equipment | Vehicle-diagnostics software licence\n5: Hydraulic metal press | Industrial welding equipment | Metalworking design licence",
+    "ids": [
+      "asset_farm_1",
+      "asset_farm_2",
+      "asset_farm_3",
+      "asset_fish_stall_1",
+      "asset_fish_stall_2",
+      "asset_fish_stall_3",
+      "asset_roastery_1",
+      "asset_roastery_2",
+      "asset_roastery_3",
+      "asset_garage_1",
+      "asset_garage_2",
+      "asset_garage_3",
+      "asset_workshop_1",
+      "asset_workshop_2",
+      "asset_workshop_3"
+    ],
+    "revisionPrompt": "Preserve the 15 objects and replace all background and colored glows with solid black #000000."
+  },
+  {
+    "file": "business-assets-02.png",
+    "prompt": "Use case: stylized-concept. Create one production sprite atlas for a pixel-art business game: exactly 3 columns and 5 rows, 15 separate icons, row-major order. Pure black #000 background, no text, no borders, no grid lines. Equal cells, wide black gutters, center each icon with generous inset. Crisp chunky 16-bit pixel art, visible square pixels, dark outlines, limited color ramps, slight three-quarter view, colorful equipment. For intangible rights/licences use a violet document or software disc with a distinctive pictogram of its industry (not a physical machine). Each cell contains exactly the subject listed. Row order:\n1: Rooftop solar panels | Battery storage bank | Energy-management software licence\n2: Automated canning line | Sterilisation equipment | Food-preservation process licence\n3: CNC milling machine | Precision testing equipment | Precision-tooling patent rights\n4: Wind turbines | Power conversion equipment | Wind-forecasting software licence\n5: Generator unit | Heat-recovery equipment | Fixed-term electricity-generation rights",
+    "ids": [
+      "asset_solar_coop_1",
+      "asset_solar_coop_2",
+      "asset_solar_coop_3",
+      "asset_cannery_1",
+      "asset_cannery_2",
+      "asset_cannery_3",
+      "asset_machine_works_1",
+      "asset_machine_works_2",
+      "asset_machine_works_3",
+      "asset_turbine_field_1",
+      "asset_turbine_field_2",
+      "asset_turbine_field_3",
+      "asset_generator_1",
+      "asset_generator_2",
+      "asset_generator_3"
+    ],
+    "revisionPrompt": "Preserve the 15 objects and replace all background and colored glows with solid black #000000."
+  },
+  {
+    "file": "business-assets-03.png",
+    "prompt": "Use case: stylized-concept. Create one production sprite atlas for a pixel-art business game: exactly 3 columns and 5 rows, 15 separate icons, row-major order. Pure black #000 background, no text, no borders, no grid lines. Equal cells, wide black gutters, center each icon with generous inset. Crisp chunky 16-bit pixel art, visible square pixels, dark outlines, limited color ramps, slight three-quarter view, colorful equipment. For intangible rights/licences use a violet document or software disc with a distinctive pictogram of its industry (not a physical machine). Each cell contains exactly the subject listed. Row order:\n1: Signal repeaters | Transmission antennas | Fixed-term spectrum-use rights\n2: Container crane | Cargo sorting conveyor | Fixed-term terminal operating concession\n3: Server racks | Cooling system | Acquired cloud-platform software\n4: Solar tracking equipment | Utility-scale inverters | Fixed-term grid-connection rights\n5: Satellite dish array | Ground-control equipment | Fixed-term satellite bandwidth rights",
+    "ids": [
+      "asset_relay_station_1",
+      "asset_relay_station_2",
+      "asset_relay_station_3",
+      "asset_freight_terminal_1",
+      "asset_freight_terminal_2",
+      "asset_freight_terminal_3",
+      "asset_data_center_1",
+      "asset_data_center_2",
+      "asset_data_center_3",
+      "asset_solar_array_1",
+      "asset_solar_array_2",
+      "asset_solar_array_3",
+      "asset_uplink_center_1",
+      "asset_uplink_center_2",
+      "asset_uplink_center_3"
+    ],
+    "revisionPrompt": "Preserve the 15 objects and replace all background and colored glows with solid black #000000."
+  }
+]

@@ -80,3 +80,24 @@
   .craft-buy {font-size:17px;}
   .craft-makes {font-size:22px;}
 }
+
+/* Business assets are catalog records, separate from material recipes. */
+.craft-tabs {display:flex;gap:8px;flex:none;}
+.craft-tabs button {background:#000;color:#aaa;border:1px solid #666;padding:6px 12px;font:inherit;font-size:22px;cursor:pointer;}
+.craft-tabs button[aria-pressed="true"] {color:#fff;border-color:#fff;}
+.craft-tabs button[data-craft-section="businessAssets"] {border-color:#47d9ca;color:#8aeade;}
+.craft-tabs button[data-craft-section="businessAssets"][aria-pressed="true"] {background:#12342f;}
+.craft-grid[data-section="businessAssets"] {grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-template-rows:none;grid-auto-rows:220px;overflow:auto;align-content:start;gap:8px;}
+.craft-grid[data-section="businessAssets"] .craft-item {padding:8px;justify-content:space-between;}
+.craft-grid[data-section="businessAssets"] .craft-sprite {width:110px;height:110px;}
+.craft-grid[data-section="businessAssets"] .craft-item-name {display:block;font-size:20px;line-height:1.05;}
+.craft-item[data-asset-type="tangible"] {border-color:#47d9ca;}
+.craft-item[data-asset-type="intangible"] {border-color:#b48aff;}
+.craft-item[data-asset-type]:hover,.craft-item[data-asset-type][aria-expanded="true"] {border-color:#fff;}
+.game-craft-page #craft-dialog[data-asset-type="tangible"] {--amber:#47d9ca;--border:#286b65;}
+.game-craft-page #craft-dialog[data-asset-type="intangible"] {--amber:#b48aff;--border:#694c91;}
+#craft-asset-detail {font-size:24px;line-height:1.25;}
+#craft-asset-detail .asset-kind {color:var(--amber);}
+#craft-asset-detail .asset-pending {color:#aaa;font-size:21px;}
+#craft-dialog [hidden] {display:none!important;}
+@media(max-width:450px) {.craft-tabs button {font-size:20px;padding:5px 8px;}.craft-grid[data-section="businessAssets"] {grid-template-columns:repeat(2,minmax(0,1fr));}}
