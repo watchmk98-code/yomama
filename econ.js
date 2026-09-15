@@ -944,10 +944,9 @@
 
   function ordersMarkup(s) {
     var indexed=orderOffers(s).map(function(o,i){return {order:o,index:i};});
-    if(goal && !indexed.some(function(entry){return entry.order.id===goal.id;}))indexed.push({order:goal,index:goal.offerIndex==null?3:goal.offerIndex});
     var rolls=(s.contracts || {}).rolls;
     var rollTip='Free reroll · '+(Array.isArray(rolls)?rolls.map(function(r){return r.label+' '+r.chance+'%';}).join(', '):'Standard 65%, Large 25%, Rare 8%, Jackpot 2%')+' · Rewards require delivery';
-    indexed.sort(function(a,b){return Number(b.order===goal)*2+Number(!!b.order.project && (!b.order.completed || !!orderReactions[b.index]))-Number(a.order===goal)*2-Number(!!a.order.project && (!a.order.completed || !!orderReactions[a.index]));});
+    indexed.sort(function(a,b){return Number(!!b.order.project && (!b.order.completed || !!orderReactions[b.index]))-Number(!!a.order.project && (!a.order.completed || !!orderReactions[a.index]));});
     return '<div class="game-card-grid game-order-grid" data-keep-scroll="orders">'+indexed.map(function(entry){
       var o=entry.order,i=entry.index;if(o.project)return projectCard(o,i,s);
       var isGoal=false, relationship=o.customer==='breakfast';

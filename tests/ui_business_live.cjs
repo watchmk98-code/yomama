@@ -25,7 +25,14 @@ const output=path.resolve('.checks/business-live');
   b.earnings={...b.earnings,operatingIncome:20+index,bySource:{...b.earnings.bySource,walkIns:15,regularBuyers:5+index}};
   b.stored=35+index;b.capacity=360;b.reserve=false;b.processing=true;b.status='Working';
  });
- const updateTownIncome=()=>{state.incomePerMinute=state.buildings.reduce((total,b)=>total+b.incomePerMinute,0);state.potentialIncomePerMinute=state.incomePerMinute;};
+ const updateTownIncome=()=>{
+  state.incomePerMinute=state.buildings.reduce((total,b)=>total+b.incomePerMinute,0);state.potentialIncomePerMinute=state.incomePerMinute;
+  state.buildings.forEach((b,index)=>{
+   const sales=b.earnings.operatingIncome,costs=3+index,profit=sales-costs;
+   b.operatingStatement={...b.operatingStatement,enabled:true,sales,costs,profit,margin:sales>0?profit/sales*100:null};
+  });
+  state.operatingStatement={...state.operatingStatement,enabled:true,sales:state.buildings.reduce((total,b)=>total+b.operatingStatement.sales,0)};
+ };
  updateTownIncome();
  const farm=state.buildings[0],other=state.buildings[1];
  const browser=await chromium.launch({headless:true});
@@ -71,13 +78,16 @@ const output=path.resolve('.checks/business-live');
    }
   }
   async function values(b,label){
-   assert.equal(await panel.locator('[data-business-metric]').count(),4,label+' displays four metrics');
-   assert.equal((await metric('income').textContent()).trim(),rate(b.incomePerMinute)+' YM',label+' current earning rate');
-   assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),rate(state.incomePerMinute)+'YM',label+' town earning rate');
+   assert.equal(await panel.locator('[data-business-metric]').count(),6,label+' displays four finance metrics and two capacity metrics');
+   assert.equal((await metric('income').textContent()).trim(),rate(b.operatingStatement.sales)+' YM',label+' actual customer sales');
+   assert.equal((await metric('cost').textContent()).trim(),'−'+rate(b.operatingStatement.costs)+' YM',label+' actual costs');
+   assert.equal((await metric('profit').textContent()).trim(),rate(b.operatingStatement.profit)+' YM',label+' actual profit');
+   assert.equal((await page.locator('[data-build-metric="income"] dd').textContent()).replace(/\s+/g,''),rate(state.operatingStatement.sales)+'YM',label+' town customer sales');
    assert.equal((await metric('produced').textContent()).trim(),rate(b.productionCapacityPerMinute),label+' current production capacity');
    assert.equal((await metric('sold').textContent()).trim(),rate(b.customerCapacityPerMinute),label+' current customer demand');
    assert.equal(await panel.locator('.game-live-rate').count(),0,label+' omits recorded-history captions');
-   assert.equal((await metric('stock').textContent()).trim(),number(b.stored)+' / '+number(b.capacity),label+' actual stock');
+   assert.equal(await panel.locator('[data-business-metric="stock"]').count(),0,label+' stock stays in its separate table');
+   assert.deepEqual(await stock.locator('[data-stock-count]').allTextContents(),b.goods.map(g=>number(g.quantity)+' / '+number(g.capacity || 0)),label+' actual stock per product');
    assert.equal(await panel.locator('.game-production-loop,.game-income-detail').count(),0,label+' does not retain tutorial or forecast');
    assert.equal(await panel.locator('.k-art img').count(),1,label+' retains upgraded business sprite');
   }
@@ -109,12 +119,12 @@ const output=path.resolve('.checks/business-live');
    document.dispatchEvent(new Event('visibilitychange'));
   });
   const readsBeforeVisible=stateReads;
-  farm.stored++;
+  farm.earnings.operatingIncome++;updateTownIncome();
   await page.evaluate(()=>{
    Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});
    document.dispatchEvent(new Event('visibilitychange'));
   });
-  await page.waitForFunction(stock=>document.querySelector('[data-business-metric="stock"] .game-live-value')?.textContent.trim()===stock,farm.stored+' / '+farm.capacity);
+  await page.waitForFunction(sales=>document.querySelector('[data-business-metric="income"] .game-live-value')?.textContent.trim()===sales,rate(farm.operatingStatement.sales)+' YM');
   assert(stateReads>readsBeforeVisible,'Returning to the visible page fetches a fresh snapshot');
   await values(farm,'Visibility recovery');
   await page.evaluate(()=>{delete document.visibilityState;});
@@ -122,14 +132,14 @@ const output=path.resolve('.checks/business-live');
   // These changes arrive from the actual poll interval, without an explicit refresh.
   const readsBefore=stateReads;
   Object.assign(farm,{incomePerMinute:120.05,potentialIncomePerMinute:120.05,stored:41,productionCapacityPerMinute:farm.productionCapacityPerMinute+1.25,customerCapacityPerMinute:farm.customerCapacityPerMinute+1.5});
-  updateTownIncome();
   farm.earnings.operatingIncome=37;farm.earnings.bySource.walkIns=32;
+  updateTownIncome();
   Object.assign(farm.activity,{producedUnits:21,soldUnits:13});
-  await page.waitForFunction(()=>document.querySelector('[data-business-metric="income"] .game-live-value')?.textContent.trim()==='120.05 YM',null,{timeout:6500});
+  await page.waitForFunction(()=>document.querySelector('[data-business-metric="income"] .game-live-value')?.textContent.trim()==='37 YM',null,{timeout:6500});
   assert(stateReads>readsBefore,'BUILD polls automatically within a few seconds');
   await values(farm,'Polled changes');
   // Large live values react to capacity changes.
-  assert.equal(await panel.locator('.game-live-value.is-updated').count(),4,'Each changed metric highlights');
+  assert.equal(await panel.locator('.game-live-value.is-updated').count(),5,'Sales, profit, margin and both changed capacities highlight');
   assert.equal(await panel.locator('.game-live-rate.is-updated').count(),0,'Removed history captions do not reappear');
   await refresh();
   assert.equal(await panel.locator('.game-live-value.is-updated').count(),0,'Unchanged poll does not highlight values');
@@ -150,7 +160,7 @@ const output=path.resolve('.checks/business-live');
   farm.earnings.operatingIncome=37;farm.earnings.bySource.walkIns=32;farm.earnings.bySource.regularBuyers=5;
   await page.emulateMedia({reducedMotion:'reduce'});farm.stored++;
   await refresh();
-  assert(await metric('stock').evaluate(el=>getComputedStyle(el).animationName==='none'),'Reduced motion disables value highlight animation');
+  assert(await metric('income').evaluate(el=>getComputedStyle(el).animationName==='none'),'Reduced motion disables value highlight animation');
 
   const fullTown=clone(state);
   async function fit(label){
@@ -197,6 +207,6 @@ const output=path.resolve('.checks/business-live');
   }
   assert.deepEqual(mutations,[]);assert.deepEqual(errors,[]);
   assert.deepEqual(fitProblems,[],'Metrics, stock rows and controls fit every panel and viewport');
-  console.log(JSON.stringify({result:'passed',metrics:4,pollReads:stateReads,viewports:8,layouts:sizes.length,checks:['AUTO-SALES heading','current business and town income rates','polling','change highlights','selection','missing history','income before first receipt','individual stock','class pause','reconnect recovery','visibility recovery','reduced motion']},null,2));
+  console.log(JSON.stringify({result:'passed',metrics:6,pollReads:stateReads,viewports:8,layouts:sizes.length,checks:['AUTO-SALES heading','actual business and town sales','polling','change highlights','selection','missing history','zero receipts','individual stock','class pause','reconnect recovery','visibility recovery','reduced motion']},null,2));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

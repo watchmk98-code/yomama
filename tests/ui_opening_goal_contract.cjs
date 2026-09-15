@@ -10,7 +10,7 @@ const window = {location:{search:'',hash:''},localStorage:{getItem:()=>null},mat
 const document = {readyState:'loading',addEventListener:noOp,getElementById:()=>null,querySelectorAll:()=>[]};
 const source = fs.readFileSync(path.join(root,'econ.js'),'utf8').replace(
   '  // ------------------------------------------------------------------ boot --',
-  '  window.contract={openingGuide};\n  // ------------------------------------------------------------------ boot --'
+  '  window.contract={openingGuide,ordersMarkup};\n  // ------------------------------------------------------------------ boot --'
 );
 vm.runInNewContext(source,{window,document,location:window.location,URLSearchParams,console});
 
@@ -32,6 +32,15 @@ assert.doesNotMatch(idle,/projects/i);
 const complete = window.contract.openingGuide({paused:false,nextStep:null,build:null,buildingsOwned:15});
 assert.match(complete,/Business network complete/,'The protected notice remains present after all businesses open');
 assert.match(complete,/All 15 businesses are open/);
+
+const order = {id:'ordinary',name:'Ordinary delivery',requirements:[],reward:10,canFulfill:true};
+const market = window.contract.ordersMarkup({
+  paused:false,buildings:[],contracts:{offers:[order,{...order,id:'second',name:'Second delivery'}]},
+  goalOrder:{...order,id:'legacy-goal',name:'Removed group goal'}
+});
+assert.match(market,/Ordinary delivery/,'The market still renders ordinary orders after group projects are removed');
+assert.match(market,/Second delivery/,'Multiple offers still sort and render');
+assert.doesNotMatch(market,/Removed group goal|id="goal-order"/,'Legacy goal data does not recreate the removed panel');
 
 const css = fs.readFileSync(path.join(root,'econ-kids.css'),'utf8');
 assert.match(css,/\.game-opening-guide\s*\{[^}]*border:\s*1px solid #927bff[^}]*box-shadow:[^}]*rgba\(119,98,255,/s,

@@ -55,8 +55,9 @@ const path=require('node:path');
     await tick(700000);assert.equal(await label(),'If saved: about 2 min');
 
     await apply({id:'goal-only',committed:true,etaSeconds:60,etaIfSavedSeconds:null,etaLabel:'About 1 min'},false,true);
-    await tick(701000);assert.equal(await label(),'About 59s','dedicated goal orders receive a live clock');
+    assert.equal(await page.locator('[data-order-countdown]').count(),0,'removed goal orders do not retain an active countdown');
+    await tick(701000);assert.equal(await label(),'About 1 min','legacy goal data does not restart the removed goal clock');
     assert.deepEqual(errors,[]);
-    console.log('Passed authoritative ETA changes, early readiness, elapsed estimates, pause/resume, release, goal clocks and persistent explanation text.');
+    console.log('Passed authoritative ETA changes, early readiness, elapsed estimates, pause/resume, release, removed goal clocks and persistent explanation text.');
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
