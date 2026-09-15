@@ -145,6 +145,33 @@ def cached_snapshot(symbols):
         _lock.release()
 
 
+def _daily_change(record, price, quote_time):
+    """Compare the displayed SIP midpoint with the prior trading day's close.
+
+    Before today's first daily bar, dailyBar can still be yesterday's bar.
+    Select by New York date so premarket, weekends and holidays use the right
+    baseline; absent or invalid bars leave the change unavailable.
+    """
+    quote_day = datetime.fromtimestamp(quote_time, _new_york).date()
+    closes = []
+    for name in ('dailyBar', 'prevDailyBar'):
+        bar = record.get(name)
+        if not isinstance(bar, dict):
+            continue
+        try:
+            close = float(bar['c'])
+            day = datetime.fromtimestamp(timestamp(bar['t']), _new_york).date()
+            if math.isfinite(close) and close > 0 and day < quote_day:
+                closes.append((day, close))
+        except (KeyError, TypeError, ValueError, OverflowError, OSError):
+            continue
+    if not closes:
+        return None
+    close = max(closes)[1]
+    change = (price / close - 1) * 100
+    return change if math.isfinite(change) else None
+
+
 def snapshot(symbols, force=False):
     """A shared, short-lived quote snapshot; callers must still check quote age.
 
@@ -183,14 +210,15 @@ def snapshot(symbols, force=False):
             session_open, session_close = _regular_session(base, headers, clock_time)
             if clock['is_open'] and (session_open is None or session_close is None):
                 raise ValueError('market open without a calendar session')
-            raw = _request('https://data.alpaca.markets/v2/stocks/quotes/latest?' +
+            raw = _request('https://data.alpaca.markets/v2/stocks/snapshots?' +
                            urlencode({'symbols': ','.join(symbols), 'feed': 'sip'}), headers)
-            records = raw.get('quotes') if isinstance(raw, dict) else None
+            records = raw if isinstance(raw, dict) else None
             if not isinstance(records, dict):
                 raise ValueError('invalid quotes')
             quotes = {}
             for symbol in symbols:
-                row = records.get(symbol)
+                record = records.get(symbol)
+                row = record.get('latestQuote') if isinstance(record, dict) else None
                 if not isinstance(row, dict):
                     continue
                 try:
@@ -201,7 +229,8 @@ def snapshot(symbols, force=False):
                     if at > time.time() + 1:
                         continue
                     quotes[symbol] = {'bid': bid, 'ask': ask, 'price': (bid + ask) / 2,
-                                      'timestamp': at, 'source': 'alpaca_sip'}
+                                      'timestamp': at, 'source': 'alpaca_sip',
+                                      'change': _daily_change(record, (bid + ask) / 2, at)}
                 except (KeyError, TypeError, ValueError, OverflowError):
                     continue
             status = 'open' if clock['is_open'] else 'closed'

@@ -19,7 +19,8 @@ def feed(monkeypatch):
     M._calendar_cache.clear()
     M._chart_cache.clear()
     calls = []
-    values = {'open': True, 'bid': 100.01, 'ask': 100.03, 'age': 0}
+    values = {'open': True, 'bid': 100.01, 'ask': 100.03, 'age': 0,
+              'previous': {'c': 98, 't': '2026-09-14T04:00:00Z'}, 'daily': None}
 
     def request(url, headers):
         calls.append(url)
@@ -30,7 +31,8 @@ def feed(monkeypatch):
             day = datetime.fromtimestamp(now[0], M._new_york).date().isoformat()
             return [{'date': day, 'open': '09:30', 'close': '16:00'}]
         at = datetime.fromtimestamp(now[0] - values['age'], timezone.utc).isoformat()
-        return {'quotes': {'AAPL': {'bp': values['bid'], 'ap': values['ask'], 't': at}}}
+        return {'AAPL': {'latestQuote': {'bp': values['bid'], 'ap': values['ask'], 't': at},
+                         'prevDailyBar': values['previous'], 'dailyBar': values['daily']}}
     monkeypatch.setattr(M, '_request', request)
     return now, calls, values
 
@@ -42,6 +44,7 @@ def test_sip_only_batched_and_cached_with_immutable_response(feed):
     assert first['quotes']['AAPL']['price'] == pytest.approx(100.02)
     assert calls[0] == 'https://paper-api.alpaca.markets/v2/clock'
     assert '/calendar?' in calls[1]
+    assert '/stocks/snapshots?' in calls[2]
     assert 'feed=sip' in calls[2] and 'symbols=AAPL%2CMSFT' in calls[2]
     first['quotes']['AAPL']['ask'] = 1
     assert M.snapshot(['AAPL', 'MSFT'])['quotes']['AAPL']['ask'] == 100.03
@@ -443,7 +446,7 @@ def test_malformed_or_missing_calendar_fails_closed(feed, monkeypatch, rows):
     result = M.snapshot(['AAPL'])
     assert result['market']['status'] == 'unavailable'
     assert result['quotes'] == {}
-    assert not any('/quotes/' in url for url in calls), 'An invalid calendar stops before requesting execution quotes'
+    assert not any('/stocks/snapshots?' in url for url in calls), 'An invalid calendar stops before requesting execution quotes'
 
 
 def test_calendar_accepts_seconds_without_changing_session_bounds(feed, monkeypatch):
@@ -508,7 +511,7 @@ def test_slow_provider_cycle_discards_a_clock_that_aged_during_fetch(feed, monke
 
     def request(url, headers):
         result = original(url, headers)
-        if '/quotes/' in url:
+        if '/stocks/snapshots?' in url:
             now[0] += 31
         return result
 
@@ -529,3 +532,41 @@ def test_regular_close_rechecked_in_both_cached_snapshot_paths(feed):
     assert M.cached_snapshot(['AAPL'])['market']['status'] == 'closed'
     assert M.snapshot(['AAPL'])['market']['status'] == 'closed'
     assert len(calls) == 3
+
+
+@pytest.mark.parametrize('close, expected', [(98, (100.02 / 98 - 1) * 100),
+                                            (102, (100.02 / 102 - 1) * 100),
+                                            (100.02, 0)])
+def test_snapshot_daily_percentage_from_previous_close(feed, close, expected):
+    _, _, values = feed
+    values['previous']['c'] = close
+    quote = M.snapshot(['AAPL'])['quotes']['AAPL']
+    assert quote['change'] == pytest.approx(expected)
+    assert quote['bid'] == 100.01 and quote['ask'] == 100.03
+
+
+@pytest.mark.parametrize('bar', [None, {}, {'c': 0}, {'c': float('nan')},
+    {'c': 100, 't': 'bad'}, {'c': -1, 't': '2026-09-14T04:00:00Z'},
+    {'c': 100, 't': '2026-09-15T04:00:00Z'}])
+def test_missing_or_invalid_previous_close_keeps_quote_without_inventing_change(feed, bar):
+    _, _, values = feed
+    values['previous'] = bar
+    quote = M.snapshot(['AAPL'])['quotes']['AAPL']
+    assert quote['price'] == pytest.approx(100.02)
+    assert quote['change'] is None
+
+
+@pytest.mark.parametrize('quote_at, daily_at, previous_at', [
+    ('2026-09-15T12:00:00Z', '2026-09-14T04:00:00Z', '2026-09-11T04:00:00Z'),
+    ('2026-09-14T12:00:00Z', '2026-09-11T04:00:00Z', '2026-09-10T04:00:00Z'),
+])
+def test_premarket_uses_latest_completed_daily_bar(quote_at, daily_at, previous_at):
+    record = {'dailyBar': {'c': 100, 't': daily_at}, 'prevDailyBar': {'c': 90, 't': previous_at}}
+    assert M._daily_change(record, 105, M.timestamp(quote_at)) == pytest.approx(5)
+
+
+def test_after_hours_and_weekend_quote_compare_with_preceding_trading_day():
+    record = {'dailyBar': {'c': 105, 't': '2026-09-11T04:00:00Z'},
+              'prevDailyBar': {'c': 100, 't': '2026-09-10T04:00:00Z'}}
+    # Friday's final extended-hours quote remains Friday in New York.
+    assert M._daily_change(record, 106, M.timestamp('2026-09-12T00:00:00Z')) == pytest.approx(6)
