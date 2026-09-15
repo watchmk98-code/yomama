@@ -1,3 +1,10 @@
+// PORT belongs to the GAME business menu, including pages with older headers.
+(function () {
+  document.querySelectorAll('.hero .tabs a[href*="port_trading.html"]').forEach(function (link) {
+    link.remove();
+  });
+})();
+
 // Shared soundtrack controls for every game page with the standard header.
 (function () {
   if (!document.querySelector('.hero .right-meta') || document.getElementById('game-music-script')) return;

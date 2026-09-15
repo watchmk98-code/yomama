@@ -10,14 +10,16 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse, urlsplit
 from urllib.request import Request, urlopen
 
 import game_api
 import access
+from port_worker import PortExecutionWorker
 
 
 ROOT = Path(__file__).resolve().parent
@@ -224,6 +226,18 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
+    def log_request(self, code="-", size="-") -> None:
+        """Keep access-log diagnostics without copying private query values."""
+        try:
+            path = urlsplit(getattr(self, "path", "")).path or "-"
+        except ValueError:
+            path = "[invalid path]"
+        if isinstance(code, HTTPStatus):
+            code = code.value
+        self.log_message('"%s %s %s" %s %s',
+                         getattr(self, "command", "-") or "-", path,
+                         getattr(self, "request_version", "-"), str(code), str(size))
+
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         self.private_page = False
@@ -304,6 +318,8 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     GAME_GET_ROUTES = {
+        "/api/game/port": game_api.port_state,
+        "/api/game/port/chart": game_api.port_chart,
         "/api/game/state": game_api.get_state,
         "/api/game/buildings": game_api.load_buildings,
         "/api/game/econ/state": game_api.econ_state,
@@ -314,6 +330,8 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
     }
     # No route opens a class: admin.py does that, off the web.
     GAME_POST_ROUTES = {
+        "/api/game/port/order": game_api.port_order,
+        "/api/game/port/cancel": game_api.port_cancel,
         "/api/game/join": game_api.join,
         "/api/game/equity": game_api.trade_equity,
         "/api/game/buildings": game_api.save_buildings,
@@ -497,6 +515,8 @@ def main() -> None:
     SERVER_PORT = port
 
     server = ThreadingHTTPServer(("0.0.0.0", port), NewsProxyHandler)
+    port_worker = PortExecutionWorker(game_api.process_pending_portfolios)
+    port_worker.start()
     lan_ip = detect_lan_ip()
     print(f"Serving {ROOT}")
     print(f"  this machine : http://127.0.0.1:{port}/index.html")
@@ -507,6 +527,7 @@ def main() -> None:
     except KeyboardInterrupt:
         pass
     finally:
+        port_worker.stop()
         server.server_close()
 
 

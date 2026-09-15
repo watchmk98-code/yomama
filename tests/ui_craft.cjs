@@ -179,7 +179,7 @@ assert(['127.0.0.1','localhost','[::1]'].includes(target.hostname) && target.por
     await buildPage.evaluate(()=>document.fonts.ready);
     if(await buildPage.locator('#econ-overnight[open]').count()) await buildPage.locator('[data-overnight-close]').click();
     const links = await page.locator('.game-nav a').evaluateAll(nodes => nodes.map(n=>new URL(n.href).pathname));
-    assert.deepEqual(links, ['/buildings.html','/marketplace.html','/craft.html','/advanced-hq.html','/license.html']);
+    assert.deepEqual(links, ['/buildings.html','/marketplace.html','/craft.html','/port_trading.html','/advanced-hq.html','/license.html']);
     const samples=await page.evaluate(()=>{
       const items=window.YomamaCraft.state().crafting.items;
       const lastId=document.querySelector('#craft-grid > :last-child').dataset.craftItem;

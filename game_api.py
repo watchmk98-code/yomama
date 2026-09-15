@@ -30,6 +30,8 @@ import production_economy as economy
 import breakfast_event
 import access
 import autopilot
+import alpaca_market
+import port_portfolio
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "game.db"
@@ -123,6 +125,7 @@ CREATE TABLE IF NOT EXISTS standings (
 # Columns added after the first release. SQLite cannot express them in
 # CREATE TABLE IF NOT EXISTS, so they are applied to existing databases here.
 MIGRATIONS = (
+    ("players", "port_state", "TEXT NOT NULL DEFAULT ''"),
     ("players", "econ_meta", "TEXT NOT NULL DEFAULT '{}'"),
     ("sessions", "pressure", "TEXT NOT NULL DEFAULT '[]'"),
     ("sessions", "income_per_hour", "INTEGER NOT NULL DEFAULT 1"),
@@ -1050,6 +1053,192 @@ def econ_keep(body) -> dict:
 
 # ----------------------------------------------------------------- Part 2 ---
 
+def _port_payload(p, s, state, feed, permitted, reason):
+    return {'portfolio': port_portfolio.public_state(state),
+            'serverTime': time.time(), 'executionRules': port_portfolio.execution_rules(),
+            'quotes': feed['quotes'], 'market': feed['market'],
+            'canTrade': permitted and feed['market']['status'] == 'open',
+            'blockedReason': reason or (feed['market']['message']
+                                        if feed['market']['status'] != 'open' else ''),
+            'player': {'name': p['name']},
+            'session': {'code': p['code'], 'paused': bool(s['paused'])}}
+
+
+def _port_request(data, action=None):
+    # The outer wrapper supplies trusted quotes before taking the class lock.
+    # Recheck the seat, class and licence in the transaction saving the account.
+    with _db_lock, connect() as conn:
+        p, s = _auth(conn, data)
+        if action == 'settle':
+            # A background stock order is not student activity. Reading the
+            # saved licence must not renew the town's offline production budget.
+            cfg = econ_config(s)
+            town, behind = _load_state(p, cfg, s), False
+        else:
+            cfg, book, town, behind = _player_econ(conn, p, s, fast=True)
+        reason = ('The class is paused.' if s['paused'] else
+                  'The licence is not open yet.' if behind or not economy.gate_open(cfg, town) else '')
+        permitted = not reason
+        now = time.time()
+        feed = alpaca_market.execution_feed(data['_server_port_feed'], now)
+        status = feed['market']['status']
+        market_open = True if status == 'open' else False if status == 'closed' else None
+        bounds = dict(session_open=feed['market'].get('sessionOpen'),
+                      session_close=feed['market'].get('sessionClose'),
+                      resume_at=float(s['clock_base']))
+        try:
+            if action == 'settle' and not p['port_state']:
+                return None  # A reset or deleted save wins over an earlier scan.
+            state = port_portfolio.load_state(p['port_state'], now=now)
+            if action == 'settle' and state['accountId'] != data['_server_port_account_id']:
+                return None
+            if action == 'order':
+                if not permitted:
+                    raise ApiError(reason, 409 if s['paused'] else 403)
+                state = port_portfolio.submit_order(state, data, feed['quotes'], now,
+                                                    market_open=market_open, **bounds,
+                                                    received_at=data['_server_received_at'], defer_execution=True)
+            elif action == 'cancel':
+                if not permitted:
+                    raise ApiError(reason, 409 if s['paused'] else 403)
+                # Record cancellation before remote I/O. The worker orders this
+                # intent against its next observed event; no request can fill it.
+                state = port_portfolio.cancel_order(state, data, {}, now,
+                                                    market_open=None, **bounds,
+                                                    received_at=data['_server_received_at'])
+            elif action == 'settle' and permitted:
+                state = port_portfolio.match_orders(state, feed['quotes'], now,
+                                                    market_open=market_open, **bounds)
+        except port_portfolio.PortError as error:
+            raise ApiError(error.message, error.status, {'code': error.code}) from None
+        encoded = json.dumps(state, separators=(',', ':'), allow_nan=False)
+        if encoded != p['port_state']:
+            conn.execute('UPDATE players SET port_state=? WHERE id=?', (encoded, p['id']))
+        return _port_payload(p, s, state, feed, permitted, reason)
+
+
+def port_state(query) -> dict:
+    """The signed-in seat's portfolio. Browser demo saves never enter this API."""
+    return _port_request(query)
+
+
+def port_order(body) -> dict:
+    """Create a virtual order using server prices and an idempotent request ID."""
+    return _port_request(body, 'order')
+
+
+def port_cancel(body) -> dict:
+    """Cancel only an order in this seat's current account generation."""
+    return _port_request(body, 'cancel')
+
+
+def _port_settle(data):
+    """Internal worker transition; never registered as an HTTP endpoint."""
+    return _port_request(data, 'settle')
+
+
+def process_pending_portfolios():
+    """Settle every eligible saved portfolio on one shared server quote cycle.
+
+    Scanning and provider calls hold no class lock. Each mutation rechecks the
+    seat, class, licence and account generation under its usual class lock.
+    GET/POST requests cannot accelerate this execution timeline.
+    """
+    with _db_lock, connect() as conn:
+        rows = conn.execute('SELECT p.token,p.port_state FROM players p JOIN sessions s '
+                            'ON s.code=p.code WHERE s.active=1 AND s.paused=0 '
+                            "AND p.port_state<>''").fetchall()
+    work = []
+    for row in rows:
+        try:
+            saved = port_portfolio.load_state(row['port_state'])
+            if saved['positions'] or any(order['status'] == 'pending' for order in saved['ledger']['orders']):
+                work.append((row['token'], saved['accountId']))
+        except port_portfolio.PortError:
+            continue  # Invalid saves remain intact for diagnosis through the API.
+    if not work:
+        return 0
+    # Browser refreshes may populate the display cache; execution samples its
+    # own fresh batch so students cannot steer fills by refreshing that cache.
+    feed = alpaca_market.snapshot(port_portfolio.ALLOWED_SYMBOLS, force=True)
+    settled = 0
+    for token, account_id in work:
+        try:
+            _port_settle({'token': token, '_server_port_feed': feed,
+                          '_server_port_account_id': account_id})
+            settled += 1
+        except ApiError:
+            continue  # Revocation/kick/licence changes during provider I/O win.
+    return settled
+
+
+def _port_chart_access(data):
+    with _db_lock, connect() as conn:
+        p, s = _auth(conn, data)
+        cfg, book, town, behind = _player_econ(conn, p, s, fast=True)
+        if behind or not economy.gate_open(cfg, town):
+            raise ApiError('The licence is not open yet.', 403)
+
+
+def port_chart(query) -> dict:
+    """Historical stock prices, reauthorized after provider I/O completes."""
+    _port_chart_access(query)
+    return query['_server_port_chart']
+
+
+def _port_with_chart(fn):
+    @functools.wraps(fn)
+    def wrapped(data):
+        _port_chart_access(data)
+        values = {}
+        for key, default in (('symbol', 'AAPL'), ('range', '1W')):
+            value = data.get(key, default)
+            if isinstance(value, list):
+                value = value[0] if len(value) == 1 else None
+            if not isinstance(value, str):
+                raise ApiError('Choose a valid stock and chart range.', 400)
+            values[key] = value.strip().upper()
+        if values['symbol'] not in port_portfolio.ALLOWED_SYMBOLS or values['range'] not in alpaca_market.CHART_RANGES:
+            raise ApiError('Choose a valid stock and chart range.', 400)
+        chart = alpaca_market.historical_chart(values['symbol'], values['range'])
+        # Overwrite any similarly named browser field with the trusted response.
+        return fn(dict(data, _server_port_chart=chart))
+    return wrapped
+
+
+_port_execution_lock = threading.RLock()
+
+
+def _port_execution_locked(fn):
+    """Serialize cancellation admission with settlement before class locking.
+
+    The cancellation wrapper captures its trusted receipt only after acquiring
+    this lock, then commits the intent before any later execution cycle can
+    inspect that account. Provider network calls remain outside this section;
+    cancellation uses only the non-blocking display-cache lookup.
+    """
+    @functools.wraps(fn)
+    def wrapped(data):
+        with _port_execution_lock:
+            return fn(data)
+    return wrapped
+
+
+def _port_with_quotes(fn):
+    """Provider I/O must not block classroom actions under the class lock."""
+    @functools.wraps(fn)
+    def wrapped(data):
+        received_at = time.time()
+        with _db_lock, connect() as conn:
+            _auth(conn, data)
+        # Cancellation must reach the ledger without waiting on the provider or
+        # on its quote-cache lock; otherwise the worker could fill a later quote.
+        feed = (alpaca_market.cached_snapshot(port_portfolio.ALLOWED_SYMBOLS)
+                if fn.__name__ == 'port_cancel' else alpaca_market.snapshot(port_portfolio.ALLOWED_SYMBOLS))
+        # Always overwrite this private field; a browser cannot supply quotes.
+        return fn(dict(data, _server_port_feed=feed, _server_received_at=received_at))
+    return wrapped
+
 def trade_equity(body) -> dict:
     """Put cash to work in the market, or take it back out."""
     token = str(body.get("token", ""))
@@ -1185,7 +1374,7 @@ def reset_class(code: str) -> dict:
         players = conn.execute("SELECT id FROM players WHERE code=?", (code,)).fetchall()
         for p in players:
             st = economy.new_state(cfg, 0, seed=cfg["global"]["seed"] * 48611 + p["id"] * 7 + 5)
-            conn.execute("UPDATE players SET cash=?, buildings='{}' WHERE id=?", (STARTING_CASH, p["id"]))
+            conn.execute("UPDATE players SET cash=?, buildings='{}', port_state='' WHERE id=?", (STARTING_CASH, p["id"]))
             conn.execute("DELETE FROM standings WHERE player_id=?", (p["id"],))   # gains start over too
             _save_state(conn, p["id"], cfg, st)
             conn.execute("DELETE FROM positions WHERE player_id=?", (p["id"],))
@@ -1370,7 +1559,7 @@ def teacher(body) -> dict:
                 raise ApiError("no such student", 404)
             cfg = econ_config(s)
             st = economy.new_state(cfg, econ_tick_now(cfg, s))
-            conn.execute("UPDATE players SET cash=?, buildings='{}' WHERE id=?", (STARTING_CASH, row['id']))
+            conn.execute("UPDATE players SET cash=?, buildings='{}', port_state='' WHERE id=?", (STARTING_CASH, row['id']))
             conn.execute("DELETE FROM standings WHERE player_id=?", (row['id'],))
             _save_state(conn,row['id'],cfg,st)
             conn.execute("DELETE FROM positions WHERE player_id=?", (row["id"],))
@@ -1508,8 +1697,18 @@ def _class_locked(fn):
     return wrapped
 
 
-for _name in ('get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
+for _name in ('port_state','port_order','port_cancel','port_chart','_port_chart_access','_port_settle','get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
               'econ_upgrade','econ_reserve','econ_processing','econ_fulfill_order','econ_replace_order','econ_commit_order','econ_focus','econ_breakfast',
               'econ_business','econ_progression','econ_workforce','econ_craft',
               'econ_contracts','econ_accept_contract','econ_customers','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
     globals()[_name]=_class_locked(globals()[_name])
+
+for _name in ('port_state', 'port_order', 'port_cancel'):
+    globals()[_name] = _port_with_quotes(globals()[_name])
+
+# Outermost wrappers enforce PORT admission -> class -> database lock order.
+# In particular, cancellation's receipt is recorded inside this admission lock.
+port_cancel = _port_execution_locked(port_cancel)
+_port_settle = _port_execution_locked(_port_settle)
+
+port_chart = _port_with_chart(port_chart)

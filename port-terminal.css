@@ -1,0 +1,324 @@
+/* PORT keeps its approved container arrangement. Visual tokens and shared
+   header/panel components come from YOMAMA's building-page styles. */
+body.port-page { min-width:320px; }
+body.port-page [hidden] { display:none !important; }
+body.port-page .port-workspace { font-variant-numeric:tabular-nums; }
+body.port-page .port-workspace button { cursor:pointer; }
+body.port-page .port-workspace button:disabled { cursor:not-allowed; opacity:.45; }
+body.port-page .port-workspace :focus-visible { outline:2px solid var(--text); outline-offset:3px; }
+body.port-page .port-account-label { color:var(--muted); font-size:15px; }
+body.port-page .port-heading { display:flex; align-items:baseline; gap:var(--s3); }
+body.port-page .port-workspace > .game-page-head { margin-bottom:0; }
+body.port-page .port-workspace {
+  width: 100%;
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+body.port-page .port-summary-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  align-items: center;
+  min-height: 64px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+body.port-page .port-summary-cell { min-width: 0; padding: 0 24px; border-right: 1px solid var(--line); }
+body.port-page .port-summary-cell:first-child { padding-left: 6px; }
+body.port-page .port-summary-cell:nth-child(3) { border-right: 0; }
+body.port-page .port-summary-label { display: block; margin-bottom: 1px; color:var(--muted); font-size: 15px; letter-spacing: .3px; }
+body.port-page .port-summary-value { display: block; font-family: var(--font-terminal); font-size: 29px; font-weight: 400; line-height: 1.05; white-space: nowrap; }
+body.port-page .port-data-status { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 7px; padding-left: 20px; color: var(--amber); font-size: 15px; }
+body.port-page .port-data-status small { grid-column: 1 / -1; color: var(--muted); font-size: 14px; text-align: right; }
+body.port-page .port-status-dot { display: block; width: 7px; height: 7px; background: var(--amber); }
+body.port-page .port-main-grid { display: grid; grid-template-columns: minmax(0, 22fr) minmax(0, 50fr) minmax(0, 28fr); gap: 10px; align-items: stretch; }
+body.port-page .port-panel { min-width: 0; border: 1px solid var(--border); background: var(--bg); }
+body.port-page .port-panel-head { padding: 7px 12px; }
+body.port-page .port-panel-head h1,
+body.port-page .port-panel-head h2 { margin: 0; color: var(--amber); font-family: var(--font-terminal); font-size: 20px; font-weight: 400; line-height: 1; letter-spacing: .5px; }
+body.port-page .port-muted { color: var(--muted); }
+body.port-page .is-up { color: var(--green); }
+body.port-page .is-down { color: var(--red); }
+
+/* A common grid keeps watchlist prices aligned as the selected row changes. */
+body.port-page .port-watchlist { display: flex; flex-direction: column; }
+body.port-page .port-watchlist-columns,
+body.port-page .port-stock-row { display: grid; grid-template-columns: minmax(0, 1fr) 66px 63px; gap: 6px; align-items: center; }
+body.port-page .port-watchlist-columns { padding: 9px 17px 10px; color: var(--muted); font-size: 14px; }
+body.port-page .port-watchlist-columns span:nth-child(n+2) { text-align: right; }
+body.port-page .port-stocks-list { flex: 1 1 auto; }
+body.port-page .port-stock-row {
+  position: relative;
+  width: 100%;
+  min-height: 58px;
+  margin: 0;
+  padding: 10px 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+body.port-page .port-stock-row:hover { background: var(--bg); }
+body.port-page .port-stock-row.is-selected { background: var(--bg); box-shadow: inset 3px 0 0 var(--amber); }
+body.port-page .port-stock-row.is-selected strong { color:var(--amber); }
+body.port-page .port-stock-identity { display: block; min-width: 0; }
+body.port-page .port-stock-identity strong { display: block; font-family: var(--font-terminal); font-size: 24px; font-weight: 400; line-height: 1; }
+body.port-page .port-stock-identity small { display: block; margin-top: 3px; overflow: hidden; color: var(--muted); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+body.port-page .port-stock-price,
+body.port-page .port-stock-change { text-align: right; font-size: 15px; white-space: nowrap; }
+body.port-page .port-symbol-picker { display: grid; gap: 6px; margin-top: auto; padding: 13px 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+body.port-page .port-symbol-picker select { width: 100%; min-height: 32px; min-width: 0; padding: 5px 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px; }
+
+/* Selected company and the chart share one research surface. */
+body.port-page .port-research { display: flex; flex-direction: column; }
+body.port-page .port-stock-header { padding: 8px 12px; border-bottom:1px solid var(--line); }
+body.port-page .port-company-heading { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+body.port-page .port-company-heading h2 { flex: 0 0 auto; margin: 0; color: var(--amber); font-family: var(--font-terminal); font-size: 24px; font-weight: 400; line-height: 1; }
+body.port-page .port-company-heading > span { font-size: 16px; }
+body.port-page #port-company-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.port-page .port-quote-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px 20px; margin-top: 5px; }
+body.port-page #port-selected-price { font-family: var(--font-terminal); font-size: 40px; font-weight: 400; line-height: 1; }
+body.port-page #port-selected-change { font-family: var(--font-terminal); font-size: 28px; line-height: 1; }
+body.port-page .port-quote-meta { margin-top: 4px; color: var(--muted); font-size: 14px; }
+body.port-page .port-section-tabs { display: flex; gap: 4px; margin: 0 12px; border-bottom: 1px solid var(--border); }
+body.port-page .port-section-tabs > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 86px;
+  min-height: 34px;
+  margin-bottom: -1px;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-bottom-color: var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  letter-spacing: .4px;
+}
+body.port-page .port-section-tabs > button:hover { color: var(--amber); background: var(--bg); }
+body.port-page .port-section-tabs > button[aria-selected="true"] { border-color: var(--amber); background: var(--bg); color: var(--amber); box-shadow: inset 0 -2px var(--amber); }
+body.port-page .port-research-panel { flex: 1 1 auto; min-height: 0; }
+body.port-page .port-chart-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 12px 5px; color: var(--muted); font-size: 14px; }
+body.port-page .port-timeframes { display: flex; align-items: center; gap: 4px; }
+body.port-page .port-timeframes button { min-width: 32px; min-height: 26px; padding: 3px 5px; border: 1px solid transparent; background: transparent; color: var(--text); font-size: 15px; }
+body.port-page .port-timeframes button:hover { border-color: var(--border); }
+body.port-page .port-timeframes button[aria-pressed="true"] { background: var(--bg); color: var(--amber); box-shadow: inset 0 -2px var(--amber); }
+body.port-page .port-chart-types { display: flex; align-items: center; gap: 4px; padding-left: 8px; border-left: 1px solid var(--line); }
+body.port-page .port-chart-types > button, body.port-page .port-chart-menu summary { display: grid; place-items: center; width: 32px; height: 30px; padding: 3px; border: 1px solid transparent; color: var(--text); background: transparent; cursor: pointer; }
+body.port-page .port-chart-types svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+body.port-page .port-chart-types button:hover, body.port-page .port-chart-menu summary:hover { color: var(--amber); }
+body.port-page .port-chart-types button[aria-pressed="true"] { color: var(--amber); box-shadow: inset 0 -2px var(--amber); }
+body.port-page .port-chart-menu { position: relative; }
+body.port-page .port-chart-menu summary { list-style: none; width: 24px; }
+body.port-page .port-chart-menu summary::-webkit-details-marker { display: none; }
+body.port-page .port-chart-menu > div { position: absolute; right: 0; top: 34px; z-index: 3; min-width: 130px; padding: 4px; border: 1px solid var(--border); background: var(--bg); }
+body.port-page .port-chart-menu > div button { display: block; width: 100%; border: 0; padding: 8px; text-align: left; background: transparent; color: var(--text); white-space: nowrap; }
+body.port-page .port-chart-types .port-chart-fit { margin-left: 4px; border-left: 1px solid var(--line); }
+body.port-page .port-price-chart { position: relative; height: 310px; min-width: 0; margin: 2px 15px 0; }
+body.port-page #port-chart-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+body.port-page #port-market-chart-host { position: absolute; inset: 0; background: #000; color: var(--muted); }
+body.port-page .port-chart-canvas { width: 100%; height: 100%; }
+body.port-page .port-chart-message { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; padding: 12px; margin: 0; text-align: center; pointer-events: none; background: rgba(0,0,0,.65); }
+body.port-page .port-market-tooltip { white-space: normal !important; }
+body.port-page .port-chart-gridline { fill: none; stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+body.port-page .port-chart-axis { fill: var(--muted); font-family: var(--font-terminal); font-size: 14px; font-weight: 400; }
+body.port-page .port-chart-line { fill: none; stroke: var(--amber); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+body.port-page .port-chart-end { fill: var(--amber); stroke: var(--bg); stroke-width: 1; }
+body.port-page #port-chart-fill stop { stop-color:var(--amber); }
+body.port-page .port-chart-guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; pointer-events: none; }
+body.port-page .port-chart-tooltip { position: absolute; z-index: 1; max-width: calc(100% - 12px); padding: 7px 9px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; pointer-events: none; white-space: nowrap; box-shadow: none; }
+body.port-page .port-chart-footer { display: flex; justify-content: space-between; gap: 10px; padding: 4px 12px 8px; color: var(--muted); font-size: 13px; }
+body.port-page .port-chart-footer a { color: var(--muted); text-decoration: none; }
+body.port-page .port-chart-footer a:hover { color: var(--amber); text-decoration: underline; }
+body.port-page .port-chart-footer a { max-width: 48%; text-align: right; font-size: 10px; }
+/* The ticket acknowledges the action directly beside the selected stock. */
+body.port-page .port-order-ticket {
+  --ticket-accent: var(--green);
+  --amber: var(--ticket-accent);
+  --text: var(--ticket-accent);
+  --muted: var(--ticket-accent);
+  --border: var(--ticket-accent);
+  --line: var(--ticket-accent);
+  display: flex; flex-direction: column;
+  color: var(--ticket-accent); border-color: var(--ticket-accent);
+}
+body.port-page .port-order-ticket[data-ticket-side="sell"] { --ticket-accent: var(--red); }
+body.port-page .port-ticket-form { display: flex; flex: 1; flex-direction: column; gap: 13px; padding: 5px 18px 12px; }
+body.port-page .port-ticket-stock strong { display: block; font-family: var(--font-terminal); font-size: 35px; font-weight: 400; line-height: 1; }
+body.port-page .port-ticket-stock > span { display: block; margin-top: 1px; color: var(--muted); font-size: 14px; text-transform: uppercase; }
+body.port-page .port-side-switch { display: grid; grid-template-columns: 1fr 1fr; }
+body.port-page .port-side-switch button { min-height: 41px; padding: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 17px; }
+body.port-page .port-side-switch button + button { border-left: 0; }
+body.port-page .port-side-switch button[aria-pressed="true"] { background: var(--bg); color: var(--amber); box-shadow: inset 0 -2px var(--amber); }
+body.port-page .port-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 15px; }
+body.port-page .port-field input,
+body.port-page .port-field select { width: 100%; height: 40px; min-width: 0; padding: 8px 11px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 17px; box-shadow: none; }
+body.port-page .port-field input:focus,
+body.port-page .port-field select:focus { border-color: var(--amber); }
+body.port-page .port-ticket-totals { display: flex; flex-direction: column; gap: 9px; margin: 5px 0 0; }
+body.port-page .port-ticket-totals > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+body.port-page .port-ticket-totals dt { font-size: 15px; }
+body.port-page .port-ticket-totals dd { margin: 0; font-family: var(--font-terminal); font-size: 25px; line-height: 1; text-align: right; white-space: nowrap; }
+body.port-page .port-ticket-note { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+body.port-page .port-submit { width: 100%; min-height: 43px; margin-top: auto; padding: 9px 8px; border: 1px solid var(--amber); background: var(--bg); color: var(--amber); box-shadow: inset 0 -2px var(--amber); font-family: var(--font-terminal); font-size: 25px; line-height: 1; }
+body.port-page .port-submit:hover { background: var(--bg); }
+body.port-page .port-ticket-feedback { margin: 0; min-height: 0; color: var(--ticket-accent); font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+body.port-page .port-ticket-feedback:empty { display: none; }
+
+/* Full-width holdings use actual table columns and local horizontal scrolling. */
+body.port-page .port-portfolio .port-panel-head { padding-bottom: 9px; }
+body.port-page .port-portfolio .port-panel-head .port-muted { font-size: 14px; }
+body.port-page .port-portfolio .port-section-tabs { margin: 0 12px; }
+body.port-page .port-portfolio .port-section-tabs > button { min-width: 112px; }
+body.port-page #port-order-count:not(:empty) { padding: 0 4px; background: transparent; font-size: 14px; }
+body.port-page .port-table-wrap { margin: 0 12px; overflow-x: auto; }
+body.port-page .port-table { width: 100%; border-collapse: collapse; font-size: 16px; }
+body.port-page .port-table th { padding: 12px 8px 9px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 14px; font-weight: 400; letter-spacing: .4px; text-align: left; text-transform: uppercase; white-space: nowrap; }
+body.port-page .port-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+body.port-page .port-table th:first-child,
+body.port-page .port-table td:first-child { padding-left: 2px; }
+body.port-page .port-table th:last-child,
+body.port-page .port-table td:last-child { padding-right: 2px; }
+body.port-page .port-table .port-numeric { text-align: right; white-space: nowrap; }
+body.port-page .port-table tbody tr:hover { background: var(--bg); }
+body.port-page .port-position-button { display: block; min-width: 90px; padding: 0; border: 0; background: transparent; color: var(--text); text-align: left; }
+body.port-page .port-position-button strong { display: block; font-family: var(--font-terminal); font-size: 23px; font-weight: 400; line-height: 1; }
+body.port-page .port-position-button small { display: block; margin-top: 2px; color: var(--muted); font-size: 14px; }
+body.port-page .port-position-button:hover strong { color: var(--amber); }
+body.port-page .port-order-actions button { min-height: 28px; padding: 3px 8px; border: 1px solid var(--border); background: transparent; color: var(--amber); font-size: 14px; white-space: nowrap; }
+body.port-page .port-order-actions button:hover { background: var(--bg); }
+body.port-page .port-order-status { display: inline-block; color: var(--amber); font-size: 14px; white-space: nowrap; }
+body.port-page .port-empty { min-height: 115px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin: 0; padding: 24px 20px; color: var(--muted); font-size: 15px; text-align: center; }
+body.port-page .port-empty strong { display: block; color: var(--text); font-family: var(--font-terminal); font-size: 25px; font-weight: 400; }
+body.port-page .port-empty p { max-width: 490px; margin: 0; line-height: 1.7; }
+body.port-page .port-portfolio-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 5px 15px; padding: 8px 12px; color: var(--muted); font-size: 14px; }
+body.port-page .port-fatal { padding: 18px; border: 1px solid var(--red); color: var(--red); }
+
+
+
+@media (max-width: 1180px) {
+
+  body.port-page .port-main-grid { grid-template-columns: minmax(180px, 22fr) minmax(0, 51fr) minmax(235px, 27fr); gap: 10px; }
+  body.port-page .port-watchlist-columns,
+  body.port-page .port-stock-row { grid-template-columns: minmax(0, 1fr) 58px 53px; gap: 4px; padding-left: 12px; padding-right: 12px; }
+  body.port-page .port-stock-price,
+  body.port-page .port-stock-change { font-size: 14px; }
+  body.port-page .port-summary-cell { padding-inline: 18px; }
+  body.port-page .port-data-status { padding-left: 8px; }
+  body.port-page .port-ticket-form { padding-inline: 14px; }
+  body.port-page .port-panel-head { padding-inline: 14px; }
+  body.port-page .port-stock-header { padding-inline: 16px; }
+  body.port-page .port-research .port-section-tabs { margin-inline: 16px; }
+  body.port-page .port-chart-toolbar { padding-inline: 16px; }
+  body.port-page .port-chart-toolbar > span { font-size: 13px; }
+  body.port-page .port-price-chart { margin-inline: 10px; }
+}
+
+@media (max-width: 980px) {
+  body.port-page .port-account-label { display: inline; }
+  body.port-page .port-summary-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 14px 10px 0; }
+  body.port-page .port-summary-cell { padding: 0 16px; }
+  body.port-page .port-summary-cell:first-child { padding-left: 6px; }
+  body.port-page .port-data-status { display: flex; grid-column: 1 / -1; gap: 7px; padding: 9px 6px; margin-top: 10px; border-top: 1px solid var(--line); font-size: 14px; }
+  body.port-page .port-data-status small { margin-left: auto; }
+  body.port-page .port-main-grid { grid-template-columns: minmax(210px, 30fr) minmax(0, 70fr); }
+  body.port-page .port-order-ticket { grid-column: 1 / -1; }
+  body.port-page .port-ticket-form { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 14px 24px; padding: 5px 18px 17px; }
+  body.port-page .port-ticket-stock { align-self: center; }
+  body.port-page .port-side-switch { align-self: center; }
+  body.port-page .port-ticket-totals { align-self: center; margin: 0; }
+  body.port-page .port-ticket-note { align-self: center; }
+  body.port-page .port-submit { margin: 0; align-self: end; }
+  body.port-page .port-ticket-feedback { align-self: center; }
+  body.port-page .port-price-chart { height: 290px; }
+}
+
+@media (max-width: 680px) {
+  body.port-page .port-workspace { padding: 8px; gap: 9px; }
+  body.port-page .port-summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 7px 0; }
+  body.port-page .port-summary-cell { padding-inline: 10px; }
+  body.port-page .port-summary-cell:nth-child(2) { border-right: 0; }
+  body.port-page .port-summary-cell:nth-child(3) { display: flex; grid-column: 1 / -1; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 9px 6px 0; border-top: 1px solid var(--line); }
+  body.port-page .port-summary-label { font-size: 13px; letter-spacing: 0; }
+  body.port-page .port-summary-value { font-size: 27px; }
+  body.port-page .port-data-status { padding-inline: 5px; font-size: 13px; }
+  body.port-page .port-data-status small { font-size: 12px; }
+  body.port-page .port-main-grid { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  body.port-page .port-watchlist { max-height: none; }
+  body.port-page .port-watchlist .port-panel-head { padding-block: 10px 5px; }
+  body.port-page .port-watchlist-columns { padding-top: 4px; padding-bottom: 6px; }
+  body.port-page .port-watchlist-columns,
+  body.port-page .port-stock-row { grid-template-columns: minmax(0, 1fr) 80px 70px; gap: 8px; padding-inline: 15px; }
+  body.port-page .port-stocks-list { max-height: 171px; overflow-y: auto; }
+  body.port-page .port-stock-row { min-height: 57px; }
+  body.port-page .port-stock-price,
+  body.port-page .port-stock-change { font-size: 15px; }
+  body.port-page .port-symbol-picker { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 9px 14px; }
+  body.port-page .port-symbol-picker select { min-height: 31px; }
+  body.port-page .port-price-chart { height: 270px; margin-inline: 8px; }
+  body.port-page .port-chart-toolbar { padding-inline: 14px; }
+  body.port-page .port-chart-footer { padding-inline: 14px; font-size: 12px; }
+  body.port-page .port-ticket-form { column-gap: 15px; padding-inline: 14px; }
+  body.port-page .port-ticket-totals { grid-column: 1 / -1; padding-top: 4px; }
+  body.port-page .port-ticket-note { grid-column: 1 / -1; }
+  body.port-page .port-submit { grid-column: 1 / -1; }
+  body.port-page .port-ticket-feedback { grid-column: 1 / -1; }
+  body.port-page .port-ticket-totals > div { gap: 20px; }
+  body.port-page .port-portfolio .port-section-tabs { margin-inline: 12px; }
+  body.port-page .port-portfolio .port-section-tabs > button { min-width: 0; flex: 1 1 0; padding-inline: 8px; font-size: 14px; }
+  body.port-page .port-table-wrap { margin-inline: 12px; }
+  body.port-page .port-table { min-width: 550px; font-size: 15px; }
+  body.port-page .port-table td { padding-block: 12px; }
+  body.port-page .port-portfolio-footer { padding-inline: 14px; font-size: 13px; }
+  body.port-page .port-empty { min-height: 130px; padding-inline: 17px; }
+}
+
+@media (max-width: 380px) {
+  body.port-page .port-summary-cell { padding-inline: 7px; }
+  body.port-page .port-summary-cell:first-child { padding-left: 3px; }
+  body.port-page .port-summary-label { font-size: 12px; }
+  body.port-page .port-summary-value { font-size: 25px; }
+  body.port-page .port-company-heading { gap: 7px; }
+  body.port-page .port-company-heading > span { font-size: 14px; }
+  body.port-page .port-quote-line { gap: 7px 13px; }
+  body.port-page #port-selected-price { font-size: 45px; }
+  body.port-page #port-selected-change { font-size: 25px; }
+  body.port-page .port-section-tabs > button { min-width: 0; flex: 1; padding-inline: 8px; }
+  body.port-page .port-chart-toolbar { padding-inline: 12px; }
+  body.port-page .port-chart-toolbar > span { font-size: 12px; }
+  body.port-page .port-timeframes { gap: 1px; }
+  body.port-page .port-timeframes button { min-width: 27px; font-size: 14px; }
+  body.port-page .port-price-chart { height: 240px; }
+  body.port-page .port-ticket-form { column-gap: 10px; }
+  body.port-page .port-field input,
+  body.port-page .port-field select { font-size: 15px; padding-inline: 8px; }
+}
+
+/* Keep the same terminal controls comfortable to tap on touch devices. */
+@media (pointer: coarse) {
+  body.port-page .port-timeframes button,
+  body.port-page .port-chart-types > button,
+  body.port-page .port-chart-menu summary {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  body.port-page .port-chart-types > button,
+  body.port-page .port-chart-menu summary { width: 44px; height: 44px; }
+  body.port-page .port-chart-menu > div { top: 48px; }
+  body.port-page .port-chart-menu > div button,
+  body.port-page .port-section-tabs > button,
+  body.port-page .port-symbol-picker select,
+  body.port-page .port-side-switch button,
+  body.port-page .port-field input,
+  body.port-page .port-field select,
+  body.port-page .port-submit,
+  body.port-page .port-order-actions button {
+    min-height: 44px;
+  }
+  body.port-page .port-order-actions button { min-width: 44px; }
+}
