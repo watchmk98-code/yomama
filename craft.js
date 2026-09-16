@@ -28,11 +28,26 @@
     var labels = {speedPercent:'production speed', costReductionPercent:'processing cost', pricePercent:'sale price', storagePercent:'product storage'};
     return Object.keys(item.effects || {}).map(function (key) { return (key === 'costReductionPercent' ? '−' : '+') + item.effects[key] + '% ' + labels[key]; }).join(' · ');
   }
-  function catalog() { return snapshot && snapshot.crafting && snapshot.crafting[section] || []; }
+  function catalog() {
+    if (!snapshot || !snapshot.crafting) return [];
+    if (section === 'tangible' || section === 'intangible') return snapshot.crafting.businessAssets.filter(function (item) { return item.assetType === section; });
+    return snapshot.crafting[section] || [];
+  }
   function selected() { return catalog().find(function (item) { return item.id === selectedId; }); }
   function status(message, tone) { el('craft-status').textContent = message || ''; el('craft-status').dataset.tone = tone || 'success'; }
-  function sprite(node, index) {
-    node.style.cssText = spriteStyle(section, index);
+  function sprite(node, index, item) {
+    var goodsIcon = section === 'supplies' && item && item.id.indexOf('craft_') === 0;
+    node.classList.toggle('craft-sprite-good', !!goodsIcon);
+    if (goodsIcon) {
+      var goodsId = item.id.indexOf('craft_input_') === 0 ? item.id.slice(12) : item.id.slice(6);
+      if (goodsId === 'cannery_preserves') goodsId = 'cannery_canned_goods';
+      node.style.cssText = 'background-image:url("./assets/game-art/goods/' + encodeURIComponent(goodsId) + '.png")';
+      node.textContent = '';
+      return;
+    }
+    var style = spriteStyle(section === 'tangible' || section === 'intangible' ? 'businessAssets' : section, index);
+    node.style.cssText = style;
+    node.textContent = style ? '' : '◇';
   }
   function spriteStyle(kind, index) {
     var sheets = window.YomamaCraftArt[kind];
@@ -81,24 +96,34 @@
     // Keep card elements stable so state polls never steal keyboard focus.
     if (gridKey !== key) {
       gridKey = key; grid.replaceChildren();
-      items.forEach(function (item) {
+      items.forEach(function (item, index) {
         var button = document.createElement('button'); button.type = 'button'; button.className = 'craft-item';
         button.id = 'craft-item-' + item.id; button.dataset.craftItem = item.id;
         if (item.assetType) button.dataset.assetType = item.assetType;
-        if (item.pilot) { button.dataset.pilot = 'true'; if (!item.assetType) button.classList.add('craft-item-pilot'); }
+        if (item.pilot) button.dataset.pilot = 'true';
         button.title = item.name; button.setAttribute('aria-label', item.name);
         button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-expanded', 'false');
-        var icon = document.createElement('span'); icon.className = 'craft-sprite'; icon.setAttribute('aria-hidden', 'true'); sprite(icon, item.iconIndex);
+        var icon = document.createElement('span'); icon.className = 'craft-sprite'; icon.setAttribute('aria-hidden', 'true'); sprite(icon, section === 'supplies' ? index : item.iconIndex, item);
         var name = document.createElement('span'); name.className = 'craft-item-name'; name.textContent = item.name;
         button.append(icon, name); grid.appendChild(button);
       });
     }
+    items.forEach(function (item) {
+      var card = document.getElementById('craft-item-' + item.id);
+      if (card) {
+        card.classList.toggle('craft-item-pilot', !!(item.pilot && item.unlocked));
+        card.classList.toggle('craft-item-crafted', !!item.craftedOnce);
+        card.classList.toggle('craft-item-building-locked', !!item.buildingLocked);
+        card.classList.toggle('craft-item-unavailable', !!(item.pilot && item.available === false));
+        card.title = item.available === false ? item.name + ' · Not available yet' : item.buildingLocked ? item.name + ' · Build required businesses' : item.name;
+      }
+    });
     grid.dataset.section = section;
-    el('craft-intro-text').textContent = section === 'items' ? (pilotEnabled() ? 'Purple borders: 15 automatic products. Open one to unlock it.' : 'Choose an item to see its ingredients.') : (pilotEnabled() ? '10 assets can be bought here and assigned on Build. Other assets are previews.' : 'Business assets are previews for this class.');
+    el('craft-intro-text').textContent = section === 'items' ? 'Three special products per building are available. The rest are grayed out.' : section === 'supplies' ? 'Buy materials for special products here or in a product’s recipe.' : 'Buy assets here, then assign three to a building on Build.';
     fit();
   }
   function fit() {
-    if (section === 'businessAssets') return;
+    if (section !== 'items') return;
     var count = catalog().length;
     if (!count || !grid.clientWidth || !grid.clientHeight) return;
     var width = grid.clientWidth, height = grid.clientHeight;
@@ -137,11 +162,12 @@
     var focusId = dialog.contains(document.activeElement) ? document.activeElement.id : '';
     var scroll = dialog.scrollTop;
     el('craft-dialog-title').textContent = item.name;
-    sprite(el('craft-large-icon'), item.iconIndex);
+    sprite(el('craft-large-icon'), section === 'supplies' ? catalog().findIndex(function (row) { return row.id === item.id; }) : item.iconIndex, item);
     var asset = !!item.assetType;
+    var supply = section === 'supplies';
     dialog.dataset.assetType = item.assetType || '';
     dialog.dataset.pilot = String(!!item.pilot);
-    dialog.querySelector('.craft-ingredients').hidden = asset;
+    dialog.querySelector('.craft-ingredients').hidden = asset || supply;
     el('craft-owned').hidden = asset;
     submit.hidden = asset;
     el('craft-asset-detail').hidden = !asset;
@@ -149,6 +175,18 @@
     if (!pilotDetail) { pilotDetail = document.createElement('div'); pilotDetail.id = 'craft-pilot-detail'; el('craft-makes').after(pilotDetail); }
     pilotDetail.hidden = !item.pilot || asset;
     submit.textContent = 'CRAFT';
+    if (supply) {
+      pilotDetail.hidden = true;
+      el('craft-makes').textContent = 'Basic crafting supply';
+      el('craft-owned').textContent = 'Owned: ' + amount(item.quantity);
+      el('craft-asset-detail').hidden = true;
+      submit.hidden = false;
+      submit.textContent = 'BUY 1 · ' + money(item.unitPrice);
+      submit.disabled = busy || !connected || !!snapshot.paused || snapshot.cash < item.unitPrice;
+      el('craft-reason').textContent = snapshot.paused ? 'Your teacher has paused the class.' : !connected ? 'Reconnect to buy supplies.' : snapshot.cash < item.unitPrice ? 'Need ' + money(item.unitPrice) + '.' : '';
+      if (dialog.open && window.YomamaCraftFitDialog) window.YomamaCraftFitDialog.fit();
+      return;
+    }
     if (asset) {
       el('craft-makes').textContent = item.businessName;
       el('craft-asset-detail').innerHTML = '<p class="asset-kind">' + (item.assetType === 'tangible' ? 'Tangible asset · Equipment' : 'Intangible asset · Software or rights') + '</p><p><strong>' + esc(item.accounting) + '</strong> spreads the recorded cost over the asset’s useful life.</p><p class="asset-pending">Asset preview · Recipe, value and useful life are not set yet. No costs or bonuses are applied.</p>';
@@ -172,7 +210,7 @@
     if (item.pilot) {
       el('craft-makes').textContent = item.businessName + ' · Automatic production';
       el('craft-owned').textContent = 'Stored: ' + amount(item.owned) + ' / ' + amount(item.storageCap);
-      pilotDetail.innerHTML = '<div class="craft-pilot-stats"><span>1 item / ' + amount(item.effectiveBatchSeconds || item.batchSeconds) + ' game sec</span><span>Processing: ' + amount(item.batchCost) + ' YM</span><span>Sells for ' + money(item.sellPrice) + '</span></div>' + (!item.unlocked ? '<ul class="craft-pilot-requirements">' + item.unlockRequirements.map(function (r) { return '<li data-ready="' + r.ready + '">' + (r.ready ? '✓ ' : '○ ') + esc(r.label) + '</li>'; }).join('') + '</ul>' : '<p class="craft-pilot-state">' + esc(item.pilotStatus) + '</p><progress max="1" value="' + item.progress + '" aria-label="Production progress"></progress>') + (item.requiredAssets.length ? '<p class="craft-pilot-assets">Needs: ' + item.requiredAssets.map(function (r) { return '<span data-ready="' + r.ready + '">' + (r.ready ? '✓ ' : '○ ') + esc(r.name) + '</span>'; }).join(' · ') + '</p>' : '') + '<p class="craft-pilot-muted">Products sell automatically. Shared ingredients take turns.</p>';
+      pilotDetail.innerHTML = '<div class="craft-pilot-stats"><span>1 item / ' + amount(item.effectiveBatchSeconds || item.batchSeconds) + ' game sec</span><span>Processing: ' + amount(item.batchCost) + ' YM</span><span>Sells for ' + money(item.sellPrice) + '</span></div>' + (!item.unlocked ? '<ul class="craft-pilot-requirements">' + item.unlockRequirements.map(function (r) { return '<li data-ready="' + r.ready + '">' + (r.ready ? '✓ ' : '○ ') + esc(r.label) + '</li>'; }).join('') + '</ul>' : '<p class="craft-pilot-state">' + esc(item.pilotStatus) + '</p><progress max="1" value="' + item.progress + '" aria-label="Production progress"></progress>') + (item.requiredAssets.length ? '<p class="craft-pilot-assets">Needs: ' + item.requiredAssets.map(function (r) { return '<span data-ready="' + r.ready + '">' + (r.ready ? '✓ ' : '○ ') + esc(r.name) + '</span>'; }).join(' · ') + '</p>' : '') + '<p class="craft-pilot-muted">Products use crafting supplies and sell automatically. Shared supplies take turns.</p>';
     }
     el('craft-ingredient-rows').innerHTML = item.ingredients.map(function (row) {
       var enough = row.available >= row.quantity;
@@ -184,9 +222,9 @@
     submit.setAttribute('aria-busy', String(busy));
     el('craft-reason').textContent = !connected ? 'Reconnect to check your ingredients.' : snapshot.paused ? 'Your teacher has paused the class.' : !item.canCraft ? item.why || 'Gather the missing ingredients to craft this item.' : '';
     if (item.pilot) {
-      submit.textContent = item.unlocked ? 'AUTOMATIC' : 'UNLOCK · ' + money(item.unlockCost);
+      submit.textContent = item.unlocked ? 'AUTOMATIC' : item.activationCraft ? 'CRAFT ONCE' : 'UNLOCK · ' + money(item.unlockCost);
       submit.disabled = busy || !connected || !!snapshot.paused || item.unlocked || !item.canUnlock;
-      el('craft-reason').textContent = !connected ? 'Reconnect to check this product.' : snapshot.paused ? 'Your teacher has paused the class.' : item.unlocked ? '' : 'Unlock once. Production starts when its business, assets and ingredients are ready.';
+      el('craft-reason').textContent = item.available === false ? 'This product is not available yet.' : !connected ? 'Reconnect to check this product.' : snapshot.paused ? 'Your teacher has paused the class.' : item.unlocked ? '' : item.activationCraft ? 'Craft one item to activate automatic production. Assign three assets to keep it running.' : 'Unlock once. Production starts when its business, assets and ingredients are ready.';
     }
     if (focusId) {
       var target = el(focusId);
@@ -249,8 +287,7 @@
     button.addEventListener('click', function () {
       section = button.dataset.craftSection;
       document.querySelectorAll('[data-craft-section]').forEach(function (tab) { tab.setAttribute('aria-pressed', String(tab === button)); });
-      el('craft-intro-text').textContent = section === 'items' ? 'Choose an item to see its ingredients.' : 'Teal: equipment · Violet: software & rights. Choose an asset to learn more.';
-      grid.setAttribute('aria-label', section === 'items' ? 'Craftable items' : 'Business assets');
+      grid.setAttribute('aria-label', button.textContent);
       grid.scrollTop = 0;
       if (snapshot) { renderHeader(); renderGrid(); }
     });
@@ -272,8 +309,9 @@
   });
   submit.addEventListener('click', function () {
     var item = selected(); if (!item || submit.disabled) return;
+    if (section === 'supplies') { perform({action:'buy_supply', supplyId:item.id, quantity:1}, 'Bought 1 ' + item.name + '.'); return; }
     if (item.pilot && item.assetType) { perform({action:'buy_asset', assetId:item.id}, 'Bought ' + item.name + '. Assign it on Build.'); return; }
-    if (item.pilot) { perform({action:'unlock', itemId:item.id}, 'Unlocked ' + item.name + '. Production is automatic.'); return; }
+    if (item.pilot) { perform({action:item.activationCraft ? 'craft' : 'unlock', itemId:item.id}, (item.activationCraft ? 'Crafted and activated ' : 'Unlocked ') + item.name + '. Production is automatic.'); return; }
     perform({itemId:item.id}, 'Crafted ' + item.name + '.');
   });
   var resizeFrame;

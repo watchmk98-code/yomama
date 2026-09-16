@@ -19,11 +19,75 @@ import inventory_costs
 
 SCALE = 1_000_000
 CONFIG_PATH = Path(__file__).parent / 'config/crafting-pilot.v1.json'
-ACTIONS = frozenset(('unlock', 'buy_asset', 'assign_asset', 'unassign_asset'))
+ACTIONS = frozenset(('unlock', 'activate', 'buy_asset', 'assign_asset', 'unassign_asset'))
 
 
 def configure(cfg):
     cfg['craftingPilot'] = json.loads(CONFIG_PATH.read_text(encoding='utf8'))
+    pilot = cfg['craftingPilot']
+    existing = {item['id'] for item in pilot['items']}
+    goods = {good['id']: (good, tier['id']) for tier in cfg['tiers'] for good in tier['goods']}
+    first_business = cfg['tiers'][0]['id']
+    for item_id, name, needs in crafting.RECIPES:
+        if item_id in existing:
+            continue
+        producers = [goods[gid][1] for gid, _ in needs if gid in goods]
+        business = producers[0] if producers else ('fish_stall' if any(word in item_id for word in ('fish', 'nautical', 'sailing'))
+                                                   else 'roastery' if any(word in item_id for word in ('coffee', 'bread', 'ice_cream'))
+                                                   else 'workshop' if any(word in item_id for word in ('wood', 'bamboo', 'chair', 'rack', 'lamp', 'board'))
+                                                   else first_business)
+        ingredients = [dict(id='craft_input_' + gid if gid in goods else gid, quantity=quantity)
+                       for gid, quantity in needs]
+        input_cost = sum((goods[gid][0]['unitPrice'] if gid in goods else crafting.SUPPLIES[gid]['unitPrice']) * quantity
+                         for gid, quantity in needs)
+        pilot['items'].append(dict(id=item_id, businessId=business, ingredients=ingredients,
+                                   ingredientBusinessIds=list(dict.fromkeys(producers)),
+                                   batchSeconds=120 + 30 * max(0, len(needs) - 2), batchCost=max(2, input_cost // 20),
+                                   sellPrice=max(10, math.ceil(input_cost * 1.5)), saleSeconds=150,
+                                   storageCap=6, activationCraft=True,
+                                   unlock=dict(cash=0, questIds=[], focusNodes=[], manualOrders=0),
+                                   requiredAssetIds=['asset_{}_{}'.format(business, n) for n in (1, 2, 3)]))
+    available = set(pilot['availableItemIds'])
+    if len(available) != len(pilot['availableItemIds']):
+        raise ValueError('Duplicate available crafting product')
+    counts = {tier['id']: 0 for tier in cfg['tiers']}
+    for item in pilot['items']:
+        item['available'] = item['id'] in available
+        if item['available']:
+            counts[item['businessId']] += 1
+    if set(pilot['availableItemIds']) - {item['id'] for item in pilot['items']} or any(n != 3 for n in counts.values()):
+        raise ValueError('Each building must have exactly three available crafting products')
+    products = {item['id']: item for item in pilot['items']}
+    tiers = {tier['id']: tier for tier in cfg['tiers']}
+    ranks = {business_id: 0 for business_id in tiers}
+    for item_id in pilot['availableItemIds']:
+        item = products[item_id]
+        business_id = item['businessId']
+        ranks[business_id] += 1
+        rank = ranks[business_id]
+        unlock = item['unlock']
+        unlock.update(productionLevel=rank, storageLevel=rank, customersLevel=rank,
+                      netWorth=tiers[business_id]['baseCost'] * rank)
+        if rank > 1:
+            quest_id = '{}-{}'.format(business_id, 'plan' if rank == 2 else 'signature')
+            unlock['questIds'] = list(dict.fromkeys(unlock['questIds'] + [quest_id]))
+    asset_map = {asset['id']: asset for asset in pilot['assets']}
+    by_business = {}
+    for item in pilot['items']:
+        if item['available']:
+            by_business.setdefault(item['businessId'], []).append(item['id'])
+    for index, tier in enumerate(cfg['tiers']):
+        business = tier['id']
+        for slot in (1, 2, 3):
+            aid = 'asset_{}_{}'.format(business, slot)
+            if aid not in asset_map:
+                pilot['assets'].append(dict(id=aid, price=250 + index * 200 + slot * 100,
+                                            lifeSeconds=604800,
+                                            effects=({'speedPercent': 10} if slot == 1 else
+                                                     {'costReductionPercent': 10} if slot == 2 else {'pricePercent': 10}),
+                                            itemIds=by_business.get(business, [])))
+            else:
+                asset_map[aid]['itemIds'] = by_business.get(business, [])
     return cfg
 
 
@@ -56,16 +120,19 @@ def ensure(cfg, st):
     business_operations.ensure(cfg, st)
     quests, focus = _achievements(st)
     data = st.setdefault('craftingPilot', {})
-    defaults = dict(version=1, unlocked={}, assets={}, work={}, salesWork={}, ordersByBusiness={},
+    defaults = dict(version=1, unlocked={}, produced={}, assets={}, work={}, salesWork={}, ordersByBusiness={},
                     ordersTotal=0, cursor=0, lastTick=st.get('tick', 0), costRemainders={}, buckets=[],
                     totals=dict(sales=0, costsMicros=0, made=0, sold=0, depreciation=0, amortization=0),
                     rewards=dict(quests=sorted(quests), focus=sorted(focus), lastVisit=st.get('tick', 0), sequence=0, recent=[]))
     for key, value in defaults.items():
         data.setdefault(key, copy.deepcopy(value))
-    for pid in _items(cfg):
+    for pid, item in _items(cfg).items():
         row = st['crafting']['items'].get(pid)
         if row is not None:
             row.setdefault('costMicros', row.get('value', 0) * SCALE)
+        if item.get('activationCraft') and (st['crafting']['crafted'].get(pid) or row and row.get('quantity', 0) > 0):
+            data['unlocked'][pid] = True
+            data['produced'][pid] = True
     return data
 
 
@@ -97,6 +164,32 @@ def _requirements(cfg, st, item):
     nodes = st.get('workforce', {}).get('teams', {}).get(item['businessId'], {}).get('nodes', [])
     quests = st.get('businessProgression', {}).get('quests', {})
     rows = [dict(kind='business', label='Open ' + next(t['name'] for t in cfg['tiers'] if t['id'] == item['businessId']), ready=b is not None)]
+    for key, kind, label in (('productionLevel', 'lv', 'Production'),
+                             ('storageLevel', 'storage', 'Storage'),
+                             ('customersLevel', 'sales', 'Customers')):
+        target = unlock.get(key, 0)
+        if target:
+            current = b.get(kind, 0) if b else 0
+            rows.append(dict(kind=key, label='{} level: {} / {}'.format(label, current, target),
+                             ready=current >= target))
+    target_worth = unlock.get('netWorth', 0)
+    if target_worth:
+        import production_economy as economy
+        current_worth = economy.net_worth(cfg, st)
+        rows.append(dict(kind='netWorth', label='Net worth: {:,} / {:,} YM'.format(current_worth, target_worth),
+                         ready=current_worth >= target_worth))
+    for business_id in item.get('ingredientBusinessIds', []):
+        if business_id != item['businessId']:
+            name = next(t['name'] for t in cfg['tiers'] if t['id'] == business_id)
+            rows.append(dict(kind='ingredientBusiness', label='Open ' + name + ' for ingredients',
+                             ready=business_id in _live(cfg, st)))
+    product_names = {recipe[0]: recipe[1] for recipe in crafting.RECIPES}
+    for dependency in item['ingredients']:
+        producer = _items(cfg).get(dependency['id'])
+        if producer and producer['businessId'] != item['businessId']:
+            producer_name = next(t['name'] for t in cfg['tiers'] if t['id'] == producer['businessId'])
+            rows.append(dict(kind='dependencyBusiness', label='Open ' + producer_name + ' for ' + product_names[producer['id']],
+                             ready=_building(cfg, st, producer) is not None))
     rows.extend(dict(kind='quest', label='Complete ' + q.replace('_', ' ').replace('-', ' '), ready=bool(quests.get(q, {}).get('completed'))) for q in unlock['questIds'])
     rows.extend(dict(kind='focus', label='Focus: ' + node.replace('-', ' ').title(), ready=node in nodes) for node in unlock['focusNodes'])
     count = data['ordersByBusiness'].get(item['businessId'], 0)
@@ -107,6 +200,8 @@ def _requirements(cfg, st, item):
 
 
 def _reason(cfg, st, item, assets_only=False):
+    if not item.get('available', True):
+        return 'Not available yet'
     b = _building(cfg, st, item)
     if not b:
         return 'Open this business first'
@@ -114,6 +209,9 @@ def _reason(cfg, st, item, assets_only=False):
         return 'Business paused'
     if not st['craftingPilot']['unlocked'].get(item['id']):
         return 'Unlock this product first'
+    for business_id in item.get('ingredientBusinessIds', []):
+        if business_id not in _live(cfg, st):
+            return 'Open ' + next(t['name'] for t in cfg['tiers'] if t['id'] == business_id)
     names = {a['id']: a['name'] for a in business_assets.catalog()}
     for aid in item['requiredAssetIds']:
         if not _active_asset(cfg, st, aid, b):
@@ -122,23 +220,21 @@ def _reason(cfg, st, item, assets_only=False):
 
 
 def _ingredients(cfg, st, item):
-    import production_economy as economy
-    goods = economy.catalog(cfg); products = _items(cfg)
+    products = _items(cfg)
     names = {r[0]: r[1] for r in crafting.RECIPES}
-    held = economy.protected_stock(cfg, st)
+    supplies = crafting.all_supplies(cfg)
     result = []
     for need in item['ingredients']:
         gid, qty = need['id'], need['quantity']
-        if gid in crafting.SUPPLIES:
-            good = crafting.SUPPLIES[gid]; pool = st['crafting']['supplies'].get(gid, {})
+        if gid in supplies:
+            good = supplies[gid]; pool = st['crafting']['supplies'].get(gid, {})
             owned = pool.get('quantity', 0); reserved = 0; kind = 'supply'; source = 'Basic supplies'
             name = good['name']; price = good['unitPrice']
         elif gid in products:
             pool = st['crafting']['items'].get(gid, {}); owned = pool.get('quantity', 0)
             reserved = 0; kind = 'crafted'; source = 'Automatic crafting'; name = names[gid]; price = products[gid]['sellPrice']
         else:
-            good = goods[gid]; owned = st['inventory'].get(gid, 0); reserved = min(owned, held.get(gid, 0))
-            kind = 'product'; source = cfg['tiers'][good['tier']]['name']; name = good['name']; price = good['unitPrice']
+            raise ValueError('Automatic recipe has a non-crafting ingredient: ' + gid)
         available = max(0, owned - reserved); missing = max(0, qty - available)
         result.append(dict(id=gid, name=name, kind=kind, quantity=qty, owned=owned, reserved=reserved,
                            available=available, missing=missing, source=source, unitPrice=price,
@@ -148,17 +244,9 @@ def _ingredients(cfg, st, item):
 
 
 def _consume(cfg, st, ingredients):
-    import production_economy as economy
-    economy._sync_pools(cfg, st)
-    before = sum(st['pend'].values()); value = 0; cost = 0
-    needs = [dict(goodId=r['id'], quantity=r['quantity']) for r in ingredients if r['kind'] == 'product']
-    for row in inventory_costs.consume(cfg, st, needs).values():
-        cost += row['costMicros']
+    value = 0; cost = 0
     for row in ingredients:
         gid, qty = row['id'], row['quantity']
-        if row['kind'] == 'product':
-            st['inventory'][gid] -= qty
-            continue
         group = 'supplies' if row['kind'] == 'supply' else 'items'
         pool = st['crafting'][group][gid]
         basis = pool['value'] * qty // pool['quantity']
@@ -167,8 +255,7 @@ def _consume(cfg, st, ingredients):
         if 'costMicros' in pool:
             pool['costMicros'] -= used_cost
         value += basis; cost += used_cost
-    economy._sync_pools(cfg, st)
-    return value + before - sum(st['pend'].values()), cost
+    return value, cost
 
 
 def _record(cfg, st, tick, identity, **values):
@@ -205,7 +292,9 @@ def tick(cfg, st, tick):
         return
     # One processed game tick only: never age assets over skipped offline time.
     seconds = cfg['global']['tick']; data['lastTick'] = tick
-    items = list(_items(cfg).values()); by_type = _live(cfg, st)
+    items = [item for item in _items(cfg).values() if item.get('available', True)
+             and (data['unlocked'].get(item['id']) or st['crafting']['items'].get(item['id'], {}).get('quantity', 0))]
+    by_type = _live(cfg, st)
     for item in items:
         b = by_type.get(item['businessId']); pid = item['id']
         if _reason(cfg, st, item):
@@ -215,7 +304,7 @@ def tick(cfg, st, tick):
         speed = 100 + bonus['speedPercent'] + cfg['production']['speedPerLevel'] * (b.get('lv', 1) - 1)
         data['work'][pid] = min(item['batchSeconds'] * 100, data['work'].get(pid, 0) + seconds * speed)
     # One ready batch per product per sweep, with rotating priority for shared supplies.
-    start = data['cursor'] % len(items)
+    start = data['cursor'] % len(items) if items else 0
     for item in items[start:] + items[:start]:
         pid = item['id']; b = by_type.get(item['businessId'])
         if _reason(cfg, st, item) or data['work'].get(pid, 0) < item['batchSeconds'] * 100:
@@ -231,6 +320,7 @@ def tick(cfg, st, tick):
         st['cash'] -= charge; data['costRemainders'][pid] = remainder
         pool = st['crafting']['items'].setdefault(pid, dict(quantity=0, value=0, costMicros=0))
         pool['quantity'] += 1; pool['value'] += value + charge; pool['costMicros'] += cost + charge * SCALE
+        data['produced'][pid] = True
         data['work'][pid] -= item['batchSeconds'] * 100
         _record(cfg, st, tick, b['buildingId'], made=1)
         # The next sweep starts after a successful producer. Locked catalog
@@ -287,7 +377,7 @@ def act(cfg, st, body):
         return dict(ok=False, why='Crafting revision must be a nonnegative integer')
     if not isinstance(action, str) or action not in ACTIONS:
         return dict(ok=False, why='Unknown crafting action')
-    fields = ('itemId',) if action == 'unlock' else ('assetId', 'buildingId', 'assetSlot') if action == 'assign_asset' else ('assetId',)
+    fields = ('itemId',) if action in ('unlock', 'activate') else ('assetId', 'buildingId', 'assetSlot') if action == 'assign_asset' else ('assetId',)
     if any(key in body and key != 'assetSlot' and not isinstance(body[key], str) for key in fields):
         return dict(ok=False, why='Invalid crafting identifier')
     if action == 'assign_asset' and ('assetSlot' in body and (type(body['assetSlot']) is not int or not 0 <= body['assetSlot'] <= 2)):
@@ -314,15 +404,33 @@ def act(cfg, st, body):
 def _act(cfg, st, body):
     data = st['craftingPilot']; action = body['action']
     fail = lambda message: dict(ok=False, why=message)
-    if action == 'unlock':
+    if action in ('unlock', 'activate'):
         item = _items(cfg).get(body.get('itemId'))
         if not item:
             return fail('Unknown automatic product')
+        if not item.get('available', True):
+            return fail('This product is not available yet')
         if data['unlocked'].get(item['id']):
             return fail('Already unlocked')
+        if bool(item.get('activationCraft')) != (action == 'activate'):
+            return fail('Use this product’s one-time activation')
         missing = next((r for r in _requirements(cfg, st, item) if not r['ready']), None)
         if missing:
             return fail(missing['label'])
+        if action == 'activate':
+            ingredients = _ingredients(cfg, st, item)
+            missing = next((r for r in ingredients if r['missing']), None)
+            if missing:
+                return fail('Need ' + missing['name'])
+            charge = item['batchCost']
+            if st['cash'] < charge:
+                return fail('Need cash for processing')
+            value, cost = _consume(cfg, st, ingredients)
+            st['cash'] -= charge
+            pool = st['crafting']['items'].setdefault(item['id'], dict(quantity=0, value=0, costMicros=0))
+            pool['quantity'] += 1; pool['value'] += value + charge; pool['costMicros'] += cost + charge * SCALE
+            data['unlocked'][item['id']] = True; data['produced'][item['id']] = True
+            return dict(ok=True, kind='craft_activate', itemId=item['id'], cost=charge)
         st['cash'] -= item['unlock']['cash']; data['unlocked'][item['id']] = True
         return dict(ok=True, kind='craft_unlock', itemId=item['id'], cost=item['unlock']['cash'])
     aid = body.get('assetId'); spec = _assets(cfg).get(aid)
@@ -478,9 +586,16 @@ def enrich(cfg, st, payload):
                 reason = 'Product storage is full'
         price = _price(item, bonus)
         replacement = sum(r['quantity'] * r['unitPrice'] for r in ingredients) + item['batchCost'] * (100 - bonus['costReductionPercent']) / 100
-        row.update(pilot=True, unlocked=unlocked, businessId=item['businessId'], buildingId=b.get('buildingId') if b else None,
+        activation = bool(item.get('activationCraft'))
+        available = item.get('available', True)
+        row.update(pilot=True, available=available, unlocked=unlocked, activationCraft=activation,
+                   craftedOnce=bool(data['produced'].get(item['id']) or row['owned'] > 0),
+                   buildingLocked=available and not unlocked and any(r['kind'] in ('business', 'dependencyBusiness', 'ingredientBusiness') and not r['ready'] for r in requirements),
+                   businessId=item['businessId'], buildingId=b.get('buildingId') if b else None,
                    businessName=next(t['name'] for t in cfg['tiers'] if t['id'] == item['businessId']),
-                   unlockRequirements=requirements, unlockCost=item['unlock']['cash'], canUnlock=not unlocked and all(r['ready'] for r in requirements),
+                   unlockRequirements=requirements, unlockCost=item['unlock']['cash'],
+                   canUnlock=available and not unlocked and all(r['ready'] for r in requirements)
+                   and (not activation or not any(r['missing'] for r in ingredients) and st['cash'] >= item['batchCost']),
                    requiredAssets=[dict(id=aid, name=next(a['name'] for a in business_assets.catalog() if a['id'] == aid), ready=_active_asset(cfg, st, aid, b)) for aid in item['requiredAssetIds']],
                    ingredients=ingredients, batchSeconds=item['batchSeconds'], batchCost=item['batchCost'] * (100 - bonus['costReductionPercent']) / 100,
                    sellPrice=price, expectedMargin=round((price - replacement) / price * 100, 1), storageCap=_capacity(item, b, bonus) if b else item['storageCap'],
@@ -496,5 +611,19 @@ def enrich(cfg, st, payload):
                    assignedBuildingId=saved.get('buildingId'), assignmentSlot=saved.get('assignmentSlot'),
                    bookValue=saved.get('bookValue', 0), remainingSeconds=saved.get('remainingSeconds', 0), lifeSeconds=spec['lifeSeconds'],
                    effects=spec['effects'], itemIds=spec['itemIds'], usageNote=spec.get('usageNote', ''), compatibleBuildings=[dict(buildingId=b['buildingId'], name=next(t['name'] for t in cfg['tiers'] if t['id'] == row['businessId'])) for bid, b in live.items() if bid == row['businessId']])
+    # Available products follow the building/level progression. Future products
+    # remain visible at the end of the catalog with their existing icon indices.
+    tier_order = {tier['id']: index for index, tier in enumerate(cfg['tiers'])}
+    available_order = cfg['craftingPilot'].get('availableItemIds', [])
+    rank = {}
+    business_counts = {}
+    for item_id in available_order:
+        business_id = items[item_id]['businessId']
+        rank[item_id] = business_counts.get(business_id, 0)
+        business_counts[business_id] = rank[item_id] + 1
+    payload['items'].sort(key=lambda row: (
+        not items[row['id']].get('available', True),
+        tier_order[items[row['id']]['businessId']] + rank.get(row['id'], 0),
+        tier_order[items[row['id']]['businessId']], rank.get(row['id'], 0), row['iconIndex']))
     payload['pilot'] = dict(enabled=True, itemIds=list(items), assetIds=list(asset_specs), summary=summary(cfg, st), rewards=copy.deepcopy(data['rewards']['recent']))
     return payload

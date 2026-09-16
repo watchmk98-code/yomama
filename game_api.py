@@ -27,6 +27,7 @@ import time
 from pathlib import Path
 
 import production_economy as economy
+import crafting_pilot
 import breakfast_event
 import access
 import autopilot
@@ -202,7 +203,7 @@ def equity_price(symbol: str, seed: int, minute: int) -> float:
 
 # --------------------------------------------------------------- economy ----
 
-_startup_config = economy.load_config()
+_startup_config = crafting_pilot.configure(economy.load_config())
 _book_cache = {}
 _class_locks = {}
 _META_KEYS = {'tick', 'rngState', 'report', 'reportBaseline', 'lastRank', 'reportTick', 'rumour'}
@@ -227,6 +228,9 @@ def econ_config(session):
     cfg = json.loads(session['econ_config']) if session['econ_config'] else copy.deepcopy(_startup_config)
     if 'fun' not in cfg or (_startup_config.get('version') == 4 and cfg.get('version') != 4):
         cfg = copy.deepcopy(_startup_config)
+    elif cfg.get('version') == 4 and 'craftingPilot' not in cfg and 'craftingPilot' in _startup_config:
+        # Existing v4 classes gain crafting without losing their saved economy.
+        cfg['craftingPilot'] = copy.deepcopy(_startup_config['craftingPilot'])
     cfg['global']['seed'] = int(session['class_seed']) or cfg['global']['seed']
     # The offline replay cap is a server setting, not a class rule: it bounds how
     # much of an absence the first request of the day replays for the whole
@@ -320,6 +324,8 @@ def _class_econ(conn, session):
     elif 'fun' not in old:
         start=min((st['tick'] for st in states.values()),default=econ_tick_now(cfg,session))
         _log(conn,session['code'],None,'v3_migration',dict(config=old,players=[dict(id=p['id'],econ=p['econ']) for p in rows]))
+        conn.execute('UPDATE sessions SET econ_config=? WHERE code=?',(json.dumps(cfg),session['code']))
+    elif cfg.get('version') == 4 and 'craftingPilot' in cfg and 'craftingPilot' not in old:
         conn.execute('UPDATE sessions SET econ_config=? WHERE code=?',(json.dumps(cfg),session['code']))
     target=econ_tick_now(cfg,session)
     stop=target if cfg.get('version') == 4 else min(target,start+economy.jsround(cfg['runtime']['maxCatchupDays']*economy.ticks_per_day(cfg)))

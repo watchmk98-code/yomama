@@ -1,4 +1,4 @@
-"""Play the isolated 15-product automatic crafting trial.
+"""Play the isolated automatic crafting catalog.
 
     python3 previews/crafting_pilot_preview.py 3011
     python3 previews/crafting_pilot_preview.py 3011 --fresh
@@ -45,11 +45,11 @@ def _action(cfg, state, **fields):
     return result
 
 
-def preview_town(cfg, fresh=False):
+def preview_town(cfg, fresh=False, starter=False):
     """Build only a preview fixture; production and sales use the real engine."""
     state = economy.new_state(cfg, seed=71)
     tiers = {tier['id']: index for index, tier in enumerate(cfg['tiers'])}
-    state['tierOf'] = [tiers[business] for business in BUSINESSES]
+    state['tierOf'] = [tiers[business] for business in (('farm',) if starter else BUSINESSES)]
     state['b'] = [economy._building(tier) for tier in state['tierOf']]
     state['cash'] = 125_000
     operations.ensure(cfg, state, new=True)
@@ -70,6 +70,10 @@ def preview_town(cfg, fresh=False):
                       crafting.SUPPLIES[supply_id]['unitPrice'] * 100)
 
     if not fresh:
+        for building in state['b']:
+            building['lv'] = 3
+            building['storage'] = 3
+            building['sales'] = 3
         for item in cfg['craftingPilot']['items']:
             for quest_id in item['unlock']['questIds']:
                 state['businessProgression']['quests'][quest_id] = dict(completed=True)
@@ -86,7 +90,9 @@ def preview_town(cfg, fresh=False):
         state['checklist']['goodSales'] = 8
         for item_id in INITIAL_PRODUCTS:
             _action(cfg, state, action='unlock', itemId=item_id)
-        for asset_id in ('asset_fish_stall_1', 'asset_garage_2'):
+        initial_assets = {asset_id for item in cfg['craftingPilot']['items'] if item['id'] in INITIAL_PRODUCTS
+                          for asset_id in item['requiredAssetIds']}
+        for asset_id in sorted(initial_assets):
             _action(cfg, state, action='buy_asset', assetId=asset_id)
             business, ordinal = asset_id[len('asset_'):].rsplit('_', 1)
             building = next(building for building in state['b']
@@ -109,6 +115,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('port', type=int, nargs='?', default=3011)
     parser.add_argument('--fresh', action='store_true')
+    parser.add_argument('--starter', action='store_true', help='Show products locked by missing buildings.')
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535:
         parser.error('Choose a local preview port from 1024 to 65535.')
@@ -117,8 +124,8 @@ def main():
     # Keep API fallbacks on the same trial config; the SOLO helper initializes
     # its own ordinary snapshot, which is replaced explicitly below.
     api._startup_config = copy.deepcopy(cfg)
-    state, world = preview_town(cfg, fresh=args.fresh)
-    label = 'CRAFT TRIAL / FRESH' if args.fresh else 'CRAFT TRIAL / 15 PRODUCTS'
+    state, world = preview_town(cfg, fresh=args.fresh, starter=args.starter)
+    label = 'CRAFT TRIAL / STARTER' if args.starter else 'CRAFT TRIAL / FRESH' if args.fresh else 'CRAFT TRIAL / PRODUCTS'
     with tempfile.TemporaryDirectory(prefix='yomama-crafting-pilot-') as directory:
         token = solo_seat(Path(directory) / 'preview.db', label)
         with api.connect() as conn:
@@ -130,7 +137,7 @@ def main():
             session = api._session_of(conn, api.SOLO_CODE)
             api._save_state(conn, player['id'], cfg, state)
             api._save_world(conn, session, world)
-        print('15-product crafting trial; disposable local save.', flush=True)
+        print('Automatic crafting trial; disposable local save.', flush=True)
         serve(args.port, preview_handler(token, label), first_page='craft.html')
 
 

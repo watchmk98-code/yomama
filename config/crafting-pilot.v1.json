@@ -7,15 +7,15 @@
       "businessId": "farm",
       "ingredients": [
         {
-          "id": "farm_eggs",
+          "id": "craft_farm_eggs",
           "quantity": 2
         },
         {
-          "id": "farm_tomatoes",
+          "id": "craft_farm_tomatoes",
           "quantity": 3
         },
         {
-          "id": "farm_honey",
+          "id": "craft_farm_honey",
           "quantity": 1
         },
         {
@@ -34,22 +34,26 @@
         "focusNodes": [],
         "manualOrders": 1
       },
-      "requiredAssetIds": []
+      "requiredAssetIds": [
+        "asset_farm_1",
+        "asset_farm_2",
+        "asset_farm_3"
+      ]
     },
     {
       "id": "seafood_picnic_box",
       "businessId": "fish_stall",
       "ingredients": [
         {
-          "id": "fish_stall_fresh_catch",
+          "id": "craft_fish_stall_fresh_catch",
           "quantity": 2
         },
         {
-          "id": "fish_stall_oysters",
+          "id": "craft_fish_stall_oysters",
           "quantity": 2
         },
         {
-          "id": "fish_stall_smoked_fish",
+          "id": "craft_fish_stall_smoked_fish",
           "quantity": 1
         },
         {
@@ -69,7 +73,9 @@
         "manualOrders": 2
       },
       "requiredAssetIds": [
-        "asset_fish_stall_1"
+        "asset_fish_stall_1",
+        "asset_fish_stall_2",
+        "asset_fish_stall_3"
       ]
     },
     {
@@ -77,11 +83,11 @@
       "businessId": "fish_stall",
       "ingredients": [
         {
-          "id": "fish_stall_smoked_fish",
+          "id": "craft_fish_stall_smoked_fish",
           "quantity": 3
         },
         {
-          "id": "cannery_sauces",
+          "id": "craft_cannery_sauces",
           "quantity": 2
         },
         {
@@ -107,7 +113,9 @@
         "manualOrders": 3
       },
       "requiredAssetIds": [
-        "asset_fish_stall_1"
+        "asset_fish_stall_1",
+        "asset_fish_stall_2",
+        "asset_fish_stall_3"
       ]
     },
     {
@@ -115,15 +123,15 @@
       "businessId": "roastery",
       "ingredients": [
         {
-          "id": "roastery_roasted_beans",
+          "id": "craft_roastery_roasted_beans",
           "quantity": 2
         },
         {
-          "id": "roastery_espresso_shots",
+          "id": "craft_roastery_espresso_shots",
           "quantity": 2
         },
         {
-          "id": "roastery_pastries",
+          "id": "craft_roastery_pastries",
           "quantity": 1
         },
         {
@@ -142,22 +150,26 @@
         "focusNodes": [],
         "manualOrders": 2
       },
-      "requiredAssetIds": []
+      "requiredAssetIds": [
+        "asset_roastery_1",
+        "asset_roastery_2",
+        "asset_roastery_3"
+      ]
     },
     {
       "id": "honey_glazed_pastries",
       "businessId": "roastery",
       "ingredients": [
         {
-          "id": "farm_honey",
+          "id": "craft_farm_honey",
           "quantity": 3
         },
         {
-          "id": "roastery_pastries",
+          "id": "craft_roastery_pastries",
           "quantity": 3
         },
         {
-          "id": "farm_eggs",
+          "id": "craft_farm_eggs",
           "quantity": 2
         },
         {
@@ -180,7 +192,11 @@
         ],
         "manualOrders": 2
       },
-      "requiredAssetIds": []
+      "requiredAssetIds": [
+        "asset_roastery_1",
+        "asset_roastery_2",
+        "asset_roastery_3"
+      ]
     },
     {
       "id": "wooden_crate",
@@ -191,7 +207,7 @@
           "quantity": 3
         },
         {
-          "id": "workshop_steel_brackets",
+          "id": "craft_workshop_steel_brackets",
           "quantity": 2
         }
       ],
@@ -206,7 +222,11 @@
         "focusNodes": [],
         "manualOrders": 1
       },
-      "requiredAssetIds": []
+      "requiredAssetIds": [
+        "asset_workshop_1",
+        "asset_workshop_2",
+        "asset_workshop_3"
+      ]
     },
     {
       "id": "seedling_tray",
@@ -217,7 +237,7 @@
           "quantity": 2
         },
         {
-          "id": "workshop_steel_brackets",
+          "id": "craft_workshop_steel_brackets",
           "quantity": 1
         }
       ],
@@ -235,7 +255,9 @@
         "manualOrders": 2
       },
       "requiredAssetIds": [
-        "asset_workshop_1"
+        "asset_workshop_1",
+        "asset_workshop_2",
+        "asset_workshop_3"
       ]
     },
     {
@@ -247,11 +269,11 @@
           "quantity": 2
         },
         {
-          "id": "workshop_steel_brackets",
+          "id": "craft_workshop_steel_brackets",
           "quantity": 2
         },
         {
-          "id": "garage_spare_parts",
+          "id": "craft_garage_spare_parts",
           "quantity": 1
         },
         {
@@ -273,7 +295,9 @@
         "manualOrders": 3
       },
       "requiredAssetIds": [
-        "asset_workshop_1"
+        "asset_workshop_1",
+        "asset_workshop_2",
+        "asset_workshop_3"
       ]
     },
     {
@@ -281,15 +305,15 @@
       "businessId": "workshop",
       "ingredients": [
         {
-          "id": "workshop_welded_frames",
+          "id": "craft_workshop_welded_frames",
           "quantity": 2
         },
         {
-          "id": "garage_spare_parts",
+          "id": "craft_garage_spare_parts",
           "quantity": 2
         },
         {
-          "id": "workshop_machined_bolts",
+          "id": "craft_workshop_machined_bolts",
           "quantity": 2
         }
       ],
@@ -309,7 +333,9 @@
         "manualOrders": 4
       },
       "requiredAssetIds": [
-        "asset_workshop_2"
+        "asset_workshop_1",
+        "asset_workshop_2",
+        "asset_workshop_3"
       ]
     },
     {
@@ -325,7 +351,7 @@
           "quantity": 2
         },
         {
-          "id": "garage_spare_parts",
+          "id": "craft_garage_spare_parts",
           "quantity": 1
         },
         {
@@ -347,7 +373,9 @@
         "manualOrders": 2
       },
       "requiredAssetIds": [
-        "asset_garage_2"
+        "asset_garage_1",
+        "asset_garage_2",
+        "asset_garage_3"
       ]
     },
     {
@@ -355,7 +383,7 @@
       "businessId": "garage",
       "ingredients": [
         {
-          "id": "workshop_welded_frames",
+          "id": "craft_workshop_welded_frames",
           "quantity": 5
         },
         {
@@ -367,7 +395,7 @@
           "quantity": 5
         },
         {
-          "id": "machine_works_cnc_parts",
+          "id": "craft_machine_works_cnc_parts",
           "quantity": 5
         },
         {
@@ -391,7 +419,9 @@
         "manualOrders": 5
       },
       "requiredAssetIds": [
-        "asset_garage_2"
+        "asset_garage_1",
+        "asset_garage_2",
+        "asset_garage_3"
       ]
     },
     {
@@ -399,7 +429,7 @@
       "businessId": "garage",
       "ingredients": [
         {
-          "id": "workshop_welded_frames",
+          "id": "craft_workshop_welded_frames",
           "quantity": 6
         },
         {
@@ -411,7 +441,7 @@
           "quantity": 6
         },
         {
-          "id": "workshop_machined_bolts",
+          "id": "craft_workshop_machined_bolts",
           "quantity": 5
         },
         {
@@ -435,7 +465,9 @@
         "manualOrders": 8
       },
       "requiredAssetIds": [
-        "asset_garage_2"
+        "asset_garage_1",
+        "asset_garage_2",
+        "asset_garage_3"
       ]
     },
     {
@@ -443,15 +475,15 @@
       "businessId": "cannery",
       "ingredients": [
         {
-          "id": "farm_tomatoes",
+          "id": "craft_farm_tomatoes",
           "quantity": 4
         },
         {
-          "id": "cannery_sauces",
+          "id": "craft_cannery_sauces",
           "quantity": 2
         },
         {
-          "id": "farm_honey",
+          "id": "craft_farm_honey",
           "quantity": 2
         },
         {
@@ -473,6 +505,7 @@
         "manualOrders": 2
       },
       "requiredAssetIds": [
+        "asset_cannery_1",
         "asset_cannery_2",
         "asset_cannery_3"
       ]
@@ -482,11 +515,11 @@
       "businessId": "cannery",
       "ingredients": [
         {
-          "id": "farm_honey",
+          "id": "craft_farm_honey",
           "quantity": 3
         },
         {
-          "id": "cannery_preserves",
+          "id": "craft_cannery_preserves",
           "quantity": 2
         },
         {
@@ -514,6 +547,7 @@
         "manualOrders": 3
       },
       "requiredAssetIds": [
+        "asset_cannery_1",
         "asset_cannery_2",
         "asset_cannery_3"
       ]
@@ -523,25 +557,25 @@
       "businessId": "cannery",
       "ingredients": [
         {
-          "id": "cannery_canned_goods",
+          "id": "craft_cannery_canned_goods",
           "quantity": 2
         },
         {
-          "id": "cannery_sauces",
+          "id": "craft_cannery_sauces",
           "quantity": 1
         },
         {
-          "id": "cannery_preserves",
+          "id": "craft_cannery_preserves",
           "quantity": 2
         },
         {
-          "id": "packaging",
+          "id": "wooden_crate",
           "quantity": 1
         }
       ],
       "batchSeconds": 240,
       "batchCost": 4,
-      "sellPrice": 199,
+      "sellPrice": 260,
       "saleSeconds": 240,
       "storageCap": 6,
       "unlock": {
@@ -550,7 +584,11 @@
         "focusNodes": [],
         "manualOrders": 2
       },
-      "requiredAssetIds": []
+      "requiredAssetIds": [
+        "asset_cannery_1",
+        "asset_cannery_2",
+        "asset_cannery_3"
+      ]
     }
   ],
   "assets": [
@@ -597,7 +635,8 @@
         "pricePercent": 10
       },
       "itemIds": [
-        "coffee_gift_set"
+        "coffee_gift_set",
+        "honey_glazed_pastries"
       ]
     },
     {
@@ -608,8 +647,10 @@
         "speedPercent": 15
       },
       "itemIds": [
+        "wooden_crate",
         "seedling_tray",
-        "toolbox"
+        "toolbox",
+        "wheeled_cart"
       ]
     },
     {
@@ -620,6 +661,9 @@
         "speedPercent": 15
       },
       "itemIds": [
+        "wooden_crate",
+        "seedling_tray",
+        "toolbox",
         "wheeled_cart"
       ]
     },
@@ -646,7 +690,8 @@
       },
       "itemIds": [
         "tomato_chutney",
-        "honey_spread_jars"
+        "honey_spread_jars",
+        "pantry_hamper"
       ]
     },
     {
@@ -658,7 +703,8 @@
       },
       "itemIds": [
         "tomato_chutney",
-        "honey_spread_jars"
+        "honey_spread_jars",
+        "pantry_hamper"
       ]
     },
     {
@@ -670,7 +716,106 @@
       },
       "itemIds": [
         "tomato_chutney",
-        "honey_spread_jars"
+        "honey_spread_jars",
+        "pantry_hamper"
+      ]
+    },
+    {
+      "id": "asset_farm_1",
+      "price": 250,
+      "lifeSeconds": 604800,
+      "effects": {
+        "speedPercent": 10
+      },
+      "itemIds": [
+        "farm_breakfast_basket"
+      ]
+    },
+    {
+      "id": "asset_farm_2",
+      "price": 300,
+      "lifeSeconds": 604800,
+      "effects": {
+        "costReductionPercent": 10
+      },
+      "itemIds": [
+        "farm_breakfast_basket"
+      ]
+    },
+    {
+      "id": "asset_fish_stall_3",
+      "price": 300,
+      "lifeSeconds": 604800,
+      "effects": {
+        "pricePercent": 10
+      },
+      "itemIds": [
+        "seafood_picnic_box",
+        "smoked_fish_gift_box"
+      ]
+    },
+    {
+      "id": "asset_roastery_1",
+      "price": 300,
+      "lifeSeconds": 604800,
+      "effects": {
+        "speedPercent": 10
+      },
+      "itemIds": [
+        "coffee_gift_set",
+        "honey_glazed_pastries"
+      ]
+    },
+    {
+      "id": "asset_roastery_2",
+      "price": 350,
+      "lifeSeconds": 604800,
+      "effects": {
+        "costReductionPercent": 10
+      },
+      "itemIds": [
+        "coffee_gift_set",
+        "honey_glazed_pastries"
+      ]
+    },
+    {
+      "id": "asset_workshop_3",
+      "price": 800,
+      "lifeSeconds": 604800,
+      "effects": {
+        "pricePercent": 10
+      },
+      "itemIds": [
+        "wooden_crate",
+        "seedling_tray",
+        "toolbox",
+        "wheeled_cart"
+      ]
+    },
+    {
+      "id": "asset_garage_1",
+      "price": 700,
+      "lifeSeconds": 604800,
+      "effects": {
+        "speedPercent": 10
+      },
+      "itemIds": [
+        "battery_pack",
+        "folding_electric_scooter",
+        "electric_cargo_tricycle"
+      ]
+    },
+    {
+      "id": "asset_garage_3",
+      "price": 900,
+      "lifeSeconds": 604800,
+      "effects": {
+        "pricePercent": 10
+      },
+      "itemIds": [
+        "battery_pack",
+        "folding_electric_scooter",
+        "electric_cargo_tricycle"
       ]
     }
   ],
@@ -681,5 +826,52 @@
     "ordersEvery": 3,
     "orderBudget": 80,
     "focusBudget": 80
-  }
+  },
+  "availableItemIds": [
+    "farm_breakfast_basket",
+    "harvest_crate",
+    "egg_carrier",
+    "seafood_picnic_box",
+    "smoked_fish_gift_box",
+    "fish_trap",
+    "coffee_gift_set",
+    "honey_glazed_pastries",
+    "roasting_drum",
+    "battery_pack",
+    "folding_electric_scooter",
+    "electric_cargo_tricycle",
+    "wooden_crate",
+    "toolbox",
+    "wheeled_cart",
+    "solar_charger",
+    "solar_watering_kit",
+    "foldable_solar_mat",
+    "tomato_chutney",
+    "honey_spread_jars",
+    "pantry_hamper",
+    "precision_drill",
+    "brass_tripod_telescope",
+    "can_sealer",
+    "wind_powered_beacon",
+    "rain_gauge",
+    "precision_wind_tunnel",
+    "steam_powered_press",
+    "heat_exchanger",
+    "radiator_panel",
+    "emergency_radio",
+    "wireless_doorbell",
+    "pocket_pager",
+    "cold_chain_cargo",
+    "cryogenic_sample_vault",
+    "autonomous_cargo_capsule",
+    "automation_controller",
+    "desktop_terminal",
+    "portable_memory_drive",
+    "grid_battery_module",
+    "solar_clock",
+    "solar_food_dehydrator",
+    "satellite_survey_map",
+    "weather_logbook",
+    "moon_phase_projector"
+  ]
 }

@@ -6,15 +6,15 @@
   <!-- The LOADING screen, once per sign-in. Must run before the
        stylesheets so the page never flashes through underneath. -->
   <script src="./preload-manifest.js?v=1"></script>
-  <script src="./loading.js?v=1"></script>
+  <script src="./loading.js?v=2"></script>
   <title>YOMAMA INVESTMENTS — CRAFT</title>
   <meta name="description" content="Combine products from your businesses to craft new items." />
   <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/craft/craft-items.png?v=1" as="image" type="image/png">
-  <link rel="stylesheet" href="./styles.css?v=20260916-sunny-banner" />
-  <link rel="stylesheet" href="./econ-kids.css?v=20260915-business-ui-2" />
+  <link rel="stylesheet" href="./styles.css?v=20260916-one-banner-1" />
+  <link rel="stylesheet" href="./econ-kids.css?v=20260916-one-banner-1" />
   <link rel="stylesheet" href="./idle-ui.css?v=20260913-upgrade-feedback" />
-  <link rel="stylesheet" href="./craft.css?v=10-pilot" />
+  <link rel="stylesheet" href="./craft.css?v=19-live-progression" />
   <link rel="stylesheet" href="./craft-dialog-fit.css?v=1" />
 </head>
 <body class="motion-paused game-page game-craft-page">
@@ -60,7 +60,7 @@
       </nav></div>
       <div id="game-hud" class="econ-kid"></div>
       <div id="econ-craft" class="craft-content" aria-busy="true">
-        <div class="craft-tabs" role="group" aria-label="Catalog"><button type="button" data-craft-section="items" aria-pressed="true">Craft items</button><button type="button" data-craft-section="businessAssets" aria-pressed="false">Business assets · 45</button></div>
+        <div class="craft-tabs" role="group" aria-label="Catalog"><button type="button" data-craft-section="items" aria-pressed="true">Special products</button><button type="button" data-craft-section="tangible" aria-pressed="false">Tangible Assets</button><button type="button" data-craft-section="intangible" aria-pressed="false">Intangible Assets</button><button type="button" data-craft-section="supplies" aria-pressed="false">Supplies</button></div>
         <p class="craft-intro"><span id="craft-intro-text">Choose an item to see its ingredients.</span><span id="craft-catalog-count"></span></p>
         <p id="craft-notice" class="craft-notice" role="status">Opening your workshop…</p>
         <div id="craft-grid" class="craft-grid" aria-label="Craftable items"></div>
@@ -92,9 +92,9 @@
   <script src="./econ.js?v=20260916-ops-hidden-1"></script>
   <script src="./account.js?v=1"></script>
   <script src="./econ-nav.js?v=20260916-ops-hidden-1"></script>
-  <script src="./game-fit.js?v=20260915-materials-retired-1"></script>
+  <script src="./game-fit.js?v=20260916-one-banner-1"></script>
   <script src="./craft-art.js?v=4"></script>
-  <script src="./craft.js?v=11-asset-life"></script>
+  <script src="./craft.js?v=19-live-progression"></script>
   <script src="./craft-dialog-fit.js?v=2-pilot"></script>
 </body>
 </html>

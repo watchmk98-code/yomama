@@ -47,15 +47,15 @@ def stock(cfg, st, item_id):
     E._sync_pools(cfg, st)
 
 
-def test_catalog_has_300_items_uses_all_businesses_and_all_64_supplies():
+def test_catalog_has_300_items_uses_all_businesses_and_original_supplies():
     cfg, st = town(all_buildings=True)
     products = E.catalog(cfg)
     assert len(C.RECIPES) == len({r[0] for r in C.RECIPES}) == 300
     assert len({r[1] for r in C.RECIPES}) == 300
-    assert len(C.SUPPLIES) == 64
+    assert len(C.SUPPLIES) == 81
     used = {gid for _, _, needs in C.RECIPES for gid, _ in needs}
     assert used <= set(products) | set(C.SUPPLIES)
-    assert used & set(C.SUPPLIES) == set(C.SUPPLIES)
+    assert used & set(C.SUPPLIES) == {sid for sid in C.SUPPLIES if not sid.startswith('craft_')}
     assert {products[gid]['buildingId'] for gid in used if gid in products} == {t['id'] for t in cfg['tiers']}
     assert all(2 <= len(needs) <= 5 and all(type(q) is int and 1 <= q <= 4 for _, q in needs)
                for _, _, needs in C.RECIPES[:30])
@@ -75,6 +75,19 @@ def test_catalog_has_300_items_uses_all_businesses_and_all_64_supplies():
     assert kinds['solar_array_reserve_capacity'] == 'service'
     assert all(row['source'] == 'Crafting supplies' for item in rows
                for row in item['ingredients'] if row['kind'] == 'supply')
+
+
+def test_brass_tripod_telescope_waits_for_cnc_parts_business():
+    cfg, st = town(all_buildings=True)
+    machine_works = next(b for b in st['b'] if cfg['tiers'][b['tier']]['id'] == 'machine_works')
+    st['b'].remove(machine_works)
+    row = next(r for r in C.payload(cfg, st)['items'] if r['id'] == 'brass_tripod_telescope')
+    assert row['buildingLocked'] and not row['canCraft']
+    assert 'Bluecollar Machine Works' in row['why']
+    assert not C.act(cfg, st, body(st, itemId=row['id']))['ok']
+    st['b'].append(machine_works)
+    row = next(r for r in C.payload(cfg, st)['items'] if r['id'] == 'brass_tripod_telescope')
+    assert not row['buildingLocked']
 
 
 def test_expansion_preserves_original_150_recipes_and_36_supply_prices():
@@ -206,7 +219,7 @@ def test_old_saves_gain_empty_storage_and_crafted_objects_survive_migration():
     st.pop('crafting')
     old_worth = E.net_worth(cfg, st)
     migrated = E.migrate_state(cfg, json.loads(json.dumps(st)))
-    assert migrated['crafting'] == dict(items={}, supplies={}, revision=0, lastRequest=None)
+    assert migrated['crafting'] == dict(items={}, crafted={}, supplies={}, revision=0, lastRequest=None)
     assert E.net_worth(cfg, migrated) == old_worth
     stock(cfg, migrated, 'fish_trap')
     assert C.act(cfg, migrated, body(migrated, itemId='fish_trap'))['ok']
@@ -216,6 +229,9 @@ def test_old_saves_gain_empty_storage_and_crafted_objects_survive_migration():
     catalog = C.payload(cfg, migrated)['items']
     assert len(catalog) == 300
     assert catalog[3]['id'] == 'fish_trap' and catalog[3]['owned'] == 1
+    assert catalog[3]['craftedOnce']
+    migrated['crafting']['items']['fish_trap']['quantity'] = 0
+    assert C.payload(cfg, migrated)['items'][3]['craftedOnce']
     assert all(item['owned'] == 0 for item in catalog[30:])
 
 

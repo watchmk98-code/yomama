@@ -378,7 +378,35 @@ SUPPLIES = {
     'metamaterial_tiles': dict(name='Metamaterial Tiles', unitPrice=1800),
     'plasma_igniters': dict(name='Plasma Igniters', unitPrice=3500),
     'radiation_shields': dict(name='Radiation Shields', unitPrice=3000),
+    # Purchased craft inputs are separate from the businesses' ordinary stock.
+    'craft_cannery_canned_goods': dict(name='Canned Goods Ingredients', unitPrice=25),
+    'craft_cannery_preserves': dict(name='Preserve Ingredients', unitPrice=30),
+    'craft_cannery_sauces': dict(name='Sauce Ingredients', unitPrice=20),
+    'craft_farm_eggs': dict(name='Egg Ingredients', unitPrice=4),
+    'craft_farm_honey': dict(name='Honey Ingredients', unitPrice=8),
+    'craft_farm_tomatoes': dict(name='Tomato Ingredients', unitPrice=2),
+    'craft_fish_stall_fresh_catch': dict(name='Fresh Fish Ingredients', unitPrice=3),
+    'craft_fish_stall_oysters': dict(name='Oyster Ingredients', unitPrice=6),
+    'craft_fish_stall_smoked_fish': dict(name='Smoked Fish Ingredients', unitPrice=10),
+    'craft_garage_spare_parts': dict(name='Repair Components', unitPrice=12),
+    'craft_machine_works_cnc_parts': dict(name='Precision Components', unitPrice=30),
+    'craft_roastery_espresso_shots': dict(name='Espresso Ingredients', unitPrice=7),
+    'craft_roastery_pastries': dict(name='Pastry Ingredients', unitPrice=20),
+    'craft_roastery_roasted_beans': dict(name='Coffee Bean Ingredients', unitPrice=5),
+    'craft_workshop_machined_bolts': dict(name='Machined Fasteners', unitPrice=34),
+    'craft_workshop_steel_brackets': dict(name='Steel Bracket Components', unitPrice=12),
+    'craft_workshop_welded_frames': dict(name='Welded Frame Components', unitPrice=20),
 }
+
+
+def all_supplies(cfg):
+    """Pilot recipe inputs are purchased craft materials, never business stock."""
+    result = dict(SUPPLIES)
+    if cfg.get('craftingPilot', {}).get('enabled'):
+        for tier in cfg['tiers']:
+            for good in tier['goods']:
+                result['craft_input_' + good['id']] = dict(name=good['name'] + ' Materials', unitPrice=good['unitPrice'])
+    return result
 ENERGY = frozenset(('solar_coop_daytime_kwh', 'turbine_field_wind_kwh',
                     'generator_steam_heat', 'generator_baseload_power',
                     'generator_peak_power', 'solar_array_utility_kwh'))
@@ -391,6 +419,7 @@ def ensure(st):
     """An old town gains empty storage; existing crafting ownership survives."""
     saved = st.setdefault('crafting', {})
     saved.setdefault('items', {})
+    saved.setdefault('crafted', {})
     saved.setdefault('supplies', {})
     saved.setdefault('revision', 0)
     saved.setdefault('lastRequest', None)
@@ -428,6 +457,15 @@ def _ingredients(cfg, st, needs, held):
     return rows
 
 
+def _missing_producers(cfg, st, needs):
+    import production_economy as economy
+    goods = economy.catalog(cfg)
+    open_businesses = {cfg['tiers'][b['tier']]['id'] for b in st.get('b', [])}
+    required = {goods[gid]['buildingId'] for gid, _ in needs if gid in goods}
+    return [tier['name'] for tier in cfg['tiers']
+            if tier['id'] in required and tier['id'] not in open_businesses]
+
+
 def payload(cfg, st):
     import business_assets
     import crafting_pilot
@@ -438,13 +476,16 @@ def payload(cfg, st):
     for index, (item_id, name, needs) in enumerate(RECIPES):
         ingredients = _ingredients(cfg, st, needs, held)
         missing = [r for r in ingredients if r['missing']]
+        missing_producers = _missing_producers(cfg, st, needs)
         items.append(dict(id=item_id, name=name, iconIndex=index,
                           owned=saved.get('items', {}).get(item_id, {}).get('quantity', 0),
-                          ingredients=ingredients, canCraft=not missing,
-                          why=('Need available ' + missing[0]['name']) if missing else ''))
+                          craftedOnce=bool(saved.get('crafted', {}).get(item_id) or saved.get('items', {}).get(item_id, {}).get('quantity', 0)),
+                          buildingLocked=bool(missing_producers), missingBuildings=missing_producers,
+                          ingredients=ingredients, canCraft=not missing and not missing_producers,
+                          why=('Open ' + ', '.join(missing_producers)) if missing_producers else ('Need available ' + missing[0]['name']) if missing else ''))
     supplies = [dict(id=sid, name=row['name'], unitPrice=row['unitPrice'],
                      quantity=saved.get('supplies', {}).get(sid, {}).get('quantity', 0))
-                for sid, row in SUPPLIES.items()]
+                for sid, row in all_supplies(cfg).items()]
     return crafting_pilot.enrich(cfg, st, dict(enabled=True, revision=saved.get('revision', 0), items=items,
                 businessAssets=business_assets.catalog(), supplies=supplies, totalOwned=sum(row['owned'] for row in items)))
 
@@ -480,13 +521,16 @@ def act(cfg, st, body):
         if recipe is None:
             return dict(ok=False, why='Unknown craftable item')
         if crafting_pilot.enabled(cfg) and item_id in crafting_pilot._items(cfg):
+            item = crafting_pilot._items(cfg)[item_id]
+            if item.get('activationCraft'):
+                return crafting_pilot.act(cfg, st, dict(body, action='activate'))
             return dict(ok=False, why='This product is manufactured automatically after unlocking')
         if 'quantity' in body and (type(body['quantity']) is not int or body['quantity'] != 1):
             return dict(ok=False, why='Craft one item at a time')
         intent = ['craft', item_id]
     elif action == 'buy_supply':
         supply_id, quantity = body.get('supplyId'), body.get('quantity')
-        if not isinstance(supply_id, str) or supply_id not in SUPPLIES:
+        if not isinstance(supply_id, str) or supply_id not in all_supplies(cfg):
             return dict(ok=False, why='Unknown crafting supply')
         if type(quantity) is not int or not 1 <= quantity <= 100:
             return dict(ok=False, why='Supply quantity must be an integer from 1 to 100')
@@ -503,7 +547,7 @@ def act(cfg, st, body):
         return dict(ok=False, why='Crafting changed; refresh and try again')
 
     if action == 'buy_supply':
-        cost = SUPPLIES[supply_id]['unitPrice'] * quantity
+        cost = all_supplies(cfg)[supply_id]['unitPrice'] * quantity
         if st['cash'] < cost:
             return dict(ok=False, why='Need ' + str(cost - st['cash']) + ' YM more')
         saved = ensure(st)
@@ -511,6 +555,9 @@ def act(cfg, st, body):
         _add(saved['supplies'], supply_id, quantity, cost)
         receipt = dict(ok=True, kind='craft_supply', supplyId=supply_id, quantity=quantity, cost=cost)
     else:
+        missing_producers = _missing_producers(cfg, st, recipe[2])
+        if missing_producers:
+            return dict(ok=False, why='Open ' + ', '.join(missing_producers))
         ingredients = _ingredients(cfg, st, recipe[2], economy.protected_stock(cfg, st))
         missing = next((r for r in ingredients if r['missing']), None)
         if missing:
@@ -537,6 +584,7 @@ def act(cfg, st, body):
         economy._sync_pools(cfg, st)
         transferred += before_goods - sum(st['pend'].values())
         _add(saved['items'], item_id, 1, transferred)
+        saved['crafted'][item_id] = True
         receipt = dict(ok=True, kind='craft', itemId=item_id, name=recipe[1], quantity=1,
                        owned=saved['items'][item_id]['quantity'])
     saved['revision'] += 1

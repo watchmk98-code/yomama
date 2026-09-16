@@ -11,13 +11,14 @@ import pytest
 import business_operations as operations
 import crafting as crafting
 import crafting_pilot as pilot
+import game_api
 import inventory_costs
 import production_economy as economy
 
 
 PILOT_ITEMS = {
     'farm_breakfast_basket', 'seafood_picnic_box', 'smoked_fish_gift_box',
-    'coffee_gift_set', 'honey_glazed_pastries', 'wooden_crate', 'seedling_tray',
+    'coffee_gift_set', 'honey_glazed_pastries', 'wooden_crate',
     'toolbox', 'wheeled_cart', 'battery_pack', 'folding_electric_scooter',
     'electric_cargo_tricycle', 'tomato_chutney', 'honey_spread_jars', 'pantry_hamper',
 }
@@ -75,6 +76,159 @@ def test_trial_configuration_survives_a_class_snapshot_without_changing_default_
     assert not pilot.enabled(original)
     assert economy.load_config() == original
     assert cfg['tiers'] == original['tiers'], 'Ordinary business goods keep their existing rules.'
+
+
+def test_new_and_existing_classes_receive_live_crafting_rules():
+    assert pilot.enabled(game_api._startup_config)
+    old_cfg = economy.load_config()
+    old_session = dict(econ_config=json.dumps(old_cfg), class_seed=7)
+    new_session = dict(econ_config='', class_seed=7)
+    assert pilot.enabled(game_api.econ_config(old_session))
+    assert game_api.econ_config(old_session)['tiers'] == old_cfg['tiers']
+    assert pilot.enabled(game_api.econ_config(new_session))
+
+
+def test_existing_class_adds_crafting_without_resetting_its_player(tmp_path, monkeypatch):
+    monkeypatch.setattr(game_api, 'DB_PATH', tmp_path / 'live-crafting.db')
+    live_config = game_api._startup_config
+    monkeypatch.setattr(game_api, '_startup_config', economy.load_config())
+    game_api._settled.clear()
+    game_api.init_db()
+    teacher = game_api.create_session({})
+    joined = game_api.join(dict(code=teacher['code'], name='PLAYER', pin='1234'))
+    with game_api.connect() as conn:
+        before = game_api._player_by_token(conn, joined['token'])
+        previous = json.loads(before['econ'])
+    monkeypatch.setattr(game_api, '_startup_config', live_config)
+    game_api.econ_state(dict(token=joined['token']))
+    with game_api.connect() as conn:
+        session = game_api._session_of(conn, teacher['code'])
+        after = game_api._player_by_token(conn, joined['token'])
+    saved = json.loads(after['econ'])
+    assert pilot.enabled(json.loads(session['econ_config']))
+    assert saved['cash'] == previous['cash']
+    assert saved['b'] == previous['b']
+    assert 'craftingPilot' in saved
+
+
+def test_catalog_places_available_products_in_progression_order():
+    cfg, state = town()
+    rows = crafting.payload(cfg, state)['items']
+    available = [row for row in rows if row['available']]
+    assert len(available) == 45
+    assert rows[:45] == available
+    assert rows[45]['available'] is False
+    stage = {tier['id']: index for index, tier in enumerate(cfg['tiers'])}
+    scores = [stage[row['businessId']] + product(cfg, row['id'])['unlock']['productionLevel'] - 1
+              for row in available]
+    assert scores == sorted(scores)
+    assert available[0]['id'] == 'farm_breakfast_basket'
+
+
+def test_every_automatic_product_uses_craft_inventory_and_three_available_assets():
+    cfg, _ = town()
+    assets = {row['id'] for row in cfg['craftingPilot']['assets']}
+    products = {row['id'] for row in cfg['craftingPilot']['items']}
+    ordinary = set(economy.catalog(cfg))
+    supplies = crafting.all_supplies(cfg)
+    for item in cfg['craftingPilot']['items']:
+        assert len(item['requiredAssetIds']) == len(set(item['requiredAssetIds'])) == 3
+        assert set(item['requiredAssetIds']) <= assets
+        assert all(need['id'] in supplies or need['id'] in products for need in item['ingredients'])
+        assert not {need['id'] for need in item['ingredients']} & ordinary
+
+
+def test_exactly_three_products_per_building_are_available_and_others_cannot_activate():
+    cfg, state = town()
+    available = [item for item in cfg['craftingPilot']['items'] if item['available']]
+    assert len(available) == 45
+    assert all(sum(item['businessId'] == tier['id'] for item in available) == 3 for tier in cfg['tiers'])
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == 'seedling_tray')
+    assert row['available'] is False and not row['canUnlock']
+    before = copy.deepcopy(state)
+    assert not pilot.act(cfg, state, request(state, action='unlock', itemId='seedling_tray'))['ok']
+    assert state == before
+
+
+def test_missing_building_blocks_unlock_and_marks_product_gray_until_built():
+    cfg, state = town()
+    item = product(cfg, 'wheeled_cart')
+    state['craftingPilot']['ordersByBusiness']['workshop'] = item['unlock']['manualOrders']
+    state['businessProgression']['quests']['workshop-plan'] = dict(completed=True)
+    state['workforce']['teams'].setdefault('workshop', {})['nodes'] = ['production']
+    grant_milestones(cfg, state, item)
+    building = next(b for b in state['b'] if cfg['tiers'][b['tier']]['id'] == 'workshop')
+    state['b'].remove(building)
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == item['id'])
+    assert row['buildingLocked'] and not row['canUnlock']
+    assert not pilot.act(cfg, state, request(state, action='unlock', itemId=item['id']))['ok']
+    state['b'].append(building)
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == item['id'])
+    assert not row['buildingLocked'] and row['canUnlock']
+
+
+def test_missing_ingredient_producer_building_grays_downstream_product():
+    cfg, state = town()
+    state['craftingPilot']['ordersByBusiness']['cannery'] = 2
+    grant_milestones(cfg, state, product(cfg, 'pantry_hamper'))
+    workshop = next(b for b in state['b'] if cfg['tiers'][b['tier']]['id'] == 'workshop')
+    state['b'].remove(workshop)
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == 'pantry_hamper')
+    assert row['buildingLocked'] and not row['canUnlock']
+    assert any(r['kind'] == 'dependencyBusiness' and not r['ready'] for r in row['unlockRequirements'])
+    state['b'].append(workshop)
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == 'pantry_hamper')
+    assert not row['buildingLocked'] and row['canUnlock']
+
+
+def test_product_keeps_crafted_status_after_automatic_stock_sells():
+    cfg, state = town()
+    ready(cfg, state, 'farm_breakfast_basket')
+    stock(cfg, state, 'farm_breakfast_basket')
+    run_ticks(cfg, state, 30)
+    assert state['craftingPilot']['produced']['farm_breakfast_basket']
+    state['crafting']['items']['farm_breakfast_basket']['quantity'] = 0
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == 'farm_breakfast_basket')
+    assert row['craftedOnce']
+
+
+def test_one_time_craft_activates_legacy_recipe_then_building_produces_stock():
+    cfg, state = town()
+    item = product(cfg, 'brass_tripod_telescope')
+    grant_milestones(cfg, state, item)
+    for need in item['ingredients']:
+        if need['id'] in crafting.all_supplies(cfg):
+            action_body = request(state, action='buy_supply', supplyId=need['id'], quantity=need['quantity'] * 3)
+            assert crafting.act(cfg, state, action_body)['ok']
+    before_inventory = copy.deepcopy(state['inventory'])
+    body = request(state, action='craft', itemId=item['id'])
+    assert crafting.act(cfg, state, body)['ok']
+    assert state['inventory'] == before_inventory
+    assert state['craftingPilot']['unlocked'][item['id']]
+    assert quantity(state, item['id']) == 1
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == item['id'])
+    assert row['businessId'] == item['businessId'] and row['owned'] == 1
+    assert not crafting.act(cfg, state, request(state, action='craft', itemId=item['id']))['ok']
+    run_ticks(cfg, state, 40)
+    assert state['craftingPilot']['totals']['made'] == 0
+    for asset_id in item['requiredAssetIds']:
+        action(cfg, state, action='buy_asset', assetId=asset_id)
+        slot = int(asset_id.rsplit('_', 1)[1]) - 1
+        action(cfg, state, action='assign_asset', assetId=asset_id,
+               buildingId=building_identity(cfg, state, item['businessId']), assetSlot=slot)
+    run_ticks(cfg, state, 40)
+    assert state['craftingPilot']['totals']['made'] > 0
+    assert state['inventory'] == before_inventory
+
+
+def test_previously_crafted_item_activates_once_after_pilot_migration():
+    cfg, state = town()
+    state['crafting']['items']['field_notebook'] = dict(quantity=1, value=30)
+    state['crafting']['crafted']['field_notebook'] = True
+    pilot.ensure(cfg, state)
+    row = next(r for r in crafting.payload(cfg, state)['items'] if r['id'] == 'field_notebook')
+    assert row['unlocked'] and row['craftedOnce']
+    assert not crafting.act(cfg, state, request(state, action='craft', itemId='field_notebook'))['ok']
 
 
 def test_old_items_supplies_and_request_receipt_survive_trial_migration():
@@ -179,22 +333,63 @@ def product(cfg, item_id):
     return next(item for item in cfg['craftingPilot']['items'] if item['id'] == item_id)
 
 
+def grant_milestones(cfg, state, item):
+    business = item['businessId']
+    unlock = item['unlock']
+    building = next(b for b in state['b'] if cfg['tiers'][b['tier']]['id'] == business)
+    for field, level in (('lv', 'productionLevel'), ('storage', 'storageLevel'),
+                         ('sales', 'customersLevel')):
+        building[field] = max(building[field], unlock.get(level, 1))
+    state['cash'] = max(state['cash'], unlock.get('netWorth', 0) + unlock.get('cash', 0))
+    state['craftingPilot']['ordersByBusiness'][business] = max(
+        state['craftingPilot']['ordersByBusiness'].get(business, 0), unlock.get('manualOrders', 0))
+    for quest_id in unlock.get('questIds', []):
+        state['businessProgression']['quests'][quest_id] = dict(completed=True)
+    team = state['workforce']['teams'].setdefault(business, {})
+    team.setdefault('nodes', [])
+    for node in unlock.get('focusNodes', []):
+        if node not in team['nodes']:
+            team['nodes'].append(node)
+
+
+def test_available_products_require_levels_net_worth_and_quest_milestones():
+    cfg, state = town()
+    items = [item for item in cfg['craftingPilot']['items'] if item['available']]
+    assert len(items) == 45
+    available_order = cfg['craftingPilot']['availableItemIds']
+    for business in (tier['id'] for tier in cfg['tiers']):
+        local = [product(cfg, item_id) for item_id in available_order
+                 if product(cfg, item_id)['businessId'] == business]
+        assert [item['unlock']['productionLevel'] for item in local] == [1, 2, 3]
+        assert [item['unlock']['storageLevel'] for item in local] == [1, 2, 3]
+        assert [item['unlock']['customersLevel'] for item in local] == [1, 2, 3]
+        assert business + '-plan' in local[1]['unlock']['questIds']
+        assert business + '-signature' in local[2]['unlock']['questIds']
+    item = product(cfg, 'brass_tripod_telescope')
+    grant_milestones(cfg, state, item)
+    building = next(b for b in state['b'] if cfg['tiers'][b['tier']]['id'] == item['businessId'])
+    assert all(row['ready'] for row in pilot._requirements(cfg, state, item))
+    for field, requirement in (('lv', 'productionLevel'), ('storage', 'storageLevel'),
+                               ('sales', 'customersLevel')):
+        building[field] = item['unlock'][requirement] - 1
+        assert not pilot.act(cfg, state, request(state, action='unlock', itemId=item['id']))['ok']
+        building[field] += 1
+    state['businessProgression']['quests']['machine_works-plan']['completed'] = False
+    assert not pilot.act(cfg, state, request(state, action='unlock', itemId=item['id']))['ok']
+    state['businessProgression']['quests']['machine_works-plan']['completed'] = True
+    state['cash'] = 0
+    state['book'] = 0
+    assert not any(row['ready'] for row in pilot._requirements(cfg, state, item)
+                   if row['kind'] == 'netWorth')
+    assert not pilot.act(cfg, state, request(state, action='unlock', itemId=item['id']))['ok']
+
+
 def ready(cfg, state, *item_ids):
     """Grant completed milestones, then use real unlock and acquisition actions."""
     wanted_assets = set()
     for item_id in item_ids:
         item = product(cfg, item_id)
-        business = item['businessId']
-        unlock = item['unlock']
-        state['craftingPilot']['ordersByBusiness'][business] = max(
-            state['craftingPilot']['ordersByBusiness'].get(business, 0), unlock.get('manualOrders', 0))
-        for quest_id in unlock.get('questIds', []):
-            state['businessProgression']['quests'][quest_id] = dict(completed=True)
-        team = state['workforce']['teams'].setdefault(business, {})
-        team.setdefault('nodes', [])
-        for node in unlock.get('focusNodes', []):
-            if node not in team['nodes']:
-                team['nodes'].append(node)
+        grant_milestones(cfg, state, item)
         action(cfg, state, action='unlock', itemId=item_id)
         wanted_assets.update(item.get('requiredAssetIds', []))
     for asset_id in sorted(wanted_assets):
@@ -289,10 +484,11 @@ def test_multiple_unlocked_products_run_together_without_product_selection():
     run_ticks(cfg, state, 30)
     assert quantity(state, 'farm_breakfast_basket') == 3
     assert quantity(state, 'coffee_gift_set') == 3
-    assert worth(cfg, state) == before, 'Making stock transfers value; selling it realizes the markup.'
+    wear = state['craftingPilot']['totals']['depreciation'] + state['craftingPilot']['totals']['amortization']
+    assert worth(cfg, state) + wear == before, 'Making stock transfers value; assigned assets wear during production.'
 
 
-@pytest.mark.parametrize('shortage', ['cash', 'supply', 'base_good'])
+@pytest.mark.parametrize('shortage', ['cash', 'supply', 'craft_supply'])
 def test_blocked_batch_has_no_partial_resource_debits(shortage):
     cfg, state = town()
     ready(cfg, state, 'farm_breakfast_basket')
@@ -302,23 +498,23 @@ def test_blocked_batch_has_no_partial_resource_debits(shortage):
     elif shortage == 'supply':
         state['crafting']['supplies']['packaging'].update(quantity=0, value=0)
     else:
-        state['inventory']['farm_eggs'] = 1
+        state['crafting']['supplies']['craft_farm_eggs'].update(quantity=1, value=4)
     before = resources(state)
     run_ticks(cfg, state, 30)
     assert resources(state) == before
     assert quantity(state, 'farm_breakfast_basket') == 0
 
 
-def test_committed_base_order_stock_is_protected_from_automatic_crafting():
+def test_automatic_crafting_never_draws_from_standard_business_stock():
     cfg, state = town()
     ready(cfg, state, 'farm_breakfast_basket')
     stock(cfg, state, 'farm_breakfast_basket')
     state['offers'][0] = dict(id='promised-farm-eggs', committed=True,
                               requirements=[dict(goodId='farm_eggs', quantity=1)])
-    before = resources(state)
+    before_inventory = copy.deepcopy(state['inventory'])
     run_ticks(cfg, state, 30)
-    assert resources(state) == before
-    assert quantity(state, 'farm_breakfast_basket') == 0
+    assert state['inventory'] == before_inventory
+    assert state['craftingPilot']['totals']['made'] > 0
 
 
 def test_input_shortages_cannot_bank_many_completed_batches():
@@ -344,7 +540,7 @@ def test_empty_shelves_cannot_bank_unlimited_customer_demand():
 
 def test_ready_products_share_a_limited_common_input_fairly():
     cfg, state = town()
-    candidates = ('wooden_crate', 'seedling_tray')
+    candidates = ('wooden_crate', 'toolbox')
     for item_id in candidates:
         product(cfg, item_id).update(ingredients=[dict(id='packaging', quantity=1)],
                                      batchSeconds=cfg['global']['tick'], batchCost=1,
@@ -525,9 +721,10 @@ def test_preview_solo_snapshot_really_enables_the_trial_before_serving(monkeypat
         # The preview's AUTO_LOGIN process permits this tokenless local call.
         data = api.econ_state({})
         products = [row for row in data['crafting']['items'] if row.get('pilot')]
-        assert len(products) == 15
+        assert len(products) == 300
         assert sum(row['unlocked'] for row in products) == (0 if fresh else 3)
-        assert sum(row['canUnlock'] for row in products) == (0 if fresh else 12)
+        original = [row for row in products if row['id'] in PILOT_ITEMS]
+        assert sum(row['canUnlock'] for row in original) == (0 if fresh else 11)
         assert first_page == 'craft.html'
         seen.append(True)
 
