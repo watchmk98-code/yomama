@@ -71,9 +71,9 @@ def preview_town(cfg, fresh=False, starter=False):
 
     if not fresh:
         for building in state['b']:
-            building['lv'] = 3
-            building['storage'] = 3
-            building['sales'] = 3
+            building['lv'] = 4
+            building['storage'] = 4
+            building['sales'] = 4
         for item in cfg['craftingPilot']['items']:
             for quest_id in item['unlock']['questIds']:
                 state['businessProgression']['quests'][quest_id] = dict(completed=True)

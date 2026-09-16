@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "version": 1,
+  "version": 2,
   "items": [
     {
       "id": "farm_breakfast_basket",
@@ -106,9 +106,7 @@
       "storageCap": 6,
       "unlock": {
         "cash": 250,
-        "questIds": [
-          "fish_stall-plan"
-        ],
+        "questIds": [],
         "focusNodes": [],
         "manualOrders": 3
       },
@@ -184,9 +182,7 @@
       "storageCap": 6,
       "unlock": {
         "cash": 240,
-        "questIds": [
-          "roastery-plan"
-        ],
+        "questIds": [],
         "focusNodes": [
           "sales"
         ],
@@ -288,9 +284,7 @@
       "storageCap": 6,
       "unlock": {
         "cash": 450,
-        "questIds": [
-          "workshop-plan"
-        ],
+        "questIds": [],
         "focusNodes": [],
         "manualOrders": 3
       },
@@ -324,9 +318,7 @@
       "storageCap": 6,
       "unlock": {
         "cash": 600,
-        "questIds": [
-          "workshop-plan"
-        ],
+        "questIds": [],
         "focusNodes": [
           "production"
         ],
@@ -410,9 +402,7 @@
       "storageCap": 3,
       "unlock": {
         "cash": 1800,
-        "questIds": [
-          "garage-plan"
-        ],
+        "questIds": [],
         "focusNodes": [
           "production"
         ],
@@ -456,9 +446,7 @@
       "storageCap": 3,
       "unlock": {
         "cash": 2800,
-        "questIds": [
-          "garage-signature"
-        ],
+        "questIds": [],
         "focusNodes": [
           "production-advanced"
         ],
@@ -498,9 +486,7 @@
       "storageCap": 6,
       "unlock": {
         "cash": 400,
-        "questIds": [
-          "cannery-plan"
-        ],
+        "questIds": [],
         "focusNodes": [],
         "manualOrders": 2
       },
@@ -538,9 +524,7 @@
       "storageCap": 6,
       "unlock": {
         "cash": 450,
-        "questIds": [
-          "cannery-plan"
-        ],
+        "questIds": [],
         "focusNodes": [
           "efficiency"
         ],
@@ -831,9 +815,9 @@
     "farm_breakfast_basket",
     "harvest_crate",
     "egg_carrier",
+    "fish_trap",
     "seafood_picnic_box",
     "smoked_fish_gift_box",
-    "fish_trap",
     "coffee_gift_set",
     "honey_glazed_pastries",
     "roasting_drum",
@@ -850,8 +834,8 @@
     "honey_spread_jars",
     "pantry_hamper",
     "precision_drill",
-    "brass_tripod_telescope",
     "can_sealer",
+    "brass_tripod_telescope",
     "wind_powered_beacon",
     "rain_gauge",
     "precision_wind_tunnel",
@@ -873,5 +857,232 @@
     "satellite_survey_map",
     "weather_logbook",
     "moon_phase_projector"
-  ]
+  ],
+  "upgradeMilestones": {
+    "farm_breakfast_basket": [
+      1,
+      2,
+      1
+    ],
+    "harvest_crate": [
+      2,
+      3,
+      1
+    ],
+    "egg_carrier": [
+      3,
+      3,
+      2
+    ],
+    "fish_trap": [
+      2,
+      1,
+      1
+    ],
+    "seafood_picnic_box": [
+      2,
+      2,
+      2
+    ],
+    "smoked_fish_gift_box": [
+      3,
+      3,
+      3
+    ],
+    "coffee_gift_set": [
+      1,
+      2,
+      1
+    ],
+    "honey_glazed_pastries": [
+      2,
+      2,
+      3
+    ],
+    "roasting_drum": [
+      4,
+      2,
+      3
+    ],
+    "battery_pack": [
+      2,
+      1,
+      1
+    ],
+    "folding_electric_scooter": [
+      3,
+      2,
+      2
+    ],
+    "electric_cargo_tricycle": [
+      4,
+      3,
+      3
+    ],
+    "wooden_crate": [
+      1,
+      2,
+      1
+    ],
+    "toolbox": [
+      3,
+      2,
+      1
+    ],
+    "wheeled_cart": [
+      4,
+      3,
+      2
+    ],
+    "solar_charger": [
+      2,
+      1,
+      1
+    ],
+    "solar_watering_kit": [
+      3,
+      2,
+      2
+    ],
+    "foldable_solar_mat": [
+      4,
+      3,
+      2
+    ],
+    "tomato_chutney": [
+      2,
+      1,
+      1
+    ],
+    "honey_spread_jars": [
+      2,
+      2,
+      2
+    ],
+    "pantry_hamper": [
+      3,
+      3,
+      3
+    ],
+    "precision_drill": [
+      2,
+      1,
+      1
+    ],
+    "can_sealer": [
+      3,
+      2,
+      2
+    ],
+    "brass_tripod_telescope": [
+      4,
+      3,
+      2
+    ],
+    "wind_powered_beacon": [
+      2,
+      1,
+      1
+    ],
+    "rain_gauge": [
+      2,
+      2,
+      2
+    ],
+    "precision_wind_tunnel": [
+      4,
+      3,
+      2
+    ],
+    "steam_powered_press": [
+      2,
+      1,
+      1
+    ],
+    "heat_exchanger": [
+      3,
+      2,
+      2
+    ],
+    "radiator_panel": [
+      3,
+      3,
+      3
+    ],
+    "emergency_radio": [
+      2,
+      1,
+      1
+    ],
+    "wireless_doorbell": [
+      2,
+      2,
+      2
+    ],
+    "pocket_pager": [
+      3,
+      3,
+      3
+    ],
+    "cold_chain_cargo": [
+      1,
+      2,
+      1
+    ],
+    "cryogenic_sample_vault": [
+      3,
+      3,
+      1
+    ],
+    "autonomous_cargo_capsule": [
+      4,
+      3,
+      2
+    ],
+    "automation_controller": [
+      2,
+      1,
+      1
+    ],
+    "desktop_terminal": [
+      2,
+      2,
+      2
+    ],
+    "portable_memory_drive": [
+      3,
+      3,
+      2
+    ],
+    "grid_battery_module": [
+      2,
+      1,
+      1
+    ],
+    "solar_clock": [
+      2,
+      2,
+      2
+    ],
+    "solar_food_dehydrator": [
+      3,
+      3,
+      2
+    ],
+    "satellite_survey_map": [
+      2,
+      1,
+      1
+    ],
+    "weather_logbook": [
+      2,
+      2,
+      2
+    ],
+    "moon_phase_projector": [
+      3,
+      3,
+      3
+    ]
+  }
 }

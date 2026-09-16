@@ -228,8 +228,9 @@ def econ_config(session):
     cfg = json.loads(session['econ_config']) if session['econ_config'] else copy.deepcopy(_startup_config)
     if 'fun' not in cfg or (_startup_config.get('version') == 4 and cfg.get('version') != 4):
         cfg = copy.deepcopy(_startup_config)
-    elif cfg.get('version') == 4 and 'craftingPilot' not in cfg and 'craftingPilot' in _startup_config:
-        # Existing v4 classes gain crafting without losing their saved economy.
+    elif (cfg.get('version') == 4 and 'craftingPilot' in _startup_config
+          and cfg.get('craftingPilot', {}).get('version', 0) < _startup_config['craftingPilot']['version']):
+        # Existing v4 classes receive newer crafting rules without losing progress.
         cfg['craftingPilot'] = copy.deepcopy(_startup_config['craftingPilot'])
     cfg['global']['seed'] = int(session['class_seed']) or cfg['global']['seed']
     # The offline replay cap is a server setting, not a class rule: it bounds how
@@ -325,7 +326,8 @@ def _class_econ(conn, session):
         start=min((st['tick'] for st in states.values()),default=econ_tick_now(cfg,session))
         _log(conn,session['code'],None,'v3_migration',dict(config=old,players=[dict(id=p['id'],econ=p['econ']) for p in rows]))
         conn.execute('UPDATE sessions SET econ_config=? WHERE code=?',(json.dumps(cfg),session['code']))
-    elif cfg.get('version') == 4 and 'craftingPilot' in cfg and 'craftingPilot' not in old:
+    elif (cfg.get('version') == 4 and 'craftingPilot' in cfg
+          and old.get('craftingPilot', {}).get('version', 0) < cfg['craftingPilot']['version']):
         conn.execute('UPDATE sessions SET econ_config=? WHERE code=?',(json.dumps(cfg),session['code']))
     target=econ_tick_now(cfg,session)
     stop=target if cfg.get('version') == 4 else min(target,start+economy.jsround(cfg['runtime']['maxCatchupDays']*economy.ticks_per_day(cfg)))

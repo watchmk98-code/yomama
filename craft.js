@@ -113,9 +113,9 @@
       if (card) {
         card.classList.toggle('craft-item-pilot', !!(item.pilot && item.unlocked));
         card.classList.toggle('craft-item-crafted', !!item.craftedOnce);
-        card.classList.toggle('craft-item-building-locked', !!item.buildingLocked);
+        card.classList.toggle('craft-item-building-locked', !!(item.buildingLocked || item.progressionLocked));
         card.classList.toggle('craft-item-unavailable', !!(item.pilot && item.available === false));
-        card.title = item.available === false ? item.name + ' · Not available yet' : item.buildingLocked ? item.name + ' · Build required businesses' : item.name;
+        card.title = item.available === false ? item.name + ' · Not available yet' : item.buildingLocked ? item.name + ' · Build required businesses' : item.progressionLocked ? item.name + ' · Upgrade this business' : item.name;
       }
     });
     grid.dataset.section = section;

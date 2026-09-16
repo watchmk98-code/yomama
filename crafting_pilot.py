@@ -58,19 +58,26 @@ def configure(cfg):
     if set(pilot['availableItemIds']) - {item['id'] for item in pilot['items']} or any(n != 3 for n in counts.values()):
         raise ValueError('Each building must have exactly three available crafting products')
     products = {item['id']: item for item in pilot['items']}
-    tiers = {tier['id']: tier for tier in cfg['tiers']}
-    ranks = {business_id: 0 for business_id in tiers}
+    milestones = pilot['upgradeMilestones']
+    if set(milestones) != available:
+        raise ValueError('Every available product needs upgrade milestones')
+    ranks = {tier['id']: 0 for tier in cfg['tiers']}
+    previous = {}
     for item_id in pilot['availableItemIds']:
         item = products[item_id]
         business_id = item['businessId']
         ranks[business_id] += 1
-        rank = ranks[business_id]
+        levels = milestones[item_id]
+        if (len(levels) != 3 or any(type(level) is not int or level < 1 or level > cfg['production']['maxLevel'] for level in levels)
+                or ranks[business_id] == 1 and max(levels) < 2
+                or business_id in previous and (not all(level >= earlier for level, earlier in zip(levels, previous[business_id]))
+                                               or not any(level > earlier for level, earlier in zip(levels, previous[business_id])))):
+            raise ValueError('Invalid crafting upgrade progression for ' + item_id)
+        previous[business_id] = levels
         unlock = item['unlock']
-        unlock.update(productionLevel=rank, storageLevel=rank, customersLevel=rank,
-                      netWorth=tiers[business_id]['baseCost'] * rank)
-        if rank > 1:
-            quest_id = '{}-{}'.format(business_id, 'plan' if rank == 2 else 'signature')
-            unlock['questIds'] = list(dict.fromkeys(unlock['questIds'] + [quest_id]))
+        unlock.update(zip(('productionLevel', 'storageLevel', 'customersLevel'), levels))
+        unlock.pop('netWorth', None)
+        unlock['questIds'] = []
     asset_map = {asset['id']: asset for asset in pilot['assets']}
     by_business = {}
     for item in pilot['items']:
@@ -172,12 +179,6 @@ def _requirements(cfg, st, item):
             current = b.get(kind, 0) if b else 0
             rows.append(dict(kind=key, label='{} level: {} / {}'.format(label, current, target),
                              ready=current >= target))
-    target_worth = unlock.get('netWorth', 0)
-    if target_worth:
-        import production_economy as economy
-        current_worth = economy.net_worth(cfg, st)
-        rows.append(dict(kind='netWorth', label='Net worth: {:,} / {:,} YM'.format(current_worth, target_worth),
-                         ready=current_worth >= target_worth))
     for business_id in item.get('ingredientBusinessIds', []):
         if business_id != item['businessId']:
             name = next(t['name'] for t in cfg['tiers'] if t['id'] == business_id)
@@ -591,6 +592,7 @@ def enrich(cfg, st, payload):
         row.update(pilot=True, available=available, unlocked=unlocked, activationCraft=activation,
                    craftedOnce=bool(data['produced'].get(item['id']) or row['owned'] > 0),
                    buildingLocked=available and not unlocked and any(r['kind'] in ('business', 'dependencyBusiness', 'ingredientBusiness') and not r['ready'] for r in requirements),
+                   progressionLocked=available and not unlocked and any(r['kind'] in ('productionLevel', 'storageLevel', 'customersLevel') and not r['ready'] for r in requirements),
                    businessId=item['businessId'], buildingId=b.get('buildingId') if b else None,
                    businessName=next(t['name'] for t in cfg['tiers'] if t['id'] == item['businessId']),
                    unlockRequirements=requirements, unlockCost=item['unlock']['cash'],
