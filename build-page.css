@@ -3,7 +3,6 @@ body.build-page { overflow: auto; }
 .build-page .shell { height: auto; min-height: 100vh; }
 .build-page *, .build-page *::before, .build-page *::after { box-sizing: border-box; }
 .build-page .hero { flex: none; }
-.build-page .banner-frame { height: 64px; min-height: 0; }
 .build-page .topline { min-height: 32px; padding-block: 4px; }
 .build-page .tabs { padding: 5px 8px; }
 .build-page .tab { min-height: 36px; padding: 5px 8px; }
@@ -101,7 +100,6 @@ body.build-page { overflow: auto; }
 .build-page .k-card--locked { opacity: 1; }
 .build-page .k-opt { min-height: 44px; padding: 6px 8px; }
 @media (min-width: 1100px) and (max-height: 800px) {
-  .build-page .banner-frame { height: 48px; }
   .build-metric { padding-block: 6px; }
   .build-site-stage { min-height: 120px; }
   .build-panel-head { padding-block: 5px; }
@@ -121,7 +119,6 @@ body.build-page { overflow: auto; }
 @media (max-width: 520px) {
   .build-page .topline .left-meta, .build-page .ticker-container { display: none; }
   .build-page .topline { display: flex; justify-content: flex-end; }
-  .build-page .banner-frame { height: 52px; }
   .build-page .tabs { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .build-page .tab { min-height: 36px; }
   .build-command-head h1 span { display: none; }
@@ -155,7 +152,6 @@ body.build-page { overflow: auto; }
   .build-caption { margin-block: 4px; }
 }
 @media (min-width: 1100px) and (max-height: 800px) {
-  .build-page .banner-frame { height: 40px; }
   .build-metric { gap: 0; padding-block: 4px; }
   .build-metric strong { font-size: 27px; }
   .build-command-head { min-height: 34px; margin-bottom: 6px; }

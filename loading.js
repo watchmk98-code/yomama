@@ -23,9 +23,17 @@
    The blocking part is this page's own art, which the browser is fetching
    anyway; the screen hides the pop-in rather than adding to the wait.
 
-   It shows once per tab: join.html sets the boot flag on a successful sign-in,
-   and the first game page after that spends it. Moving between pages later
-   does not show it again - by then the art is in the HTTP cache anyway.
+   It shows once per page per tab: join.html sets the boot flag on a successful
+   sign-in and the first page after that spends it, but BUILD, MARKET, CRAFT
+   and the rest each carry their own art, so each one gets the screen the first
+   time it is opened. Going back to a page already seen in this tab skips it -
+   by then that page's art is in the HTTP cache.
+
+   A page that skips the screen still runs the warm-up, so the heavy sheets
+   keep coming down in the background while a student reads whatever is in
+   front of them, and the screen on the next page has little left to wait for.
+   The warm list is walked in order and how far it got is kept for the tab, so
+   pages carry on down the list instead of starting it again.
 
    Nothing here may trap a class. Every wait has a ceiling (MAX_MS), a file
    that 404s counts as done, and a browser that refuses sessionStorage skips
@@ -40,7 +48,8 @@
 
   var SESSION_KEY = 'yomama_session_v1';
   var BOOT_KEY = 'yomama_boot_v1';        // join.html sets this on a fresh sign-in
-  var SEEN_KEY = 'yomama_loaded_v1';      // one screen per tab, not one per page
+  var SEEN_KEY = 'yomama_loaded_v2';      // which pages of this tab have shown it
+  var WARM_KEY = 'yomama_warm_v1';        // how far down the warm list the tab got
   var MAX_MS = 15000;                     // hard ceiling on the whole screen
   var RENDER_WAIT_MS = 9000;              // ceiling on waiting for yomama:econ
   var WARM_DELAY_MS = 1500;               // let the page settle before warming
@@ -71,15 +80,44 @@
     } catch (e) { return false; }
   }
 
+  /* Which page this is. Each one is remembered separately: BUILD's spritesheets
+     are not MARKET's and neither are CRAFT's, so the first visit to each page
+     of a tab has real art to wait for and earns the screen. */
+  function pageKey() {
+    var path = window.location.pathname || '';
+    return (path.slice(path.lastIndexOf('/') + 1) || 'index.html').toLowerCase();
+  }
+  function seenPages() {
+    try { return JSON.parse(flag(SEEN_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function markSeen() {
+    var pages = seenPages();
+    pages[pageKey()] = 1;
+    setFlag(SEEN_KEY, JSON.stringify(pages));
+  }
+
   function wanted() {
     if (/[?&]noboot=1\b/.test(window.location.search)) return false;
     if (!store('sessionStorage')) return false;   // cannot spend the flag, so never show it
     if (!signedIn()) return false;                // account.js is about to send them to join.html
     if (flag(BOOT_KEY)) return true;              // just signed in
-    return !flag(SEEN_KEY);                       // first game page of this tab
+    return !seenPages()[pageKey()];               // first visit to this page in this tab
   }
 
-  if (!wanted()) { window.YomamaLoading = { shown: false }; return; }
+  // Read here rather than further down: a page that skips the screen returns
+  // below and still warms, and warm() reads this.
+  var manifest = window.YomamaPreloadManifest || { core: [], warm: [] };
+
+  if (!wanted()) {
+    window.YomamaLoading = { shown: false, warm: warm };
+    // No screen to hide behind, but the pages this student has not opened yet
+    // still want their art. Fetch it quietly once this page has settled.
+    if (signedIn()) {
+      if (document.readyState === 'complete') setTimeout(warm, WARM_DELAY_MS);
+      else window.addEventListener('load', function () { setTimeout(warm, WARM_DELAY_MS); });
+    }
+    return;
+  }
   setFlag(BOOT_KEY, null);
 
   // ------------------------------------------------------------- the screen --
@@ -139,7 +177,7 @@
     finished = true;
     clearTimeout(capTimer);
     show(100);
-    setFlag(SEEN_KEY, '1');
+    markSeen();
     setTimeout(function () {
       screenEl.setAttribute('data-done', '1');
       root.className = root.className.replace(/\byomama-booting\b/g, '').trim();
@@ -187,7 +225,6 @@
   }
 
   // ------------------------------------------------- 1. the shared art set --
-  var manifest = window.YomamaPreloadManifest || { core: [], warm: [] };
   var corePart = 0, domPart = 0;
   function paint() { show(corePart * CORE_END + domPart * (DOM_END - CORE_END)); }
 
@@ -239,8 +276,10 @@
       }
       window.addEventListener('yomama:econ', go);
       // A page without econ.js, or a snapshot that never arrives, still moves on.
-      if (document.readyState === 'complete') setTimeout(go, 1200);
-      else window.addEventListener('load', function () { setTimeout(go, 1200); });
+      // Only a page that actually has econ.js gets the extra moment for it.
+      var slack = document.querySelector('script[src*="econ.js"]') ? 1200 : 0;
+      if (document.readyState === 'complete') setTimeout(go, slack);
+      else window.addEventListener('load', function () { setTimeout(go, slack); });
       setTimeout(go, RENDER_WAIT_MS);
     });
   }
@@ -275,7 +314,13 @@
     var link = navigator.connection || {};
     // Data saver on, or a phone on a bad signal: what is on screen is enough.
     if (link.saveData || /(^|-)2g$/.test(link.effectiveType || '')) return;
-    var list = (manifest.warm || []).slice();
+    var all = manifest.warm || [];
+    // The list is in a fixed order, so a page picks up where the last one
+    // stopped instead of walking everything it already has again.
+    var stamp = String(manifest.version || '');
+    var mark = String(flag(WARM_KEY) || '').split(':');
+    var at = (mark[0] === stamp) ? Math.min(all.length, parseInt(mark[1], 10) || 0) : 0;
+    var list = all.slice(at);
     var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 200); };
     (function next() {
       if (!list.length) return;
@@ -287,7 +332,13 @@
         });
         return;
       }
-      idle(function () { grab(list.shift()[0]).then(next); });
+      idle(function () {
+        grab(list.shift()[0]).then(function () {
+          at += 1;
+          setFlag(WARM_KEY, stamp + ':' + at);
+          next();
+        });
+      });
     }());
   }
 

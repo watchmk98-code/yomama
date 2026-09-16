@@ -16,6 +16,11 @@ body.port-page .port-workspace {
   flex-direction: column;
   gap: 10px;
 }
+/* game-fit.js adds `port-fitted` once it has scaled the workspace to the room
+   under the masthead. Without it the page keeps its old scrolling behaviour. */
+body.port-page.port-fitted { height: 100dvh; overflow: hidden; }
+body.port-page.port-fitted .shell { height: 100dvh; min-height: 0; overflow: hidden; }
+body.port-page.port-fitted .port-workspace { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 body.port-page .port-summary-strip {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;

@@ -172,8 +172,67 @@
       host.style.setProperty('--market-goods-geometry',String(geometryOnly?fitted:fitted*.25));
     });
   }
+  // The masthead is the same height on every page, so the workspace below it
+  // has less room than the old shrunken banners left it. Nothing is hidden or
+  // re-stacked for that: the whole workspace is scaled down until everything
+  // fits, so the arrangement a student learns stays the same on every screen.
+  // Same binary search as fitMarketGoods, one level up.
+  //
+  // Below FLOOR the type stops being readable across a classroom. A page that
+  // still does not fit there is left at FLOOR (game pages, which clip) or let
+  // go entirely so it scrolls the way it always has (Port).
+  var FIT_FLOOR=.68;
+  var FIT_FRAMES = '.game-layout,.game-center,.game-actions,.game-purpose-layout,.game-license-layout,'+
+    '.game-site,.game-business-overview,.game-live-metrics,.game-operations,.game-expansion,'+
+    '.game-roster,.game-market-orders,.game-market-tools,.game-customer-contracts,.game-build-bottom,'+
+    '.game-contract-panel,.game-contract-body,.game-contract-supply,.game-contract-footer';
+  function shrinkToFit(host,fits){
+    host.style.removeProperty('zoom');
+    if(!host.getClientRects().length || host.clientHeight<=0 || fits())return 1;
+    var low=FIT_FLOOR, high=1;
+    for(var step=0;step<8;step++){
+      var scale=(low+high)/2;
+      host.style.setProperty('zoom',String(scale));
+      if(fits())low=scale;else high=scale;
+    }
+    host.style.setProperty('zoom',String(Math.floor(low*1000)/1000));
+    return fits()?low:0;
+  }
+  function fitWorkspace(){
+    var host=document.querySelector('.game-workspace');
+    if(!host)return;
+    shrinkToFit(host,function(){
+      if(host.scrollHeight>host.clientHeight+1)return false;
+      return Array.from(host.querySelectorAll(FIT_FRAMES)).every(function(frame){
+        return frame.scrollHeight<=frame.clientHeight+1;
+      });
+    });
+  }
+  // Port has no panel pages or tabs to fall back on, so it is the workspace
+  // scale alone: measure the terminal at full size, then scale it to the room
+  // under the masthead. `port-fitted` clamps the shell to the viewport, and is
+  // only added once it really fits; on a screen too short even for FLOOR the
+  // page keeps the scroll it has always had, just with less of it to do.
+  function fitPort(){
+    var host=document.querySelector('.port-workspace'), hero=document.querySelector('.hero');
+    if(!host || !hero)return;
+    document.body.classList.remove('port-fitted');
+    host.style.removeProperty('zoom');
+    var room=innerHeight-hero.getBoundingClientRect().height, need=host.scrollHeight;
+    if(room<=0 || need<=0)return;
+    var scale=Math.min(1,Math.max(FIT_FLOOR,Math.floor(room/need*1000)/1000));
+    // Scaling rewraps text, so settle on the measured height, not the estimate.
+    for(var step=0;step<4;step++){
+      if(scale<1)host.style.setProperty('zoom',String(scale));
+      var height=host.getBoundingClientRect().height;
+      if(height<=room+1 || scale<=FIT_FLOOR)break;
+      scale=Math.max(FIT_FLOOR,Math.floor(scale*room/height*1000)/1000);
+    }
+    if(host.getBoundingClientRect().height<=room+1)document.body.classList.add('port-fitted');
+  }
   function render(){
     if(!document.body.classList.contains('game-page'))return;
+    if(document.body.classList.contains('port-page')){fitPort();return;}
     var focusedId=document.activeElement && document.activeElement.id;
     document.body.classList.add('game-fitted');document.body.classList.toggle('game-compact',compact());sectionMenu();
     var build=document.getElementById('econ-building'), market=document.getElementById('econ-market'), ops=document.getElementById('econ-auto'), licence=document.getElementById('econ-license');
@@ -219,6 +278,7 @@
     }
     if(ops && !ops.querySelector('.wf-workspace'))tabset(ops,'Operations',[[(window.YomamaEcon && window.YomamaEcon.state() || {}).productionMode==='independent'?'Products':'Recipes',ops.querySelector('.game-purpose-main')],['Team',ops.querySelector('.game-business-team')],['Quests',ops.querySelector('.game-business-quests')]]);
     if(licence){var sections=Array.from(licence.querySelector('.game-license-layout')?.children||[]);tabset(licence,'Licence',sections.map(function(n){return [n.classList.contains('game-invest')?'Invest':n.querySelector('#game-goals')?'Goals':'Quiz',n];}));var goals=licence.querySelector('#game-goals');if(goals)goals.open=true;}
+    fitWorkspace();
     paginate('.game-roster-list','Buildings',68,1);
     var orderGrid=market && market.querySelector('.game-order-grid');
     var orderCardWidth=orderGrid && orderGrid.clientHeight<500?430:350;
@@ -229,6 +289,11 @@
     paginate('.game-purpose-main .game-recipe','Recipes',140,compact()?1:(innerWidth>1100?2:1));
     pageStock();
     paginate('.game-checklist','Milestones',50,1);
+    // Paging and the goods fit both move things after the first pass, so settle
+    // the workspace scale once more against the layout that actually shipped,
+    // then re-fit the goods to the room that scale finally left them.
+    fitWorkspace();
+    fitMarketGoods(market);
     if(focusedId && focusedId.indexOf('game-tab-')===0){var focusedTab=document.getElementById(focusedId);if(focusedTab)focusedTab.focus({preventScroll:true});}
   }
   window.YomamaFit={render:render};

@@ -16,6 +16,10 @@
   --s3:13px;
   --s4:21px;
 
+  /* One banner height for every page: the terminal masthead never shrinks
+     from page to page. Only the viewport steps it down, below. */
+  --banner-h:168px;
+
   --analysis-yellow-1:rgba(255,176,0,1);
   --analysis-yellow-2:rgba(255,176,0,.78);
   --analysis-yellow-3:rgba(255,176,0,.52);
@@ -285,7 +289,7 @@ textarea{
 
 .banner-frame{
   position:relative;
-  height:168px;
+  height:var(--banner-h);
   overflow:hidden;
   background:#000;
   display:grid;
@@ -3805,8 +3809,8 @@ textarea{
   }
   .top-tape,
   .ticker-container{ grid-area:tape; }
+  :root{ --banner-h:120px; }
   .banner-frame{
-    height:120px;
     grid-template-columns:minmax(70px, 14%) 1fr minmax(70px, 14%);
   }
   .grid{ grid-template-columns:1fr; }
@@ -3910,8 +3914,8 @@ textarea{
 }
 
 @media (max-width:760px){
+  :root{ --banner-h:112px; }
   .banner-frame{
-    height:112px;
     grid-template-columns:1fr;
   }
   .fund-strip{
