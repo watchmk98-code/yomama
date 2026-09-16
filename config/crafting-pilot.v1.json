@@ -1,0 +1,685 @@
+{
+  "enabled": true,
+  "version": 1,
+  "items": [
+    {
+      "id": "farm_breakfast_basket",
+      "businessId": "farm",
+      "ingredients": [
+        {
+          "id": "farm_eggs",
+          "quantity": 2
+        },
+        {
+          "id": "farm_tomatoes",
+          "quantity": 3
+        },
+        {
+          "id": "farm_honey",
+          "quantity": 1
+        },
+        {
+          "id": "packaging",
+          "quantity": 1
+        }
+      ],
+      "batchSeconds": 120,
+      "batchCost": 2,
+      "sellPrice": 40,
+      "saleSeconds": 120,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 100,
+        "questIds": [],
+        "focusNodes": [],
+        "manualOrders": 1
+      },
+      "requiredAssetIds": []
+    },
+    {
+      "id": "seafood_picnic_box",
+      "businessId": "fish_stall",
+      "ingredients": [
+        {
+          "id": "fish_stall_fresh_catch",
+          "quantity": 2
+        },
+        {
+          "id": "fish_stall_oysters",
+          "quantity": 2
+        },
+        {
+          "id": "fish_stall_smoked_fish",
+          "quantity": 1
+        },
+        {
+          "id": "packaging",
+          "quantity": 1
+        }
+      ],
+      "batchSeconds": 150,
+      "batchCost": 3,
+      "sellPrice": 50,
+      "saleSeconds": 150,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 150,
+        "questIds": [],
+        "focusNodes": [],
+        "manualOrders": 2
+      },
+      "requiredAssetIds": [
+        "asset_fish_stall_1"
+      ]
+    },
+    {
+      "id": "smoked_fish_gift_box",
+      "businessId": "fish_stall",
+      "ingredients": [
+        {
+          "id": "fish_stall_smoked_fish",
+          "quantity": 3
+        },
+        {
+          "id": "cannery_sauces",
+          "quantity": 2
+        },
+        {
+          "id": "wooden_boards",
+          "quantity": 2
+        },
+        {
+          "id": "packaging",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 180,
+      "batchCost": 4,
+      "sellPrice": 134,
+      "saleSeconds": 180,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 250,
+        "questIds": [
+          "fish_stall-plan"
+        ],
+        "focusNodes": [],
+        "manualOrders": 3
+      },
+      "requiredAssetIds": [
+        "asset_fish_stall_1"
+      ]
+    },
+    {
+      "id": "coffee_gift_set",
+      "businessId": "roastery",
+      "ingredients": [
+        {
+          "id": "roastery_roasted_beans",
+          "quantity": 2
+        },
+        {
+          "id": "roastery_espresso_shots",
+          "quantity": 2
+        },
+        {
+          "id": "roastery_pastries",
+          "quantity": 1
+        },
+        {
+          "id": "packaging",
+          "quantity": 1
+        }
+      ],
+      "batchSeconds": 150,
+      "batchCost": 3,
+      "sellPrice": 73,
+      "saleSeconds": 150,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 180,
+        "questIds": [],
+        "focusNodes": [],
+        "manualOrders": 2
+      },
+      "requiredAssetIds": []
+    },
+    {
+      "id": "honey_glazed_pastries",
+      "businessId": "roastery",
+      "ingredients": [
+        {
+          "id": "farm_honey",
+          "quantity": 3
+        },
+        {
+          "id": "roastery_pastries",
+          "quantity": 3
+        },
+        {
+          "id": "farm_eggs",
+          "quantity": 2
+        },
+        {
+          "id": "paper_sheets",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 120,
+      "batchCost": 3,
+      "sellPrice": 147,
+      "saleSeconds": 120,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 240,
+        "questIds": [
+          "roastery-plan"
+        ],
+        "focusNodes": [
+          "sales"
+        ],
+        "manualOrders": 2
+      },
+      "requiredAssetIds": []
+    },
+    {
+      "id": "wooden_crate",
+      "businessId": "workshop",
+      "ingredients": [
+        {
+          "id": "wooden_boards",
+          "quantity": 3
+        },
+        {
+          "id": "workshop_steel_brackets",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 120,
+      "batchCost": 2,
+      "sellPrice": 64,
+      "saleSeconds": 120,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 200,
+        "questIds": [],
+        "focusNodes": [],
+        "manualOrders": 1
+      },
+      "requiredAssetIds": []
+    },
+    {
+      "id": "seedling_tray",
+      "businessId": "workshop",
+      "ingredients": [
+        {
+          "id": "metal_sheets",
+          "quantity": 2
+        },
+        {
+          "id": "workshop_steel_brackets",
+          "quantity": 1
+        }
+      ],
+      "batchSeconds": 150,
+      "batchCost": 3,
+      "sellPrice": 51,
+      "saleSeconds": 150,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 300,
+        "questIds": [],
+        "focusNodes": [
+          "production"
+        ],
+        "manualOrders": 2
+      },
+      "requiredAssetIds": [
+        "asset_workshop_1"
+      ]
+    },
+    {
+      "id": "toolbox",
+      "businessId": "workshop",
+      "ingredients": [
+        {
+          "id": "metal_sheets",
+          "quantity": 2
+        },
+        {
+          "id": "workshop_steel_brackets",
+          "quantity": 2
+        },
+        {
+          "id": "garage_spare_parts",
+          "quantity": 1
+        },
+        {
+          "id": "plastic_casings",
+          "quantity": 1
+        }
+      ],
+      "batchSeconds": 180,
+      "batchCost": 4,
+      "sellPrice": 99,
+      "saleSeconds": 180,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 450,
+        "questIds": [
+          "workshop-plan"
+        ],
+        "focusNodes": [],
+        "manualOrders": 3
+      },
+      "requiredAssetIds": [
+        "asset_workshop_1"
+      ]
+    },
+    {
+      "id": "wheeled_cart",
+      "businessId": "workshop",
+      "ingredients": [
+        {
+          "id": "workshop_welded_frames",
+          "quantity": 2
+        },
+        {
+          "id": "garage_spare_parts",
+          "quantity": 2
+        },
+        {
+          "id": "workshop_machined_bolts",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 240,
+      "batchCost": 5,
+      "sellPrice": 199,
+      "saleSeconds": 240,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 600,
+        "questIds": [
+          "workshop-plan"
+        ],
+        "focusNodes": [
+          "production"
+        ],
+        "manualOrders": 4
+      },
+      "requiredAssetIds": [
+        "asset_workshop_2"
+      ]
+    },
+    {
+      "id": "battery_pack",
+      "businessId": "garage",
+      "ingredients": [
+        {
+          "id": "battery_cells",
+          "quantity": 3
+        },
+        {
+          "id": "copper_stock",
+          "quantity": 2
+        },
+        {
+          "id": "garage_spare_parts",
+          "quantity": 1
+        },
+        {
+          "id": "insulation",
+          "quantity": 1
+        }
+      ],
+      "batchSeconds": 180,
+      "batchCost": 5,
+      "sellPrice": 148,
+      "saleSeconds": 180,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 450,
+        "questIds": [],
+        "focusNodes": [
+          "production"
+        ],
+        "manualOrders": 2
+      },
+      "requiredAssetIds": [
+        "asset_garage_2"
+      ]
+    },
+    {
+      "id": "folding_electric_scooter",
+      "businessId": "garage",
+      "ingredients": [
+        {
+          "id": "workshop_welded_frames",
+          "quantity": 5
+        },
+        {
+          "id": "electric_motors",
+          "quantity": 4
+        },
+        {
+          "id": "rubber_sheets",
+          "quantity": 5
+        },
+        {
+          "id": "machine_works_cnc_parts",
+          "quantity": 5
+        },
+        {
+          "id": "battery_pack",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 600,
+      "batchCost": 25,
+      "sellPrice": 1058,
+      "saleSeconds": 600,
+      "storageCap": 3,
+      "unlock": {
+        "cash": 1800,
+        "questIds": [
+          "garage-plan"
+        ],
+        "focusNodes": [
+          "production"
+        ],
+        "manualOrders": 5
+      },
+      "requiredAssetIds": [
+        "asset_garage_2"
+      ]
+    },
+    {
+      "id": "electric_cargo_tricycle",
+      "businessId": "garage",
+      "ingredients": [
+        {
+          "id": "workshop_welded_frames",
+          "quantity": 6
+        },
+        {
+          "id": "electric_motors",
+          "quantity": 5
+        },
+        {
+          "id": "rubber_sheets",
+          "quantity": 6
+        },
+        {
+          "id": "workshop_machined_bolts",
+          "quantity": 5
+        },
+        {
+          "id": "battery_pack",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 900,
+      "batchCost": 40,
+      "sellPrice": 1192,
+      "saleSeconds": 900,
+      "storageCap": 3,
+      "unlock": {
+        "cash": 2800,
+        "questIds": [
+          "garage-signature"
+        ],
+        "focusNodes": [
+          "production-advanced"
+        ],
+        "manualOrders": 8
+      },
+      "requiredAssetIds": [
+        "asset_garage_2"
+      ]
+    },
+    {
+      "id": "tomato_chutney",
+      "businessId": "cannery",
+      "ingredients": [
+        {
+          "id": "farm_tomatoes",
+          "quantity": 4
+        },
+        {
+          "id": "cannery_sauces",
+          "quantity": 2
+        },
+        {
+          "id": "farm_honey",
+          "quantity": 2
+        },
+        {
+          "id": "food_safe_containers",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 180,
+      "batchCost": 5,
+      "sellPrice": 127,
+      "saleSeconds": 180,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 400,
+        "questIds": [
+          "cannery-plan"
+        ],
+        "focusNodes": [],
+        "manualOrders": 2
+      },
+      "requiredAssetIds": [
+        "asset_cannery_2",
+        "asset_cannery_3"
+      ]
+    },
+    {
+      "id": "honey_spread_jars",
+      "businessId": "cannery",
+      "ingredients": [
+        {
+          "id": "farm_honey",
+          "quantity": 3
+        },
+        {
+          "id": "cannery_preserves",
+          "quantity": 2
+        },
+        {
+          "id": "food_safe_containers",
+          "quantity": 2
+        },
+        {
+          "id": "packaging",
+          "quantity": 2
+        }
+      ],
+      "batchSeconds": 180,
+      "batchCost": 5,
+      "sellPrice": 164,
+      "saleSeconds": 180,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 450,
+        "questIds": [
+          "cannery-plan"
+        ],
+        "focusNodes": [
+          "efficiency"
+        ],
+        "manualOrders": 3
+      },
+      "requiredAssetIds": [
+        "asset_cannery_2",
+        "asset_cannery_3"
+      ]
+    },
+    {
+      "id": "pantry_hamper",
+      "businessId": "cannery",
+      "ingredients": [
+        {
+          "id": "cannery_canned_goods",
+          "quantity": 2
+        },
+        {
+          "id": "cannery_sauces",
+          "quantity": 1
+        },
+        {
+          "id": "cannery_preserves",
+          "quantity": 2
+        },
+        {
+          "id": "packaging",
+          "quantity": 1
+        }
+      ],
+      "batchSeconds": 240,
+      "batchCost": 4,
+      "sellPrice": 199,
+      "saleSeconds": 240,
+      "storageCap": 6,
+      "unlock": {
+        "cash": 300,
+        "questIds": [],
+        "focusNodes": [],
+        "manualOrders": 2
+      },
+      "requiredAssetIds": []
+    }
+  ],
+  "assets": [
+    {
+      "id": "asset_farm_3",
+      "price": 40,
+      "lifeSeconds": 604800,
+      "effects": {
+        "costReductionPercent": 10
+      },
+      "itemIds": [
+        "farm_breakfast_basket"
+      ]
+    },
+    {
+      "id": "asset_fish_stall_1",
+      "price": 250,
+      "lifeSeconds": 604800,
+      "effects": {
+        "storagePercent": 50
+      },
+      "itemIds": [
+        "seafood_picnic_box",
+        "smoked_fish_gift_box"
+      ]
+    },
+    {
+      "id": "asset_fish_stall_2",
+      "price": 200,
+      "lifeSeconds": 604800,
+      "effects": {
+        "costReductionPercent": 15
+      },
+      "itemIds": [
+        "seafood_picnic_box",
+        "smoked_fish_gift_box"
+      ]
+    },
+    {
+      "id": "asset_roastery_3",
+      "price": 400,
+      "lifeSeconds": 604800,
+      "effects": {
+        "pricePercent": 10
+      },
+      "itemIds": [
+        "coffee_gift_set"
+      ]
+    },
+    {
+      "id": "asset_workshop_1",
+      "price": 600,
+      "lifeSeconds": 604800,
+      "effects": {
+        "speedPercent": 15
+      },
+      "itemIds": [
+        "seedling_tray",
+        "toolbox"
+      ]
+    },
+    {
+      "id": "asset_workshop_2",
+      "price": 700,
+      "lifeSeconds": 604800,
+      "effects": {
+        "speedPercent": 15
+      },
+      "itemIds": [
+        "wheeled_cart"
+      ]
+    },
+    {
+      "id": "asset_garage_2",
+      "price": 800,
+      "lifeSeconds": 604800,
+      "effects": {
+        "costReductionPercent": 15
+      },
+      "itemIds": [
+        "battery_pack",
+        "folding_electric_scooter",
+        "electric_cargo_tricycle"
+      ]
+    },
+    {
+      "id": "asset_cannery_1",
+      "price": 650,
+      "usageNote": "Most useful at Customers level 3 or higher; extra speed needs enough demand.",
+      "lifeSeconds": 604800,
+      "effects": {
+        "speedPercent": 15
+      },
+      "itemIds": [
+        "tomato_chutney",
+        "honey_spread_jars"
+      ]
+    },
+    {
+      "id": "asset_cannery_2",
+      "price": 500,
+      "lifeSeconds": 604800,
+      "effects": {
+        "speedPercent": 10
+      },
+      "itemIds": [
+        "tomato_chutney",
+        "honey_spread_jars"
+      ]
+    },
+    {
+      "id": "asset_cannery_3",
+      "price": 750,
+      "lifeSeconds": 604800,
+      "effects": {
+        "costReductionPercent": 15
+      },
+      "itemIds": [
+        "tomato_chutney",
+        "honey_spread_jars"
+      ]
+    }
+  ],
+  "rewards": {
+    "welcomeAbsenceSeconds": 14400,
+    "welcomeBudget": 300,
+    "questBudget": 120,
+    "ordersEvery": 3,
+    "orderBudget": 80,
+    "focusBudget": 80
+  }
+}

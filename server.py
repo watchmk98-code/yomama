@@ -222,6 +222,35 @@ def is_public_path(url_path: str) -> bool:
     return True
 
 
+# The art is the heavy part of this site - a building spritesheet is a
+# megabyte or two - and without a Cache-Control header a browser re-fetches it
+# on every page a student opens. Say how long it may be kept:
+#   ?v=... in the url   the page is asking for one exact version, and a new
+#                       version comes with a new ?v=, so keep it for a year
+#   no query            keep it a few minutes, then ask again. Long enough to
+#                       cover a class moving between pages, short enough that
+#                       redrawn art shows up without anyone clearing a cache.
+# Only files, never pages: a page behind the sign-in wall stays no-store.
+CACHEABLE_SUFFIXES = frozenset({
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico",
+    ".ttf", ".woff", ".woff2", ".otf",
+    ".wav", ".mp3", ".ogg", ".mp4", ".webm",
+    ".css", ".js",
+})
+IMMUTABLE_MAX_AGE = 31536000        # a year, the most a browser will take
+REVALIDATE_MAX_AGE = 300            # five minutes
+
+
+def cache_rule(parsed) -> str:
+    """The Cache-Control for a static file, or "" for anything else."""
+    path = unquote(parsed.path.split("#", 1)[0])
+    if Path(path).suffix.lower() not in CACHEABLE_SUFFIXES:
+        return ""
+    if parsed.query:
+        return "public, max-age=%d, immutable" % IMMUTABLE_MAX_AGE
+    return "public, max-age=%d" % REVALIDATE_MAX_AGE
+
+
 class NewsProxyHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -256,6 +285,7 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         if self.sent_to_sign_in(parsed):
             return
         self.private_page = needs_sign_in(parsed.path)
+        self.asset_cache = cache_rule(parsed)
         super().do_GET()
 
     def do_HEAD(self) -> None:
@@ -267,16 +297,20 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         if self.sent_to_sign_in(parsed):
             return
         self.private_page = needs_sign_in(parsed.path)
+        self.asset_cache = cache_rule(parsed)
         super().do_HEAD()
 
     # Set per request. A page behind the wall must never be cached, or a
     # signed-out browser could show it again without asking the server.
     private_page = False
+    asset_cache = ""
 
     def end_headers(self) -> None:
         if self.private_page:
             self.send_header("Cache-Control", "no-store, max-age=0")
             self.send_header("Vary", "Cookie")
+        elif self.asset_cache:
+            self.send_header("Cache-Control", self.asset_cache)
         super().end_headers()
 
     def signed_in(self) -> bool:
@@ -348,6 +382,7 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         "/api/game/business": game_api.econ_business,
         "/api/game/craft": game_api.econ_craft,
         "/api/game/progression": game_api.econ_progression,
+        "/api/game/quests": game_api.econ_quests,
         "/api/game/workforce": game_api.econ_workforce,
         "/api/game/econ/orders/fulfill": game_api.econ_fulfill_order,
         "/api/game/econ/orders/replace": game_api.econ_replace_order,

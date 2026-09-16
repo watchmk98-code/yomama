@@ -12,7 +12,7 @@ const sample=JSON.stringify({paperState:{account:{availableCash:9999999},positio
 let portfolio={accountId:'ui-test-account',account:{startingCash:100000,availableCash:100000,reservedCash:0,realizedPnl:0},positions:{},ledger:{orders:[],fills:[],cashEvents:[]},meta:{updatedAt:new Date().toISOString(),revision:0}};
 let firstRead=true,releaseRead;
 const readGate=new Promise(resolve=>{releaseRead=resolve;});
-let readBlocked=false,dropNextPost=false,stale=false,unconfigured=false,quotePrice=100,marketClosed=false,closePassed=false;
+let readBlocked=false,dropNextPost=false,stale=false,unconfigured=false,quotePrice=100,marketClosed=false,closePassed=false,afterHours=false;
 const posts=[],errors=[];
 const chartRequests=[];
 let failChartSymbol='',holdNextChart=false,releaseHeldChart=null,finishHeldChart=null;
@@ -21,10 +21,16 @@ let holdNextRead=false,releaseHeldRead=null,notifyHeldRead=null;
 function holdRead(){holdNextRead=true;return new Promise(resolve=>{notifyHeldRead=resolve;});}
 function payload(){
  const now=Date.now()/1000;
- return {portfolio,serverTime:now,executionRules:{clock:'real_time',timezone:'America/New_York',session:'regular',buyPrice:'ask',sellPrice:'bid',maxQuoteAgeSeconds:10,marketOrderTimeoutSeconds:30,limitTimeInForce:'gtc',matching:'server_poll',pollIntervalSeconds:2},
+ // The tradable window covers extended hours; the clock's next close ends the
+ // regular session only, exactly as the server reports it.
+ const closing=now+(closePassed?-1:3600);
+ return {portfolio,serverTime:now,executionRules:{clock:'real_time',timezone:'America/New_York',session:afterHours?'extended':'regular',extendedHours:true,buyPrice:'ask',sellPrice:'bid',maxQuoteAgeSeconds:10,marketOrderTimeoutSeconds:30,limitTimeInForce:'gtc',matching:'server_poll',pollIntervalSeconds:2},
   quotes:unconfigured?{}:{AAPL:{price:quotePrice,bid:99,ask:101,timestamp:now-(stale?60:0)}},
-  market:{source:'alpaca_sip',status:unconfigured?'unconfigured':marketClosed?'closed':'open',message:unconfigured?'Market prices are not configured.':marketClosed?'The regular session is closed.':'',maxQuoteAgeSeconds:10,
-   asOf:now-120,nextOpen:new Date((now+86400)*1000).toISOString(),nextClose:new Date((now+(closePassed?-1:3600))*1000).toISOString()},
+  market:{source:'alpaca_sip',status:unconfigured?'unconfigured':marketClosed?'closed':'open',message:unconfigured?'Market prices are not configured.':marketClosed?'The market session is closed.':'',maxQuoteAgeSeconds:10,
+   session:unconfigured?null:marketClosed?'closed':afterHours?'afterhours':'regular',extendedHours:true,
+   asOf:now-120,nextOpen:new Date((now+86400)*1000).toISOString(),nextSessionOpen:now+86400,
+   nextClose:new Date(closing*1000).toISOString(),sessionOpen:now-3600,sessionClose:closing,
+   regularOpen:now-7200,regularClose:afterHours?now-60:closing},
   canTrade:!unconfigured&&!marketClosed,blockedReason:unconfigured?'Market prices are not configured.':'',player:{name:'UI TEST'},session:{paused:false}};
 }
 async function routePort(route){
@@ -350,9 +356,13 @@ async function sameCanvas(page,canvas,message){
    finally{Date.now=original;input.dispatchEvent(new Event('input',{bubbles:true}));}
   }),'rolling back a device clock cannot make a stale quote tradable');
   stale=false;closePassed=true;await refresh(first);
-  await first.waitForFunction(()=>document.querySelector('#port-ticket-note').textContent.includes('Regular session closed'));
-  assert(await first.locator('#port-ticket-submit').isDisabled(),'the known regular-session close blocks an order before another market status arrives');
-  closePassed=false;marketClosed=true;await refresh(first);
+  await first.waitForFunction(()=>document.querySelector('#port-ticket-note').textContent.includes('Market session closed'));
+  assert(await first.locator('#port-ticket-submit').isDisabled(),'the known session close blocks an order before another market status arrives');
+  closePassed=false;afterHours=true;await refresh(first);
+  await first.waitForFunction(()=>document.querySelector('#port-data-label').textContent==='Alpaca SIP · EXT');
+  assert.match(await first.locator('#port-ticket-note').textContent(),/After-hours U\.S\. session.*closes.* ET/,'after-hours trading names its own session and close');
+  assert(!await first.locator('#port-ticket-submit').isDisabled(),'after-hours quotes can be traded');
+  afterHours=false;marketClosed=true;await refresh(first);
   await first.waitForFunction(()=>document.querySelector('#port-data-label').textContent==='Market closed');
   assert.match(await first.locator('#port-ticket-note').textContent(),/opens.* ET/,'closed market shows the next opening in New York time');
   marketClosed=false;unconfigured=true;await refresh(first);
@@ -372,6 +382,6 @@ async function sameCanvas(page,canvas,message){
    assert(bounds.panels.every(panel=>panel.left>=-1&&panel.right<=bounds.width+1),'server panels fit '+width+'px');
   }
   assert.deepEqual(errors,[],'no uncaught frontend errors');
-  console.log(JSON.stringify({result:'passed',checks:['empty before server load','sample isolation','authenticated historical chart ranges','chart survives polling, tab changes and resize','persisted area/candle preference','late chart response ignored','chart unavailable state','mobile chart fit','authoritative holdings and history across browsers','pending orders','exact retry after lost response','pending cancellation','reset after lost response and reload','monotonic server clock','ET session and execution rules','known close blocks orders','stale quote block','provider unavailable']}));
+  console.log(JSON.stringify({result:'passed',checks:['empty before server load','sample isolation','authenticated historical chart ranges','chart survives polling, tab changes and resize','persisted area/candle preference','late chart response ignored','chart unavailable state','mobile chart fit','authoritative holdings and history across browsers','pending orders','exact retry after lost response','pending cancellation','reset after lost response and reload','monotonic server clock','ET session and execution rules','known close blocks orders','after-hours session trading','stale quote block','provider unavailable']}));
  }finally{releaseRead();if(releaseHeldRead)releaseHeldRead();if(releaseHeldChart)releaseHeldChart();for(const context of contexts)await context.close();await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

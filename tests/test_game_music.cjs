@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'game-music.js'), 'utf8');
 const prefsKey = 'yomama_music_v1';
-const positionKey = 'yomama_music_position_v1';
+const positionKey = 'yomama_music_position_shy_fx_this_style_v1';
 
 class Events {
   constructor() { this.listeners = new Map(); }
@@ -122,7 +122,7 @@ function page(options = {}) {
   const document = Object.assign(new Events(), {
     body,
     hidden: options.hidden || false,
-    currentScript: { src: 'https://game.example/game-music.js?v=1' },
+    currentScript: { src: 'https://game.example/game-music.js?v=2' },
     querySelector: selector => body.querySelector(selector),
     getElementById: id => body.querySelector(`#${id}`),
     createElement: tag => tag === 'audio' ? new Audio() : new Element(tag),
@@ -158,7 +158,7 @@ test('music stays undownloaded until the player explicitly chooses Play', async 
   assert.equal(game.audio.attempts.length, 0);
 
   game.toggle.emit('click');
-  assert.equal(game.audio.src, 'https://game.example/assets/music/cls-no-1-g-major.mp4');
+  assert.equal(game.audio.src, 'https://game.example/assets/music/shy-fx-this-style.mp4');
   assert.equal(game.audio.loop, true);
   assert.equal(game.audio.attempts.length, 1);
   game.audio.attempts[0].resolve();

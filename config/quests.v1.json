@@ -1,0 +1,689 @@
+{
+  "enabled": true,
+  "version": 1,
+  "boosts": {
+    "maxActivePerMetric": 1
+  },
+  "templates": [
+    {
+      "id": "develop",
+      "forEachBusiness": true,
+      "skipBusinesses": [
+        "farm",
+        "fish_stall",
+        "roastery"
+      ],
+      "chapter": 0,
+      "title": "Develop {businessName}",
+      "summary": "Run the basic line at {businessName} until it earns its advanced recipe.",
+      "teaches": "Every business earns its advanced product by running its ordinary line first.",
+      "appear": {
+        "ownsBusiness": "{businessId}"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:{good1}",
+          "target": 20,
+          "label": "Sell 20 {good1Name}"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:{good2}",
+          "target": 12,
+          "label": "Sell 12 {good2Name}"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_recipe",
+          "goodId": "{good3}"
+        },
+        {
+          "type": "flag",
+          "name": "business_developed:{businessId}"
+        },
+        {
+          "type": "speed_perk",
+          "goodId": "{good3}",
+          "percent": 5
+        }
+      ]
+    }
+  ],
+  "quests": [
+    {
+      "id": "first-crop",
+      "chapter": 1,
+      "title": "First Crop",
+      "summary": "Your farm is open. Sell your first ten tomatoes.",
+      "teaches": "A business produces goods, and goods become cash only when someone buys them.",
+      "appear": {},
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:farm_tomatoes",
+          "target": 10,
+          "label": "Sell 10 Tomatoes"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 40
+        },
+        {
+          "type": "supplies",
+          "budget": 60
+        }
+      ]
+    },
+    {
+      "id": "room-to-grow",
+      "chapter": 1,
+      "title": "Room to Grow",
+      "summary": "Buy your first upgrade at the farm.",
+      "teaches": "Upgrades cost cash now and pay it back over time. This is the first real trade-off in the game.",
+      "appear": {
+        "afterQuests": [
+          "first-crop"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:upgrade",
+          "target": 1,
+          "label": "Buy any upgrade"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 60
+        }
+      ]
+    },
+    {
+      "id": "three-crops",
+      "chapter": 1,
+      "title": "Three Crops",
+      "summary": "Tomatoes, eggs and honey sell for 2, 4 and 8. Sell some of each.",
+      "teaches": "Slower goods are worth more per unit. The expensive product is not always the better one.",
+      "appear": {
+        "afterQuests": [
+          "first-crop"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:farm_eggs",
+          "target": 15,
+          "label": "Sell 15 Eggs"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:farm_honey",
+          "target": 8,
+          "label": "Sell 8 Honey"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 2,
+          "charges": 10
+        }
+      ]
+    },
+    {
+      "id": "first-delivery",
+      "chapter": 1,
+      "title": "First Delivery",
+      "summary": "Fill three order cards to earn a fully funded fish stall.",
+      "teaches": "Orders pay far better than walk-in shoppers, but you have to choose what to make.",
+      "appear": {
+        "afterQuests": [
+          "three-crops"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "deliver:order",
+          "target": 3,
+          "label": "Complete 3 orders"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "grant_building",
+          "businessId": "fish_stall"
+        }
+      ]
+    },
+    {
+      "id": "harbour-lunch",
+      "chapter": 1,
+      "title": "Harbour Lunch",
+      "summary": "Get the fish stall trading to earn a fully funded roastery.",
+      "teaches": "A second business does not replace the first. Both run at once.",
+      "appear": {
+        "afterQuests": [
+          "first-delivery"
+        ],
+        "ownsBusiness": "fish_stall"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:fish_stall_fresh_catch",
+          "target": 12,
+          "label": "Sell 12 Fresh Catch"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:fish_stall_oysters",
+          "target": 6,
+          "label": "Sell 6 Oysters"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "grant_building",
+          "businessId": "roastery"
+        }
+      ]
+    },
+    {
+      "id": "cafe-opening",
+      "chapter": 1,
+      "title": "Café Opening",
+      "summary": "Pastries sell for 20, the best price you have seen so far.",
+      "teaches": "Processed goods are worth several times their ingredients.",
+      "appear": {
+        "afterQuests": [
+          "harbour-lunch"
+        ],
+        "ownsBusiness": "roastery"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:roastery_espresso_shots",
+          "target": 10,
+          "label": "Sell 10 Espresso Shots"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:roastery_pastries",
+          "target": 6,
+          "label": "Sell 6 Pastries"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 400
+        },
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 2,
+          "charges": 5
+        }
+      ]
+    },
+    {
+      "id": "four-doors-open",
+      "chapter": 2,
+      "title": "Four Doors Open",
+      "summary": "Own four businesses at once.",
+      "teaches": "Cash spent on a new business stops earning until that business is running.",
+      "appear": {
+        "afterQuests": [
+          "cafe-opening"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "own:businesses",
+          "target": 4,
+          "label": "Own 4 businesses"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 500
+        }
+      ]
+    },
+    {
+      "id": "standing-order",
+      "chapter": 2,
+      "title": "Standing Order",
+      "summary": "Set up two regular buyers before you log off.",
+      "teaches": "Regular buyers keep earning while you are away. Set them up before a long absence.",
+      "appear": {
+        "afterQuests": [
+          "cafe-opening"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:set_regular",
+          "target": 2,
+          "label": "Set up 2 regular buyers"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "supplies",
+          "budget": 150
+        }
+      ]
+    },
+    {
+      "id": "take-the-contract",
+      "chapter": 2,
+      "title": "A Bigger Order",
+      "summary": "Grow one of your regular buyers into its larger order.",
+      "teaches": "A regular who has taken three deliveries will take twice as much. Growing a buyer you already have beats finding a new one.",
+      "appear": {
+        "afterQuests": [
+          "standing-order"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:upgrade_regular",
+          "target": 1,
+          "label": "Upgrade 1 regular buyer"
+        },
+        {
+          "kind": "count",
+          "counter": "deliver:order",
+          "target": 12,
+          "label": "Complete 12 orders"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 2,
+          "charges": 8
+        }
+      ]
+    },
+    {
+      "id": "farm-kitchen",
+      "chapter": 2,
+      "title": "Farm Kitchen",
+      "summary": "Sell thirty goods from your farm to earn its first crafted product.",
+      "teaches": "Crafting turns several ordinary goods into one that sells for much more.",
+      "appear": {
+        "afterQuests": [
+          "four-doors-open"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:business:farm",
+          "target": 30,
+          "label": "Sell 30 farm goods"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_craft",
+          "itemId": "farm_breakfast_basket"
+        },
+        {
+          "type": "cash",
+          "amount": 300
+        }
+      ]
+    },
+    {
+      "id": "own-supply-chain",
+      "chapter": 2,
+      "title": "Your Own Supplier",
+      "summary": "The garage needs parts the workshop can make. Sell both lines.",
+      "teaches": "One of your businesses can supply another instead of buying from outside.",
+      "appear": {
+        "ownsBusiness": "workshop"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:garage_spare_parts",
+          "target": 20,
+          "label": "Sell 20 Spare Parts"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:workshop_steel_brackets",
+          "target": 15,
+          "label": "Sell 15 Steel Brackets"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_craft",
+          "itemId": "battery_pack"
+        },
+        {
+          "type": "upgrade_voucher",
+          "amount": 1500
+        }
+      ]
+    },
+    {
+      "id": "clear-the-shelves",
+      "chapter": 2,
+      "title": "Clear the Shelves",
+      "summary": "Goods with nowhere to go are sold off cheaply. Let forty go.",
+      "teaches": "Storage that overflows sells at a discount. Producing more is not always earning more.",
+      "appear": {
+        "afterQuests": [
+          "four-doors-open"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:source:clearance",
+          "target": 40,
+          "label": "Clear 40 units"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 2000
+        }
+      ]
+    },
+    {
+      "id": "production-line",
+      "chapter": 3,
+      "title": "Production Line",
+      "summary": "Get three businesses to production level 5.",
+      "teaches": "Depth beats width. Three strong businesses out-earn six weak ones.",
+      "appear": {
+        "minBuildings": 4
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "businesses_at_level",
+          "level": 5,
+          "target": 3,
+          "label": "3 businesses at level 5"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 5000
+        }
+      ]
+    },
+    {
+      "id": "focus-induction",
+      "chapter": 3,
+      "title": "Find Your Focus",
+      "summary": "Train three focus advancements across your businesses.",
+      "teaches": "Focus is a permanent improvement to how a business works, not a one-off payment.",
+      "appear": {
+        "afterQuests": [
+          "production-line"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:focus_node",
+          "target": 3,
+          "label": "Buy 3 focus advancements"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 8000
+        }
+      ]
+    },
+    {
+      "id": "two-hundred-sold",
+      "chapter": 3,
+      "title": "Two Hundred Sold",
+      "summary": "Sell two hundred units across the whole conglomerate.",
+      "teaches": "Volume at a small margin can beat a few expensive sales.",
+      "appear": {
+        "afterQuests": [
+          "production-line"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:any",
+          "target": 200,
+          "label": "Sell 200 units"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 3,
+          "charges": 15
+        }
+      ]
+    },
+    {
+      "id": "six-businesses",
+      "chapter": 3,
+      "title": "Head Office",
+      "summary": "Own six businesses and open the Operations desk.",
+      "teaches": "Past a certain size you manage the group, not each shop.",
+      "appear": {
+        "minBuildings": 5
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "own:businesses",
+          "target": 6,
+          "label": "Own 6 businesses"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_feature",
+          "feature": "operations"
+        },
+        {
+          "type": "cash",
+          "amount": 25000
+        }
+      ]
+    },
+    {
+      "id": "quality-run",
+      "chapter": 3,
+      "title": "Quality Run",
+      "summary": "Sell the advanced products of two different businesses.",
+      "teaches": "Advanced recipes are where the margin is, once you have unlocked them.",
+      "appear": {
+        "ownsBusiness": "cannery"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:cannery_preserves",
+          "target": 25,
+          "label": "Sell 25 Preserves"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:solar_coop_carbon_credits",
+          "target": 20,
+          "label": "Sell 20 Carbon Credits"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 20000
+        }
+      ]
+    },
+    {
+      "id": "eight-businesses",
+      "chapter": 4,
+      "title": "Eight Under One Roof",
+      "summary": "Own eight businesses at once.",
+      "teaches": "A conglomerate earns from businesses that have nothing to do with each other.",
+      "appear": {
+        "minBuildings": 7
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "own:businesses",
+          "target": 8,
+          "label": "Own 8 businesses"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 100000
+        }
+      ]
+    },
+    {
+      "id": "keep-the-lights-on",
+      "chapter": 4,
+      "title": "Keep the Lights On",
+      "summary": "Supply the grid from your own power stations.",
+      "teaches": "Utilities sell steadily and in volume rather than in bursts.",
+      "appear": {
+        "ownsBusiness": "generator"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:generator_baseload_power",
+          "target": 50,
+          "label": "Sell 50 Baseload Power"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:generator_peak_power",
+          "target": 30,
+          "label": "Sell 30 Peak Power"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 3,
+          "charges": 10
+        }
+      ]
+    },
+    {
+      "id": "network-effect",
+      "chapter": 4,
+      "title": "Network Effect",
+      "summary": "Complete fifty orders in total, then open the Port.",
+      "teaches": "A business with steady cash flow can start investing its profits elsewhere.",
+      "appear": {
+        "afterQuests": [
+          "eight-businesses"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "deliver:order",
+          "target": 50,
+          "label": "Complete 50 orders"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_feature",
+          "feature": "port_trading"
+        }
+      ]
+    },
+    {
+      "id": "full-portfolio",
+      "chapter": 4,
+      "title": "Full Portfolio",
+      "summary": "Own twelve businesses at once.",
+      "teaches": "Nothing new. This one is for the scoreboard.",
+      "appear": {
+        "minBuildings": 10
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "own:businesses",
+          "target": 12,
+          "label": "Own 12 businesses"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 5,
+          "charges": 25
+        }
+      ]
+    },
+    {
+      "id": "mission-control",
+      "chapter": 4,
+      "title": "Mission Control",
+      "summary": "Sell telemetry from the uplink centre, the last product in the game.",
+      "teaches": "You started with two-YM tomatoes and finished at seven hundred and sixty.",
+      "appear": {
+        "ownsBusiness": "uplink_center"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:uplink_center_telemetry",
+          "target": 10,
+          "label": "Sell 10 Telemetry"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "flag",
+          "name": "conglomerate_complete"
+        },
+        {
+          "type": "cash",
+          "amount": 5000000
+        }
+      ]
+    }
+  ]
+}

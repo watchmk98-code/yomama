@@ -95,8 +95,16 @@ def test_pages_behind_the_wall_are_never_cached(site, db):
         assert headers.get("Vary") == "Cookie", path
     _, _, headers = site("/index.html")                 # the redirect itself too
     assert "no-store" in headers.get("Cache-Control", "")
-    _, _, headers = site("/styles.css")                 # assets may be cached as before
-    assert "Cache-Control" not in headers
+    # Assets are the opposite case: public, heavy, and the same for everyone, so
+    # they say how long a browser may keep them. A versioned url is one exact
+    # file for ever; an unversioned one is rechecked in minutes.
+    _, _, headers = site("/styles.css")
+    assert headers.get("Cache-Control") == "public, max-age=300"
+    _, _, headers = site("/styles.css?v=20260916")
+    assert headers.get("Cache-Control") == "public, max-age=31536000, immutable"
+    _, _, headers = site("/assets/game-art/ui/workers.svg")
+    assert "no-store" not in headers.get("Cache-Control", "")
+    assert "Vary" not in headers
 
 
 def test_spelling_tricks_do_not_slip_past_the_gate(site):

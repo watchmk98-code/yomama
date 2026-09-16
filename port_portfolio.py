@@ -176,11 +176,15 @@ def _migrate_execution_fields(state):
             order.setdefault("expiresAt", _iso(deadline))
 
 
-def execution_rules(server_poll_seconds=2):
+def execution_rules(server_poll_seconds=2, extended_hours=False):
     """Public rules for the terminal; prices and deadlines use real UTC time."""
     return {
-        "clock": "real_time", "timeZone": "America/New_York", "session": "regular",
+        "clock": "real_time", "timeZone": "America/New_York",
+        "session": "extended" if extended_hours else "regular",
         "regularOpen": "09:30", "regularClose": "16:00", "calendar": "alpaca",
+        "extendedHours": bool(extended_hours),
+        "premarketOpen": "04:00" if extended_hours else None,
+        "afterHoursClose": "20:00" if extended_hours else None,
         "holidaysAndEarlyCloses": True,
         "serverPollSeconds": server_poll_seconds,
         "matching": "server_poll", "pollIntervalSeconds": server_poll_seconds,
@@ -379,7 +383,8 @@ def match_orders(state, quotes, now=None, market_open=True, *, session_open=None
 
 
 def submit_order(state, body, quotes, now=None, market_open=True, *, received_at=None,
-                 session_open=None, session_close=None, resume_at=None, defer_execution=False):
+                 session_open=None, session_close=None, resume_at=None, defer_execution=False,
+                 session="regular"):
     now = _now(now)
     _validate_state(state)
     normalized = _normalize_order(body)
@@ -391,7 +396,7 @@ def submit_order(state, body, quotes, now=None, market_open=True, *, received_at
         raise PortError(400, "The order receipt time is invalid.", "invalid_receipt")
     if market_open is False or (session_open is not None and received_at < session_open) or (
             session_close is not None and (received_at >= session_close or now >= session_close)):
-        raise PortError(409, "The stock market is closed. Place orders during regular market hours.", "market_closed")
+        raise PortError(409, "The stock market is closed. Place orders while the market session is open.", "market_closed")
     if market_open is not True:
         raise PortError(503, "The market status is temporarily unavailable. Please try again shortly.", "market_unavailable")
     quote = _fresh_quote((quotes or {}).get(normalized["symbol"]), now)
@@ -418,7 +423,8 @@ def submit_order(state, body, quotes, now=None, market_open=True, *, received_at
     order = dict(normalized, id=request_id, status="pending", referencePriceCents=reference,
                  reservedAmountCents=reservation, createdAt=_iso(received_at), submittedAt=_iso(received_at),
                  submittedTimestamp=received_at, receivedTimestamp=received_at,
-                 receivedAt=_iso(received_at), acceptedAt=_iso(now), updatedAt=_iso(now), session="regular",
+                 receivedAt=_iso(received_at), acceptedAt=_iso(now), updatedAt=_iso(now),
+                 session=session if session in ("regular", "premarket", "afterhours") else "regular",
                  timeInForce="gtc" if normalized["type"] == "limit" else "day")
     if normalized["type"] == "market":
         deadline = received_at + MARKET_ORDER_TIMEOUT_SECONDS

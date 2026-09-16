@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import copy
 
+import quest_engine
 import rules_tables
 
 
@@ -138,6 +139,7 @@ def ensure(cfg, st, migrating=False):
 
 def record_production(cfg, st, good_id, qty):
     """Observe an actual completed production batch; never create goods/rewards."""
+    quest_engine.record_production(cfg, st, good_id, qty)
     if not connected_enabled(cfg) or type(qty) is not int or qty <= 0 or good_id not in _catalog(cfg):
         return
     counters = ensure(cfg, st)['activity']['produced']
@@ -150,6 +152,7 @@ def record_sale(cfg, st, requirements, source):
     Orders, projects, shoppers and regulars share these observations; no second
     stock debit occurs when a quest recognizes the same fulfilled delivery.
     """
+    quest_engine.record_sale(cfg, st, requirements, source)
     if not connected_enabled(cfg) or not isinstance(source, str):
         return
     activity = ensure(cfg, st)['activity']
@@ -206,6 +209,10 @@ def _quest_specs(cfg):
 
 
 def product_unlocked(cfg, st, gid):
+    # The quest engine owns recipe unlocks wherever it runs; a legacy class
+    # keeps answering from its own quest records below.
+    if quest_engine.enabled(cfg):
+        return quest_engine.product_unlocked(cfg, st, gid)
     if not enabled(cfg):
         return True
     p = ensure(cfg, st)
@@ -217,15 +224,16 @@ def product_unlocked(cfg, st, gid):
 
 
 def speed_bonus(cfg, st, b, good):
+    bonus = quest_engine.speed_bonus(cfg, st, good['id'])
     if not enabled(cfg):
-        return 0
+        return bonus
     p = ensure(cfg, st)
     ti = b.get('tier')
     if type(ti) is not int or not 0 <= ti < len(cfg['tiers']):
         return 0
     tier = cfg['tiers'][ti]
-    bonus = sum(5 for quest in p['quests'].values()
-                if quest.get('completed') and quest.get('perkGood') == good['id'])
+    bonus += sum(5 for quest in p['quests'].values()
+                 if quest.get('completed') and quest.get('perkGood') == good['id'])
     for r in RESEARCH if research_enabled(cfg) else ():
         if r['id'] in p['research'] and r['family'] == tier['family']:
             if r['effect'] == 'all' or good['id'] == tier['goods'][-1]['id']:

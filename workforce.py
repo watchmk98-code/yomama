@@ -171,9 +171,25 @@ def bonuses(cfg, st, b):
     return result
 
 
-def _qualified(st, b, tier):
-    return (b.get('lv', 1) >= 3 or bool(st.get('businessProgression', {}).get('quests', {})
-            .get(tier['id'] + '-plan', {}).get('completed')))
+def _developed(cfg, st, bid):
+    """This business has earned its advanced recipe. The quest engine says so
+    with a named flag, so the focus tree no longer depends on a quest id; a
+    legacy class keeps answering from its signature quest record."""
+    import quest_engine
+    if quest_engine.enabled(cfg):
+        return quest_engine.has_flag(cfg, st, 'business_developed:' + bid)
+    return bool(st.get('businessProgression', {}).get('quests', {})
+                .get(bid + '-signature', {}).get('completed'))
+
+
+def _qualified(cfg, st, b, tier):
+    if b.get('lv', 1) >= 3:
+        return True
+    import quest_engine
+    if quest_engine.enabled(cfg):
+        return _developed(cfg, st, tier['id'])
+    return bool(st.get('businessProgression', {}).get('quests', {})
+                .get(tier['id'] + '-plan', {}).get('completed'))
 
 
 def _nodes(cfg, st, b, tier, team):
@@ -200,9 +216,9 @@ def _nodes(cfg, st, b, tier, team):
         cost = 0 if node_id == 'orientation' else int(math.floor(tier['upgradeBase'] * (2 if advanced else 1) + .5))
         prestige_cost = (0 if node_id == 'orientation' else 2 if advanced else 1) if cfg.get('businessDesign', {}).get('connectedProgression') else 0
         owned = node_id in team['nodes']
-        structural_why = ('Reach production level 3 or complete this business’s planning quest' if node_id == 'orientation' and not _qualified(st, b, tier) else
+        structural_why = ('Reach production level 3 or complete this business’s planning quest' if node_id == 'orientation' and not _qualified(cfg, st, b, tier) else
                           'Complete the preceding focus first' if any(n not in team['nodes'] for n in requires) else
-                          'Complete this business’s signature quest' if advanced and not st.get('businessProgression', {}).get('quests', {}).get(tier['id'] + '-signature', {}).get('completed') else '')
+                          'Complete this business’s signature quest' if advanced and not _developed(cfg, st, tier['id']) else '')
         unlocked = owned or not bool(structural_why)
         why = ('Already completed' if owned else structural_why if structural_why else
                'Not enough Prestige' if st.get('businessProgression', {}).get('prestige', 0) < prestige_cost else
@@ -327,6 +343,8 @@ def _apply(cfg, st, body):
         st['cash'] -= node['cost']
         team['spent'] += node['cost']
         team['nodes'].append(node['id'])
+        import quest_engine
+        quest_engine.record_action(cfg, st, 'focus_node')
         receipt.update(cost=node['cost'], prestigeCost=node['prestigeCost'], nodeId=node['id'])
     elif action == 'allocate':
         if population.enabled(cfg):

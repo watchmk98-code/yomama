@@ -28,7 +28,8 @@
       var viewport = window.visualViewport;
       var width = viewport ? viewport.width : innerWidth;
       var height = viewport ? viewport.height : innerHeight;
-      var wide = width >= 650 && height < 560;
+      var pilot = dialog.dataset.pilot === 'true';
+      var wide = !pilot && width >= 650 && height < 560;
       var small = width < 450;
       var short = height < 560;
       dialog.dataset.fitLayout = wide ? 'wide' : 'tall';
@@ -49,6 +50,9 @@
       set('art-height', artHeight);
       body.style.zoom = '1';
       body.style.width = 'auto';
+      // Automatic products have requirements and live progress in addition to
+      // ingredients. Keep these readable and allow natural dialog scrolling.
+      if (pilot) { set('art-height', Math.min(150, height * .18)); dialog.dataset.fitReady = 'true'; return; }
       var style = getComputedStyle(dialog);
       var verticalFrame = number(style.paddingTop) + number(style.paddingBottom) + number(style.borderTopWidth) + number(style.borderBottomWidth);
       var availableHeight = Math.max(40, height - 20 - verticalFrame);

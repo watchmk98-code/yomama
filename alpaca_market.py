@@ -26,6 +26,12 @@ _calendar_cache = {}
 CHART_RANGES = {'1D': ('1Min', 7, 30), '1W': ('30Min', 7, 30),
                 '1M': ('1Hour', 31, 60), '3M': ('4Hour', 91, 60),
                 '1Y': ('1Day', 366, 60), '5Y': ('1Week', 1827, 60)}
+EXTENDED_PREMARKET_OPEN = '04:00'
+EXTENDED_LAST_CLOSE = '20:00'
+EXTENDED_AFTER_HOURS_SECONDS = 4 * 3600
+SESSION_MESSAGES = {'premarket': 'Pre-market · live SIP quotes · virtual trades',
+                    'regular': 'Live SIP quotes · virtual trades',
+                    'afterhours': 'After hours · live SIP quotes · virtual trades'}
 MAX_CHART_PAGES = 3
 MAX_FOUR_HOUR_CHART_PAGES = 8
 CHART_REQUEST_BUDGET_SECONDS = 9.0
@@ -72,7 +78,35 @@ def _result(status, message, quotes=None, **extra):
         maxQuoteAgeSeconds=MAX_QUOTE_AGE_SECONDS, **extra)}
 
 
-def _regular_session(base, headers, clock_time):
+def extended_hours_enabled():
+    """Pre-market and after-hours execution. Set PORT_EXTENDED_HOURS=0 for
+    regular hours only; no code change is needed either way."""
+    return os.environ.get('PORT_EXTENDED_HOURS', '1').strip().lower() not in ('0', 'false', 'off', 'no')
+
+
+def _exchange_time(day, clock):
+    return datetime.fromisoformat(day + 'T' + clock).replace(tzinfo=_new_york).timestamp()
+
+
+def _extended_bounds(day, regular_open, regular_close):
+    """US extended hours around one calendar row.
+
+    Pre-market starts at 04:00 ET and after-hours runs four hours past the
+    close, never beyond 20:00 ET. Early closes shorten both windows exactly as
+    the exchanges do: a 13:00 ET close trades until 17:00 ET. The times are
+    derived here rather than read from optional calendar fields, so a provider
+    response cannot widen the tradable window.
+    """
+    if regular_open is None or regular_close is None:
+        return None, None
+    opening = min(_exchange_time(day, EXTENDED_PREMARKET_OPEN), regular_open)
+    closing = max(regular_close, min(regular_close + EXTENDED_AFTER_HOURS_SECONDS,
+                                     _exchange_time(day, EXTENDED_LAST_CLOSE)))
+    return opening, closing
+
+
+def _session_bounds(base, headers, clock_time):
+    """The exchange day's regular window and the wider extended-hours window."""
     day = datetime.fromtimestamp(clock_time, _new_york).date().isoformat()
     key = (base, headers['APCA-API-KEY-ID'], day)
     cached = _calendar_cache.get(key)
@@ -81,7 +115,7 @@ def _regular_session(base, headers, clock_time):
     rows = _request(base + '/v2/calendar?' + urlencode({'start': day, 'end': day}), headers)
     if not isinstance(rows, list) or len(rows) > 1:
         raise ValueError('invalid market calendar')
-    bounds = (None, None)
+    bounds = (None, None, None, None)
     if rows:
         row = rows[0]
         if not isinstance(row, dict) or row.get('date') != day:
@@ -91,14 +125,39 @@ def _regular_session(base, headers, clock_time):
             value = row.get(field)
             if not isinstance(value, str) or not re.fullmatch(r'\d{2}:\d{2}(?::\d{2})?', value):
                 raise ValueError('invalid calendar hours')
-            values.append(datetime.fromisoformat(day + 'T' + value).replace(tzinfo=_new_york).timestamp())
+            values.append(_exchange_time(day, value))
         if values[0] >= values[1]:
             raise ValueError('invalid calendar session')
-        bounds = tuple(values)
+        bounds = tuple(values) + _extended_bounds(day, values[0], values[1])
     if len(_calendar_cache) >= 10:
         _calendar_cache.clear()
     _calendar_cache[key] = (time.time(), bounds)
     return bounds
+
+
+def _next_session_open(next_open, extended):
+    """When trading next becomes possible, so a closed market counts down to
+    the pre-market open rather than to the later regular open."""
+    try:
+        opening = timestamp(next_open)
+    except (TypeError, ValueError, OverflowError, OSError):
+        return None
+    if not extended:
+        return opening
+    day = datetime.fromtimestamp(opening, _new_york).date().isoformat()
+    return min(opening, _exchange_time(day, EXTENDED_PREMARKET_OPEN))
+
+
+def _session_label(now, market):
+    """Which session `now` falls in. Display only; execution uses the bounds."""
+    if market['status'] == 'closed':
+        return 'closed'
+    if market['status'] != 'open':
+        return None
+    opening, closing = market.get('regularOpen'), market.get('regularClose')
+    if opening is None or closing is None:
+        return 'regular'
+    return 'premarket' if now < opening else 'regular' if now < closing else 'afterhours'
 
 
 def execution_feed(feed, now=None):
@@ -116,10 +175,17 @@ def execution_feed(feed, now=None):
             # omit them, so isolated tests can use a deliberate simulated clock.
             if market.get('source') == 'alpaca_sip' and (session_open is None or session_close is None):
                 raise ValueError('missing calendar session')
+            # The clock's next close ends the regular session only. With
+            # extended hours on, the calendar-derived bounds above are the
+            # tradable window and after-hours trading continues past it.
             if ((session_open is not None and now < session_open) or
                     (session_close is not None and now >= session_close) or
-                    (market.get('nextClose') and now >= timestamp(market['nextClose']))):
+                    (not market.get('extendedHours') and market.get('nextClose')
+                     and now >= timestamp(market['nextClose']))):
                 market.update(status='closed', message='US stock market closed.')
+        market['session'] = _session_label(now, market)
+        if market['status'] == 'open' and market.get('source') == 'alpaca_sip':
+            market['message'] = SESSION_MESSAGES[market['session']]
     except (TypeError, ValueError, OverflowError):
         market.update(status='unavailable', message='Market time is temporarily unavailable.')
         result['quotes'] = {}
@@ -207,7 +273,11 @@ def snapshot(symbols, force=False):
             clock_time = timestamp(clock.get('timestamp'))
             if abs(now - clock_time) > 30:
                 raise ValueError('stale market clock')
-            session_open, session_close = _regular_session(base, headers, clock_time)
+            regular_open, regular_close, extended_open, extended_close = _session_bounds(
+                base, headers, clock_time)
+            extended = extended_hours_enabled()
+            session_open, session_close = ((extended_open, extended_close) if extended
+                                           else (regular_open, regular_close))
             if clock['is_open'] and (session_open is None or session_close is None):
                 raise ValueError('market open without a calendar session')
             raw = _request('https://data.alpaca.markets/v2/stocks/snapshots?' +
@@ -233,11 +303,16 @@ def snapshot(symbols, force=False):
                                       'change': _daily_change(record, (bid + ask) / 2, at)}
                 except (KeyError, TypeError, ValueError, OverflowError):
                     continue
-            status = 'open' if clock['is_open'] else 'closed'
-            message = 'Live SIP quotes · virtual trades' if clock['is_open'] else 'US stock market closed.'
+            trading = bool(clock['is_open']) or (session_open is not None
+                                                 and session_open <= clock_time < session_close)
+            status = 'open' if trading else 'closed'
+            message = SESSION_MESSAGES['regular'] if trading else 'US stock market closed.'
             result = execution_feed(_result(status, message, quotes, nextOpen=clock.get('next_open'),
                                             nextClose=clock.get('next_close'), clockTimestamp=clock_time,
-                                            sessionOpen=session_open, sessionClose=session_close))
+                                            nextSessionOpen=_next_session_open(clock.get('next_open'), extended),
+                                            sessionOpen=session_open, sessionClose=session_close,
+                                            regularOpen=regular_open, regularClose=regular_close,
+                                            extendedHours=extended))
         except HTTPError as error:
             # Never forward provider response bodies, URLs, or credentials.
             message = ('Market data credentials or SIP access need checking.'

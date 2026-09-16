@@ -15,7 +15,7 @@
   document.head.appendChild(style);
   const script = document.createElement('script');
   script.id = 'game-music-script';
-  script.src = new URL('game-music.js?v=1', base).href;
+  script.src = new URL('game-music.js?v=2', base).href;
   document.head.appendChild(script);
 })();
 
@@ -2875,7 +2875,7 @@
   const analystPhotoSlot = document.querySelector('.analyst-photo-slot');
   const analystBioSlot = document.querySelector('.analyst-bio-slot');
   let confirmSearchTimer = null;
-  const defaultSearchPlaceholder = stockSearch?.getAttribute('placeholder') || '$_$';
+  const defaultSearchPlaceholder = stockSearch?.getAttribute('placeholder') || 'ASK';
   const tvContainer = document.querySelector('#tv-symbol-overview .tradingview-widget-container');
   const tvHost = document.getElementById('tv-symbol-overview');
   const splitBox = tvHost ? tvHost.closest('.split-box') : null;

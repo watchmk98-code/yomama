@@ -43,6 +43,10 @@
   var businessClocks = {};
   var businessConnected = true;
   var businessClockNeedsSync = false;
+  var businessPanelViews = {};
+  var selectedAssetSlot = null;
+  var lastAssetOperation = null;
+  var assetMessage = '';
   var busy = false;
   var staffChoices = {};
   var selectedQuest = null;
@@ -239,6 +243,17 @@
     var key = building.id + '_' + String(good.name).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
     if (GOOD_ART[key]) return assetIcon('goods/' + key + '.png', 'econ-good-icon', labeled ? good.name : '');
     return '<span class="econ-art-fallback"' + (labeled ? ' role="img" aria-label="' + esc(good.name) + '"' : ' aria-hidden="true"') + '>' + esc(good.name.slice(0, 2)) + '</span>';
+  }
+
+  function craftedStockIcon(item) {
+    var sheets=(window.YomamaCraftArt || {}).items || [];
+    var sheet=sheets.find(function(entry){return item.iconIndex >= (entry.start || 0) && item.iconIndex < (entry.start || 0) + entry.rects.length;});
+    if(!sheet)return '<span class="econ-art-fallback" aria-hidden="true">'+esc(item.name.slice(0,2))+'</span>';
+    var rect=sheet.rects[item.iconIndex-(sheet.start || 0)], size=Math.max(rect[2],rect[3]);
+    var style='--craft-stock-image:url("'+sheet.src+'");--craft-stock-width:'+rect[2]/size*100+'%;--craft-stock-height:'+rect[3]/size*100+'%;'+
+      '--craft-stock-sheet-width:'+sheet.width/rect[2]*100+'%;--craft-stock-sheet-height:'+sheet.height/rect[3]*100+'%;'+
+      '--craft-stock-x:'+rect[0]/(sheet.width-rect[2])*100+'%;--craft-stock-y:'+rect[1]/(sheet.height-rect[3])*100+'%;';
+    return '<span class="econ-good-icon game-craft-stock-icon" aria-hidden="true" style="'+esc(style)+'"></span>';
   }
 
   function goodsStrip(building, s) {
@@ -540,15 +555,77 @@
     ];
     var withCosts=s.operations && s.operations.enabled;
     if(withCosts)metrics=[
-      ['depreciation','Depreciation','—','Cost of tangible assets spread over their useful lives. No depreciation amount recorded yet.'],
-      ['amortization','Amortization','—','Cost of intangible assets spread over their useful lives. No amortization amount recorded yet.']
+      ['depreciation','Depreciation',b.craftingPilot?incomeRate(b.craftingPilot.depreciation):'—','Cost of assigned equipment used in the last 60 game seconds.'],
+      ['amortization','Amortization',b.craftingPilot?incomeRate(b.craftingPilot.amortization):'—','Cost of assigned software or rights used in the last 60 game seconds.']
     ];
     var note=activity.observedSeconds!=null && activity.observedSeconds<60?units(activity.observedSeconds)+'s recorded':'stock now';
-    return '<div class="game-business-numbers"><div class="game-live-heading">'+(withCosts?'<span class="game-report-period">Last 60 game seconds</span>':'<span class="game-live-title">Live rates <small>· '+note+'</small></span>')+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div><dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
+    var switchable=!!document.getElementById('econ-building');
+    var assetView=switchable && businessPanelViews[businessPanelKey(b)]==='assets';
+    var heading=assetView?'<span class="game-report-period">Business assets</span>':withCosts?'<span class="game-report-period">Last 60 game seconds</span>':'<span class="game-live-title">Live rates <small>· '+note+'</small></span>';
+    var figures='<dl class="game-live-metrics'+(withCosts?' has-costs':'')+'" aria-label="Business activity">'+(withCosts?financeMetrics(b,changes):'')+metrics.map(function(m){
       var capacity=m[0]==='produced'?b.productionCapacityPerMinute:m[0]==='sold'?b.customerCapacityPerMinute:null;
       var value=capacity==null?m[2]:rateUnits(capacity);
       return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+'">'+value+'</dd></div>';
-    }).join('')+'</dl>'+(withCosts && b.savingForOrders?'<p class="game-cashflow-note">Manual orders and their goods costs are separate from these shop results.</p>':'')+'</div>';
+    }).join('')+'</dl>'+(withCosts && b.savingForOrders?'<p class="game-cashflow-note">Manual orders and their goods costs are separate from these shop results.</p>':'');
+    var controls=switchable?'<span class="game-business-page-controls" role="group" aria-label="Business panel navigation">'+[-1,1].map(function(step){
+      var direction=step<0?'Previous':'Next', destination=assetView?'financial results':'business assets';
+      return '<button id="game-business-panel-'+(step<0?'previous':'next')+'" type="button" class="game-business-page-arrow" data-business-panel-step="'+step+'" aria-controls="game-business-panel-content" aria-label="'+direction+' panel: '+destination+'" title="Show '+destination+'"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><path d="'+(step<0?'M10 3 5 8l5 5':'m6 3 5 5-5 5')+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+    }).join('')+'</span>':'';
+    return '<div class="game-business-numbers"><div class="game-live-heading'+(switchable?' game-business-page-heading':'')+'">'+(switchable?'<span class="game-business-page-label">'+controls+heading+'</span>':heading)+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div>'+(switchable?'<div id="game-business-panel-content" class="game-business-panel-content" data-business-panel="'+(assetView?'assets':'finance')+'">'+(assetView?businessAssetSlots(b):figures)+'</div>':figures)+'</div>';
+  }
+
+  function businessPanelKey(b) { return b.buildingId || b.id; }
+
+  function businessAssetSlots(b) {
+    return '<div class="game-business-assets-body"><div class="game-business-asset-slots" role="group" aria-label="'+esc(b.name)+' asset slots">'+[
+      ['equipment-1','tangible','Equipment 1'],['equipment-2','tangible','Equipment 2'],['intangible','intangible','Intangible']
+    ].map(function(slot,index){
+      var asset=((snapshot.crafting || {}).businessAssets || []).find(function(a){return a.assignedBuildingId===b.buildingId && a.assignmentSlot===index;});
+      var state=asset?(asset.remainingSeconds>0?rateUnits(asset.remainingSeconds/3600)+'h left':'Worn out'):'Empty';
+      return '<button id="game-business-asset-slot-'+slot[0]+'" type="button" class="game-business-asset-slot'+(asset?' is-assigned':'')+'" data-business-asset-slot="'+slot[0]+'" data-slot-number="'+index+'" data-slot-label="'+slot[2]+'" data-asset-type="'+slot[1]+'" aria-haspopup="dialog" aria-controls="game-asset-picker" aria-label="'+slot[2]+' · '+esc(asset?asset.name:'empty')+' · manage assets"><span class="game-asset-slot-plus" aria-hidden="true">'+(asset?'✓':'+')+'</span><strong>'+esc(asset?asset.name:slot[2])+'</strong><small>'+state+'</small></button>';
+    }).join('')+'</div><p class="game-asset-empty-note">Choose a slot to view compatible assets.</p></div>';
+  }
+
+  function assetPickerMarkup(s) {
+    var chosen=selectedAssetSlot, b=chosen && s.buildings.find(function(item){return businessPanelKey(item)===chosen.buildingId;});
+    if(!b)return '<p class="game-hint">This business is no longer open.</p>';
+    document.getElementById('game-asset-picker-title').textContent=b.name+' · '+chosen.label;
+    var assets=((s.crafting || {}).businessAssets || []).filter(function(asset){return asset.businessId===b.id && asset.assetType===chosen.kind;});
+    var pilot=assets.some(function(a){return a.pilot;});
+    var occupant=assets.find(function(a){return a.assignedBuildingId===b.buildingId && a.assignmentSlot===chosen.slot;});
+    return '<p class="game-asset-picker-note">'+(pilot?'Buy an asset, then assign it here. Its bonuses apply to the listed automatic products.':'These compatible assets are currently previews.')+'</p><div class="game-asset-picker-list">'+assets.map(function(asset){
+      var detail='<p>Not owned · Catalog preview</p>';
+      if(asset.pilot){
+        var labels={speedPercent:'speed',costReductionPercent:'processing cost',pricePercent:'sale price',storagePercent:'product storage'};
+        var effects=Object.keys(asset.effects).map(function(key){return (key==='costReductionPercent'?'−':'+')+asset.effects[key]+'% '+labels[key];}).join(' · ');
+        var products=asset.itemIds.map(function(id){var item=s.crafting.items.find(function(p){return p.id===id;});return item?item.name:id;}).join(', ');
+        var here=asset.assignedBuildingId===b.buildingId && asset.assignmentSlot===chosen.slot;
+        var owned=asset.owned && asset.remainingSeconds>0;
+        var action=!owned?'buy_asset':here?'unassign_asset':'assign_asset';
+        var disabled=busy || !businessConnected || s.paused || (action==='buy_asset'?!asset.canBuy:action==='assign_asset'?(!!occupant || b.paused):false);
+        var label=!owned?(asset.owned?'Replace · ':'Buy · ')+ym(asset.price):here?'Remove':occupant?'Slot occupied':asset.assignedBuildingId?'Move here':'Assign';
+        detail='<p>'+esc(effects)+'</p><small>'+esc(products)+'</small><small>'+rateUnits(asset.lifeSeconds/3600)+' active game hours'+(asset.owned?' · '+rateUnits(asset.remainingSeconds/3600)+'h left':'')+'</small><button id="game-asset-picker-action-'+esc(asset.id)+'" type="button" class="game-small-button" data-craft-asset-action="'+action+'" data-craft-asset-id="'+esc(asset.id)+'"'+(disabled?' disabled':'')+'>'+esc(label)+'</button>';
+        if(asset.usageNote)detail+='<small>'+esc(asset.usageNote)+'</small>';
+        if(here && !owned)detail+='<button id="game-asset-picker-remove-'+esc(asset.id)+'" type="button" class="game-small-button" data-craft-asset-action="unassign_asset" data-craft-asset-id="'+esc(asset.id)+'"'+(busy || s.paused || !businessConnected?' disabled':'')+'>Remove worn asset</button>';
+      }
+      return '<article class="game-asset-picker-card" data-asset-type="'+esc(asset.assetType)+'"><strong>'+esc(asset.name)+'</strong><small>'+(asset.assetType==='tangible'?'Tangible · Equipment':'Intangible · Software or rights')+'</small>'+detail+'</article>';
+    }).join('')+'</div><p class="game-asset-picker-note" role="status">'+esc(assetMessage)+'</p>'+(assets.length?'':'<p class="game-hint">No compatible assets listed yet.</p>');
+  }
+
+  function performAsset(body) {
+    if(busy || !snapshot || snapshot.paused || !businessConnected)return;
+    var key=JSON.stringify(body), bytes=new Uint8Array(16);window.crypto.getRandomValues(bytes);
+    var id=Array.from(bytes,function(n){return n.toString(16).padStart(2,'0');}).join('');
+    var operation=lastAssetOperation && lastAssetOperation.key===key?lastAssetOperation:{key:key,body:Object.assign({},body,{requestId:id,revision:snapshot.crafting.revision})};
+    lastAssetOperation=operation;busy=true;actionVersion++;assetMessage='Saving…';render();
+    request('POST','/api/game/craft',Object.assign({},operation.body)).then(function(payload){
+      lastAssetOperation=null;assetMessage=body.action==='buy_asset'?'Asset bought. Assign it to a slot.':body.action==='unassign_asset'?'Asset removed.':'Asset assigned. Eligible products start automatically.';
+      busy=false;apply(payload);
+    }).catch(function(error){
+      if(error.status && error.status<500)lastAssetOperation=null;
+      assetMessage=error.status?error.message:'Could not confirm. Retry to check safely.';
+      busy=false;render();refresh();
+    });
   }
 
   function financeValues(b) {
@@ -570,6 +647,7 @@
       ['margin','Profit margin',values.margin,statement?marginTip:'Profit divided by actual customer sales, as a percentage. Order payouts and upfront purchases are separate.',null]
     ].map(function(m){
       var value=m[0]==='margin'?(m[2]==null?'—':Number(m[2].toFixed(1)).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'):(m[0]==='cost'?'−':'')+incomeRate(m[2]);
+      if(statement && statement.crafting)m[3]+=' Includes automatic craft sales, their ingredient and processing costs, and assigned asset wear.';
       if(m[0]==='cost' && statement && statement.estimatedCostBasis)m[3]+=' Includes estimated production costs for stock from an earlier save.';
       var potential=m[4]==null?'':'<dd class="game-finance-potential" title="Forecast for shops and regular buyers only, at current production costs and sales capacity. Actual stock costs and shipment timing can differ.">Forecast '+rateUnits(m[4])+' / min</dd>';
       return '<div data-business-metric="'+m[0]+'" title="'+esc(m[3])+'"><dt>'+m[1]+'</dt><dd class="game-live-value'+(m[0]==='income'?' game-output':'')+(changes[m[0]]?' is-updated':'')+((m[0]==='profit' || m[0]==='margin') && Number(m[2])<0?' is-loss':'')+(m[0]==='margin' && m[2]==null?' is-unavailable':'')+'">'+value+'</dd>'+potential+'</div>';
@@ -730,7 +808,7 @@
   function ensureBusinessDialogs() {
     if(!document.querySelector('#econ-building, #econ-auto'))return;
     if(!document.getElementById('game-breakfast')){var breakfastDialog=document.createElement('dialog');breakfastDialog.id='game-breakfast';breakfastDialog.setAttribute('aria-labelledby','game-breakfast-title');breakfastDialog.innerHTML='<div class="game-dialog-head"><h2 id="game-breakfast-title">Breakfast Club</h2><button type="button" class="game-small-button" data-close-breakfast>Close ×</button></div><div id="game-breakfast-content" class="econ-kid"></div>'+statusLine();document.body.appendChild(breakfastDialog);}
-    [['game-growth',!snapshot || researchEnabled(snapshot)?(equipmentEnabled(snapshot || {})?'Research & equipment':'Research'):'Prestige'],['game-activities','Business activities'],['game-project','Business project'],['game-quest','Business quest'],['game-business-dialog','Close business']].forEach(function(info){
+    [['game-growth',!snapshot || researchEnabled(snapshot)?(equipmentEnabled(snapshot || {})?'Research & equipment':'Research'):'Prestige'],['game-activities','Business activities'],['game-project','Business project'],['game-quest','Business quest'],['game-business-dialog','Close business'],['game-asset-picker','Business assets']].forEach(function(info){
       if(document.getElementById(info[0]))return;
       var dialog=document.createElement('dialog');dialog.id=info[0];dialog.className='game-management-dialog';dialog.setAttribute('aria-labelledby',info[0]+'-title');
       dialog.innerHTML='<div class="game-dialog-head"><h2 id="'+info[0]+'-title">'+info[1]+'</h2><button id="'+info[0]+'-close" type="button" class="game-small-button" data-close-business-dialog>Close ×</button></div><div class="econ-kid game-dialog-content" data-keep-scroll="'+info[0]+'"><div id="'+info[0]+'-content"></div>'+statusLine()+'</div>';
@@ -740,7 +818,7 @@
 
   function renderBusinessDialogs(s) {
     ensureBusinessDialogs();
-    [['game-growth',growthMarkup],['game-activities',activitiesMarkup],['game-project',projectMarkup],['game-quest',questMarkup],['game-business-dialog',salvageMarkup]].forEach(function(info){var dialog=document.getElementById(info[0]);if(dialog && dialog.open)document.getElementById(info[0]+'-content').innerHTML=info[1](s);});
+    [['game-growth',growthMarkup],['game-activities',activitiesMarkup],['game-project',projectMarkup],['game-quest',questMarkup],['game-business-dialog',salvageMarkup],['game-asset-picker',assetPickerMarkup]].forEach(function(info){var dialog=document.getElementById(info[0]);if(dialog && dialog.open)document.getElementById(info[0]+'-content').innerHTML=info[1](s);});
   }
 
   function openBusinessDialog(id,trigger) {
@@ -799,11 +877,20 @@
   function buildingStockPanel(b, s) {
     var goods=b.goods || s.board.filter(function(g){return g.slot===b.slot;});
     var canSell=b.clearableQuantity==null ? goods.some(function(g){return g.quantity>(g.reserved || 0);}) : b.clearableQuantity>0;
+    // These are views of the shared craft inventory, never copies in base stock.
+    var crafted=((s.crafting || {}).items || []).filter(function(item){return item.pilot && item.businessId===b.id && (item.unlocked || item.owned>0);});
+    goods=goods.concat(crafted.map(function(item){return {goodId:item.id,name:item.name,quantity:item.owned,capacity:item.storageCap,reserved:b.reserve?item.owned:null,craftItem:item};}));
     var independent=independentProduction(s), protectedNote=independent?'Regular buyer and order goods stay saved.':'Recipe and delivery supplies stay saved.';
     var saleNote=(s.clearStockPercent || 60)+(operatingStatement(s)?'% of shop payout · ':'% of retail · ')+protectedNote;
-    return '<section id="stock" class="game-building-stock game-inventory-table" aria-label="'+esc(b.name)+' stock">'+
-      '<div class="game-stock-heading"><h3>Stock</h3><span>'+esc(b.name)+'</span><small>'+(b.reserve?'Shop sales paused':'Automatic shop sales')+'</small></div>'+
+    if(crafted.length)saleNote+=' Sells standard business goods only; crafted products sell automatically.';
+    return '<section id="stock" class="game-building-stock game-inventory-table'+(crafted.length?' has-craft-stock':'')+'" aria-label="'+esc(b.name)+' stock">'+
+      '<div class="game-stock-heading"><h3>Stock'+(crafted.length?' <span class="game-stock-craft-count">· '+crafted.length+' craft</span>':'')+'</h3><span>'+esc(b.name)+'</span><small>'+(b.reserve?'Shop sales paused':'Automatic shop sales')+'</small></div>'+
       '<div class="game-inventory-head"><span>Item</span><span>Stock / cap.</span><span>Saved</span></div><div class="game-inventory-rows" data-keep-scroll="inventory">'+goods.map(function(g){
+        if(g.craftItem){
+          var item=g.craftItem, status=s.paused?'Class paused':item.unlocked?item.pilotStatus:'Unlock production in Craft';
+          if(status==='Producing automatically')status='Producing · '+Math.floor(item.progress*100)+'%';
+          return '<div class="game-inventory-row is-crafted" data-stock-good="'+esc(g.goodId)+'" data-stock-crafted="true"><span class="game-inventory-good">'+craftedStockIcon(item)+'<span><strong>'+esc(g.name)+'</strong><small class="game-stock-craft-status" title="Production: '+esc(status)+'">'+esc(status)+'</small>'+bar(g.capacity?g.quantity/g.capacity*100:0)+'</span></span><span data-stock-count>'+units(g.quantity)+'<small> / '+units(g.capacity || 0)+'</small></span><span data-stock-saved'+(g.reserved==null?' data-craft-reservations="automatic" title="Components are saved automatically for other craft recipes. Check their availability in Craft.">—':' title="Shop sales paused; these crafted products remain in stock.">'+units(g.reserved))+'</span></div>';
+        }
         var questId=unlockQuestId(b,s), quest=buildingQuests(b,s).find(function(q){return q.id===questId;});
         var unlockText=quest?'Complete '+quest.title+' to unlock '+g.name:g.unlockText || 'Complete this business’s unlock quest';
         return '<div class="game-inventory-row'+(g.locked?' is-locked':'')+'" data-stock-good="'+esc(g.goodId)+'" data-stock-locked="'+!!g.locked+'"><span class="game-inventory-good">'+goodIcon(b,g,false)+'<span><strong>'+esc(g.name)+'</strong>'+(g.locked?'<button id="game-stock-unlock-'+esc(g.goodId)+'" type="button" class="game-stock-unlock" title="'+esc(unlockText)+'" aria-label="'+esc(unlockText)+'" data-game-quest="'+esc(unlockQuestId(b,s))+'">Locked · Unlock →</button>':'')+bar(g.capacity?g.quantity/g.capacity*100:0)+'</span></span><span data-stock-count>'+units(g.quantity)+'<small> / '+units(g.capacity || 0)+'</small></span><span data-stock-saved title="'+(independent?'Held for regular buyers, saved orders, or paused shop sales':'Held for recipes, deliveries, or paused shop sales')+'">'+units(g.reserved || 0)+'</span></div>';
@@ -1270,7 +1357,7 @@
       });
     }
     if(focusId==='game-expansion-choice'){var expansionChoice=document.getElementById(focusId);if(expansionChoice)expansionChoice.focus({preventScroll:true});}
-    if(focusId && /^(game-wf-|game-staff-|game-growth-|game-quest-|game-activity-|game-activities-|game-project-|game-next-goal-|game-stock-unlock-)/.test(focusId)){var managementControl=document.getElementById(focusId);if(managementControl && !managementControl.disabled)managementControl.focus({preventScroll:true});}
+    if(focusId && /^(game-wf-|game-staff-|game-growth-|game-quest-|game-activity-|game-activities-|game-project-|game-next-goal-|game-stock-unlock-|game-business-panel-|game-business-asset-slot-|game-asset-picker-)/.test(focusId)){var managementControl=document.getElementById(focusId);if(managementControl && !managementControl.disabled)managementControl.focus({preventScroll:true});}
     if(focusId==='game-business-choice' || focusId==='game-business-focus'){var businessChoice=document.getElementById(focusId);if(businessChoice)businessChoice.focus({preventScroll:true});}
     var openBreakfast=document.querySelector('#game-breakfast[open]');
     if(openBreakfast && !openBreakfast.contains(document.activeElement))openBreakfast.querySelector('[data-close-breakfast]').focus({preventScroll:true});
@@ -1579,6 +1666,26 @@
   },true);
 
   document.addEventListener('click', function (event) {
+    var panelStep=event.target.closest('[data-business-panel-step]');
+    if(panelStep && snapshot){
+      var panelKey=businessPanelKey(selectedBuilding(snapshot));
+      businessPanelViews[panelKey]=businessPanelViews[panelKey]==='assets'?'finance':'assets';
+      var panelFocusId=panelStep.id;render();
+      var panelControl=document.getElementById(panelFocusId);if(panelControl)panelControl.focus({preventScroll:true});
+      return;
+    }
+    var assetSlot=event.target.closest('[data-business-asset-slot]');
+    if(assetSlot && snapshot){
+      selectedAssetSlot={buildingId:businessPanelKey(selectedBuilding(snapshot)),kind:assetSlot.dataset.assetType,label:assetSlot.dataset.slotLabel,slot:Number(assetSlot.dataset.slotNumber)};
+      assetMessage='';
+      openBusinessDialog('game-asset-picker',assetSlot);return;
+    }
+    var assetAction=event.target.closest('[data-craft-asset-action]');
+    if(assetAction && !assetAction.disabled && selectedAssetSlot){
+      var assetBody={action:assetAction.dataset.craftAssetAction,assetId:assetAction.dataset.craftAssetId};
+      if(assetBody.action==='assign_asset'){assetBody.buildingId=selectedAssetSlot.buildingId;assetBody.assetSlot=selectedAssetSlot.slot;}
+      performAsset(assetBody);return;
+    }
     if(event.target.closest('[data-related-breakfast]')){var relatedBreakfast=document.getElementById('game-breakfast');if(relatedBreakfast){relatedBreakfast._returnFocusId='game-quest-breakfast';document.getElementById('game-breakfast-content').innerHTML=breakfastMarkup(snapshot);relatedBreakfast.showModal();}return;}
     var closeBusiness=event.target.closest('[data-close-business-dialog]');
     if(closeBusiness){closeBusiness.closest('dialog').close();return;}

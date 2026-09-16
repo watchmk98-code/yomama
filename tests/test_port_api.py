@@ -24,7 +24,8 @@ def port(tmp_path, monkeypatch):
     seats = [A.join(dict(code=teacher['code'], name=name, pin=pin)) for name in ('ALICE', 'BOB')]
     for seat in seats:
         set_licence(seat, True)
-    provider = {'status': 'open', 'bid': 99.99, 'ask': 100.01, 'age': 0.01, 'calls': 0}
+    provider = {'status': 'open', 'bid': 99.99, 'ask': 100.01, 'age': 0.01, 'calls': 0,
+                'market': {}}
 
     def snapshot(*_, **__):
         provider['calls'] += 1
@@ -33,7 +34,8 @@ def port(tmp_path, monkeypatch):
                    for symbol in A.port_portfolio.ALLOWED_SYMBOLS}
                   if provider['status'] in ('open', 'closed') else {})
         return dict(quotes=quotes, market=dict(status=provider['status'], source='test_fixture',
-                                               message='Test fixture quotes', asOf=now[0]))
+                                               message='Test fixture quotes', asOf=now[0],
+                                               **provider['market']))
     monkeypatch.setattr(A.alpaca_market, 'snapshot', snapshot)
     return now, teacher, seats, provider, pin
 
@@ -151,6 +153,36 @@ def test_pause_and_revocation_still_block_licensed_port_trades(port):
         with pytest.raises(A.ApiError) as exc:
             handler(request)
         assert exc.value.status == 403
+
+
+def test_after_hours_feed_fills_orders_and_records_the_session(port):
+    now, _, seats, provider, _ = port
+    provider['market'] = {'extendedHours': True, 'regularOpen': now[0] - 23400,
+                          'regularClose': now[0] - 60, 'sessionOpen': now[0] - 42600,
+                          'sessionClose': now[0] + 14340}
+    state = get(seats[0])
+    assert state['market']['session'] == 'afterhours'
+    assert state['canTrade'] and state['executionRules']['session'] == 'extended'
+    assert state['executionRules']['afterHoursClose'] == '20:00'
+    placed = A.port_order(order(seats[0], state))['portfolio']['ledger']['orders'][-1]
+    assert placed['session'] == 'afterhours'
+    now[0] += 1
+    filled = get(seats[0])['portfolio']
+    assert filled['positions']['AAPL']['quantity'] == 2
+    assert filled['ledger']['orders'][-1]['status'] == 'filled'
+
+
+def test_orders_are_refused_after_the_extended_session_closes(port):
+    now, _, seats, provider, _ = port
+    state = get(seats[0])
+    provider['market'] = {'extendedHours': True, 'regularOpen': now[0] - 43200,
+                          'regularClose': now[0] - 14460, 'sessionOpen': now[0] - 57600,
+                          'sessionClose': now[0] - 60}
+    closed = get(seats[0])
+    assert closed['market']['status'] == 'closed' and not closed['canTrade']
+    with pytest.raises(A.ApiError) as exc:
+        A.port_order(order(seats[0], state))
+    assert exc.value.status == 409
 
 
 @pytest.mark.parametrize('status', ['unconfigured', 'unavailable', 'closed'])

@@ -85,12 +85,14 @@ def test_crossed_quotes_and_future_quotes_are_excluded(feed):
 
 
 def test_closed_market_still_has_display_quotes(feed):
-    _, _, values = feed
+    now, _, values = feed
+    now[0] = M.timestamp('2026-09-16T01:00:00Z')  # 21:00 ET, after extended hours.
     values['open'] = False
     values['age'] = 3600
     result = M.snapshot(['AAPL'])
     assert result['market']['status'] == 'closed'
-    assert result['quotes']['AAPL']['timestamp'] == M.timestamp('2026-09-15T14:00:00Z') - 3600
+    assert result['market']['session'] == 'closed'
+    assert result['quotes']['AAPL']['timestamp'] == M.timestamp('2026-09-16T01:00:00Z') - 3600
 
 
 @pytest.mark.parametrize('error', [URLError('secret-provider-detail'),
@@ -305,15 +307,38 @@ def test_regular_market_request_keeps_four_second_timeout(monkeypatch):
     assert timeouts == [4]
 
 
-def test_cached_open_clock_cannot_trade_after_closing_boundary(feed, monkeypatch):
-    now, calls, _ = feed
+def announce_next_close(monkeypatch, now, seconds_ahead=1, advance_quotes=0):
+    """Let the provider clock announce a regular close `seconds_ahead` away."""
     original = M._request
+
     def request(url, headers):
         result = original(url, headers)
         if url.endswith('/clock'):
-            result['next_close'] = datetime.fromtimestamp(now[0] + 1, timezone.utc).isoformat()
+            result['next_close'] = datetime.fromtimestamp(now[0] + seconds_ahead, timezone.utc).isoformat()
+        elif advance_quotes:
+            now[0] += advance_quotes
         return result
+
     monkeypatch.setattr(M, '_request', request)
+
+
+def test_regular_close_does_not_end_after_hours_trading(feed, monkeypatch):
+    now, calls, _ = feed
+    now[0] = M.timestamp('2026-09-15T19:59:59Z')
+    announce_next_close(monkeypatch, now)
+    assert M.snapshot(['AAPL'])['market']['session'] == 'regular'
+    now[0] += 1.1
+    after = M.snapshot(['AAPL'])
+    assert after['market']['status'] == 'open', 'after-hours execution continues past the regular close'
+    assert after['market']['session'] == 'afterhours'
+    assert after['market']['message'] == M.SESSION_MESSAGES['afterhours']
+    assert len(calls) == 3  # the cached quote window still re-derives the session
+
+
+def test_cached_open_clock_cannot_trade_after_closing_boundary(feed, monkeypatch):
+    now, calls, _ = feed
+    monkeypatch.setenv('PORT_EXTENDED_HOURS', '0')
+    announce_next_close(monkeypatch, now)
     assert M.snapshot(['AAPL'])['market']['status'] == 'open'
     now[0] += 1.1
     assert M.snapshot(['AAPL'])['market']['status'] == 'closed'
@@ -322,15 +347,15 @@ def test_cached_open_clock_cannot_trade_after_closing_boundary(feed, monkeypatch
 
 def test_slow_quote_response_crossing_close_is_closed(feed, monkeypatch):
     now, _, _ = feed
-    original = M._request
-    def request(url, headers):
-        result = original(url, headers)
-        if url.endswith('/clock'):
-            result['next_close'] = datetime.fromtimestamp(now[0] + 1, timezone.utc).isoformat()
-        else:
-            now[0] += 2
-        return result
-    monkeypatch.setattr(M, '_request', request)
+    monkeypatch.setenv('PORT_EXTENDED_HOURS', '0')
+    announce_next_close(monkeypatch, now, advance_quotes=2)
+    assert M.snapshot(['AAPL'])['market']['status'] == 'closed'
+
+
+def test_slow_quote_response_crossing_the_extended_close_is_closed(feed, monkeypatch):
+    now, _, _ = feed
+    now[0] = M.timestamp('2026-09-15T23:59:59Z')
+    announce_next_close(monkeypatch, now, seconds_ahead=3600, advance_quotes=2)
     assert M.snapshot(['AAPL'])['market']['status'] == 'closed'
 
 
@@ -345,24 +370,68 @@ def override_calendar(monkeypatch, rows):
     monkeypatch.setattr(M, '_request', request)
 
 
+@pytest.mark.parametrize('at,status,session', [
+    ('2026-09-15T07:59:59Z', 'closed', 'closed'),
+    ('2026-09-15T08:00:00Z', 'open', 'premarket'),
+    ('2026-09-15T13:29:59Z', 'open', 'premarket'),
+    ('2026-09-15T13:30:00Z', 'open', 'regular'),
+    ('2026-09-15T19:59:59Z', 'open', 'regular'),
+    ('2026-09-15T20:00:00Z', 'open', 'afterhours'),
+    ('2026-09-15T23:59:59Z', 'open', 'afterhours'),
+    ('2026-09-16T00:00:00Z', 'closed', 'closed'),
+])
+def test_extended_session_opens_inclusively_and_closes_exclusively(feed, at, status, session):
+    now, calls, values = feed
+    now[0] = M.timestamp(at)
+    # Even a clock claiming "open" cannot authorize execution outside the window.
+    values['open'] = True
+    result = M.snapshot(['AAPL'])
+    assert result['market']['status'] == status
+    assert result['market']['session'] == session
+    assert result['market']['extendedHours'] is True
+    assert result['market']['sessionOpen'] == M.timestamp('2026-09-15T08:00:00Z')
+    assert result['market']['sessionClose'] == M.timestamp('2026-09-16T00:00:00Z')
+    assert result['market']['regularOpen'] == M.timestamp('2026-09-15T13:30:00Z')
+    assert result['market']['regularClose'] == M.timestamp('2026-09-15T20:00:00Z')
+    query = parse_qs(urlsplit(next(url for url in calls if '/calendar?' in url)).query)
+    assert query == {'start': ['2026-09-15'], 'end': ['2026-09-15']}
+
+
 @pytest.mark.parametrize('at,status', [
     ('2026-09-15T13:29:59Z', 'closed'),
     ('2026-09-15T13:30:00Z', 'open'),
     ('2026-09-15T19:59:59Z', 'open'),
     ('2026-09-15T20:00:00Z', 'closed'),
-    ('2026-09-15T21:00:00Z', 'closed'),
 ])
-def test_regular_session_opens_inclusively_and_closes_exclusively(feed, at, status):
-    now, calls, values = feed
+@pytest.mark.parametrize('switch', ['0', 'false', 'off'])
+def test_extended_hours_switched_off_keeps_the_regular_session_only(feed, monkeypatch, at, status, switch):
+    now, _, values = feed
+    monkeypatch.setenv('PORT_EXTENDED_HOURS', switch)
     now[0] = M.timestamp(at)
-    # Even a clock claiming "open" cannot authorize pre/post-market execution.
     values['open'] = True
     result = M.snapshot(['AAPL'])
     assert result['market']['status'] == status
+    assert result['market']['extendedHours'] is False
     assert result['market']['sessionOpen'] == M.timestamp('2026-09-15T13:30:00Z')
     assert result['market']['sessionClose'] == M.timestamp('2026-09-15T20:00:00Z')
-    query = parse_qs(urlsplit(next(url for url in calls if '/calendar?' in url)).query)
-    assert query == {'start': ['2026-09-15'], 'end': ['2026-09-15']}
+
+
+def test_closed_market_counts_down_to_the_next_premarket_open(feed, monkeypatch):
+    now, _, values = feed
+    now[0] = M.timestamp('2026-09-16T01:00:00Z')
+    values['open'] = False
+    original = M._request
+
+    def request(url, headers):
+        result = original(url, headers)
+        if url.endswith('/clock'):
+            result['next_open'] = '2026-09-16T13:30:00Z'
+        return result
+
+    monkeypatch.setattr(M, '_request', request)
+    assert M.snapshot(['AAPL'])['market']['nextSessionOpen'] == M.timestamp('2026-09-16T08:00:00Z')
+    monkeypatch.setenv('PORT_EXTENDED_HOURS', '0')
+    assert M.snapshot(['AAPL'], force=True)['market']['nextSessionOpen'] == M.timestamp('2026-09-16T13:30:00Z')
 
 
 @pytest.mark.parametrize('claims_open,expected_status', [(False, 'closed'), (True, 'unavailable')])
@@ -381,13 +450,14 @@ def test_empty_holiday_calendar_never_authorizes_execution(feed, monkeypatch, cl
         assert result['quotes']['AAPL']['price'] > 0  # Display is distinct from execution.
 
 
-def test_early_close_calendar_boundary_applies_to_cached_quotes(feed, monkeypatch):
+def test_early_close_shortens_after_hours_and_applies_to_cached_quotes(feed, monkeypatch):
     now, calls, _ = feed
-    now[0] = M.timestamp('2026-11-27T17:59:59Z')
+    now[0] = M.timestamp('2026-11-27T21:59:59Z')  # 16:59:59 ET, a 13:00 ET early close.
     override_calendar(monkeypatch, [{'date': '2026-11-27', 'open': '09:30', 'close': '13:00'}])
     opening = M.snapshot(['AAPL'])
-    assert opening['market']['status'] == 'open'
-    assert opening['market']['sessionClose'] == M.timestamp('2026-11-27T18:00:00Z')
+    assert opening['market']['status'] == 'open' and opening['market']['session'] == 'afterhours'
+    assert opening['market']['regularClose'] == M.timestamp('2026-11-27T18:00:00Z')
+    assert opening['market']['sessionClose'] == M.timestamp('2026-11-27T22:00:00Z')
     assert opening['market']['nextClose'] is None
     now[0] += 1
     assert M.snapshot(['AAPL'])['market']['status'] == 'closed'
@@ -407,9 +477,12 @@ def test_calendar_hours_follow_new_york_daylight_saving_time(feed, day, open_utc
     now[0] = M.timestamp(day + 'T16:00:00Z')
     result = M.snapshot(['AAPL'])
     assert result['market']['status'] == 'open'
-    assert result['market']['sessionOpen'] == M.timestamp(day + 'T' + open_utc + ':00Z')
-    assert result['market']['sessionClose'] == M.timestamp(day + 'T' + close_utc + ':00Z')
-    assert result['market']['sessionClose'] - result['market']['sessionOpen'] == 6.5 * 3600
+    assert result['market']['regularOpen'] == M.timestamp(day + 'T' + open_utc + ':00Z')
+    assert result['market']['regularClose'] == M.timestamp(day + 'T' + close_utc + ':00Z')
+    assert result['market']['regularClose'] - result['market']['regularOpen'] == 6.5 * 3600
+    # Pre-market starts 04:00 ET and after-hours ends 20:00 ET on either offset.
+    assert result['market']['sessionOpen'] == result['market']['regularOpen'] - 5.5 * 3600
+    assert result['market']['sessionClose'] == result['market']['regularClose'] + 4 * 3600
 
 
 def test_calendar_query_uses_exchange_date_before_utc_midnight_rollover(feed):
@@ -419,7 +492,8 @@ def test_calendar_query_uses_exchange_date_before_utc_midnight_rollover(feed):
     result = M.snapshot(['AAPL'])
     query = parse_qs(urlsplit(next(url for url in calls if '/calendar?' in url)).query)
     assert query == {'start': ['2026-09-15'], 'end': ['2026-09-15']}
-    assert result['market']['sessionClose'] == M.timestamp('2026-09-15T20:00:00Z')
+    assert result['market']['regularClose'] == M.timestamp('2026-09-15T20:00:00Z')
+    assert result['market']['sessionClose'] == M.timestamp('2026-09-16T00:00:00Z')
     assert result['market']['status'] == 'closed'
 
 
@@ -453,20 +527,33 @@ def test_calendar_accepts_seconds_without_changing_session_bounds(feed, monkeypa
     override_calendar(monkeypatch, [{'date': '2026-09-15', 'open': '09:30:00', 'close': '16:00:00'}])
     result = M.snapshot(['AAPL'])
     assert result['market']['status'] == 'open'
-    assert result['market']['sessionOpen'] == M.timestamp('2026-09-15T13:30:00Z')
-    assert result['market']['sessionClose'] == M.timestamp('2026-09-15T20:00:00Z')
+    assert result['market']['regularOpen'] == M.timestamp('2026-09-15T13:30:00Z')
+    assert result['market']['regularClose'] == M.timestamp('2026-09-15T20:00:00Z')
+    assert result['market']['sessionOpen'] == M.timestamp('2026-09-15T08:00:00Z')
+    assert result['market']['sessionClose'] == M.timestamp('2026-09-16T00:00:00Z')
 
 
-def test_execution_feed_rechecks_regular_close_after_waiting_for_class_lock(feed):
+def test_execution_feed_rechecks_the_session_close_after_waiting_for_class_lock(feed):
     now, calls, _ = feed
-    now[0] = M.timestamp('2026-09-15T19:59:50Z')
+    now[0] = M.timestamp('2026-09-15T23:59:50Z')
     original = M.snapshot(['AAPL'])
-    assert original['market']['status'] == 'open'
+    assert original['market']['status'] == 'open' and original['market']['session'] == 'afterhours'
     # A callback can wait for a class lock after fetching valid quotes.
-    at_close = M.execution_feed(original, now=M.timestamp('2026-09-15T20:00:00Z'))
+    at_close = M.execution_feed(original, now=M.timestamp('2026-09-16T00:00:00Z'))
     assert at_close['market']['status'] == 'closed'
     assert original['market']['status'] == 'open'
     assert len(calls) == 3
+
+
+def test_execution_feed_relabels_the_session_crossed_during_a_class_lock_wait(feed):
+    now, _, _ = feed
+    now[0] = M.timestamp('2026-09-15T19:59:50Z')
+    original = M.snapshot(['AAPL'])
+    assert original['market']['session'] == 'regular'
+    after = M.execution_feed(original, now=M.timestamp('2026-09-15T20:00:00Z'))
+    assert after['market']['status'] == 'open' and after['market']['session'] == 'afterhours'
+    assert after['quotes']['AAPL']['price'] > 0
+    assert original['market']['session'] == 'regular'
 
 
 def test_execution_feed_discards_quotes_when_clock_ages_during_lock_wait(feed):
@@ -524,9 +611,9 @@ def test_slow_provider_cycle_discards_a_clock_that_aged_during_fetch(feed, monke
     assert M.cached_snapshot(['AAPL'])['market']['status'] == 'unavailable'
 
 
-def test_regular_close_rechecked_in_both_cached_snapshot_paths(feed):
+def test_session_close_rechecked_in_both_cached_snapshot_paths(feed):
     now, calls, _ = feed
-    now[0] = M.timestamp('2026-09-15T19:59:59.500000Z')
+    now[0] = M.timestamp('2026-09-15T23:59:59.500000Z')
     assert M.snapshot(['AAPL'])['market']['status'] == 'open'
     now[0] += 0.5
     assert M.cached_snapshot(['AAPL'])['market']['status'] == 'closed'

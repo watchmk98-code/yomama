@@ -3,10 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- The LOADING screen, once per sign-in. Must run before the
+       stylesheets so the page never flashes through underneath. -->
+  <script src="./preload-manifest.js?v=1"></script>
+  <script src="./loading.js?v=1"></script>
   <title>YOMAMA INVESTMENTS — Port</title>
   <meta name="description" content="Research companies, place practice trades and manage your portfolio in YOMAMA Port." />
   <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin />
-  <link rel="stylesheet" href="./styles.css?v=20260912-live2" />
+  <link rel="stylesheet" href="./styles.css?v=20260916-sunny-banner" />
   <link rel="stylesheet" href="./econ-kids.css?v=20260915-business-ui-2" />
   <link rel="stylesheet" href="./idle-ui.css?v=20260913-upgrade-feedback" />
   <link rel="stylesheet" href="./port-terminal.css?v=20260915-terminal-polish-1" />
@@ -34,7 +38,7 @@
         <div id="large-header" class="large-header" aria-hidden="true">
           <canvas id="demo-canvas"></canvas>
         </div>
-        <img class="hero-banner" src="./banner-colored.png" alt="YOMAMA Investments banner" />
+        <img class="hero-banner" src="./banner-colored.png?v=20260916-sunny-smooth" alt="Sunny Ventures banner" />
       </div>
 
       <nav class="tabs" aria-label="Primary navigation">

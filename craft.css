@@ -8,6 +8,9 @@
 .craft-item {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;min-height:0;padding:2px;background:#000;border:1px solid #785500;color:var(--text);font:inherit;font-size:var(--craft-label,14px);line-height:1.05;cursor:pointer;}
 .craft-item:hover {border-color:var(--amber);}
 .craft-item[aria-expanded="true"] {border-color:var(--amber);}
+.craft-item.craft-item-pilot {border:2px solid #b06cff;box-shadow:inset 0 0 0 1px #38204d;}
+.craft-item.craft-item-pilot:hover,.craft-item.craft-item-pilot[aria-expanded="true"] {border-color:#e3c4ff;background:#190d27;}
+.craft-grid[data-section="businessAssets"] .craft-item[data-pilot="true"] .craft-item-name::after {content:' · Available';color:#fff;font-size:15px;}
 .craft-item-name {display:none;}
 .craft-sprite {display:grid;place-items:center;flex:none;width:var(--craft-art,160px);height:var(--craft-art,160px);}
 .craft-sprite::before,.craft-supply-icon::before {content:'';display:block;width:var(--sprite-width);height:var(--sprite-height);background-image:var(--sprite-image);background-size:var(--sprite-sheet-width) var(--sprite-sheet-height);background-position:var(--sprite-x) var(--sprite-y);background-repeat:no-repeat;image-rendering:pixelated;}
@@ -100,4 +103,16 @@
 #craft-asset-detail .asset-kind {color:var(--amber);}
 #craft-asset-detail .asset-pending {color:#aaa;font-size:21px;}
 #craft-dialog [hidden] {display:none!important;}
+.game-craft-page #craft-dialog[data-pilot="true"] {overflow:auto;}
+#craft-pilot-detail {font-size:20px;line-height:1.15;margin:8px 0;}
+.craft-pilot-stats {display:flex;gap:5px 15px;flex-wrap:wrap;color:#d3afff;}
+.craft-pilot-requirements {list-style:none;padding:0;margin:10px 0;display:flex;gap:4px 16px;flex-wrap:wrap;}
+#craft-pilot-detail [data-ready="true"] {color:var(--green);}
+#craft-pilot-detail [data-ready="false"] {color:var(--muted);}
+.craft-pilot-state {margin:6px 0;color:#d3afff;}
+#craft-pilot-detail progress {width:100%;height:8px;accent-color:#b06cff;}
+.craft-pilot-assets {margin:8px 0;}
+.craft-pilot-muted {font-size:18px;line-height:1.2;color:var(--muted);margin:6px 0;}
+#craft-asset-detail .craft-pilot-muted {font-size:20px;}
+#craft-asset-detail a {color:var(--amber);}
 @media(max-width:450px) {.craft-tabs button {font-size:20px;padding:5px 8px;}.craft-grid[data-section="businessAssets"] {grid-template-columns:repeat(2,minmax(0,1fr));}}

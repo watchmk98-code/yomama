@@ -1,0 +1,134 @@
+/* Business cards switch between recent results and their asset slots. */
+.game-building-stock .game-inventory-good > .game-craft-stock-icon {display:grid;place-items:center;flex:0 0 26px;gap:0;}
+.game-craft-stock-icon::before {
+  content:'';display:block;width:var(--craft-stock-width);height:var(--craft-stock-height);
+  background-image:var(--craft-stock-image);background-size:var(--craft-stock-sheet-width) var(--craft-stock-sheet-height);
+  background-position:var(--craft-stock-x) var(--craft-stock-y);background-repeat:no-repeat;image-rendering:pixelated;
+}
+.game-building-stock .is-crafted .game-inventory-good strong,
+.game-stock-heading .game-stock-craft-count {color:#c396ff;}
+.game-building-stock .is-crafted .k-bar-fill {background:#b06cff;}
+.game-building-stock .is-crafted .game-inventory-good > span:not(.game-craft-stock-icon) {gap:3px;}
+.game-building-stock .game-stock-craft-status {display:block;max-width:100%;margin-top:0;font-size:13px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.game-business-live [data-craft-reservations="automatic"]::after {content:'';}
+.game-building-stock.has-craft-stock > .game-pager {flex:none;}
+@media(min-width:1100px) and (min-height:950px) {
+  .game-business-live > .game-building-stock.has-craft-stock {flex-basis:290px;}
+}
+.game-business-numbers > .game-live-heading.game-business-page-heading {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-height:24px;
+}
+.game-business-page-label {display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
+.game-business-page-controls {
+  display:flex;
+  align-items:center;
+  gap:3px;
+  flex:none;
+}
+.game-business-page-arrow {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  min-width:24px;
+  min-height:24px;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:2px;
+  background:transparent;
+  color:var(--amber);
+  cursor:pointer;
+}
+.game-business-page-arrow svg {width:12px;height:12px;flex:none;}
+.game-business-page-arrow:hover {border-color:var(--amber);background:rgba(255,198,0,.08);}
+.game-business-page-arrow:focus-visible,
+.game-business-asset-slot:focus-visible {outline:2px solid var(--amber);outline-offset:2px;}
+.game-business-page-heading .game-report-period {flex:1;min-width:0;line-height:1.1;}
+.game-business-page-heading [data-business-feed] {flex:none;margin-left:auto;white-space:nowrap;}
+
+.game-business-panel-content {display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;}
+.game-business-assets-body {display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;gap:8px;}
+.game-business-asset-slots {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:minmax(0,1fr);
+  gap:8px;
+  flex:1;
+  min-width:0;
+  min-height:0;
+}
+.game-business-asset-slot {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-width:0;
+  min-height:0;
+  padding:10px 5px;
+  border:1px dashed var(--line);
+  border-radius:2px;
+  background:rgba(255,198,0,.025);
+  color:var(--text);
+  font:inherit;
+  line-height:1.1;
+  text-align:center;
+  cursor:pointer;
+}
+.game-business-asset-slot:hover {border-color:var(--amber);background:rgba(255,198,0,.065);}
+.game-business-asset-slot.is-assigned {border-style:solid;border-color:#b06cff;background:rgba(176,108,255,.07);}
+.game-business-asset-slot.is-assigned strong {font-size:16px;}
+.game-asset-picker-card .game-small-button {margin-top:auto;white-space:normal;}
+.game-asset-picker-card .game-small-button:disabled {opacity:.5;cursor:default;}
+.game-business-asset-slot .game-asset-slot-plus {color:var(--amber);font-size:34px;line-height:.9;font-weight:400;}
+.game-business-asset-slot strong {max-width:100%;font-size:18px;font-weight:400;line-height:1.05;overflow-wrap:anywhere;}
+.game-business-asset-slot small {max-width:100%;color:var(--muted);font-size:14px;line-height:1;}
+.game-business-assets-body .game-asset-empty-note {flex:none;margin:0;color:var(--muted);font-size:13px;line-height:1.15;}
+
+.game-asset-picker-list {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.game-asset-picker-card {display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0;padding:14px;border:1px solid var(--line);}
+.game-asset-picker-card strong {font-size:23px;line-height:1.1;font-weight:400;color:var(--amber);overflow-wrap:anywhere;}
+.game-asset-picker-card small {font-size:15px;line-height:1.2;color:var(--muted);}
+.game-management-dialog .game-asset-picker-card p {margin:auto 0 0;padding-top:4px;font-size:16px;line-height:1.2;color:var(--muted);}
+.game-management-dialog .game-asset-picker-note {margin:0 0 12px;color:var(--muted);font-size:17px;line-height:1.2;}
+
+@container (max-width:280px) {
+  .game-business-assets-body {gap:6px;}
+  .game-business-asset-slots {gap:5px;}
+  .game-business-asset-slot {padding:8px 3px;gap:5px;}
+  .game-business-asset-slot strong {font-size:15px;}
+  .game-business-asset-slot small {font-size:12px;}
+  .game-business-assets-body .game-asset-empty-note {font-size:12px;}
+}
+@media(max-width:600px) {
+  .game-business-numbers > .game-live-heading.game-business-page-heading {gap:4px;font-size:11px;}
+  .game-business-page-label {gap:4px;}
+  .game-business-page-controls {gap:2px;}
+  .game-asset-picker-list {grid-template-columns:minmax(0,1fr);gap:8px;}
+  .game-asset-picker-card {padding:12px;}
+}
+@media(max-height:650px) and (min-width:600px) {
+  .game-business-assets-body {gap:4px;}
+  .game-business-asset-slots {gap:6px;}
+  .game-business-asset-slot {padding:4px;gap:3px;}
+  .game-business-asset-slot .game-asset-slot-plus {font-size:23px;}
+  .game-business-asset-slot strong {font-size:16px;}
+  .game-business-asset-slot small {font-size:12px;}
+  .game-business-assets-body .game-asset-empty-note {font-size:12px;}
+}
+@media(max-height:450px) and (min-width:650px) {
+  /* The existing short-screen cashflow rule must not hide these controls. */
+  .game-compact .game-business-numbers:has(.game-cashflow-note) > .game-live-heading.game-business-page-heading {display:flex;}
+  .game-business-assets-body {gap:3px;}
+  .game-business-asset-slot {display:grid;grid-template-columns:18px auto;grid-template-rows:auto auto;align-content:center;padding:3px;gap:2px 6px;}
+  .game-business-asset-slot .game-asset-slot-plus {grid-column:1;grid-row:1/3;font-size:18px;}
+  .game-business-asset-slot strong {grid-column:2;grid-row:1;font-size:14px;}
+  .game-business-asset-slot small {grid-column:2;grid-row:2;}
+  .game-business-asset-slot small,
+  .game-business-assets-body .game-asset-empty-note {font-size:11px;}
+  .game-asset-picker-card {padding:9px;gap:5px;}
+}

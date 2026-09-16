@@ -21,8 +21,10 @@ import earnings
 import rules_tables
 import town_projects
 import project_orders
+import quest_engine
 import workforce
 import crafting
+import crafting_pilot
 import economy as legacy
 from economy import *  # Stable public helpers used by the classroom API.
 
@@ -120,6 +122,7 @@ def new_state(cfg, start_tick=0, seed=1):
     town_projects.default(cfg,st)
     offer_contracts(cfg,st,start_tick)
     _sync_project_offer(cfg,st)
+    crafting_pilot.ensure(cfg,st)
     return st
 
 
@@ -162,6 +165,7 @@ def migrate_state(cfg, st, tick=None):
         business_progression.ensure(cfg,st,migrating=True)
         town_projects.migrate(cfg,st)
         _sync_project_offer(cfg,st)
+        crafting_pilot.ensure(cfg,st)
         return st
     old_gate=legacy.gate_open(legacy.load_config(),st) if st.get('b') else False
     keep=st.get('keepPercent')
@@ -201,6 +205,7 @@ def migrate_state(cfg, st, tick=None):
     inventory_costs.migrate(cfg,st)
     offer_contracts(cfg,st,st.get('tick',0))
     _sync_project_offer(cfg,st)
+    crafting_pilot.ensure(cfg,st)
     return st
 
 
@@ -512,6 +517,7 @@ def player_tick(cfg,cls,st,k):
     # while regulars ship and walk-ins buy, so both read them once.
     held=_held_stock(cfg,st);paused_goods=_paused_goods(cfg,st)
     plan=_tick_customer_contracts(cfg,st,k+1,paused_goods=paused_goods)
+    crafting_pilot.tick(cfg,st,k+1)
     _retail(cfg,st,k+1,protected_stock(cfg,st,held,plan));_sync_pools(cfg,st)
     business_operations.advance_shifts(cfg,st)
     workforce.advance(cfg,st)
@@ -583,7 +589,7 @@ def net_worth(cfg_or_state,st=None):
     st=cfg_or_state if st is None else st
     return (int(st['cash'])+sum(st.get('pend',{}).values())+int(st['book'])
             +int(st.get('businessProgression',{}).get('equipmentValue',0))
-            +crafting.stored_value(st))
+            +crafting.stored_value(st)+crafting_pilot.stored_value(st))
 
 
 def upgrade_cost(cfg,st,slot,kind):
@@ -605,15 +611,18 @@ def buy_upgrade(cfg,st,slot,kind):
     if kind not in ('production','sales','storage'): return dict(ok=False,why='Unknown upgrade')
     cost=upgrade_cost(cfg,st,slot,kind)
     if cost is None: return dict(ok=False,why='Fully upgraded')
-    if st['cash']<cost: return dict(ok=False,why=f'Need {cost-st["cash"]} YM more')
+    cover=quest_engine.voucher_cover(cfg,st,cost)
+    if st['cash']<cost-cover: return dict(ok=False,why=f'Need {cost-cover-st["cash"]} YM more')
     consequence=upgrade_preview(cfg,st,slot,kind)
     key={'production':'lv','sales':'sales','storage':'storage'}[kind]
-    st['cash']-=cost;st['book']+=cost;st['b'][slot][key]+=1
+    payable,covered=quest_engine.apply_voucher(cfg,st,cost)
+    st['cash']-=payable;st['book']+=cost;st['b'][slot][key]+=1
+    quest_engine.record_action(cfg,st,'upgrade')
     business_operations.record_investment(cfg,st,slot,cost)
     st['b'][slot]['auto']=st['b'][slot]['sales']
     if kind=='production' and st['b'][slot]['lv']>=cfg['gate']['levelNeeded']: st['checklist']['lv25']=True
     if kind=='sales': st['checklist']['auto']=True
-    return dict(ok=True,kind='upgrade',upgrade=kind,cost=cost,level=st['b'][slot][key],**consequence)
+    return dict(ok=True,kind='upgrade',upgrade=kind,cost=cost,voucherPaid=covered,level=st['b'][slot][key],**consequence)
 
 
 def buy_level(cfg,st,bi): return buy_upgrade(cfg,st,bi,'production')
@@ -658,7 +667,7 @@ def expansion_quote(cfg,st,ti):
     # Retired material fields stay zero for older clients and class snapshots.
     substitute=required=used=missing=0
     full_cost=t['baseCost']
-    grant=town_projects.construction_grant(cfg,st,ti)
+    grant=town_projects.construction_grant(cfg,st,ti) or quest_engine.building_grant(cfg,st,t['id'])
     result=dict(baseCost=t['baseCost'],cost=0 if grant else full_cost,materialUnitValue=substitute,
                 materialCost=required,materialsCost=required,materialsUsed=0 if grant else used,
                 materialsMissing=0 if grant else missing,constructionGrant=grant,
@@ -690,13 +699,14 @@ def expand(cfg,st,ti,tick):
     if not progression['ok']: return progression
     if result.get('constructionGrant'):
         claimed=town_projects.consume_construction_grant(cfg,st,ti)
-        if not claimed['ok']: return claimed
+        if not claimed['ok'] and not quest_engine.consume_building_grant(cfg,st,cfg['tiers'][ti]['id']): return claimed
     installed_non_cash=result.get('fundedValue',0)+progression.get('consumedValue',0)
     st['cash']-=result['cost'];st['book']+=result['cost']+installed_non_cash
     business_operations.reserve_construction(cfg,st,ti,result['cost'],installed_non_cash)
     if st.get('build') is None:
         st['build']=dict(i=ti,t=tick+max(1,jsround(cfg['tiers'][ti]['timerH']*3600/cfg['global']['tick'])))
     else: st['queue'].append(ti)
+    quest_engine.record_action(cfg,st,'open_business')
     return result
 
 
@@ -865,6 +875,7 @@ def manage_customer_contract(cfg,st,slot,action,customer_id=None,contract_id=Non
         if current is not None: data['active'].remove(current)
         data['active'].append(replacement)
         data['active'].sort(key=lambda c:c['slot'])
+        if action=='accept': quest_engine.record_action(cfg,st,'set_regular')
         return dict(ok=True,kind='customer_contract',action=action,contractId=replacement['id'])
     if action in ('upgrade','downgrade'):
         larger=action=='upgrade'
@@ -876,6 +887,7 @@ def manage_customer_contract(cfg,st,slot,action,customer_id=None,contract_id=Non
                        nextDeliveryTick=st['tick']+current['intervalTicks'])
         current.pop('sellingTerms',None)
         _freeze_selling_terms(cfg,st,current)
+        if larger: quest_engine.record_action(cfg,st,'upgrade_regular')
         return dict(ok=True,kind='customer_contract',action=action,contractId=current['id'])
     if action=='release': data['active'].remove(current)
     elif action=='pause': current['paused']=True
@@ -1119,6 +1131,7 @@ def _settle_order(cfg,st,order):
     _freeze_selling_terms(cfg,st,order)
     costed=inventory_costs.consume(cfg,st,order['requirements'])
     for need in order['requirements']: st['inventory'][need['goodId']]-=need['quantity']
+    order['reward'],boosted=quest_engine.apply_boost(cfg,st,'order_payout',order['reward'])
     operating_margins.pay(cfg,st,'orders',order['reward'],order['requirements'],costed=costed,
                           terms=order.get('sellingTerms'))
     order['materials']=0  # Ignore rewards embedded in pre-removal saves.
@@ -1126,12 +1139,14 @@ def _settle_order(cfg,st,order):
     if not order.get('project'):
         town_projects.record_delivery(cfg,st,order['requirements'],order['id'])
     st['cStats']['accepted']+=1;st['cStats']['done']+=1
+    crafting_pilot.record_order(cfg,st,order['requirements'])
+    quest_engine.record_order(cfg,st)
     raw_value=sum(goods[n['goodId']]['unitPrice']*n['quantity'] for n in order['requirements'])
     st['cStats']['net']+=order['reward']-raw_value;st['checklist']['goodSales']=st['cStats']['done']
     if order.get('customer') == 'breakfast':
         st['regularDeliveries']=min(3,st.get('regularDeliveries',0)+1)
     project_result=town_projects.complete(cfg,st,order['id']) if order.get('project') else {}
-    return dict(ok=True,kind='delivery',reward=order['reward'],materials=order['materials'],orderId=order['id'],
+    return dict(ok=True,kind='delivery',reward=order['reward'],boostMultiplier=boosted,materials=order['materials'],orderId=order['id'],
                 projectReward=project_result.get('rewardText',''))
 
 
@@ -1429,9 +1444,12 @@ def payload(cfg,st,cls,session,behind=False):
         item['focusOptions']=[dict(id=o[0],name=o[1],effect=o[2]) for o in focus_options(cfg,b)]
         item['regularBonus']=20 if t['id']=='roastery' and st.get('regularDeliveries',0)>=3 else 0
         item.update(business_operations.building_payload(cfg,st,slot,shop_receipts['operatingIncome'],potential_income,rates))
+        if crafting_pilot.enabled(cfg):
+            item['craftingPilot']=crafting_pilot.building_payload(cfg,st,b)
         if operating_margins.enabled(cfg):
             item['operatingStatement']=operating_margins.statement(
                 cfg,st,slot,rates,potential_income,item.get('potentialOperatingCostPerMinute',0))
+            item['operatingStatement']=crafting_pilot.include_statement(cfg,st,item['operatingStatement'],b['buildingId'])
         cost=item.get('operatingCostPerMinute',0)
         item['recentCashflow']=dict(sales=shop_receipts['operatingIncome'],costs=cost,
                                     net=shop_receipts['operatingIncome']-cost,
@@ -1495,8 +1513,9 @@ def payload(cfg,st,cls,session,behind=False):
                   observedSeconds=receipts['observedSeconds'])
     return dict(modelVersion=4,productionMode='independent',sectorRhythms=business_rhythms.payload(cfg),tick=st['tick'],tickSeconds=g['tick'],behind=behind,cash=int(st['cash']),
                 operations=operations,recentCashflow=cashflow,goalOrder=goal_delivery,
-                operatingStatement=operating_margins.town_statement(cfg,st,buildings),
+                operatingStatement=crafting_pilot.include_statement(cfg,st,operating_margins.town_statement(cfg,st,buildings)),
                 progression=business_progression.payload(cfg,st),
+                quests=quest_engine.payload(cfg,st),
                 workforce=workforce.payload(cfg,st),
                 crafting=crafting.payload(cfg,st),
                 rulesRevision=4 if business_progression.connected_enabled(cfg) else 3,

@@ -27,6 +27,9 @@ Set these environment variables on the server:
 - `APCA_API_SECRET_KEY`
 - `APCA_API_BASE_URL` — defaults to `https://paper-api.alpaca.markets`; use
   `https://api.alpaca.markets` only when using a live-account key for data.
+- `PORT_EXTENDED_HOURS` — pre-market and after-hours trading, on by default.
+  Set it to `0` (or `false`/`off`) for regular hours only. It changes nothing
+  else: the same calendar, quotes and accounting apply.
 
 Use an API key whose account has the paid SIP data entitlement. Credentials
 must stay outside the web root, repository and browser assets. No credential
@@ -41,9 +44,16 @@ and [US market calendar](https://docs.alpaca.markets/us/reference/legacycalendar
 - PORT follows real time, independently of the accelerated town clock. The UI
   displays New York exchange time using the server clock, so changing a device's
   date or timezone cannot change trading eligibility or quote freshness.
-- Trading follows regular US sessions: normally 09:30–16:00 ET. Alpaca's
-  calendar supplies holidays and early closes. Orders cannot fill outside the
-  current session, even if a cached clock response still says the market is open.
+- Trading follows US extended hours: normally 04:00–20:00 ET, with the regular
+  session 09:30–16:00 ET inside it. Alpaca's calendar supplies holidays and
+  early closes, and the extended window follows them — a 13:00 ET early close
+  trades until 17:00 ET. Orders cannot fill outside the current tradable
+  window, even if a cached clock response still says the market is open. The
+  clock's next regular close ends the regular session only; after-hours
+  execution continues past it. Pre-market and after-hours quotes are real SIP
+  quotes with real extended-hours spreads, which are usually wider.
+- Each order records the session it was placed in (`premarket`, `regular` or
+  `afterhours`), and the terminal labels the live session beside the feed.
 - Whole shares; buy at ask, sell at bid; no short selling or leverage.
 - Integer-cent cash and cost basis, with cash/share reservations for open orders.
 - Market and GTC limit orders, cancellations, fills and history are saved together.
@@ -54,8 +64,9 @@ and [US market calendar](https://docs.alpaca.markets/us/reference/legacycalendar
   order submissions and cancellation requests do not trigger fills. Orders keep
   running with every browser closed and resume from saved state after a restart.
 - Fills use the first eligible quote observed by that cycle, timestamped at or
-  after the server received the order, inside the regular session and at most
-  10 seconds old. Older snapshots cannot rewind an account's execution history.
+  after the server received the order, inside the current tradable session and
+  at most 10 seconds old. Older snapshots cannot rewind an account's execution
+  history.
 - Market orders expire after 30 real seconds or at that session's close,
   whichever comes first. GTC limit orders remain pending across sessions until
   filled or cancelled. An accepted order is not a confirmed fill.
@@ -63,8 +74,8 @@ and [US market calendar](https://docs.alpaca.markets/us/reference/legacycalendar
   worker compares its receipt time with the quote timestamp: an eligible
   earlier quote may still fill the order; a quote at or after cancellation
   cannot. Closed-market cancellations complete on the next server cycle.
-- New orders require a signed-in seat, an active/unpaused class, and regular US
-  market hours. Class pauses freeze portfolio transitions, while real-time
+- New orders require a signed-in seat, an active/unpaused class, and an open US
+  market session (pre-market, regular or after-hours). Class pauses freeze portfolio transitions, while real-time
   market-order deadlines keep advancing. After resume, fills require a quote
   timestamped at or after resume. The worker does not count as town activity.
 - Feed failures block new orders and fills while preserving saved accounts.

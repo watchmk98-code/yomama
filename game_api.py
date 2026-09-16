@@ -371,6 +371,9 @@ def _fast_poll(conn, player, session):
     breakfast_event.advance(st,stop*cfg['global']['tick'])
     economy.bind_sales(cfg,cls,st)
     st['lastActiveTick']=st['tick']
+    if not session['paused']:
+        import crafting_pilot
+        crafting_pilot.visit(cfg,st)
     _save_state(conn,player['id'],cfg,st)
     return cfg,cls,st,False
 
@@ -386,6 +389,9 @@ def _player_econ(conn, player, session, fast=False):
         # Other students can replay a class, but cannot renew this player's
         # offline allowance. Only their own request records activity.
         st['lastActiveTick']=st['tick']
+        if not session['paused']:
+            import crafting_pilot
+            crafting_pilot.visit(cfg,st)
         _save_state(conn,player['id'],cfg,st)
     return cfg,cls,st,behind
 
@@ -786,6 +792,8 @@ def _act(body, apply_fn) -> dict:
         result = apply_fn(cfg, st, book)
         if not result.get("ok"):
             raise ApiError(result.get("why", "not allowed"), details=result)
+        import crafting_pilot
+        crafting_pilot.observe_rewards(cfg,st)
         _save_state(conn, p["id"], cfg, st)
         _settled.pop(p["code"], None)
         _log(conn, p["code"], p["id"], "econ_" + result.get("kind", "action"),
@@ -836,6 +844,16 @@ def econ_progression(body):
             return economy.fulfill_legacy_project(cfg, st, body.get('id'))
         import business_progression
         return business_progression.act(cfg, st, body)
+    return _act(body, apply)
+
+
+def econ_quests(body):
+    """Claim a quest reward inside the seat's atomic save."""
+    def apply(cfg, st, cls):
+        if cfg.get('version') != 4:
+            return dict(ok=False, why='Quests unavailable')
+        import quest_engine
+        return quest_engine.act(cfg, st, body)
     return _act(body, apply)
 
 
@@ -1055,7 +1073,9 @@ def econ_keep(body) -> dict:
 
 def _port_payload(p, s, state, feed, permitted, reason):
     return {'portfolio': port_portfolio.public_state(state),
-            'serverTime': time.time(), 'executionRules': port_portfolio.execution_rules(),
+            'serverTime': time.time(),
+            'executionRules': port_portfolio.execution_rules(
+                extended_hours=bool(feed['market'].get('extendedHours'))),
             'quotes': feed['quotes'], 'market': feed['market'],
             'canTrade': permitted and feed['market']['status'] == 'open',
             'blockedReason': reason or (feed['market']['message']
@@ -1072,7 +1092,11 @@ def _port_request(data, action=None):
         cfg = econ_config(s)
         town = _load_state(p, cfg, s)
         licensed = economy.gate_open(cfg, town)
+        import quest_engine
+        # A class without the quest engine is gated exactly as before.
+        quest_locked = quest_engine.enabled(cfg) and not quest_engine.has_feature(cfg, town, 'port_trading')
         reason = ('Earn your licence to unlock Port.' if not licensed else
+                  'Complete the Network Effect quest to unlock Port.' if quest_locked else
                   'The class is paused.' if s['paused'] else '')
         permitted = not reason
         now = time.time()
@@ -1093,7 +1117,8 @@ def _port_request(data, action=None):
                     raise ApiError(reason, 409)
                 state = port_portfolio.submit_order(state, data, feed['quotes'], now,
                                                     market_open=market_open, **bounds,
-                                                    received_at=data['_server_received_at'], defer_execution=True)
+                                                    received_at=data['_server_received_at'], defer_execution=True,
+                                                    session=feed['market'].get('session') or 'regular')
             elif action == 'cancel':
                 if not permitted:
                     raise ApiError(reason, 409)
@@ -1692,7 +1717,7 @@ def _class_locked(fn):
 
 for _name in ('port_state','port_order','port_cancel','port_chart','_port_chart_access','_port_settle','get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
               'econ_upgrade','econ_reserve','econ_processing','econ_fulfill_order','econ_replace_order','econ_commit_order','econ_focus','econ_breakfast',
-              'econ_business','econ_progression','econ_workforce','econ_craft',
+              'econ_business','econ_progression','econ_workforce','econ_craft','econ_quests',
               'econ_contracts','econ_accept_contract','econ_customers','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
     globals()[_name]=_class_locked(globals()[_name])
 

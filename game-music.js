@@ -7,7 +7,7 @@
 
   var base = new URL('.', document.currentScript.src);
   var prefsKey = 'yomama_music_v1';
-  var positionKey = 'yomama_music_position_v1';
+  var positionKey = 'yomama_music_position_shy_fx_this_style_v1';
   var prefs = readPrefs();
   var resumeAt = 0;
   try { resumeAt = Math.max(0, Number(sessionStorage.getItem(positionKey)) || 0); } catch (_) {}
@@ -43,7 +43,7 @@
   dialog.setAttribute('aria-labelledby', 'game-music-title');
   dialog.innerHTML = '<div class="game-music-heading"><h2 id="game-music-title">Music</h2>' +
     '<button type="button" data-music-close aria-label="Close music settings">×</button></div>' +
-    '<p class="game-music-track">CLS No. 1 · I in G Major<br><small>2nd revision</small></p>' +
+    '<p class="game-music-track">This Style<br><small>Shy FX</small></p>' +
     '<button type="button" class="game-music-play" data-music-toggle>Play music</button>' +
     '<label class="game-music-volume" for="game-music-volume">Volume <output id="game-music-level"></output></label>' +
     '<input id="game-music-volume" type="range" min="0" max="100" step="5">' +
@@ -115,7 +115,7 @@
     pending = true;
     errorText = '';
     audio.volume = prefs.volume;
-    if (!audio.getAttribute('src')) audio.src = new URL('assets/music/cls-no-1-g-major.mp4', base).href;
+    if (!audio.getAttribute('src')) audio.src = new URL('assets/music/shy-fx-this-style.mp4', base).href;
     else if (audio.error) {
       if (audio.currentTime > 0) resumeAt = audio.currentTime;
       audio.load();

@@ -430,6 +430,7 @@ def _ingredients(cfg, st, needs, held):
 
 def payload(cfg, st):
     import business_assets
+    import crafting_pilot
     import production_economy as economy
     saved = st.get('crafting', {})
     held = economy.protected_stock(cfg, st)
@@ -444,8 +445,8 @@ def payload(cfg, st):
     supplies = [dict(id=sid, name=row['name'], unitPrice=row['unitPrice'],
                      quantity=saved.get('supplies', {}).get(sid, {}).get('quantity', 0))
                 for sid, row in SUPPLIES.items()]
-    return dict(enabled=True, revision=saved.get('revision', 0), items=items,
-                businessAssets=business_assets.catalog(), supplies=supplies, totalOwned=sum(row['owned'] for row in items))
+    return crafting_pilot.enrich(cfg, st, dict(enabled=True, revision=saved.get('revision', 0), items=items,
+                businessAssets=business_assets.catalog(), supplies=supplies, totalOwned=sum(row['owned'] for row in items)))
 
 
 def _add(group, key, quantity, value):
@@ -462,6 +463,9 @@ def act(cfg, st, body):
     its revision remains stale even after the one cached receipt is replaced.
     """
     import production_economy as economy
+    import crafting_pilot
+    if isinstance(body, dict) and isinstance(body.get('action'), str) and body['action'] in crafting_pilot.ACTIONS:
+        return crafting_pilot.act(cfg, st, body)
     if cfg.get('version') != 4:
         return dict(ok=False, why='Crafting unavailable')
     request_id, revision = body.get('requestId'), body.get('revision')
@@ -475,6 +479,8 @@ def act(cfg, st, body):
         recipe = next((r for r in RECIPES if r[0] == item_id), None) if isinstance(item_id, str) else None
         if recipe is None:
             return dict(ok=False, why='Unknown craftable item')
+        if crafting_pilot.enabled(cfg) and item_id in crafting_pilot._items(cfg):
+            return dict(ok=False, why='This product is manufactured automatically after unlocking')
         if 'quantity' in body and (type(body['quantity']) is not int or body['quantity'] != 1):
             return dict(ok=False, why='Craft one item at a time')
         intent = ['craft', item_id]

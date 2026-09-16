@@ -145,11 +145,24 @@
     if (remaining >= 3600) return Math.floor(remaining / 3600) + 'h ' + Math.floor(remaining % 3600 / 60) + 'm';
     return remaining >= 60 ? Math.ceil(remaining / 60) + 'm' : remaining + 's';
   }
+  var SESSION_NAMES = { premarket: 'Pre-market U.S. session', regular: 'Regular U.S. session',
+    afterhours: 'After-hours U.S. session', closed: 'U.S. market session' };
+  function extendedSession() {
+    return serverMarket.session === 'premarket' || serverMarket.session === 'afterhours';
+  }
+  function sessionClose() {
+    // The server's session bounds already cover extended hours; the clock's
+    // next close ends the regular session only.
+    return finite(serverMarket.sessionClose) ? serverMarket.sessionClose : epochSeconds(serverMarket.nextClose);
+  }
+  function sessionOpen() {
+    return finite(serverMarket.nextSessionOpen) ? serverMarket.nextSessionOpen : epochSeconds(serverMarket.nextOpen);
+  }
   function marketSessionText() {
     var open = serverMarket.status === 'open';
-    var boundary = epochSeconds(open ? serverMarket.nextClose : serverMarket.nextOpen);
+    var boundary = open ? sessionClose() : sessionOpen();
     var now = marketNow();
-    var text = 'Regular U.S. session';
+    var text = SESSION_NAMES[serverMarket.session] || 'U.S. market session';
     if (!finite(boundary)) return text + ' · ET.';
     if (finite(now) && boundary <= now) return text + ' · awaiting market update.';
     return text + ' · ' + (open ? 'closes ' : 'opens ') + dateText(boundary * 1000, true) +
@@ -157,8 +170,9 @@
   }
   function executionText(isLimit) {
     var price = side === 'buy' ? 'ask' : 'bid';
-    return isLimit ? 'Next eligible fresh ' + price + ' at your limit or better. GTC: open until filled or cancelled.'
-      : 'Next eligible fresh ' + price + '; unfilled orders expire after ' + executionRules.marketOrderTimeoutSeconds + 's.';
+    var extended = extendedSession() ? 'Fewer buyers and sellers now, so spreads are wider. ' : '';
+    return extended + (isLimit ? 'Next eligible fresh ' + price + ' at your limit or better. GTC: open until filled or cancelled.'
+      : 'Next eligible fresh ' + price + '; unfilled orders expire after ' + executionRules.marketOrderTimeoutSeconds + 's.');
   }
   function company(symbol) { return catalog[symbol] || { name: symbol }; }
   function position(symbol) { return paperState.positions && paperState.positions[symbol]; }
@@ -401,8 +415,8 @@
     if (responseAgeSeconds() > 15) return 'Refreshing your account before trading…';
     if (!finite(marketNow())) return 'Waiting for the market clock…';
     if (!serverCanTrade) return serverBlockedReason || serverMarket.message || 'Trading is temporarily unavailable.';
-    var nextClose = epochSeconds(serverMarket.nextClose);
-    if (serverMarket.status === 'open' && finite(nextClose) && marketNow() >= nextClose) return 'Regular session closed. Refreshing market status…';
+    var closing = sessionClose();
+    if (serverMarket.status === 'open' && finite(closing) && marketNow() >= closing) return 'Market session closed. Refreshing market status…';
     if (!quoteIsFresh(quote(selectedSymbol))) return 'Waiting for a fresh ' + selectedSymbol + ' quote.';
     return '';
   }
@@ -519,7 +533,11 @@
     byId('port-reserved-cash').textContent = summary.reservedCash ? money(summary.reservedCash) + ' reserved for open orders' : 'No cash reserved';
     if (!demoMode) {
       byId('port-account-label').textContent = serverPlayerName ? serverPlayerName + ' · VIRTUAL ACCOUNT' : 'VIRTUAL ACCOUNT';
-      byId('port-data-label').textContent = serverMarket.source === 'local_test_fixture' ? 'TEST QUOTES' : serverMarket.status === 'open' ? 'Alpaca SIP' : serverMarket.status === 'closed' ? 'Market closed' : 'Market feed offline';
+      var feedName = serverMarket.source === 'local_test_fixture' ? 'TEST QUOTES'
+        : serverMarket.status === 'open' ? 'Alpaca SIP'
+        : serverMarket.status === 'closed' ? 'Market closed' : 'Market feed offline';
+      byId('port-data-label').textContent = feedName +
+        (serverMarket.status === 'open' && extendedSession() ? ' · EXT' : '');
       byId('port-data-label').title = marketSessionText();
       byId('port-save-status').textContent = !serverLoaded ? connectionMessage || 'Loading your account…'
         : !serverConnected ? 'Connection interrupted · last saved account' : 'Saved to your student seat';

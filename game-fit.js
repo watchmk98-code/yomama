@@ -6,7 +6,7 @@
   if(location.hash==='#stock')tabs.Build=1;
   if(location.hash==='#team')tabs.Operations=1;
   if(location.hash==='#quests')tabs.Operations=2;
-  function compact(){return innerWidth<1100 || innerHeight<=650 || (innerHeight<720 && !!document.querySelector('#econ-building')) || (innerHeight<820 && !!document.querySelector('#econ-building #game-expansion-choice, #econ-building .game-construction'));}
+  function compact(){return innerWidth<1100 || innerHeight<=650 || (innerHeight<720 && !!document.querySelector('#econ-building')) || (innerHeight<820 && !!document.querySelector('#econ-building #game-expansion-choice, #econ-building .game-construction')) || (innerHeight<950 && !!document.querySelector('#econ-building .has-craft-stock'));}
   function guideText(value){var node=document.createElement('span');node.textContent=value;return node.innerHTML;}
   function moneyGuide(state){
     if(!state.operatingStatement || !state.operatingStatement.enabled)return '';
@@ -199,7 +199,8 @@
     paginate('.game-market-orders .game-order-grid','Orders',10000,orderColumns);
     fitMarketGoods(market);
     paginate('.game-purpose-main .game-recipe','Recipes',140,compact()?1:(innerWidth>1100?2:1));
-    paginate('.game-inventory-rows','Inventory',compact()?38:76,compact()?1:3);
+    var craftStock=!!document.querySelector('.game-building-stock.has-craft-stock');
+    paginate('.game-inventory-rows','Inventory',craftStock?(compact()?90:84):(compact()?38:76),compact()?1:3);
     paginate('.game-checklist','Milestones',50,1);
     if(focusedId && focusedId.indexOf('game-tab-')===0){var focusedTab=document.getElementById(focusedId);if(focusedTab)focusedTab.focus({preventScroll:true});}
   }

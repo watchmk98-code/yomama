@@ -98,11 +98,18 @@
 
       function say(text, tone) { msg.textContent = text; msg.className = 'join-msg ' + (tone || 'info'); }
 
+      // loading.js on the next page reads this and shows the LOADING screen
+      // while it pulls the sprites down. It spends the flag, so it happens
+      // once per sign-in and not on every page after it.
+      function bootNext() { try { sessionStorage.setItem('yomama_boot_v1', '1'); } catch (e) {} }
+
       // Already in a class? Offer to continue or switch.
       if (net && net.isJoined()) {
         var s = net.session();
         foot.innerHTML = 'Signed in as <strong>' + s.name + '</strong> in class <strong>' + s.code +
           '</strong>. <a href="./buildings.html">Continue</a> &middot; <a href="#" id="join-leave">leave</a>';
+        var cont = foot.querySelector('a[href="./buildings.html"]');
+        if (cont) cont.addEventListener('click', bootNext);
         var leave = document.getElementById('join-leave');
         if (leave) leave.addEventListener('click', function (e) {
           e.preventDefault(); net.leave(); window.location.reload();
@@ -126,7 +133,7 @@
           } else {
             say('Checking your seat...', 'info');
             net.connect().then(function (live) {
-              if (live) window.location.replace(next);
+              if (live) { bootNext(); window.location.replace(next); }
               else { foot.textContent = ''; say('Your seat is no longer valid. Sign in again.', 'err'); }
             });
           }
@@ -150,6 +157,7 @@
           say(res.rejoined
             ? 'Welcome back, ' + res.name + '. Restoring your base...'
             : 'Joined class ' + res.code + '. Setting up your base...', 'ok');
+          bootNext();
           window.setTimeout(function () { window.location.href = afterJoin; }, 700);
         }).catch(function (err) {
           btn.disabled = false;

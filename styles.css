@@ -509,6 +509,7 @@ textarea{
   transform:translate(calc(-50% + var(--banner-x, 0px)), calc(-50% + var(--banner-y, 0px))) scale(1);
   transform-origin:center center;
   filter:saturate(1.05) contrast(1.03);
+  mix-blend-mode:screen;
   cursor:grab;
   user-select:none;
   -webkit-user-drag:none;
