@@ -176,46 +176,75 @@
   // has less room than the old shrunken banners left it. Nothing is hidden or
   // re-stacked for that: the whole workspace is scaled down until everything
   // fits, so the arrangement a student learns stays the same on every screen.
-  // Same binary search as fitMarketGoods, one level up.
   //
   // Below FLOOR the type stops being readable across a classroom. A page that
   // still does not fit there is left at FLOOR (game pages, which clip) or let
   // go entirely so it scrolls the way it always has (Port).
-  var FIT_FLOOR=.68;
+  var FIT_FLOOR=.68, GROW_BACK_MS=15000;
+  var fitScale=1, fitKey='', fitAt=0;
   var FIT_FRAMES = '.game-layout,.game-center,.game-actions,.game-purpose-layout,.game-license-layout,'+
     '.game-site,.game-business-overview,.game-live-metrics,.game-operations,.game-expansion,'+
     '.game-roster,.game-market-orders,.game-market-tools,.game-customer-contracts,.game-build-bottom,'+
     '.game-contract-panel,.game-contract-body,.game-contract-supply,.game-contract-footer';
-  function shrinkToFit(host,fits){
-    host.style.removeProperty('zoom');
-    if(!host.getClientRects().length || host.clientHeight<=0 || fits())return 1;
-    var low=FIT_FLOOR, high=1;
-    for(var step=0;step<8;step++){
-      var scale=(low+high)/2;
-      host.style.setProperty('zoom',String(scale));
-      if(fits())low=scale;else high=scale;
-    }
-    host.style.setProperty('zoom',String(Math.floor(low*1000)/1000));
-    return fits()?low:0;
+  // Does every frame that must not clip still clear? Reads only, and it stops
+  // at the first failure - this runs on every poll, so it has to be cheap.
+  function framesFit(host){
+    if(host.scrollHeight>host.clientHeight+1)return false;
+    var frames=host.querySelectorAll(FIT_FRAMES);
+    for(var i=0;i<frames.length;i++)
+      if(frames[i].clientHeight>0 && frames[i].scrollHeight>frames[i].clientHeight+1)return false;
+    return true;
   }
   function fitWorkspace(){
     var host=document.querySelector('.game-workspace');
-    if(!host)return;
-    shrinkToFit(host,function(){
-      if(host.scrollHeight>host.clientHeight+1)return false;
-      return Array.from(host.querySelectorAll(FIT_FRAMES)).every(function(frame){
-        return frame.scrollHeight<=frame.clientHeight+1;
-      });
-    });
+    if(!host || !host.getClientRects().length || host.clientHeight<=0)return false;
+    var key=innerWidth+'x'+innerHeight+'|'+(document.body.classList.contains('game-compact')?1:0),
+        now=Date.now(), was=fitScale;
+    if(key===fitKey && framesFit(host)){
+      // Settled. econ.js rebuilds this page every three seconds, so this path
+      // has to stay one measurement with no style writes at all.
+      if(fitScale>=1 || now-fitAt<GROW_BACK_MS)return false;
+      // Held below full size and still fitting: try a step back up, so the
+      // page grows again once whatever was crowding it has gone. One step at
+      // a time, which costs two measurements instead of a whole search.
+      var up=Math.min(1,Math.floor(fitScale*1080)/1000);
+      host.style.setProperty('zoom',String(up));
+      if(!framesFit(host)){host.style.setProperty('zoom',String(fitScale));fitAt=now;return false;}
+      if(up>=1)host.style.removeProperty('zoom');
+      fitScale=up; fitAt=now;
+      return true;
+    }
+    // Something moved: find the largest scale that clears, measuring from full
+    // size so the answer can be bigger than the one we were holding.
+    var scale=1;
+    host.style.removeProperty('zoom');
+    if(!framesFit(host)){
+      var low=FIT_FLOOR, high=1;
+      for(var step=0;step<6;step++){
+        var mid=(low+high)/2;
+        host.style.setProperty('zoom',String(mid));
+        if(framesFit(host))low=mid;else high=mid;
+      }
+      scale=Math.floor(low*1000)/1000;
+      host.style.setProperty('zoom',String(scale));
+    }
+    fitScale=scale; fitKey=key; fitAt=now;
+    return scale!==was;
   }
   // Port has no panel pages or tabs to fall back on, so it is the workspace
   // scale alone: measure the terminal at full size, then scale it to the room
   // under the masthead. `port-fitted` clamps the shell to the viewport, and is
   // only added once it really fits; on a screen too short even for FLOOR the
   // page keeps the scroll it has always had, just with less of it to do.
+  var portKey='';
   function fitPort(){
     var host=document.querySelector('.port-workspace'), hero=document.querySelector('.hero');
     if(!host || !hero)return;
+    // Nothing but the viewport changes the answer here, so don't pay for the
+    // reset-and-remeasure when it has not moved.
+    var key=innerWidth+'x'+innerHeight;
+    if(key===portKey)return;
+    portKey=key;
     document.body.classList.remove('port-fitted');
     host.style.removeProperty('zoom');
     var room=innerHeight-hero.getBoundingClientRect().height, need=host.scrollHeight;
@@ -278,7 +307,7 @@
     }
     if(ops && !ops.querySelector('.wf-workspace'))tabset(ops,'Operations',[[(window.YomamaEcon && window.YomamaEcon.state() || {}).productionMode==='independent'?'Products':'Recipes',ops.querySelector('.game-purpose-main')],['Team',ops.querySelector('.game-business-team')],['Quests',ops.querySelector('.game-business-quests')]]);
     if(licence){var sections=Array.from(licence.querySelector('.game-license-layout')?.children||[]);tabset(licence,'Licence',sections.map(function(n){return [n.classList.contains('game-invest')?'Invest':n.querySelector('#game-goals')?'Goals':'Quiz',n];}));var goals=licence.querySelector('#game-goals');if(goals)goals.open=true;}
-    fitWorkspace();
+    if(!fitKey)fitWorkspace();   // first paint: size the page before paging it
     paginate('.game-roster-list','Buildings',68,1);
     var orderGrid=market && market.querySelector('.game-order-grid');
     var orderCardWidth=orderGrid && orderGrid.clientHeight<500?430:350;
@@ -289,11 +318,10 @@
     paginate('.game-purpose-main .game-recipe','Recipes',140,compact()?1:(innerWidth>1100?2:1));
     pageStock();
     paginate('.game-checklist','Milestones',50,1);
-    // Paging and the goods fit both move things after the first pass, so settle
-    // the workspace scale once more against the layout that actually shipped,
-    // then re-fit the goods to the room that scale finally left them.
-    fitWorkspace();
-    fitMarketGoods(market);
+    // Paging and the goods fit both move things, so the scale is settled last,
+    // against the layout that actually shipped. The goods only need fitting
+    // again when that scale actually moved.
+    if(fitWorkspace())fitMarketGoods(market);
     if(focusedId && focusedId.indexOf('game-tab-')===0){var focusedTab=document.getElementById(focusedId);if(focusedTab)focusedTab.focus({preventScroll:true});}
   }
   window.YomamaFit={render:render};
