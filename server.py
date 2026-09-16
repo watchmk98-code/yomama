@@ -177,6 +177,15 @@ PUBLIC_SUFFIXES = frozenset({
 # hold nothing personal. The API has its own token checks.
 SESSION_COOKIE = "yomama_session"
 PUBLIC_PAGES = frozenset({"/join.html", "/class.html"})
+
+# Pages taken out of play. The nav links are hidden in econ-nav.js, but hiding
+# a link only stops the click - a bookmark, a typed URL or the browser history
+# would still open the page. These are answered with a redirect instead, so the
+# page is unreachable however it is asked for. The file stays on disk: put the
+# entry back in play by deleting its line here.
+RETIRED_PAGES = {
+    "/advanced-hq.html": "/buildings.html",     # Operations
+}
 TOKEN_RE = re.compile(r"[A-Za-z0-9_-]{16,64}")      # secrets.token_urlsafe(24) is 32 of these
 
 
@@ -282,6 +291,8 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         if not is_public_path(parsed.path):
             self.send_error(404, "Not Found")
             return
+        if self.sent_to_replacement(parsed):
+            return
         if self.sent_to_sign_in(parsed):
             return
         self.private_page = needs_sign_in(parsed.path)
@@ -293,6 +304,8 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
         self.private_page = False
         if not is_public_path(parsed.path):
             self.send_error(404, "Not Found")
+            return
+        if self.sent_to_replacement(parsed):
             return
         if self.sent_to_sign_in(parsed):
             return
@@ -324,6 +337,19 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
             value = unquote(value.strip().strip('"'))
             return bool(TOKEN_RE.fullmatch(value)) and game_api.token_may_browse(value)
         return False
+
+    def sent_to_replacement(self, parsed) -> bool:
+        """True when a retired page was answered with a redirect to what replaced
+        it. Checked before the sign-in wall so the page is closed to everyone."""
+        target = RETIRED_PAGES.get(unquote(parsed.path.split("#", 1)[0]).lower())
+        if not target:
+            return False
+        self.send_response(302)
+        self.send_header("Location", target)
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+        return True
 
     def sent_to_sign_in(self, parsed) -> bool:
         """True when a redirect to the login screen was sent instead of the page."""

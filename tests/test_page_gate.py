@@ -110,3 +110,18 @@ def test_pages_behind_the_wall_are_never_cached(site, db):
 def test_spelling_tricks_do_not_slip_past_the_gate(site):
     for path in ("/INDEX.HTML", "/index.html?", "//index.html", "/index%2Ehtml", "/./index.html", "/Join.html/../index.html"):
         assert site(path)[0] in (302, 404), path
+
+
+def test_operations_is_closed_to_everyone(site, db):
+    """Operations (advanced-hq.html) is out of play: a signed-in seat, a signed-out
+    browser and a HEAD all get the redirect, so no bookmark or typed URL opens it."""
+    c, token = seat(db)
+    good = "%s=%s" % (server.SESSION_COOKIE, token)
+    for cookie in (None, good):
+        status, location, _ = site("/advanced-hq.html", cookie)
+        assert (status, location) == (302, "/buildings.html"), cookie
+    assert site("/advanced-hq.html", good, method="HEAD")[0] == 302
+    # the query string cannot slip past it either
+    assert site("/advanced-hq.html?tab=team", good)[1] == "/buildings.html"
+    # a seat that can still reach the pages that stayed in play
+    assert site("/buildings.html", good)[0] == 200

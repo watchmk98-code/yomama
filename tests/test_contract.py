@@ -118,6 +118,13 @@ def test_every_page_on_disk_is_behind_the_wall(site, db):
         if path in server.PUBLIC_PAGES:
             assert site(path)[0] == 200, path
             continue
+        if path in server.RETIRED_PAGES:
+            # Out of play: closed to a live seat as well, so it never reaches the wall.
+            assert site(path)[0] == 302, path
+            assert site(path)[1] == server.RETIRED_PAGES[path], path
+            assert site(path, "yomama_session=" + token)[1] == server.RETIRED_PAGES[path], \
+                path + " is retired but still opened for a seat." + see("2")
+            continue
         assert server.needs_sign_in(path), path + " is not behind the wall." + see("2")
         status, location, _ = site(path)
         assert (status, location) == (302, "/join.html?next=" + quote(path, safe="")), \

@@ -49,7 +49,9 @@
     craftNavStyle.textContent='.game-nav .craft-nav-icon{display:inline-block;width:28px;height:28px;flex:0 0 28px;background:url("./assets/craft/craft-items.png?v=1") no-repeat -34.51px -32.57px / 190.46px 158.71px;image-rendering:pixelated;}.game-nav .port-nav-icon{width:28px;height:28px;object-fit:contain;image-rendering:pixelated;flex:none;}.game-nav a[hidden]{display:none!important;}@media(max-width:900px){.game-page .game-page-head .game-nav[data-craft-nav],.game-page .game-nav[data-craft-nav]{display:grid;grid-template-columns:repeat(var(--game-nav-columns,5),minmax(0,1fr));}.game-nav[data-craft-nav] a{min-width:0;}}@media(max-width:550px){.game-nav[data-craft-nav] a{flex-direction:column;gap:2px;padding-inline:1px;font-size:14px;letter-spacing:0;}.game-nav[data-craft-nav] a img,.game-nav[data-craft-nav] .craft-nav-icon{display:none;}.game-nav[data-craft-nav] a .port-nav-icon{display:block;width:18px;height:18px;}}@media(max-width:380px){.game-page .game-nav[data-craft-nav] a{font-size:11px;}}';
     document.head.appendChild(craftNavStyle);
   }
-  document.querySelectorAll('a[href*="produce.html"],a[href*="collect.html"],a[href*="focus-tree.html"]').forEach(function(a){a.hidden=true;});
+  // Pages out of play. advanced-hq.html is Operations: the server redirects it
+  // away as well (server.RETIRED_PAGES), this only keeps the link out of sight.
+  document.querySelectorAll('a[href*="produce.html"],a[href*="collect.html"],a[href*="focus-tree.html"],a[href*="advanced-hq.html"]').forEach(function(a){a.hidden=true;});
   document.querySelectorAll('a[href="./port_trading.html"]').forEach(function(a){
     a.hidden=!hasSeat;
     a.removeAttribute('data-econ-gate');
