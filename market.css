@@ -1,5 +1,6 @@
 /* Readable Market cards stay inside the same fixed screen as the game. */
 .game-orders-notice {margin:0;}
+.game-orders-notice[hidden] {display:none;}
 #econ-market {--market-product-size:24px;--market-icon-size:56px;--market-goods-row:64px;--muted:#b8bcc2;font-size:20px;line-height:1.2;}
 #econ-market .game-market-orders,
 #econ-market .game-customer-contracts {display:flex;flex-direction:column;min-height:0;gap:0;}

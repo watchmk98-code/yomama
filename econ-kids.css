@@ -991,6 +991,14 @@
 .game-stock-heading h3 {margin:0;font-size:19px;font-weight:400;color:var(--amber);}
 .game-stock-heading > span {display:none;}
 .game-stock-heading small {margin-left:auto;font-size:13px;color:var(--muted);}
+.game-opening-guide .game-notice-close {flex:none;align-self:flex-start;width:24px;height:24px;padding:0;border:1px solid #927bff;background:#18112b;color:#c1b5ff;font:22px/20px var(--font-terminal);cursor:pointer;}
+.game-opening-guide .game-notice-close:hover {color:#fff;border-color:#c1b5ff;}
+.game-opening-guide .game-notice-close:focus-visible {outline:2px solid #c1b5ff;outline-offset:2px;}
+.game-stock-pager {display:flex;align-items:center;gap:9px;margin-left:auto;color:var(--muted);font-size:16px;white-space:nowrap;}
+.game-stock-heading:has(.game-stock-pager) small {margin-left:0;}
+.game-stock-pager button {width:40px;height:40px;padding:0;border:1px solid var(--border);background:var(--bg);color:var(--amber);font:27px/1 var(--font-terminal);cursor:pointer;}
+.game-stock-pager button:disabled {color:var(--muted);border-color:var(--line);cursor:default;}
+.game-stock-pager button:focus-visible {outline:2px solid var(--amber);outline-offset:2px;}
 .game-building-stock .game-inventory-head,.game-building-stock .game-inventory-row {grid-template-columns:minmax(0,1fr) 94px 44px;gap:8px;padding:4px 10px;}
 .game-building-stock .game-inventory-head {font-size:13px;flex:none;}
 .game-building-stock .game-inventory-row {min-height:38px;font-size:17px;}
@@ -1017,7 +1025,7 @@
  .game-compact .game-building-stock > .game-pager {grid-column:1;grid-row:4;min-height:30px;}
 }
 @media(min-width:1100px) and (min-height:651px){
- .game-business-live > .game-building-stock {flex:0 0 178px;}
+ .game-business-live > .game-building-stock {flex:0 0 clamp(178px,22vh,250px);}
  .game-business-live .game-inventory-head {display:none;}
  .game-business-live .game-inventory-rows {grid-template-columns:repeat(3,minmax(0,1fr));}
  .game-business-live .game-inventory-row {grid-template-columns:1fr auto;align-content:center;gap:6px;padding:6px 10px;border-bottom:0;border-right:1px solid var(--line);}

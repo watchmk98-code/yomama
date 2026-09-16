@@ -44,6 +44,8 @@
   var businessConnected = true;
   var businessClockNeedsSync = false;
   var businessPanelViews = {};
+  var buildNoticeDismissed = false;
+  try { buildNoticeDismissed = window.sessionStorage.getItem('yomama_build_notice_dismissed') === '1'; } catch (_) {}
   var selectedAssetSlot = null;
   var lastAssetOperation = null;
   var assetMessage = '';
@@ -854,13 +856,14 @@
   }
 
   function openingGuide(s) {
+    if(buildNoticeDismissed)return '';
     var n=s.nextStep;
     if(s.build)n={title:s.build.name+' is being built',detail:s.build.remainingSec+'s remaining. Your other businesses keep working.'};
     if(!n || (!s.build && !(n.action && n.action.indexOf('expand:')===0)))n=Number(s.buildingsOwned || (s.buildings || []).length)>=15?
       {title:'Business network complete',detail:'All 15 businesses are open. Keep improving them through upgrades and quests.'}:
       {title:'Choose your next business',detail:'Build when you have enough cash and Prestige. Your open businesses keep working.'};
     var control=n.action?bigButton(n.action,n.actionLabel || 'Continue','',!!n.disabled || s.paused,' k-btn--alt'):'';
-    return '<section class="game-opening-guide" aria-label="Business status"><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.detail)+'</small></div>'+control+'</section>';
+    return '<section class="game-opening-guide" aria-label="Business status"><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.detail)+'</small></div>'+control+'<button class="game-notice-close" type="button" data-build-notice-close aria-label="Close notice board" title="Close notice board">×</button></section>';
   }
 
   function focusMarkup(b) {
@@ -1666,6 +1669,11 @@
   },true);
 
   document.addEventListener('click', function (event) {
+    if(event.target.closest('[data-build-notice-close]')){
+      buildNoticeDismissed=true;
+      try { window.sessionStorage.setItem('yomama_build_notice_dismissed','1'); } catch (_) {}
+      render();return;
+    }
     var panelStep=event.target.closest('[data-business-panel-step]');
     if(panelStep && snapshot){
       var panelKey=businessPanelKey(selectedBuilding(snapshot));

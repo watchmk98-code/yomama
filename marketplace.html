@@ -16,9 +16,9 @@
   <link rel="preload" href="./assets/game-art/reactions/lucky-seven-pixel.svg" as="image" type="image/svg+xml">
   <link rel="preload" href="./assets/game-art/reactions/gold-bars-pixel.svg" as="image" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css?v=20260916-sunny-banner" />
-  <link rel="stylesheet" href="./econ-kids.css?v=20260915-business-ui-2" />
+  <link rel="stylesheet" href="./econ-kids.css?v=20260916-stock-pager-1" />
   <link rel="stylesheet" href="./idle-ui.css?v=20260913-upgrade-feedback" />
-  <link rel="stylesheet" href="./market.css?v=20260915-orders-notice-3" />
+  <link rel="stylesheet" href="./market.css?v=20260916-notice-close-1" />
 </head>
 <body class="motion-paused game-page game-market-page">
   <div class="scanlines" aria-hidden="true"></div>
@@ -64,6 +64,7 @@
       <div id="game-hud" class="econ-kid"></div>
       <aside class="game-opening-guide game-orders-notice" aria-labelledby="orders-notice-title">
         <div><strong id="orders-notice-title">Keep clicking CLICK!!!! for free new offers</strong><small>Regular buyers get goods first. Collect the rest, then click Deliver to earn cash.</small></div>
+        <button class="game-notice-close" type="button" aria-label="Close notice board" title="Close notice board">×</button>
       </aside>
       <div id="econ-market" class="econ-kid"><p class="game-loading" role="status">Opening your business…</p></div>
     </main>
@@ -77,5 +78,14 @@
   <script src="./account.js?v=1"></script>
   <script src="./econ-nav.js?v=20260916-ops-hidden-1"></script>
   <script src="./game-fit.js?v=20260915-materials-retired-1"></script>
+  <script>
+    var marketNotice = document.querySelector('.game-orders-notice');
+    try { marketNotice.hidden = sessionStorage.getItem('yomama_market_notice_dismissed') === '1'; } catch (_) {}
+    document.querySelector('.game-notice-close').addEventListener('click', function () {
+      marketNotice.hidden = true;
+      try { sessionStorage.setItem('yomama_market_notice_dismissed', '1'); } catch (_) {}
+      if (window.YomamaFit) window.YomamaFit.render();
+    });
+  </script>
 </body>
 </html>

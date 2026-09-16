@@ -1,7 +1,7 @@
 /* Viewport layouts: panels use pages; Market goods scale to remain visible. */
 (function(){
   'use strict';
-  var tabs={}, pages={}, resizing, lastSelected;
+  var tabs={}, pages={}, resizing, lastSelected, lastStockBuilding;
   if(new URLSearchParams(location.search).has('customer'))tabs.Market=1;
   if(location.hash==='#stock')tabs.Build=1;
   if(location.hash==='#team')tabs.Operations=1;
@@ -102,6 +102,34 @@
     nav.appendChild(button('←',-1));var info=document.createElement('span');info.textContent=(current+1)+' / '+count;nav.appendChild(info);nav.appendChild(button('→',1));
     pagerParent.appendChild(nav);
   }
+  function pageStock(){
+    var stock=document.querySelector('.game-building-stock');
+    if(!stock)return;
+    var rows=Array.from(stock.querySelectorAll('.game-inventory-rows > .game-inventory-row'));
+    var heading=stock.querySelector('.game-stock-heading');
+    var building=stock.getAttribute('aria-label');
+    if(building!==lastStockBuilding){pages.Inventory=0;lastStockBuilding=building;}
+    var count=Math.max(1,Math.ceil(rows.length/3));
+    var current=Math.min(pages.Inventory||0,count-1);pages.Inventory=current;
+    rows.forEach(function(row){row.hidden=true;row.style.removeProperty('order');});
+    for(var slot=0;slot<Math.min(3,rows.length);slot++){
+      var row=rows[(current*3+slot)%rows.length];row.hidden=false;row.style.order=String(slot);
+    }
+    stock.querySelector('.game-inventory-rows').classList.add('game-paged-list');
+    stock.querySelector('.game-inventory-rows').style.setProperty('--page-rows',compact()?3:1);
+    var old=heading.querySelector('.game-stock-pager');if(old)old.remove();
+    var nav=document.createElement('div');nav.className='game-stock-pager';nav.setAttribute('aria-label','Stock pages');
+    function arrow(label,step,name){
+      var button=document.createElement('button');button.type='button';button.textContent=label;
+      button.setAttribute('aria-label',name+' stock items');button.disabled=step<0?current===0:current===count-1;
+      button.addEventListener('click',function(){pages.Inventory=current+step;render();var next=stock.querySelector('.game-stock-pager button'+(step>0?':last-child':':first-child'));if(next)next.focus({preventScroll:true});});
+      return button;
+    }
+    nav.appendChild(arrow('‹',-1,'Previous'));
+    var position=document.createElement('span');position.textContent=(current+1)+' / '+count;nav.appendChild(position);
+    nav.appendChild(arrow('›',1,'Next'));
+    heading.appendChild(nav);
+  }
   function fitMarketGoods(market){
     if(!market)return;
     market.querySelectorAll('.game-order-goods,.game-contract-goods').forEach(function(host){
@@ -199,8 +227,7 @@
     paginate('.game-market-orders .game-order-grid','Orders',10000,orderColumns);
     fitMarketGoods(market);
     paginate('.game-purpose-main .game-recipe','Recipes',140,compact()?1:(innerWidth>1100?2:1));
-    var craftStock=!!document.querySelector('.game-building-stock.has-craft-stock');
-    paginate('.game-inventory-rows','Inventory',craftStock?(compact()?90:84):(compact()?38:76),compact()?1:3);
+    pageStock();
     paginate('.game-checklist','Milestones',50,1);
     if(focusedId && focusedId.indexOf('game-tab-')===0){var focusedTab=document.getElementById(focusedId);if(focusedTab)focusedTab.focus({preventScroll:true});}
   }
