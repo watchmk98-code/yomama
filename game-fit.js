@@ -273,7 +273,10 @@
       build.querySelectorAll('.game-fit-controls').forEach(function(n){n.remove();});
       var site=build.querySelector('.game-site'), stock=build.querySelector('.game-building-stock');
       if(site && stock){if(compact())site.after(stock);else site.appendChild(stock);}
-      tabset(build,'Build',[['Building',site],['Stock',stock],['Upgrades',build.querySelector('.game-operations')],['Expand',build.querySelector('.game-expansion')]]);
+      var shiftStage=document.body.classList.contains('first-shift-focus')?Number(document.body.dataset.firstShiftStage):-1;
+      tabset(build,'Build',[['Building',site],['Stock',stock],
+        ['Upgrades',shiftStage<0 || shiftStage===4?build.querySelector('.game-operations'):null],
+        ['Expand',shiftStage<0 || shiftStage===6?build.querySelector('.game-expansion'):null]]);
       document.body.dataset.fitBuildView=String(tabs.Build||0);
       var picker=build.querySelector('.game-fit-picker');if(picker)picker.remove();
       if(compact() && window.YomamaEcon){var s=window.YomamaEcon.state();if(s && s.buildings.length>1){picker=document.createElement('select');picker.className='game-fit-picker';picker.setAttribute('aria-label','Selected building');s.buildings.forEach(function(b){var o=document.createElement('option');o.value=b.slot;o.textContent=b.name;o.selected=!!build.querySelector('[data-select-building="'+b.slot+'"][aria-pressed="true"]');picker.appendChild(o);});picker.onchange=function(){var b=build.querySelector('[data-select-building="'+picker.value+'"]');if(b)b.click();};build.insertBefore(picker,build.firstChild);}}
@@ -286,7 +289,8 @@
     }
     if(market){
       var regulars=market.querySelector('.game-customer-contracts');
-      tabset(market,'Market',[['Orders',market.querySelector('.game-market-orders')],['Contracts',regulars]]);
+      var shiftOrdersOnly=document.body.classList.contains('first-shift-focus') && Number(document.body.dataset.firstShiftStage)<=2;
+      tabset(market,'Market',[['Orders',market.querySelector('.game-market-orders')],['Contracts',shiftOrdersOnly?null:regulars]]);
       market.classList.toggle('game-market-narrow',!compact() && !!regulars && innerWidth<1250);
       var buyerPanel=market.querySelector('.game-contract-panel');
       market.classList.toggle('game-market-tight',!!buyerPanel && buyerPanel.clientHeight<570);

@@ -856,7 +856,7 @@
   }
 
   function openingGuide(s) {
-    if(buildNoticeDismissed)return '';
+    if(buildNoticeDismissed && !(window.YomamaOnboarding && window.YomamaOnboarding.active(s)))return '';
     var n=s.nextStep;
     if(s.build)n={title:s.build.name+' is being built',detail:s.build.remainingSec+'s remaining. Your other businesses keep working.'};
     if(!n || (!s.build && !(n.action && n.action.indexOf('expand:')===0)))n=Number(s.buildingsOwned || (s.buildings || []).length)>=15?
@@ -1518,6 +1518,7 @@
     var deliveredOrder = false;
     var deliveredJackpot = false;
     var skippedJackpot = false;
+    var cashBeforeAction = snapshot && snapshot.cash;
     if (name.indexOf('workforce:')===0) {
       var workforceBits=name.split(':');path='/api/game/workforce';
       try { body=JSON.parse(decodeURIComponent(workforceBits.slice(2).join(':'))); }
@@ -1594,6 +1595,7 @@
       if(name.indexOf('customer:')===0)customerSwitchId=null;
       if(name.indexOf('business:salvage:')===0){salvageBuildingId=null;var closedDialog=document.getElementById('game-business-dialog');if(closedDialog)closedDialog.close();}
       apply(payload);
+      window.dispatchEvent(new CustomEvent('yomama:econ-action',{detail:{name:name,receipt:receipt,cashBefore:cashBeforeAction,cashAfter:payload.cash}}));
       if(name.indexOf('upgrade:')===0 && receipt){
         if(receipt.incomeBefore==null)receipt.incomeBefore=incomeBefore;
         if(receipt.incomeAfter==null)receipt.incomeAfter=incomeAfter;
