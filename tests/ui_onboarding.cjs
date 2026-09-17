@@ -170,6 +170,33 @@ print(json.dumps(payload))
       assert.equal(await page.locator('#game-quests-dialog[open]').count(), 1, 'Active chapter quest opens from the guide');
       assert.equal(await page.evaluate(() => window.YomamaOnboarding.step()), 6);
     }
+    state.cash = 250;
+    state.checklist.goodSales = 7;
+    Object.values(state.buildings[0].upgrades).forEach(upgrade => { upgrade.level = 1; });
+    state.tick = 100;
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('firstShiftFreshAfterSales') !== '1') return;
+      sessionStorage.removeItem('firstShiftFreshAfterSales');
+      const key = Object.keys(localStorage).find(name => name.startsWith('yomama_first_shift_v1:'));
+      localStorage.removeItem(key);
+    });
+    await page.evaluate(() => sessionStorage.setItem('firstShiftFreshAfterSales', '1'));
+    await page.goto(base + '/buildings.html');
+    await page.locator('.game-first-shift-board').waitFor();
+    assert.equal(await page.evaluate(() => window.YomamaOnboarding.step()), 0, 'Passive sales do not skip the first visit');
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('firstShiftResetAfterFinish') !== '1') return;
+      sessionStorage.removeItem('firstShiftResetAfterFinish');
+      const key = Object.keys(localStorage).find(name => name.startsWith('yomama_first_shift_v1:'));
+      const saved = JSON.parse(localStorage.getItem(key));
+      Object.assign(saved, {stage: 8, finished: true, lastTick: 100});
+      localStorage.setItem(key, JSON.stringify(saved));
+    });
+    await page.evaluate(() => sessionStorage.setItem('firstShiftResetAfterFinish', '1'));
+    state.tick = 0;
+    await page.reload();
+    await page.locator('.game-first-shift-board').waitFor();
+    assert.equal(await page.evaluate(() => window.YomamaOnboarding.step()), 0, 'A class reset restarts a finished guide');
     assert.equal(errors.length, 0, errors.join('\n'));
     console.log('Passed first shift flow across Build, Market, quest, and mobile.');
   } finally {

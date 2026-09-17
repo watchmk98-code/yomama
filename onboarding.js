@@ -37,9 +37,7 @@
     var farm = (s.buildings || []).find(function (b) { return b.id === 'farm'; });
     var upgrades = farm && farm.upgrades || {};
     return s.modelVersion >= 4 && s.buildingsOwned === 1 && !!farm &&
-      Number((s.checklist || {}).goodSales || 0) === 0 &&
       Number((s.progression || {}).prestigeEarned || 0) === 0 &&
-      Number(s.cash || 0) <= 200 &&
       ['production', 'sales', 'storage'].every(function (kind) {
         return !upgrades[kind] || Number(upgrades[kind].level) === 1;
       });
@@ -257,15 +255,15 @@
   function update(s) {
     state = s;
     setup(s);
+    if (Number(s.tick || 0) < record.lastTick) {
+      record = null;
+      try { localStorage.removeItem(key); } catch (_) {}
+      setup(s);
+    }
     if (!record.finished) {
       var now = Date.now();
       if (document.visibilityState !== 'hidden' && !s.paused) record.activeMs += Math.max(0, Math.min(30000, now - record.lastActiveAt));
       record.lastActiveAt = now;
-      if (Number(s.tick || 0) < record.lastTick) {
-        record = null;
-        try { localStorage.removeItem(key); } catch (_) {}
-        setup(s);
-      }
       record.lastTick = Number(s.tick || 0);
       advance(s);
       save();

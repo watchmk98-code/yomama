@@ -23,7 +23,8 @@ Build and Market; leaving the tab or a teacher pause stops it.
 ## Board Rules
 
 - Start automatically for a new Farm seat. Returning, developed seats keep the
-  normal business notices. Progress is stored per seat in this browser.
+  normal business notices. Passive sales before a student's first visit do not
+  skip the guide. Progress is stored per seat in this browser.
 - Prefer the starter tomato order. If it is gone, choose another Farm-only
   order. If there is none, explain that free rerolls can find one.
 - On Market, point at the actual Save or Deliver button. On compact screens,
@@ -37,8 +38,9 @@ Build and Market; leaving the tab or a teacher pause stops it.
   construction, and a newly opened second business.
 - The close button hides the guide. The question-mark button reopens it. The
   first-shift progress survives page changes and refreshes on the same device.
-- A class reset restarts the guide when the class clock returns to an earlier
-  tick. Finishing returns Build and Market to their normal notices.
+- A class reset restarts the guide, including for seats that previously
+  finished it, when the class clock returns to an earlier tick. Finishing
+  returns Build and Market to their normal notices.
 
 ## Acceptance Check
 
