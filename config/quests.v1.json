@@ -48,13 +48,307 @@
           "goodId": "{good3}",
           "percent": 5
         }
-      ]
+      ],
+      "group": "Business development",
+      "businesses": {
+        "garage": {
+          "title": "Back on the Road",
+          "summary": "Clear a run of repairs and keep the parts shelf stocked to earn the custom-mods recipe.",
+          "teaches": "A repair shop earns twice: once for the work, and once for the parts it fits while doing it.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:garage_repairs",
+              "target": 20,
+              "label": "Sell 20 Repairs"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:garage_spare_parts",
+              "target": 12,
+              "label": "Sell 12 Spare Parts"
+            }
+          ]
+        },
+        "workshop": {
+          "title": "Measure Twice",
+          "summary": "Cut brackets for the trade counter and weld frames in the back to earn the machined-bolts recipe.",
+          "teaches": "Brackets are quick and cheap, frames slow and dear. A workshop lives on the mix, not on one or the other.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:workshop_steel_brackets",
+              "target": 18,
+              "label": "Sell 18 Steel Brackets"
+            },
+            {
+              "kind": "count",
+              "counter": "produce:workshop_welded_frames",
+              "target": 10,
+              "label": "Make 10 Welded Frames"
+            }
+          ]
+        },
+        "solar_coop": {
+          "title": "Power the Block",
+          "summary": "Generate daytime power and bank some of it to earn the carbon-credits recipe.",
+          "teaches": "Daylight is free but it does not last. Storing it is what makes it worth something after dark.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "produce:solar_coop_daytime_kwh",
+              "target": 25,
+              "label": "Make 25 Daytime kWh"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:solar_coop_battery_storage",
+              "target": 10,
+              "label": "Sell 10 Battery Storage"
+            }
+          ]
+        },
+        "cannery": {
+          "title": "Save the Harvest",
+          "summary": "Put up canned goods and bottle sauce to earn the preserves recipe.",
+          "teaches": "Preserving is how food keeps its value after the harvest is over and the price has dropped.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:cannery_canned_goods",
+              "target": 15,
+              "label": "Sell 15 Canned Goods"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:cannery_sauces",
+              "target": 10,
+              "label": "Sell 10 Sauces"
+            }
+          ]
+        },
+        "machine_works": {
+          "title": "Precision Work",
+          "summary": "Machine parts for customers and tooling for yourself to earn the prototypes recipe.",
+          "teaches": "Tooling is not for customers. It is what lets you make the next thing accurately, and it pays for itself later.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:machine_works_cnc_parts",
+              "target": 12,
+              "label": "Sell 12 CNC Parts"
+            },
+            {
+              "kind": "count",
+              "counter": "produce:machine_works_tooling",
+              "target": 8,
+              "label": "Make 8 Tooling"
+            }
+          ]
+        },
+        "turbine_field": {
+          "title": "Catch the Wind",
+          "summary": "Generate wind power and sign capacity contracts to earn the green-certificates recipe.",
+          "teaches": "A capacity contract sells a promise to be available, not electricity you have already made.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "produce:turbine_field_wind_kwh",
+              "target": 20,
+              "label": "Make 20 Wind kWh"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:turbine_field_capacity_contracts",
+              "target": 8,
+              "label": "Sell 8 Capacity Contracts"
+            }
+          ]
+        },
+        "generator": {
+          "title": "Peak Hour",
+          "summary": "Run steady power and cover the evening peak to earn the steam-heat recipe.",
+          "teaches": "Steady power is cheap. Power at the exact hour everyone wants it is expensive. Same electricity.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:generator_baseload_power",
+              "target": 12,
+              "label": "Sell 12 Baseload Power"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:generator_peak_power",
+              "target": 6,
+              "label": "Sell 6 Peak Power"
+            }
+          ]
+        },
+        "relay_station": {
+          "title": "Dead Zone",
+          "summary": "Carry bandwidth and route messages to earn the tower-leases recipe.",
+          "teaches": "One tower can carry your own traffic and be rented to somebody else at the same time.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:relay_station_bandwidth",
+              "target": 10,
+              "label": "Sell 10 Bandwidth"
+            },
+            {
+              "kind": "count",
+              "counter": "produce:relay_station_sms_traffic",
+              "target": 6,
+              "label": "Make 6 SMS Traffic"
+            }
+          ]
+        },
+        "freight_terminal": {
+          "title": "Loading Puzzle",
+          "summary": "Fill container slots and run the cold chain to earn the last-mile recipe.",
+          "teaches": "Cold cargo pays more because it is harder. You are charging for the refrigeration, not the distance.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:freight_terminal_container_slots",
+              "target": 8,
+              "label": "Sell 8 Container Slots"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:freight_terminal_cold_storage",
+              "target": 5,
+              "label": "Sell 5 Cold Storage"
+            }
+          ]
+        },
+        "data_center": {
+          "title": "Launch Day",
+          "summary": "Sell compute time and provision storage to earn the API-calls recipe.",
+          "teaches": "Compute is sold by the hour and spent. Storage is rented by the month and keeps earning. Both are the same racks.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "produce:data_center_compute_hours",
+              "target": 10,
+              "label": "Make 10 Compute Hours"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:data_center_cloud_storage",
+              "target": 5,
+              "label": "Sell 5 Cloud Storage"
+            }
+          ]
+        },
+        "solar_array": {
+          "title": "Panel Plan",
+          "summary": "Supply the grid and hold capacity in reserve to earn the renewable-credits recipe.",
+          "teaches": "Reserve capacity earns whether or not anyone uses it. That is exactly why it is worth more than the power.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:solar_array_utility_kwh",
+              "target": 6,
+              "label": "Sell 6 Utility kWh"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:solar_array_reserve_capacity",
+              "target": 4,
+              "label": "Sell 4 Reserve Capacity"
+            }
+          ]
+        },
+        "uplink_center": {
+          "title": "Launch Window",
+          "summary": "Route satellite bandwidth and book ground time to earn the telemetry recipe.",
+          "teaches": "A ground station can only talk to a satellite while it is overhead. The window itself is the product.",
+          "objectives": [
+            {
+              "kind": "count",
+              "counter": "sell:uplink_center_satellite_bandwidth",
+              "target": 5,
+              "label": "Sell 5 Satellite Bandwidth"
+            },
+            {
+              "kind": "count",
+              "counter": "sell:uplink_center_ground_time",
+              "target": 3,
+              "label": "Sell 3 Ground Time"
+            }
+          ]
+        }
+      }
     }
   ],
   "quests": [
     {
+      "id": "cafe-opening",
+      "chapter": 10,
+      "title": "Café Opening",
+      "summary": "Pastries sell for 20, the best price you have seen so far.",
+      "teaches": "Processed goods are worth several times their ingredients.",
+      "appear": {
+        "afterQuests": [
+          "harbour-lunch"
+        ],
+        "ownsBusiness": "roastery"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:roastery_espresso_shots",
+          "target": 10,
+          "label": "Sell 10 Espresso Shots"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:roastery_pastries",
+          "target": 6,
+          "label": "Sell 6 Pastries"
+        }
+      ],
+      "group": "Opening up",
+      "choices": [
+        {
+          "id": "cash",
+          "label": "400 YM now",
+          "rewards": [
+            {
+              "type": "cash",
+              "amount": 400
+            }
+          ]
+        },
+        {
+          "id": "boost",
+          "label": "x3 on your next 6 order deliveries",
+          "rewards": [
+            {
+              "type": "boost",
+              "metric": "order_payout",
+              "multiplier": 3,
+              "charges": 6
+            }
+          ]
+        },
+        {
+          "id": "perk",
+          "label": "+10% Pastries speed, permanently",
+          "rewards": [
+            {
+              "type": "speed_perk",
+              "goodId": "roastery_pastries",
+              "percent": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "first-crop",
-      "chapter": 1,
+      "chapter": 10,
       "title": "First Crop",
       "summary": "Your farm is open. Sell your first ten tomatoes.",
       "teaches": "A business produces goods, and goods become cash only when someone buys them.",
@@ -76,11 +370,83 @@
           "type": "supplies",
           "budget": 60
         }
-      ]
+      ],
+      "group": "Opening up"
+    },
+    {
+      "id": "first-delivery",
+      "chapter": 10,
+      "title": "First Delivery",
+      "summary": "Fill three order cards to see how deliveries pay.",
+      "teaches": "Orders pay far better than walk-in shoppers, but you have to choose what to make.",
+      "appear": {
+        "afterQuests": [
+          "three-crops"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "deliver:order",
+          "target": 3,
+          "label": "Complete 3 orders"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 120
+        },
+        {
+          "type": "supplies",
+          "budget": 80
+        }
+      ],
+      "group": "Opening up"
+    },
+    {
+      "id": "harbour-lunch",
+      "chapter": 10,
+      "title": "Harbour Lunch",
+      "summary": "Get the fish stall trading.",
+      "teaches": "A second business does not replace the first. Both run at once.",
+      "appear": {
+        "afterQuests": [
+          "first-delivery"
+        ],
+        "ownsBusiness": "fish_stall"
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:fish_stall_fresh_catch",
+          "target": 12,
+          "label": "Sell 12 Fresh Catch"
+        },
+        {
+          "kind": "count",
+          "counter": "sell:fish_stall_oysters",
+          "target": 6,
+          "label": "Sell 6 Oysters"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 600
+        },
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 2,
+          "charges": 6
+        }
+      ],
+      "group": "Opening up"
     },
     {
       "id": "room-to-grow",
-      "chapter": 1,
+      "chapter": 10,
       "title": "Room to Grow",
       "summary": "Buy your first upgrade at the farm.",
       "teaches": "Upgrades cost cash now and pay it back over time. This is the first real trade-off in the game.",
@@ -102,11 +468,12 @@
           "type": "cash",
           "amount": 60
         }
-      ]
+      ],
+      "group": "Opening up"
     },
     {
       "id": "three-crops",
-      "chapter": 1,
+      "chapter": 10,
       "title": "Three Crops",
       "summary": "Tomatoes, eggs and honey sell for 2, 4 and 8. Sell some of each.",
       "teaches": "Slower goods are worth more per unit. The expensive product is not always the better one.",
@@ -136,25 +503,61 @@
           "multiplier": 2,
           "charges": 10
         }
-      ]
+      ],
+      "group": "Opening up"
     },
     {
-      "id": "first-delivery",
-      "chapter": 1,
-      "title": "First Delivery",
-      "summary": "Fill three order cards to earn a fully funded fish stall.",
-      "teaches": "Orders pay far better than walk-in shoppers, but you have to choose what to make.",
+      "id": "group-cafe",
+      "chapter": 15,
+      "group": "Group projects",
+      "scope": "group",
+      "title": "Open the Neighbourhood Café",
+      "summary": "Deliver espresso and pastries through ordinary orders to open regular buyers.",
+      "teaches": "Regular buyers keep earning while you are away. This is what opens them.",
       "appear": {
         "afterQuests": [
-          "three-crops"
+          "group-seafood"
         ]
       },
       "objectives": [
         {
           "kind": "count",
-          "counter": "deliver:order",
-          "target": 3,
-          "label": "Complete 3 orders"
+          "counter": "deliver:roastery_espresso_shots",
+          "target": 4,
+          "label": "Deliver 4 Espresso Shots"
+        },
+        {
+          "kind": "count",
+          "counter": "deliver:roastery_pastries",
+          "target": 2,
+          "label": "Deliver 2 Pastries"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_regulars"
+        },
+        {
+          "type": "cash",
+          "amount": 500
+        }
+      ]
+    },
+    {
+      "id": "group-farm-supply",
+      "chapter": 15,
+      "group": "Group projects",
+      "scope": "group",
+      "title": "Launch Farm Supply",
+      "summary": "Deliver six tomatoes through ordinary orders to earn a fully funded fish stall.",
+      "teaches": "Your first supplier pays for the next business in your group. Deliveries do this; shop sales do not.",
+      "appear": {},
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "deliver:farm_tomatoes",
+          "target": 6,
+          "label": "Deliver 6 Tomatoes"
         }
       ],
       "rewards": [
@@ -165,29 +568,30 @@
       ]
     },
     {
-      "id": "harbour-lunch",
-      "chapter": 1,
-      "title": "Harbour Lunch",
-      "summary": "Get the fish stall trading to earn a fully funded roastery.",
-      "teaches": "A second business does not replace the first. Both run at once.",
+      "id": "group-seafood",
+      "chapter": 15,
+      "group": "Group projects",
+      "scope": "group",
+      "title": "Establish Seafood Processing",
+      "summary": "Deliver smoked fish and oysters through ordinary orders to earn a fully funded roastery.",
+      "teaches": "Processed seafood is worth several times the fresh catch it came from.",
       "appear": {
         "afterQuests": [
-          "first-delivery"
-        ],
-        "ownsBusiness": "fish_stall"
+          "group-farm-supply"
+        ]
       },
       "objectives": [
         {
           "kind": "count",
-          "counter": "sell:fish_stall_fresh_catch",
-          "target": 12,
-          "label": "Sell 12 Fresh Catch"
+          "counter": "deliver:fish_stall_smoked_fish",
+          "target": 2,
+          "label": "Deliver 2 Smoked Fish"
         },
         {
           "kind": "count",
-          "counter": "sell:fish_stall_oysters",
-          "target": 6,
-          "label": "Sell 6 Oysters"
+          "counter": "deliver:fish_stall_oysters",
+          "target": 4,
+          "label": "Deliver 4 Oysters"
         }
       ],
       "rewards": [
@@ -198,133 +602,149 @@
       ]
     },
     {
-      "id": "cafe-opening",
-      "chapter": 1,
-      "title": "Café Opening",
-      "summary": "Pastries sell for 20, the best price you have seen so far.",
-      "teaches": "Processed goods are worth several times their ingredients.",
+      "id": "earn-your-licence",
+      "chapter": 20,
+      "group": "Your licence",
+      "title": "Licensed",
+      "summary": "Earn your trading licence: three businesses, production level 3, a sales upgrade, three deliveries and the quiz.",
+      "teaches": "A licence is not one achievement. It is proof you have done a bit of everything.",
       "appear": {
         "afterQuests": [
-          "harbour-lunch"
-        ],
-        "ownsBusiness": "roastery"
-      },
-      "objectives": [
-        {
-          "kind": "count",
-          "counter": "sell:roastery_espresso_shots",
-          "target": 10,
-          "label": "Sell 10 Espresso Shots"
-        },
-        {
-          "kind": "count",
-          "counter": "sell:roastery_pastries",
-          "target": 6,
-          "label": "Sell 6 Pastries"
-        }
-      ],
-      "rewards": [
-        {
-          "type": "cash",
-          "amount": 400
-        },
-        {
-          "type": "boost",
-          "metric": "order_payout",
-          "multiplier": 2,
-          "charges": 5
-        }
-      ]
-    },
-    {
-      "id": "four-doors-open",
-      "chapter": 2,
-      "title": "Four Doors Open",
-      "summary": "Own four businesses at once.",
-      "teaches": "Cash spent on a new business stops earning until that business is running.",
-      "appear": {
-        "afterQuests": [
-          "cafe-opening"
+          "pass-the-quiz"
         ]
       },
       "objectives": [
         {
           "kind": "state",
-          "check": "own:businesses",
-          "target": 4,
-          "label": "Own 4 businesses"
-        }
-      ],
-      "rewards": [
-        {
-          "type": "upgrade_voucher",
-          "amount": 500
-        }
-      ]
-    },
-    {
-      "id": "standing-order",
-      "chapter": 2,
-      "title": "Standing Order",
-      "summary": "Set up two regular buyers before you log off.",
-      "teaches": "Regular buyers keep earning while you are away. Set them up before a long absence.",
-      "appear": {
-        "afterQuests": [
-          "cafe-opening"
-        ]
-      },
-      "objectives": [
-        {
-          "kind": "count",
-          "counter": "act:set_regular",
-          "target": 2,
-          "label": "Set up 2 regular buyers"
-        }
-      ],
-      "rewards": [
-        {
-          "type": "supplies",
-          "budget": 150
-        }
-      ]
-    },
-    {
-      "id": "take-the-contract",
-      "chapter": 2,
-      "title": "A Bigger Order",
-      "summary": "Grow one of your regular buyers into its larger order.",
-      "teaches": "A regular who has taken three deliveries will take twice as much. Growing a buyer you already have beats finding a new one.",
-      "appear": {
-        "afterQuests": [
-          "standing-order"
-        ]
-      },
-      "objectives": [
-        {
-          "kind": "count",
-          "counter": "act:upgrade_regular",
+          "check": "licence:open",
           "target": 1,
-          "label": "Upgrade 1 regular buyer"
+          "label": "Licence earned"
+        }
+      ],
+      "choices": [
+        {
+          "id": "cash",
+          "label": "1,500 YM now",
+          "rewards": [
+            {
+              "type": "cash",
+              "amount": 1500
+            }
+          ]
         },
         {
+          "id": "boost",
+          "label": "x3 on your next 6 order deliveries",
+          "rewards": [
+            {
+              "type": "boost",
+              "metric": "order_payout",
+              "multiplier": 3,
+              "charges": 6
+            }
+          ]
+        },
+        {
+          "id": "perk",
+          "label": "+10% Smoked Fish speed, permanently",
+          "rewards": [
+            {
+              "type": "speed_perk",
+              "goodId": "fish_stall_smoked_fish",
+              "percent": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass-the-quiz",
+      "chapter": 20,
+      "group": "Your licence",
+      "title": "Know Your Business",
+      "summary": "Pass the licence quiz.",
+      "teaches": "The quiz asks about the things you have been doing. Running a business and understanding one are not the same skill.",
+      "appear": {
+        "minBuildings": 2
+      },
+      "objectives": [
+        {
           "kind": "count",
-          "counter": "deliver:order",
-          "target": 12,
-          "label": "Complete 12 orders"
+          "counter": "act:quiz_pass",
+          "target": 1,
+          "label": "Pass the quiz"
         }
       ],
       "rewards": [
         {
-          "type": "boost",
-          "metric": "order_payout",
-          "multiplier": 2,
-          "charges": 8
+          "type": "cash",
+          "amount": 600
+        },
+        {
+          "type": "supplies",
+          "budget": 200
+        }
+      ]
+    },
+    {
+      "id": "clear-the-shelves",
+      "chapter": 30,
+      "title": "Clear the Shelves",
+      "summary": "Goods with nowhere to go are sold off cheaply. Let forty go.",
+      "teaches": "Storage that overflows sells at a discount. Producing more is not always earning more.",
+      "appear": {
+        "afterQuests": [
+          "four-doors-open"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:source:clearance",
+          "target": 40,
+          "label": "Clear 40 units"
+        }
+      ],
+      "group": "Supply chain",
+      "choices": [
+        {
+          "id": "cash",
+          "label": "3,000 YM now",
+          "rewards": [
+            {
+              "type": "cash",
+              "amount": 3000
+            }
+          ]
+        },
+        {
+          "id": "boost",
+          "label": "x3 on your next 8 order deliveries",
+          "rewards": [
+            {
+              "type": "boost",
+              "metric": "order_payout",
+              "multiplier": 3,
+              "charges": 8
+            }
+          ]
+        },
+        {
+          "id": "perk",
+          "label": "+10% Spare Parts speed, permanently",
+          "rewards": [
+            {
+              "type": "speed_perk",
+              "goodId": "garage_spare_parts",
+              "percent": 10
+            }
+          ]
         }
       ]
     },
     {
       "id": "farm-kitchen",
-      "chapter": 2,
+      "chapter": 30,
       "title": "Farm Kitchen",
       "summary": "Sell thirty goods from your farm to earn its first crafted product.",
       "teaches": "Crafting turns several ordinary goods into one that sells for much more.",
@@ -350,11 +770,39 @@
           "type": "cash",
           "amount": 300
         }
-      ]
+      ],
+      "group": "Supply chain"
+    },
+    {
+      "id": "four-doors-open",
+      "chapter": 30,
+      "title": "Four Doors Open",
+      "summary": "Own four businesses at once.",
+      "teaches": "Cash spent on a new business stops earning until that business is running.",
+      "appear": {
+        "afterQuests": [
+          "cafe-opening"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "own:businesses",
+          "target": 4,
+          "label": "Own 4 businesses"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 500
+        }
+      ],
+      "group": "Supply chain"
     },
     {
       "id": "own-supply-chain",
-      "chapter": 2,
+      "chapter": 30,
       "title": "Your Own Supplier",
       "summary": "The garage needs parts the workshop can make. Sell both lines.",
       "teaches": "One of your businesses can supply another instead of buying from outside.",
@@ -384,62 +832,473 @@
           "type": "upgrade_voucher",
           "amount": 1500
         }
-      ]
+      ],
+      "group": "Supply chain"
     },
     {
-      "id": "clear-the-shelves",
-      "chapter": 2,
-      "title": "Clear the Shelves",
-      "summary": "Goods with nowhere to go are sold off cheaply. Let forty go.",
-      "teaches": "Storage that overflows sells at a discount. Producing more is not always earning more.",
+      "id": "standing-order",
+      "chapter": 30,
+      "title": "Standing Order",
+      "summary": "Set up two regular buyers before you log off.",
+      "teaches": "Regular buyers keep earning while you are away. Set them up before a long absence.",
       "appear": {
         "afterQuests": [
-          "four-doors-open"
+          "cafe-opening"
         ]
       },
       "objectives": [
         {
           "kind": "count",
-          "counter": "sell:source:clearance",
-          "target": 40,
-          "label": "Clear 40 units"
+          "counter": "act:set_regular",
+          "target": 2,
+          "label": "Set up 2 regular buyers"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "supplies",
+          "budget": 150
+        }
+      ],
+      "group": "Supply chain"
+    },
+    {
+      "id": "take-the-contract",
+      "chapter": 30,
+      "title": "A Bigger Order",
+      "summary": "Grow one of your regular buyers into its larger order.",
+      "teaches": "A regular who has taken three deliveries will take twice as much. Growing a buyer you already have beats finding a new one.",
+      "appear": {
+        "afterQuests": [
+          "standing-order"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:upgrade_regular",
+          "target": 1,
+          "label": "Upgrade 1 regular buyer"
+        },
+        {
+          "kind": "count",
+          "counter": "deliver:order",
+          "target": 12,
+          "label": "Complete 12 orders"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 2,
+          "charges": 8
+        }
+      ],
+      "group": "Supply chain"
+    },
+    {
+      "id": "craft-and-sell",
+      "chapter": 40,
+      "group": "The workshop",
+      "title": "First Batch Out the Door",
+      "summary": "Sell ten crafted items.",
+      "teaches": "A crafted item earns its price only when it sells. Making them is half the job.",
+      "appear": {
+        "afterQuests": [
+          "first-craft-unlock"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:craft_sale",
+          "target": 10,
+          "label": "Sell 10 crafted items"
         }
       ],
       "rewards": [
         {
           "type": "cash",
-          "amount": 2000
+          "amount": 3000
         }
       ]
     },
     {
-      "id": "production-line",
-      "chapter": 3,
-      "title": "Production Line",
-      "summary": "Get three businesses to production level 5.",
-      "teaches": "Depth beats width. Three strong businesses out-earn six weak ones.",
+      "id": "first-craft-unlock",
+      "chapter": 40,
+      "group": "The workshop",
+      "title": "Open the Workshop",
+      "summary": "Unlock your first crafted product.",
+      "teaches": "Crafting turns several ordinary goods into one that sells for far more than their total.",
+      "appear": {
+        "minBuildings": 3
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:craft_unlock",
+          "target": 1,
+          "label": "Unlock 1 crafted product"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "supplies",
+          "budget": 400
+        },
+        {
+          "type": "cash",
+          "amount": 1500
+        }
+      ]
+    },
+    {
+      "id": "kit-out-a-business",
+      "chapter": 40,
+      "group": "The workshop",
+      "title": "Tools of the Trade",
+      "summary": "Buy a business asset, then assign it to the business that uses it.",
+      "teaches": "An asset sitting in storage does nothing at all. It only works once it is assigned to a business.",
+      "appear": {
+        "afterQuests": [
+          "first-craft-unlock"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:buy_asset",
+          "target": 1,
+          "label": "Buy 1 asset"
+        },
+        {
+          "kind": "count",
+          "counter": "act:assign_asset",
+          "target": 1,
+          "label": "Assign it to a business"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 4000
+        }
+      ]
+    },
+    {
+      "id": "three-lines-running",
+      "chapter": 40,
+      "group": "The workshop",
+      "title": "Three Lines Running",
+      "summary": "Have three crafted products unlocked at once.",
+      "teaches": "Crafted products compete for the same ingredients. Three lines need three times the supply.",
+      "appear": {
+        "afterQuests": [
+          "craft-and-sell"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:craft_unlock",
+          "target": 3,
+          "label": "Unlock 3 crafted products"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 8000
+        },
+        {
+          "type": "supplies",
+          "budget": 600
+        }
+      ]
+    },
+    {
+      "id": "workshop-profits",
+      "chapter": 40,
+      "group": "The workshop",
+      "title": "The Workshop Pays",
+      "summary": "Sell fifty crafted items.",
+      "teaches": "Nothing new. This is the workshop at full speed.",
+      "appear": {
+        "afterQuests": [
+          "three-lines-running"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:craft_sale",
+          "target": 50,
+          "label": "Sell 50 crafted items"
+        }
+      ],
+      "choices": [
+        {
+          "id": "cash",
+          "label": "10,000 YM now",
+          "rewards": [
+            {
+              "type": "cash",
+              "amount": 10000
+            }
+          ]
+        },
+        {
+          "id": "boost",
+          "label": "x3 on your next 8 order deliveries",
+          "rewards": [
+            {
+              "type": "boost",
+              "metric": "order_payout",
+              "multiplier": 3,
+              "charges": 8
+            }
+          ]
+        },
+        {
+          "id": "perk",
+          "label": "+10% Machined Bolts speed, permanently",
+          "rewards": [
+            {
+              "type": "speed_perk",
+              "goodId": "workshop_machined_bolts",
+              "percent": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "best-in-class",
+      "chapter": 50,
+      "group": "Running the numbers",
+      "title": "Best in Class",
+      "summary": "Run one business at an 18% profit margin.",
+      "teaches": "Every industry has a margin it can reach: a farm about 6%, a data centre about 22%. Find out which of yours can do best, and see how close you can get it.",
+      "appear": {
+        "afterQuests": [
+          "where-money-goes"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "margin:business",
+          "target": 18,
+          "label": "One business at 18% margin"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 20000
+        }
+      ]
+    },
+    {
+      "id": "in-the-black",
+      "chapter": 50,
+      "group": "Running the numbers",
+      "title": "In the Black",
+      "summary": "Get your whole group to a 16% profit margin.",
+      "teaches": "Margin is profit as a share of sales. Upgrading a low-margin business makes more money at a worse margin, so this one is won by choosing better industries, not bigger ones.",
+      "appear": {
+        "afterQuests": [
+          "where-money-goes"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "margin:town",
+          "target": 16,
+          "label": "Group margin at 16%"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "upgrade_voucher",
+          "amount": 25000
+        }
+      ]
+    },
+    {
+      "id": "thousand-a-minute",
+      "chapter": 50,
+      "group": "Running the numbers",
+      "title": "A Thousand a Minute",
+      "summary": "Reach 1,000 YM per minute of income.",
+      "teaches": "Income per minute is the number that compounds. Everything else is a means to it.",
+      "appear": {
+        "afterQuests": [
+          "in-the-black"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "income:perMinute",
+          "target": 1000,
+          "label": "Income at 1,000 YM/min"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 3,
+          "charges": 12
+        }
+      ]
+    },
+    {
+      "id": "where-money-goes",
+      "chapter": 50,
+      "group": "Running the numbers",
+      "title": "Where the Money Goes",
+      "summary": "Keep a fifth of your gross sales as take-home.",
+      "teaches": "Selling costs eat most of what your shops take. A farm keeps about 14% of its gross; a solar co-op keeps about 26%. What you sell matters more than how much.",
       "appear": {
         "minBuildings": 4
       },
       "objectives": [
         {
           "kind": "state",
-          "check": "businesses_at_level",
-          "level": 5,
-          "target": 3,
-          "label": "3 businesses at level 5"
+          "check": "takehome:percent",
+          "target": 20,
+          "label": "Take-home at 20% of gross"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 15000
+        }
+      ]
+    },
+    {
+      "id": "worth-a-million",
+      "chapter": 50,
+      "group": "Running the numbers",
+      "title": "Worth a Million",
+      "summary": "Reach a net worth of one million YM.",
+      "teaches": "Net worth counts what you own, not what is in your pocket. Buildings are wealth too.",
+      "appear": {
+        "afterQuests": [
+          "thousand-a-minute"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "netWorth",
+          "target": 1000000,
+          "label": "Net worth of 1,000,000 YM"
+        }
+      ],
+      "choices": [
+        {
+          "id": "cash",
+          "label": "40,000 YM now",
+          "rewards": [
+            {
+              "type": "cash",
+              "amount": 40000
+            }
+          ]
+        },
+        {
+          "id": "boost",
+          "label": "x3 on your next 10 order deliveries",
+          "rewards": [
+            {
+              "type": "boost",
+              "metric": "order_payout",
+              "multiplier": 3,
+              "charges": 10
+            }
+          ]
+        },
+        {
+          "id": "perk",
+          "label": "+10% Prototypes speed, permanently",
+          "rewards": [
+            {
+              "type": "speed_perk",
+              "goodId": "machine_works_prototypes",
+              "percent": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cut-your-losses",
+      "chapter": 60,
+      "group": "Hard choices",
+      "title": "Cut Your Losses",
+      "summary": "Salvage a business you no longer want and take the money.",
+      "teaches": "Closing something you built is a real decision, not a failure. The money goes somewhere better.",
+      "appear": {
+        "afterQuests": [
+          "take-a-breath"
+        ],
+        "minBuildings": 5
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:salvage_business",
+          "target": 1,
+          "label": "Salvage 1 business"
         }
       ],
       "rewards": [
         {
           "type": "upgrade_voucher",
+          "amount": 15000
+        }
+      ]
+    },
+    {
+      "id": "take-a-breath",
+      "chapter": 60,
+      "group": "Hard choices",
+      "title": "Take a Breath",
+      "summary": "Pause a business, then start it again.",
+      "teaches": "A paused business stops producing and stops spending. Sometimes the cheapest thing to do is nothing.",
+      "appear": {
+        "minBuildings": 4
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "act:pause_business",
+          "target": 1,
+          "label": "Pause a business"
+        },
+        {
+          "kind": "count",
+          "counter": "act:resume_business",
+          "target": 1,
+          "label": "Resume it"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
           "amount": 5000
         }
       ]
     },
     {
       "id": "focus-induction",
-      "chapter": 3,
+      "chapter": 70,
       "title": "Find Your Focus",
       "summary": "Train three focus advancements across your businesses.",
       "teaches": "Focus is a permanent improvement to how a business works, not a one-off payment.",
@@ -461,67 +1320,38 @@
           "type": "upgrade_voucher",
           "amount": 8000
         }
-      ]
-    },
-    {
-      "id": "two-hundred-sold",
-      "chapter": 3,
-      "title": "Two Hundred Sold",
-      "summary": "Sell two hundred units across the whole conglomerate.",
-      "teaches": "Volume at a small margin can beat a few expensive sales.",
-      "appear": {
-        "afterQuests": [
-          "production-line"
-        ]
-      },
-      "objectives": [
-        {
-          "kind": "count",
-          "counter": "sell:any",
-          "target": 200,
-          "label": "Sell 200 units"
-        }
       ],
-      "rewards": [
-        {
-          "type": "boost",
-          "metric": "order_payout",
-          "multiplier": 3,
-          "charges": 15
-        }
-      ]
+      "group": "Scale"
     },
     {
-      "id": "six-businesses",
-      "chapter": 3,
-      "title": "Head Office",
-      "summary": "Own six businesses and open the Operations desk.",
-      "teaches": "Past a certain size you manage the group, not each shop.",
+      "id": "production-line",
+      "chapter": 70,
+      "title": "Production Line",
+      "summary": "Get three businesses to production level 5.",
+      "teaches": "Depth beats width. Three strong businesses out-earn six weak ones.",
       "appear": {
-        "minBuildings": 5
+        "minBuildings": 4
       },
       "objectives": [
         {
           "kind": "state",
-          "check": "own:businesses",
-          "target": 6,
-          "label": "Own 6 businesses"
+          "check": "businesses_at_level",
+          "level": 5,
+          "target": 3,
+          "label": "3 businesses at level 5"
         }
       ],
       "rewards": [
         {
-          "type": "unlock_feature",
-          "feature": "operations"
-        },
-        {
-          "type": "cash",
-          "amount": 25000
+          "type": "upgrade_voucher",
+          "amount": 5000
         }
-      ]
+      ],
+      "group": "Scale"
     },
     {
       "id": "quality-run",
-      "chapter": 3,
+      "chapter": 70,
       "title": "Quality Run",
       "summary": "Sell the advanced products of two different businesses.",
       "teaches": "Advanced recipes are where the margin is, once you have unlocked them.",
@@ -547,11 +1377,70 @@
           "type": "upgrade_voucher",
           "amount": 20000
         }
-      ]
+      ],
+      "group": "Scale"
+    },
+    {
+      "id": "six-businesses",
+      "chapter": 70,
+      "title": "Head Office",
+      "summary": "Own six businesses and open the Operations desk.",
+      "teaches": "Past a certain size you manage the group, not each shop.",
+      "appear": {
+        "minBuildings": 5
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "own:businesses",
+          "target": 6,
+          "label": "Own 6 businesses"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_feature",
+          "feature": "operations"
+        },
+        {
+          "type": "cash",
+          "amount": 25000
+        }
+      ],
+      "group": "Scale"
+    },
+    {
+      "id": "two-hundred-sold",
+      "chapter": 70,
+      "title": "Two Hundred Sold",
+      "summary": "Sell two hundred units across the whole conglomerate.",
+      "teaches": "Volume at a small margin can beat a few expensive sales.",
+      "appear": {
+        "afterQuests": [
+          "production-line"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:any",
+          "target": 200,
+          "label": "Sell 200 units"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 3,
+          "charges": 15
+        }
+      ],
+      "group": "Scale"
     },
     {
       "id": "eight-businesses",
-      "chapter": 4,
+      "chapter": 80,
       "title": "Eight Under One Roof",
       "summary": "Own eight businesses at once.",
       "teaches": "A conglomerate earns from businesses that have nothing to do with each other.",
@@ -571,11 +1460,66 @@
           "type": "upgrade_voucher",
           "amount": 100000
         }
+      ],
+      "group": "Conglomerate"
+    },
+    {
+      "id": "full-portfolio",
+      "chapter": 80,
+      "title": "Full Portfolio",
+      "summary": "Own twelve businesses at once.",
+      "teaches": "Nothing new. This one is for the scoreboard.",
+      "appear": {
+        "minBuildings": 10
+      },
+      "objectives": [
+        {
+          "kind": "state",
+          "check": "own:businesses",
+          "target": 12,
+          "label": "Own 12 businesses"
+        }
+      ],
+      "group": "Conglomerate",
+      "choices": [
+        {
+          "id": "cash",
+          "label": "500,000 YM now",
+          "rewards": [
+            {
+              "type": "cash",
+              "amount": 500000
+            }
+          ]
+        },
+        {
+          "id": "boost",
+          "label": "x3 on your next 15 order deliveries",
+          "rewards": [
+            {
+              "type": "boost",
+              "metric": "order_payout",
+              "multiplier": 3,
+              "charges": 15
+            }
+          ]
+        },
+        {
+          "id": "perk",
+          "label": "+10% Telemetry speed, permanently",
+          "rewards": [
+            {
+              "type": "speed_perk",
+              "goodId": "uplink_center_telemetry",
+              "percent": 10
+            }
+          ]
+        }
       ]
     },
     {
       "id": "keep-the-lights-on",
-      "chapter": 4,
+      "chapter": 80,
       "title": "Keep the Lights On",
       "summary": "Supply the grid from your own power stations.",
       "teaches": "Utilities sell steadily and in volume rather than in bursts.",
@@ -603,63 +1547,12 @@
           "multiplier": 3,
           "charges": 10
         }
-      ]
-    },
-    {
-      "id": "network-effect",
-      "chapter": 4,
-      "title": "Network Effect",
-      "summary": "Complete fifty orders in total, then open the Port.",
-      "teaches": "A business with steady cash flow can start investing its profits elsewhere.",
-      "appear": {
-        "afterQuests": [
-          "eight-businesses"
-        ]
-      },
-      "objectives": [
-        {
-          "kind": "count",
-          "counter": "deliver:order",
-          "target": 50,
-          "label": "Complete 50 orders"
-        }
       ],
-      "rewards": [
-        {
-          "type": "unlock_feature",
-          "feature": "port_trading"
-        }
-      ]
-    },
-    {
-      "id": "full-portfolio",
-      "chapter": 4,
-      "title": "Full Portfolio",
-      "summary": "Own twelve businesses at once.",
-      "teaches": "Nothing new. This one is for the scoreboard.",
-      "appear": {
-        "minBuildings": 10
-      },
-      "objectives": [
-        {
-          "kind": "state",
-          "check": "own:businesses",
-          "target": 12,
-          "label": "Own 12 businesses"
-        }
-      ],
-      "rewards": [
-        {
-          "type": "boost",
-          "metric": "order_payout",
-          "multiplier": 5,
-          "charges": 25
-        }
-      ]
+      "group": "Conglomerate"
     },
     {
       "id": "mission-control",
-      "chapter": 4,
+      "chapter": 80,
       "title": "Mission Control",
       "summary": "Sell telemetry from the uplink centre, the last product in the game.",
       "teaches": "You started with two-YM tomatoes and finished at seven hundred and sixty.",
@@ -683,7 +1576,130 @@
           "type": "cash",
           "amount": 5000000
         }
-      ]
+      ],
+      "group": "Conglomerate"
+    },
+    {
+      "id": "network-effect",
+      "chapter": 80,
+      "title": "Network Effect",
+      "summary": "Complete fifty orders in total, then open the Port.",
+      "teaches": "A business with steady cash flow can start investing its profits elsewhere.",
+      "appear": {
+        "afterQuests": [
+          "eight-businesses"
+        ]
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "deliver:order",
+          "target": 50,
+          "label": "Complete 50 orders"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "unlock_feature",
+          "feature": "port_trading"
+        }
+      ],
+      "group": "Conglomerate"
+    },
+    {
+      "id": "daily-orders",
+      "chapter": 99,
+      "group": "Every day",
+      "title": "Today: Deliver",
+      "summary": "Fill order cards today. Tomorrow asks for a quarter more.",
+      "teaches": "",
+      "appear": {
+        "minBuildings": 2
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "deliver:order",
+          "target": 3,
+          "label": "Complete 3 orders today",
+          "scoped": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "boost",
+          "metric": "order_payout",
+          "multiplier": 2,
+          "charges": 5
+        }
+      ],
+      "repeat": {
+        "every": "day",
+        "scale": 1.25,
+        "maxOutstanding": 1
+      }
+    },
+    {
+      "id": "daily-production",
+      "chapter": 99,
+      "group": "Every day",
+      "title": "Today: Produce",
+      "summary": "Make goods today. Tomorrow asks for a quarter more.",
+      "teaches": "",
+      "appear": {
+        "minBuildings": 3
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "produce:any",
+          "target": 150,
+          "label": "Produce 150 units today",
+          "scoped": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "supplies",
+          "budget": 350
+        }
+      ],
+      "repeat": {
+        "every": "day",
+        "scale": 1.25,
+        "maxOutstanding": 1
+      }
+    },
+    {
+      "id": "daily-sales",
+      "chapter": 99,
+      "group": "Every day",
+      "title": "Today: Sell",
+      "summary": "Sell goods today. Tomorrow asks for a quarter more.",
+      "teaches": "",
+      "appear": {
+        "minBuildings": 2
+      },
+      "objectives": [
+        {
+          "kind": "count",
+          "counter": "sell:any",
+          "target": 100,
+          "label": "Sell 100 units today",
+          "scoped": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "cash",
+          "amount": 1200
+        }
+      ],
+      "repeat": {
+        "every": "day",
+        "scale": 1.25,
+        "maxOutstanding": 1
+      }
     }
   ]
 }

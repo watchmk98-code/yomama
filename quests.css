@@ -1,42 +1,34 @@
-/* Quest panel at the bottom of Build. Inherits the game's panel styling. */
-#econ-quests { margin-top: 28px; position: relative; z-index: 2; clear: both;
-               border-top: 1px solid var(--line); padding-top: 18px; }
+/* Quests reuse the game's own strip, card and dialog styles. Only what those
+   do not already provide lives here. */
+/* The strips live inside econ.js's own .game-build-bottom, which already
+   grids and styles them, so there is no layout of ours to declare here.
+   Only the other layout's side panel needs hiding: one quest system per class. */
+.quests-engine .game-business-quests { display: none !important; }
 
-/* While the quest engine runs it is the only quest system on the page. */
-.quests-engine .game-business-quests,
-.quests-engine .game-building-activity[data-activity-kind="quests"] { display: none !important; }
-#econ-quests[hidden] { display: none !important; }
+.quest-tag { font-size: 14px; color: var(--amber); border: 1px solid var(--border);
+             border-radius: 3px; padding: 0 6px; vertical-align: middle; }
 
-.quest-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.quest-head h2 { margin: 0; font-size: 1.5rem; letter-spacing: .08em; }
-.quest-count { color: var(--muted); font-size: .95rem; }
+/* Popup */
+#game-quests-dialog { max-width: 720px; width: min(94vw, 720px); }
+#game-quests-dialog .game-eyebrow { display: block; font-size: 15px; color: var(--muted); }
+#game-quests-dialog .game-text-button { margin-bottom: 10px; }
+.quest-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.quest-chip { border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px;
+              font-size: 15px; color: var(--amber); }
 
-.quest-strip { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
-.quest-chip { border: 1px solid var(--border); border-radius: 4px; padding: 3px 9px; font-size: .85rem; color: var(--amber); }
+.game-quest-summary { margin: 0 0 8px; font-size: 18px; line-height: 1.25; }
+.game-quest-step { margin: 14px 0 8px; font-size: 18px; font-weight: 400; color: var(--amber); }
+.game-quest-complete { margin-top: 12px; }
+.game-quest-complete p { margin: 4px 0 0; color: var(--green); }
 
-.quest-chapter { margin-top: 18px; }
-.quest-chapter h3 { margin: 0 0 8px; font-size: 1.05rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-.quest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-
-.quest-card { display: flex; flex-direction: column; gap: 6px; padding: 12px; }
-.quest-card h4 { margin: 0; font-size: 1.1rem; }
-.quest-summary { margin: 0; font-size: .95rem; }
-.quest-teaches { margin: 0; font-size: .85rem; color: var(--muted); font-style: italic; }
-.quest-reward { margin: 4px 0 0; font-size: .9rem; color: var(--amber); }
-.quest-card[data-status="done"] { opacity: .62; }
-.quest-done { color: var(--green); font-size: .9rem; }
-
-.quest-objectives { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
-.quest-objective { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 8px; font-size: .88rem; }
-.quest-objective-label { grid-column: 1; }
-.quest-objective strong { grid-column: 2; grid-row: 1; white-space: nowrap; }
-.quest-objective-bar { grid-column: 1 / -1; height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; }
-.quest-objective-bar i { display: block; height: 100%; background: var(--amber); }
-.quest-objective.is-ready .quest-objective-bar i { background: var(--green); }
+.quest-objectives { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.quest-objective { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 17px; }
+.quest-objective strong { white-space: nowrap; }
+.quest-bar { grid-column: 1 / -1; display: block; height: 6px; background: var(--line);
+             border-radius: 3px; overflow: hidden; }
+.quest-bar b { display: block; height: 100%; background: var(--amber); }
+.quest-objective.is-ready .quest-bar b { background: var(--green); }
 .quest-objective.is-ready strong { color: var(--green); }
 
-.quest-claim { margin-top: 6px; align-self: flex-start; }
-.quest-claim[disabled] { opacity: .5; cursor: not-allowed; }
-.quest-status { margin-top: 12px; color: var(--green); }
-
-@media (max-width: 520px) { .quest-grid { grid-template-columns: 1fr; } }
+.quest-choices { display: flex; flex-direction: column; gap: 8px; }
+.quest-choices .game-small-button { white-space: normal; min-height: 40px; }

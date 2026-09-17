@@ -70,6 +70,18 @@
 .game-inventory-rows {max-height:340px;overflow:auto;}
 .game-inventory-table .game-stock-progress {padding:10px 16px 0;}
 .game-market-orders {margin-bottom:16px;}
+.game-market-order-tools {display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none;padding:8px 10px;border-bottom:1px solid var(--line);}
+.game-market-order-tools .game-small-button {font-size:14px;min-height:32px;margin:0;}
+.game-market-order-tools .game-deliver-ready {color:var(--amber);border-color:var(--amber);}
+.game-market-order-tools small {flex-basis:100%;font-size:12px;color:var(--muted);}
+@media(max-width:600px) {
+ .game-market-order-tools {gap:5px;padding:5px;}
+ .game-market-order-tools .game-small-button {font-size:12px;padding:4px;}
+}
+@media(max-height:550px) {
+ .game-fitted #econ-market .game-market-orders {overflow-y:auto;overscroll-behavior:contain;}
+ .game-fitted #econ-market .game-order-grid {flex:0 0 240px;min-height:240px;}
+}
 .game-customer-prices {display:flex;flex-wrap:wrap;justify-content:space-around;gap:8px;padding:4px 12px 8px;}
 .game-customer-prices > span {display:flex;align-items:center;gap:4px;font-size:15px;}
 .econ-kid .game-customer-prices .econ-good-icon {width:26px;height:26px;flex-basis:26px;}

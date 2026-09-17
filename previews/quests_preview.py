@@ -36,8 +36,11 @@ from preview_support import preview_handler, serve, solo_seat
 BUSINESSES = ('farm', 'fish_stall', 'roastery', 'garage', 'workshop', 'solar_coop')
 
 
-def _claim(cfg, state, quest_id):
-    result = quests.act(cfg, state, dict(action='quest_claim', questId=quest_id))
+def _claim(cfg, state, quest_id, choice=None):
+    body = dict(action='quest_claim', questId=quest_id)
+    if choice:
+        body['choiceId'] = choice
+    result = quests.act(cfg, state, body)
     if not result['ok']:
         raise RuntimeError('%s: %s' % (quest_id, result['why']))
     return result
@@ -78,10 +81,18 @@ def preview_town(cfg, fresh=False):
     quests.record_action(cfg, state, 'open_business', 5)
     quests.record_action(cfg, state, 'set_regular', 2)
 
+    quests.record_action(cfg, state, 'quiz_pass')
+    quests.record_action(cfg, state, 'craft_unlock')
+    quests.record_action(cfg, state, 'craft_sale', 14)
     for quest_id in ('first-crop', 'room-to-grow', 'three-crops', 'first-delivery',
-                     'harbour-lunch', 'cafe-opening', 'standing-order'):
+                     'harbour-lunch', 'pass-the-quiz'):
         _claim(cfg, state, quest_id)
-    # 'four-doors-open' is left ready so the Claim button is live in the preview.
+    _claim(cfg, state, 'cafe-opening', choice='perk')   # a choice already taken
+    _claim(cfg, state, 'standing-order')
+    _claim(cfg, state, 'four-doors-open')
+    # Clearance sales leave 'Clear the Shelves' ready, so its three reward
+    # buttons are on screen: a choice the player has not made yet.
+    quests.record_sale(cfg, state, [dict(goodId='farm_tomatoes', quantity=40)], 'clearance')
     return _settle(cfg, state)
 
 

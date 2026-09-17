@@ -941,6 +941,8 @@
       var u=(b.upgrades || {})[kind];
       if(!u) return '';
       var done=u.cost===null;
+      var cashCost=u.cashCost==null?u.cost:u.cashCost;
+      var voucher=!done && u.voucherPaid?'<small class="game-upgrade-reason k-good">Voucher pays '+ym(u.voucherPaid)+'</small>':'';
       var reasonId='game-upgrade-reason-'+b.slot+'-'+kind;
       var capacity=upgradeCapacity(u);
       var incomeDelta=u.businessIncomeBefore!=null && u.businessIncomeAfter!=null?Math.round((u.businessIncomeAfter-u.businessIncomeBefore)*100)/100:u.incomeDelta;
@@ -953,7 +955,7 @@
       var income=!done && incomeValue?'<small class="game-upgrade-impact'+(incomeDelta>0?' k-good':incomeDelta<0?' k-bad':' game-no-gain')+'" aria-label="Estimated income change: '+incomeValue+'" title="'+incomeTitle+'">Sales <span class="game-upgrade-value">'+incomeValue+'</span></small>':'';
       var extra=kind==='production' && incomeDelta<=0 && !done?'<small class="game-upgrade-explanation">'+esc(u.consequence || 'More goods, no extra sales yet. Attract customers or save for orders.')+'</small>':'';
       var costs=!done && costValue?'<small class="game-upgrade-running-cost" aria-label="Estimated cost change: '+costValue+'" title="'+(statementReady?'Estimated production and selling cost change. Goods cost money to make; selling fees come out of customer payments.':'Estimated running cost change for this business after the next upgrade. Costs are charged as goods are produced.')+'">Costs <span class="game-upgrade-cost">'+costValue+'</span></small>':'';
-      return '<div class="game-operation"><div><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong>'+(done?'<span class="game-upgrade-capacity">Complete</span>':income+costs+extra)+'</div><div class="game-upgrade-buy"><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(u.cost)))+'"'+(!u.canBuy&&!done?' aria-describedby="'+reasonId+'"':'')+' title="'+esc(u.why || (capacity?capacity+(u.unlocksSpecialty?' · Specialty':''):u.consequence || u.effect))+'">'+(done?'MAX':ym(u.cost)+' ↑')+'</button>'+(!u.canBuy&&!done?'<small id="'+reasonId+'" class="game-upgrade-reason">'+esc(u.why || 'Keep earning to upgrade')+'</small>':'')+'</div></div>';
+      return '<div class="game-operation"><div><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong>'+(done?'<span class="game-upgrade-capacity">Complete</span>':income+costs+extra)+'</div><div class="game-upgrade-buy"><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(cashCost)))+'"'+(!u.canBuy&&!done?' aria-describedby="'+reasonId+'"':'')+' title="'+esc(u.why || (capacity?capacity+(u.unlocksSpecialty?' · Specialty':''):u.consequence || u.effect))+'">'+(done?'MAX':ym(cashCost)+' ↑')+'</button>'+voucher+(!u.canBuy&&!done?'<small id="'+reasonId+'" class="game-upgrade-reason">'+esc(u.why || 'Keep earning to upgrade')+'</small>':'')+'</div></div>';
     }).join('')+'</div>';
   }
 
@@ -1032,6 +1034,12 @@
     var clock=o.committed && orderClocks[o.id];
     var label=o.canFulfill?'Ready now':clock?orderClockLabel(clock):o.etaLabel || (o.etaSeconds!=null?'About '+duration(o.etaSeconds):o.etaIfSavedSeconds!=null?'If saved: about '+duration(o.etaIfSavedSeconds):'Waiting for supplies');
     return '<p class="game-order-eta" data-order-eta><span'+(clock?' data-order-countdown="'+esc(o.id)+'"':'')+'>'+esc(label)+'</span>'+(o.etaReason?'<small>'+esc(o.etaReason)+'</small>':'')+'</p>';
+  }
+
+  function marketOrderTools(s) {
+    if(s.orderPreview)return '';
+    var offers=orderOffers(s), ready=offers.filter(function(o){return o.canFulfill && !o.project && !o.goalOrder && !o.inTransit;}).length;
+    return '<div class="game-market-order-tools"><button class="game-small-button game-deliver-ready" data-econ-action="market:deliver"'+(!ready || s.paused?' disabled':'')+'>Deliver ready'+(ready?' ('+ready+')':'')+'</button><small>Keep clicking CLICK!!!! for new offers. Bulk rolls can clear more spare stock.</small></div>';
   }
 
   function ordersMarkup(s) {
@@ -1191,7 +1199,7 @@
 
   function renderProductionInventory(el,s,b,market) {
     if(market){
-      el.innerHTML=notice(s)+'<div class="game-market-surface'+(s.customerContracts?' has-contracts':'')+'"><div class="game-market-income'+(s.customerContracts?' has-contracts':'')+'"><section class="game-market-orders" aria-label="Delivery orders">'+panelHead(connectedProgression(s)?'Orders':'Projects & deliveries',connectedProgression(s)?'Deliver goods · earn cash':'Build your town · earn cash')+ordersMarkup(s)+'</section>'+customerContractsMarkup(s)+'</div></div>'+statusLine();
+      el.innerHTML=notice(s)+'<div class="game-market-surface'+(s.customerContracts?' has-contracts':'')+'"><div class="game-market-income'+(s.customerContracts?' has-contracts':'')+'"><section class="game-market-orders" data-keep-scroll="market-panel" aria-label="Delivery orders">'+panelHead(connectedProgression(s)?'Orders':'Projects & deliveries',connectedProgression(s)?'Deliver goods · earn cash':'Build your town · earn cash')+marketOrderTools(s)+ordersMarkup(s)+'</section>'+customerContractsMarkup(s)+'</div></div>'+statusLine();
       return;
     }
   }
@@ -1552,6 +1560,9 @@
       var processing=name.split(':');path='/processing';body={slot:Number(processing[1]),enabled:processing[2]==='true'};
     } else if (name.indexOf('focus:')===0) {
       var focus=name.split(':');path='/focus';body={slot:Number(focus[1]),focus:focus[2]};
+    } else if (name==='market:deliver') {
+      path='/orders/fulfill';
+      body={orders:orderOffers(snapshot).map(function(o,i){return {offerIndex:i,orderId:o.id,offer:o};}).filter(function(row){return !row.offer.project && !row.offer.goalOrder && !row.offer.inTransit && row.offer.canFulfill;}).map(function(row){return {offerIndex:row.offerIndex,orderId:row.orderId};})};
     } else if (/^(fulfill|replace|commit):/.test(name)) {
       var order=name.split(':');path='/orders/'+order[0];body={offerIndex:Number(order[1]),orderId:order.slice(2).join(':')};
       var oldOrder=snapshot && orderAt(snapshot,body.offerIndex);
@@ -1612,6 +1623,7 @@
         else if (name.indexOf('focus:')===0) setStatus('Specialty changed · check your new output','success');
         else if (name.indexOf('reserve:')===0) setStatus(body.reserve?'Saving goods for orders':'Customer sales resumed','success');
         else if (name.indexOf('processing:')===0) setStatus(body.enabled?'Processing resumed':'Recipes paused','success');
+        else if (name==='market:deliver') setStatus('Delivered '+receipt.delivered+' order'+(receipt.delivered===1?'':'s')+' · '+ym(receipt.reward)+(receipt.skipped?' · Other orders need more goods':''),'success');
         else if (name.indexOf('fulfill:')===0) setStatus('Delivered · '+ym(receipt && receipt.reward)+(receipt && receipt.projectReward?' · '+receipt.projectReward:''),'success');
         else if (name.indexOf('replace:')===0) setStatus(skippedOpportunity?'':'New order ready','success');
         else if (name.indexOf('expand:')===0) setStatus('Construction started','success');

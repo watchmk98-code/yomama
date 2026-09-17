@@ -282,6 +282,8 @@ def manage(cfg, st, body):
     b = st['b'][slot]
     if action in ('pause', 'resume'):
         b['paused'] = action == 'pause'
+        import quest_engine
+        quest_engine.record_action(cfg, st, 'pause_business' if action == 'pause' else 'resume_business')
         return dict(ok=True, kind='business', action=action, buildingId=b['buildingId'])
     if action == 'hire':
         if workforce.enabled(cfg):
@@ -307,6 +309,8 @@ def manage(cfg, st, body):
     building_id = b['buildingId']
     st['cash'] += quote['value']
     st['book'] = max(0, st['book'] - quote['bookValue'])
+    import quest_engine
+    quest_engine.record_action(cfg, st, 'salvage_business')
     for good in tier['goods']:
         for key in ('inventory', 'productionWork', 'productionPhase', 'salesWork', 'productionBlocked'):
             st.get(key, {}).pop(good['id'], None)

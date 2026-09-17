@@ -25,6 +25,8 @@ import quest_engine
 import workforce
 import crafting
 import crafting_pilot
+import focus_tree
+import market_orders
 import economy as legacy
 from economy import *  # Stable public helpers used by the classroom API.
 
@@ -120,6 +122,7 @@ def new_state(cfg, start_tick=0, seed=1):
     workforce.ensure(cfg,st)
     business_progression.ensure(cfg,st)
     town_projects.default(cfg,st)
+    focus_tree.ensure(cfg,st)
     offer_contracts(cfg,st,start_tick)
     _sync_project_offer(cfg,st)
     crafting_pilot.ensure(cfg,st)
@@ -156,6 +159,7 @@ def migrate_state(cfg, st, tick=None):
     business_activity.ensure(st)
     # Existing v4 towns gain an empty roster without resetting their economy.
     _customer_defaults(st)
+    focus_tree.ensure(cfg,st)
     _migrate_customer_rewards(cfg,st)
     if st.get('modelVersion')==4:
         workforce.ensure(cfg,st)
@@ -166,6 +170,7 @@ def migrate_state(cfg, st, tick=None):
         town_projects.migrate(cfg,st)
         _sync_project_offer(cfg,st)
         crafting_pilot.ensure(cfg,st)
+        market_orders.defaults(cfg,st)
         return st
     old_gate=legacy.gate_open(legacy.load_config(),st) if st.get('b') else False
     keep=st.get('keepPercent')
@@ -206,6 +211,7 @@ def migrate_state(cfg, st, tick=None):
     offer_contracts(cfg,st,st.get('tick',0))
     _sync_project_offer(cfg,st)
     crafting_pilot.ensure(cfg,st)
+    focus_tree.ensure(cfg,st)
     return st
 
 
@@ -227,6 +233,7 @@ def product_speed(cfg, st, b, good):
     speed += business_operations.speed_bonus(cfg,b,good)
     speed += business_progression.speed_bonus(cfg,st,b,good)
     speed += workforce.bonuses(cfg,st,b)['production']
+    speed += focus_tree.speed_bonus(cfg,st,b,good)
     return speed
 
 
@@ -365,7 +372,7 @@ def customer_demand(cfg, st, b):
     base += cfg['production']['customerBasePercent'] * workforce.bonuses(cfg,st,b)['customer']
     if cfg['tiers'][b['tier']]['id'] == 'roastery' and st.get('regularDeliveries', 0) >= 3:
         base = base * 120 // 100
-    return base
+    return base * focus_tree.demand_percent(cfg,st,b) // 100
 
 
 def order_reservations(st, exclude=None, in_transit_only=False):
@@ -407,7 +414,8 @@ def sales_multiplier(cfg,b):
 
 def _capacity(cfg,st,slot):
     tier=cfg['tiers'][st['tierOf'][slot]]
-    return math.floor(tier['capacity']*(1+cfg['production']['storagePerLevel']*(st['b'][slot]['storage']-1)))
+    return math.floor(tier['capacity']*(1+cfg['production']['storagePerLevel']*(st['b'][slot]['storage']-1))
+                      *focus_tree.storage_percent(cfg,st,tier)/100)
 
 
 def _good_capacity(cfg,st,slot,gid):
@@ -522,6 +530,7 @@ def player_tick(cfg,cls,st,k):
     business_operations.advance_shifts(cfg,st)
     workforce.advance(cfg,st)
     st['tick']=k+1
+    focus_tree.advance(cfg,st,st['tick'])
 
 
 def class_price(cfg,cls,ti,k): return 1.0
@@ -572,6 +581,7 @@ def _advance_class(cfg,cls,players,start,target):
         while st.get('build') and st['build']['t']<target:
             finish_build(cfg,st,st['build']['t'])
         st['tick']=max(st['tick'],target)
+        focus_tree.advance(cfg,st,st['tick'])
         _sync_pools(cfg,st)
     cls['k']=max(0,target-1);cls['nextTick']=target
     cls['incomePerHour']=max(1,sum(revS(cfg,s) for s in players)*ticks_per_hour(cfg))
@@ -580,6 +590,7 @@ def _advance_class(cfg,cls,players,start,target):
 def on_login(cfg,st,k=None):
     k=st['tick'] if k is None else k
     st['lastLogin']=k;st['lastActiveTick']=k;st['catchupUntil']=-1
+    market_orders.sync(cfg,st)
 
 
 def bRev(cfg,st,bi): return jsround(_rate(cfg,st,bi)[1]*cfg['global']['tick']/60)
@@ -612,10 +623,13 @@ def buy_upgrade(cfg,st,slot,kind):
     cost=upgrade_cost(cfg,st,slot,kind)
     if cost is None: return dict(ok=False,why='Fully upgraded')
     cover=quest_engine.voucher_cover(cfg,st,cost)
+    cover+=focus_tree.voucher_cover(st,cost-cover)
     if st['cash']<cost-cover: return dict(ok=False,why=f'Need {cost-cover-st["cash"]} YM more')
     consequence=upgrade_preview(cfg,st,slot,kind)
     key={'production':'lv','sales':'sales','storage':'storage'}[kind]
     payable,covered=quest_engine.apply_voucher(cfg,st,cost)
+    payable,focus_covered=focus_tree.apply_voucher(st,payable)
+    covered+=focus_covered
     st['cash']-=payable;st['book']+=cost;st['b'][slot][key]+=1
     quest_engine.record_action(cfg,st,'upgrade')
     business_operations.record_investment(cfg,st,slot,cost)
@@ -719,6 +733,7 @@ def finish_build(cfg,st,k,DAY=None):
         ti=st['queue'].pop(0)
         st['build']=dict(i=ti,t=k+max(1,jsround(cfg['tiers'][ti]['timerH']*3600/cfg['global']['tick'])))
     _sync_pools(cfg,st)
+    market_orders.sync(cfg,st)
 
 
 def auto_continue(cfg,st,tick): return None
@@ -740,19 +755,20 @@ def _customer_slots(st):
     return 4 if len(st['b'])>=6 else 3 if len(st['b'])>=3 else 2
 
 
-def _customer_reward(cfg,requirements):
+def _customer_reward(cfg,requirements,st=None):
     """Discount the whole shipment, including larger orders, to whole YM."""
     goods=catalog(cfg)
     retail=sum(goods[n['goodId']]['unitPrice']*n['quantity'] for n in requirements)
     reward=jsround(retail*CUSTOMER_RETAIL_PERCENT/100)
     # Whole-YM rounding must not erase the discount on small bundles.
-    return min(retail-1,max(1,reward)) if retail>1 else retail
+    reward=min(retail-1,max(1,reward)) if retail>1 else retail
+    return focus_tree.regular_reward(st,reward) if st is not None else reward
 
 
 def _migrate_customer_rewards(cfg,st):
     """Reprice future shipments in place; past earnings and schedules stay put."""
     for contract in st['customerContracts']['active']:
-        contract['reward']=_customer_reward(cfg,contract['requirements'])
+        contract['reward']=_customer_reward(cfg,contract['requirements'],st)
 
 
 def _customer_catalog(cfg,st):
@@ -769,7 +785,7 @@ def _customer_catalog(cfg,st):
         customers.append(dict(id=customer_id,name=name,description=description,available=not missing and locked is None,
                               unlockText='Open '+', '.join(cfg['tiers'][ti]['name'] for ti in missing) if missing else
                               'Complete the product quest for '+locked['name'] if locked else '',
-                              requirements=requirements,reward=_customer_reward(cfg,requirements),
+                              requirements=requirements,reward=_customer_reward(cfg,requirements,st),
                               intervalSeconds=seconds))
     return customers
 
@@ -883,7 +899,7 @@ def manage_customer_contract(cfg,st,slot,action,customer_id=None,contract_id=Non
                       for n in customer['requirements']]
         data['serial']+=1
         current.update(id='regular-{}-{}'.format(st.get('rngState',1),data['serial']),largerOrder=larger,
-                       reward=_customer_reward(cfg,requirements),requirements=requirements,
+                       reward=_customer_reward(cfg,requirements,st),requirements=requirements,
                        nextDeliveryTick=st['tick']+current['intervalTicks'])
         current.pop('sellingTerms',None)
         _freeze_selling_terms(cfg,st,current)
@@ -901,6 +917,7 @@ def _tick_customer_contracts(cfg,st,tick,transit=None,paused_goods=None):
     """Ship every due regular whose shipment is saved up. Returns the stock
     plan still valid afterwards - None once a delivery changed the stock - so
     the same tick's walk-in sales can reuse it instead of redoing it."""
+    if focus_tree.has(st,'breakfast_regulars'): _migrate_customer_rewards(cfg,st)
     data=st.get('customerContracts',{})
     active=sorted(data.get('active',[]),key=lambda c:c['slot'])
     if not active: return None
@@ -933,6 +950,7 @@ def _tick_customer_contracts(cfg,st,tick,transit=None,paused_goods=None):
 
 
 def customer_contract_payload(cfg,st):
+    if focus_tree.has(st,'breakfast_regulars'): _migrate_customer_rewards(cfg,st)
     data=st.get('customerContracts',{});goods=catalog(cfg);slots=_customer_slots(st)
     customers=_customer_catalog(cfg,st);by_id={c['id']:c for c in customers}
     assigned=_customer_stock_plan(cfg,st)[1];active=[]
@@ -953,7 +971,7 @@ def customer_contract_payload(cfg,st):
         if not larger and contract['deliveries']>=3 and contract['customerId'] in by_id:
             base=by_id[contract['customerId']]
             larger_requirements=[dict(n,quantity=n['quantity']*2) for n in base['requirements']]
-            offer=dict(reward=_customer_reward(cfg,larger_requirements),intervalSeconds=contract['intervalSeconds'],
+            offer=dict(reward=_customer_reward(cfg,larger_requirements,st),intervalSeconds=contract['intervalSeconds'],
                        requirements=larger_requirements)
         active.append(dict(slot=contract['slot'],id=contract['id'],customerId=contract['customerId'],
                            name=contract['name'],paused=contract['paused'],deliveries=contract['deliveries'],
@@ -964,7 +982,7 @@ def customer_contract_payload(cfg,st):
                 earned=data.get('earned',0),deliveries=data.get('deliveries',0),customers=customers,active=active)
 
 
-def _order_recipe(cfg,st,index,rarity,digest,goods):
+def _order_recipe(cfg,st,index,rarity,digest,goods,target_tier=None):
     """Deal a complete job the town can produce, with a saved rotation per slot.
 
     Eligibility follows owned businesses and unlocked products.
@@ -974,6 +992,8 @@ def _order_recipe(cfg,st,index,rarity,digest,goods):
     def can_make(gid):
         return gid in goods and goods[gid]['tier'] in owned and business_progression.product_unlocked(cfg,st,gid)
     eligible=[r for r in ORDER_RECIPES if all(can_make(gid) for gid in r['goods'])]
+    if target_tier is not None:
+        eligible=[r for r in eligible if any(goods[gid]['tier']==target_tier for gid in r['goods'])]
     if index==2 and not business_progression.connected_enabled(cfg):
         # Legacy migrations can preserve a town with only an industrial
         # business. Give it ordinary jobs until it can supply breakfast food.
@@ -1034,9 +1054,10 @@ def _sync_project_offer(cfg,st):
         if offers[2]['id']!=current['id']: offers[2]=current
 
 
-def _make_order(cfg,st,index):
+def _make_order(cfg,st,index,target_tier=None):
     if index==2 and town_projects.enabled(cfg) and not business_progression.connected_enabled(cfg): return _project_order(cfg,st)
     goods=catalog(cfg)
+    if target_tier is None: target_tier=market_orders.pending_tier(cfg,st)
     serial=st['orderSerial'];st['orderSerial']+=1
     # Independent deterministic randomness: saving/reloading cannot reroll the
     # next offer, and class/player request timing cannot change its rarity.
@@ -1047,13 +1068,18 @@ def _make_order(cfg,st,index):
         if roll<candidate['chance']:
             rarity=candidate;break
         roll-=candidate['chance']
-    recipe=_order_recipe(cfg,st,index,rarity,digest,goods)
+    recipe=_order_recipe(cfg,st,index,rarity,digest,goods,target_tier)
     picks=[goods[gid] for gid in recipe['goods']]
     requirements=[];value=0
     for good in picks:
-        # Fixed order sizes do not scale with cash; upgrades shorten lead time.
+        # Normal rolls keep fixed sizes. Bulk rolls can clear existing spare
+        # stock without changing their rarity, product rotation or unit price.
         qty=max(2,math.ceil(cfg['production']['orderMinutes'][index]*60/(good['cycleTicks']*cfg['global']['tick'])))
         qty=math.ceil(qty*rarity['quantityPercent']/100)
+        if rarity['id']=='bulk':
+            previous=(st.get('offers') or [])[index:index+1]
+            held=delivery_reservations(cfg,st,exclude=previous[0]['id'] if previous else None)
+            qty=max(qty,st['inventory'].get(good['id'],0)-held.get(good['id'],0))
         slot=st['tierOf'].index(goods[good['id']]['tier'])
         qty=min(qty,_good_capacity(cfg,st,slot,good['id']))
         requirements.append(dict(goodId=good['id'],quantity=qty));value+=qty*good['unitPrice']
@@ -1085,6 +1111,7 @@ def _freeze_selling_terms(cfg,st,order):
 def offer_contracts(cfg,st,k,DAY=None):
     st.setdefault('orderSerial',0)
     if st.get('offers') is None: st['offers']=[_make_order(cfg,st,i) for i in range(3)]
+    market_orders.defaults(cfg,st)
 
 
 def _order_at(st,index):
@@ -1131,7 +1158,8 @@ def _settle_order(cfg,st,order):
     _freeze_selling_terms(cfg,st,order)
     costed=inventory_costs.consume(cfg,st,order['requirements'])
     for need in order['requirements']: st['inventory'][need['goodId']]-=need['quantity']
-    order['reward'],boosted=quest_engine.apply_boost(cfg,st,'order_payout',order['reward'])
+    reward=focus_tree.order_reward(st,order['reward'])
+    order['reward'],boosted=quest_engine.apply_boost(cfg,st,'order_payout',reward)
     operating_margins.pay(cfg,st,'orders',order['reward'],order['requirements'],costed=costed,
                           terms=order.get('sellingTerms'))
     order['materials']=0  # Ignore rewards embedded in pre-removal saves.
@@ -1236,6 +1264,7 @@ def _flows(cfg,st):
     This forecast shows the current configuration's capacity; actual income is
     reported separately from completed sales. No income is credited by it.
     """
+    if focus_tree.has(st,'breakfast_regulars'): _migrate_customer_rewards(cfg,st)
     capacities={};by_tier={ti:i for i,ti in enumerate(st['tierOf'])}
     for ti in sorted(by_tier):
         b=st['b'][by_tier[ti]]
@@ -1418,11 +1447,15 @@ def payload(cfg,st,cls,session,behind=False):
         upgrades={}
         for kind,key in (('production','lv'),('sales','sales'),('storage','storage')):
             cost=upgrade_cost(cfg,st,slot,kind);level=b[key]
-            why='Fully upgraded' if cost is None else f'Need {cost-st["cash"]} YM more' if cost>st['cash'] else ''
+            covered=quest_engine.voucher_cover(cfg,st,cost) if cost is not None else 0
+            covered+=focus_tree.voucher_cover(st,cost-covered) if cost is not None else 0
+            payable=cost-covered if cost is not None else None
+            why='Fully upgraded' if cost is None else f'Need {payable-st["cash"]} YM more' if payable>st['cash'] else ''
             if kind=='production': effect=f'{100+cfg["production"]["speedPerLevel"]*level}% base speed'
             elif kind=='sales': effect=f'{100+cfg["production"]["customerPerLevel"]*level}% base customers'
-            else: effect=f'{math.floor(t["capacity"]*(1+cfg["production"]["storagePerLevel"]*level))} items'
-            upgrades[kind]=dict(level=level,cost=cost,canBuy=cost is not None and cost<=st['cash'],why=why,effect=effect)
+            else: effect=f'{math.floor(t["capacity"]*(1+cfg["production"]["storagePerLevel"]*level)*focus_tree.storage_percent(cfg,st,t)/100)} items'
+            upgrades[kind]=dict(level=level,cost=cost,cashCost=payable,voucherPaid=covered,
+                                canBuy=payable is not None and payable<=st['cash'],why=why,effect=effect)
             if cost is not None: upgrades[kind].update(upgrade_preview(cfg,st,slot,kind))
         clear_qty=sum(max(0,inventory.get(x['id'],0)-protected.get(x['id'],0)) for x in t['goods'])
         clear_value=sum(max(0,inventory.get(x['id'],0)-protected.get(x['id'],0))*x['unitPrice'] for x in t['goods'])*cfg['production']['clearStockPercent']//100
@@ -1470,6 +1503,9 @@ def payload(cfg,st,cls,session,behind=False):
     saved_goal=st.get('goalOffer') if group_projects_enabled else None
     visible_orders=list(st.get('offers') or [])+([saved_goal] if saved_goal else [])+([saved_legacy] if saved_legacy else [])
     for order in visible_orders:
+        order=dict(order,reward=focus_tree.order_reward(st,order['reward']))
+        if order.get('rewardPercent'):
+            order['rewardPercent']=focus_tree.order_reward(st,order['rewardPercent'])
         held=delivery_reservations(cfg,st,exclude=order['id'])
         requirements=[dict(n,name=goods[n['goodId']]['name'],owned=max(0,inventory.get(n['goodId'],0)-held.get(n['goodId'],0)),
                            buildingId=goods[n['goodId']]['buildingId']) for n in order['requirements']]
@@ -1516,6 +1552,7 @@ def payload(cfg,st,cls,session,behind=False):
                 operatingStatement=crafting_pilot.include_statement(cfg,st,operating_margins.town_statement(cfg,st,buildings)),
                 progression=business_progression.payload(cfg,st),
                 quests=quest_engine.payload(cfg,st),
+                focusTree=focus_tree.payload(cfg,st),
                 workforce=workforce.payload(cfg,st),
                 crafting=crafting.payload(cfg,st),
                 rulesRevision=4 if business_progression.connected_enabled(cfg) else 3,

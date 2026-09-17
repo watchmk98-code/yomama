@@ -1,0 +1,197 @@
+/* Connected business focus tree, retaining the approved terminal design. */
+.food-focus-page {font-size:18px;letter-spacing:.25px;overflow:auto;}
+.food-focus-page .shell {min-height:100svh;height:auto;}
+.food-focus-page .focus-workspace {padding:12px;}
+.food-focus-page .focus-heading {gap:16px;border-left:1px solid var(--amber);border-bottom:1px solid var(--border);padding:0 0 8px 12px;margin:0 0 12px;}
+.focus-heading-copy {display:flex;align-items:center;gap:20px;min-width:0;}
+.food-focus-page .focus-heading h1 {color:var(--amber);font-size:clamp(30px,3.1vw,48px);font-weight:400;letter-spacing:1px;white-space:nowrap;}
+.focus-heading-copy>span {color:#b2b2c0;font-size:19px;letter-spacing:2px;white-space:nowrap;}
+.food-focus-page .focus-heading .game-nav {flex-wrap:nowrap;flex:none;}
+.food-focus-page .game-nav a {gap:8px;padding:6px 14px;min-height:46px;white-space:nowrap;font-size:20px;}
+.food-focus-page .game-nav img {object-fit:contain;image-rendering:pixelated;}
+.focus-notice {padding:8px 12px;margin:0 0 10px;border:1px solid var(--border);color:var(--amber);}
+.focus-notice:empty {display:none;}
+.focus-notice[data-tone="error"] {color:var(--red);border-color:var(--red);}
+.focus-layout {display:grid;grid-template-columns:minmax(0,2.56fr) minmax(300px,1fr);gap:10px;align-items:stretch;}
+.focus-board {border:1px solid var(--amber);min-width:0;position:relative;}
+.focus-tree-map {position:relative;min-width:0;padding:14px 7.2%;height:clamp(640px,calc(100svh - 277px),860px);}
+.focus-nodes {height:100%;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));gap:26px 0;position:relative;z-index:1;}
+.focus-connections {position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
+.focus-connection {stroke:#b88826;stroke-width:2;fill:none;}
+.focus-connection.is-complete {stroke:#fbc65c;}
+.focus-connection.is-excluded {stroke:#4f4f4f;}
+.food-focus-page .focus-node {grid-column:4/span 4;position:relative;display:grid;grid-template-columns:minmax(0,34%) minmax(0,1fr);align-items:center;align-self:stretch;gap:8px;width:100%;height:100%;min-height:0;min-width:0;margin:0;padding:5px 8px;border:1px solid #888;background:#000;color:var(--text);font:inherit;letter-spacing:0;text-align:left;cursor:pointer;}
+.food-focus-page .focus-node[data-focus-id="secure_harvest"] {grid-row:1;}
+.food-focus-page .focus-node[data-focus-id="reliable_supply"] {grid-row:2;}
+.food-focus-page .focus-node[data-focus-id="preserve_surplus"] {grid-column:1/span 4;grid-row:3;}
+.food-focus-page .focus-node[data-focus-id="distribution_network"] {grid-column:1/span 4;grid-row:4;}
+.food-focus-page .focus-node[data-focus-id="regional_supplier"] {grid-column:1/span 4;grid-row:5;}
+.food-focus-page .focus-node[data-focus-id="local_brand"] {grid-column:7/span 4;grid-row:3;}
+.food-focus-page .focus-node[data-focus-id="breakfast_regulars"] {grid-column:7/span 4;grid-row:4;}
+.food-focus-page .focus-node[data-focus-id="signature_experience"] {grid-column:7/span 4;grid-row:5;}
+.food-focus-page .focus-node[data-focus-id="food_empire"] {grid-row:6;}
+.focus-node-art {min-width:0;min-height:0;height:100%;display:flex;align-items:center;justify-content:center;}
+.focus-node-art .food-empire-art {width:100%;height:100%;}
+.food-empire-art {display:block;width:100%;height:auto;}
+.focus-node-copy {display:flex;flex-direction:column;gap:5px;min-width:0;}
+.focus-node-title {font-size:20px;line-height:1.02;color:#b4b4c2;font-weight:400;text-transform:uppercase;}
+.focus-node-reward {font-size:17px;line-height:1.1;color:#c8c8d2;}
+.focus-node-status {display:flex;align-items:center;gap:7px;min-height:18px;font-size:17px;line-height:1;color:#b4b4c2;text-transform:uppercase;}
+.focus-state-icon {display:inline-block;width:18px;height:18px;flex:none;}
+.food-focus-page .focus-node[data-status="completed"],.food-focus-page .focus-node[data-status="available"],.food-focus-page .focus-node[data-status="active"] {border-color:var(--amber);}
+.focus-node[data-status="completed"] .focus-node-title,.focus-node[data-status="available"] .focus-node-title,.focus-node[data-status="active"] .focus-node-title {color:var(--amber);}
+.focus-node[data-status="completed"] .focus-node-status {color:var(--green);}
+.focus-node[data-status="available"] .focus-node-status,.focus-node[data-status="active"] .focus-node-status {color:var(--amber);}
+.food-focus-page .focus-node[aria-pressed="true"] {outline:2px solid var(--amber);outline-offset:-1px;border-color:var(--amber);}
+.food-focus-page .focus-node:hover {border-color:var(--amber);}
+.food-focus-page .focus-node:focus-visible,.food-focus-page .focus-start:focus-visible {outline:3px solid var(--text);outline-offset:3px;}
+.focus-node[data-status="excluded"] {border-style:dashed;color:var(--muted);}
+.focus-node[data-status="excluded"] .focus-node-art {filter:grayscale(1);opacity:.5;}
+.focus-node[data-status="loading"] .focus-node-status {color:var(--muted);}
+.focus-path-label,.focus-choice-label {position:absolute;z-index:2;color:var(--amber);background:#000;padding:0 8px;pointer-events:none;text-align:center;}
+.focus-path-label {font-size:20px;transform:translate(-50%,-50%);}
+.focus-choice-label {font-size:14px;letter-spacing:.4px;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;}
+.focus-detail {display:flex;flex-direction:column;min-width:0;padding:16px 20px;border:1px solid var(--amber);background:#000;}
+.focus-detail-head {display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.focus-detail-head h2 {margin:0;color:var(--amber);font-size:28px;line-height:1.04;font-weight:400;text-transform:uppercase;}
+.focus-detail-badge {flex:none;border:1px solid var(--muted);padding:4px 8px;font-size:18px;line-height:1.1;color:var(--muted);}
+.focus-detail-badge[data-status="available"],.focus-detail-badge[data-status="completed"] {color:var(--green);border-color:var(--green);}
+.focus-detail-badge[data-status="active"] {color:var(--amber);border-color:var(--amber);}
+.focus-detail-branch {color:#b4b4c2;font-size:19px;letter-spacing:1.3px;margin-top:8px;}
+.focus-detail-art {display:flex;align-items:center;justify-content:center;height:clamp(180px,25svh,275px);padding:12px 6px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.focus-detail-art .food-empire-art {max-height:100%;width:100%;height:100%;}
+.focus-detail-body {display:flex;flex-direction:column;gap:22px;}
+.focus-detail h3 {font-size:20px;font-weight:400;color:var(--amber);margin:0 0 8px;}
+.focus-detail p {font-size:19px;line-height:1.2;margin:0;}
+.focus-detail ul {list-style:none;margin:0;padding:0;display:grid;gap:8px;}
+.focus-detail li {display:flex;align-items:flex-start;gap:10px;font-size:19px;line-height:1.15;}
+.focus-detail li .focus-state-icon {width:23px;height:20px;color:var(--muted);}
+.focus-detail li.is-met .focus-state-icon {color:var(--green);}
+.focus-detail-action {margin-top:auto;padding-top:20px;}
+.focus-detail-action p {font-size:16px;line-height:1.25;}
+#focus-choice-warning:not(:empty) {border-top:1px solid var(--border);padding:14px 0;}
+#focus-start-reason:not(:empty) {padding:0 0 10px;color:var(--muted);}
+.focus-start {display:block;border:1px solid var(--amber);background:var(--amber);color:#000;width:100%;font:inherit;font-size:24px;min-height:48px;cursor:pointer;letter-spacing:1px;}
+.focus-start:hover:not(:disabled) {background:#ffd15c;}
+.focus-start:disabled {color:var(--muted);background:#111;border-color:#666;cursor:not-allowed;}
+.focus-active-progress {margin-top:2px;}
+.focus-active-progress[hidden] {display:none;}
+.focus-progress-label {display:flex;justify-content:space-between;gap:10px;color:var(--amber);font-size:16px;margin-bottom:7px;}
+.focus-progress-track {height:7px;background:#312407;}
+.focus-progress-track>span {display:block;height:100%;width:0;background:var(--amber);}
+.focus-legend {display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--amber);margin-top:10px;padding:12px 14px;color:#b4b4c2;font-size:17px;}
+.focus-legend>div {display:flex;gap:32px;}
+.focus-legend>div>span {display:flex;gap:10px;align-items:center;}
+.focus-key {display:inline-block;width:20px;height:24px;border:2px solid var(--muted);}
+.focus-key.complete {border-color:var(--green);}
+.focus-key.available {border-color:var(--amber);}
+#focus-summary {text-align:right;font-size:15px;letter-spacing:1px;}
+@media(min-width:1500px){.focus-node-title{font-size:22px;}.focus-node-reward{font-size:19px;}.focus-node-status{font-size:20px;}}
+@media(max-width:1380px){
+  .focus-heading-copy{gap:12px;}
+  .focus-heading-copy>span{font-size:15px;letter-spacing:1px;}
+  .food-focus-page .game-nav a{padding:5px 10px;font-size:18px;gap:5px;}
+  .focus-detail{padding:16px;}
+  .focus-detail-head h2{font-size:25px;}
+  .focus-tree-map{padding-inline:5.5%;}
+  .focus-node-title{font-size:18px;}
+  .focus-node-reward{font-size:16px;}
+  .focus-node-status{font-size:16px;}
+}
+@media(max-width:1100px){
+  .food-focus-page .focus-heading{flex-wrap:wrap;}
+  .food-focus-page .focus-heading .game-nav{width:100%;flex:1 0 100%;}
+  .food-focus-page .game-nav a{flex:1;}
+  .focus-layout{grid-template-columns:minmax(0,1fr) 300px;}
+  .focus-tree-map{padding-inline:16px;height:700px;}
+  .focus-nodes{grid-template-columns:repeat(6,minmax(0,1fr));}
+  .food-focus-page .focus-node{grid-template-columns:70px minmax(0,1fr);grid-column:2/span 4;padding:5px;}
+  .food-focus-page .focus-node[data-focus-id="preserve_surplus"],.food-focus-page .focus-node[data-focus-id="distribution_network"],.food-focus-page .focus-node[data-focus-id="regional_supplier"]{grid-column:1/span 3;margin-right:9px;width:calc(100% - 9px);}
+  .food-focus-page .focus-node[data-focus-id="local_brand"],.food-focus-page .focus-node[data-focus-id="breakfast_regulars"],.food-focus-page .focus-node[data-focus-id="signature_experience"]{grid-column:4/span 3;margin-left:9px;width:calc(100% - 9px);}
+  .focus-node-title{font-size:17px;}
+  .focus-node-reward{font-size:15px;}
+  .focus-node-status{font-size:15px;}
+  .focus-choice-label{font-size:12px;}
+}
+@media(max-width:850px){
+  .focus-layout{grid-template-columns:1fr;}
+  .focus-tree-map{height:690px;padding-inline:6%;}
+  .food-focus-page .focus-node{grid-template-columns:minmax(0,34%) minmax(0,1fr);}
+  .focus-node-title{font-size:20px;}
+  .focus-node-reward{font-size:18px;}
+  .focus-node-status{font-size:18px;}
+  .focus-detail{display:grid;grid-template-columns:minmax(150px,35%) minmax(0,1fr);column-gap:24px;}
+  .focus-detail-head,.focus-detail-branch,.focus-detail-action{grid-column:1/-1;}
+  .focus-detail-art{height:250px;margin:0;border-bottom:0;grid-row:3;}
+  .focus-detail-body{grid-column:2;grid-row:3;padding-top:14px;gap:16px;}
+  .focus-legend>div{gap:20px;}
+}
+@media(max-width:550px){
+  .food-focus-page .focus-workspace{padding:8px;}
+  .focus-heading-copy{align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .food-focus-page .focus-heading h1{font-size:34px;}
+  .focus-heading-copy>span{font-size:14px;letter-spacing:.5px;}
+  .food-focus-page .focus-heading{gap:10px;padding-left:8px;margin-bottom:8px;}
+  .food-focus-page .focus-heading .game-nav{gap:3px;}
+  .food-focus-page .focus-heading .game-nav a{padding:5px 2px;font-size:16px;min-height:44px;}
+  .focus-tree-map{height:900px;padding:12px 10px;}
+  .focus-nodes{gap:30px 0;}
+  .food-focus-page .focus-node{grid-template-columns:1fr;justify-items:center;gap:2px;text-align:center;padding:4px;}
+  .food-focus-page .focus-node[data-focus-id="secure_harvest"],.food-focus-page .focus-node[data-focus-id="reliable_supply"],.food-focus-page .focus-node[data-focus-id="food_empire"]{grid-template-columns:64px minmax(0,1fr);justify-items:stretch;text-align:left;grid-column:2/span 4;}
+  .focus-node-art{height:47px;width:70px;}
+  .focus-node-copy{gap:3px;align-items:center;width:100%;}
+  .focus-node[data-focus-id="secure_harvest"] .focus-node-copy,.focus-node[data-focus-id="reliable_supply"] .focus-node-copy,.focus-node[data-focus-id="food_empire"] .focus-node-copy{align-items:flex-start;}
+  .focus-node-title{font-size:16px;line-height:1;}
+  .focus-node-reward{font-size:14px;line-height:1;}
+  .focus-node-status{font-size:14px;gap:4px;min-height:14px;}
+  .focus-state-icon{width:13px;height:13px;}
+  .focus-path-label{font-size:17px;}
+  .focus-choice-label{font-size:12px;letter-spacing:0;padding-inline:5px;}
+  .focus-detail{padding:14px;grid-template-columns:minmax(105px,34%) minmax(0,1fr);column-gap:12px;}
+  .focus-detail-head h2{font-size:25px;}
+  .focus-detail-badge{font-size:16px;}
+  .focus-detail-art{height:205px;padding:8px 0;}
+  .focus-detail h3{font-size:18px;}
+  .focus-detail p,.focus-detail li{font-size:17px;}
+  .focus-detail li{gap:5px;}
+  .focus-detail-action p{font-size:16px;}
+  .focus-legend{align-items:flex-start;flex-direction:column;padding:10px;font-size:15px;}
+  .focus-legend>div{gap:22px;}
+  .focus-key{width:15px;height:18px;}
+  #focus-summary{font-size:14px;}
+}
+@media(max-width:360px){.focus-tree-map{height:1020px;}}
+
+/* The entire network fits in one board. Full rewards stay in the detail pane. */
+.food-focus-page .focus-board {overflow:hidden;max-height:none;min-height:0;}
+.food-focus-page .focus-tree-map {box-sizing:border-box;width:100%;min-width:0;height:clamp(560px,calc(100svh - 280px),780px);padding:38px 16px 14px;}
+.food-focus-page .focus-nodes {grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(7,minmax(0,1fr));gap:24px 28px;height:100%;}
+.food-focus-page .focus-nodes .focus-node {grid-template-columns:clamp(28px,4vw,56px) minmax(0,1fr);margin:0;width:100%;padding:4px;gap:5px;text-align:left;justify-items:stretch;}
+.food-focus-page .focus-node-art {width:100%;height:100%;max-height:58px;}
+.food-focus-page .focus-node .focus-node-copy {align-items:flex-start;gap:3px;}
+.food-focus-page .focus-node-title {font-size:clamp(13px,1.15vw,18px);line-height:1.05;overflow-wrap:anywhere;}
+.food-focus-page .focus-node-reward {display:none;}
+.food-focus-page .focus-node-status {font-size:12px;min-height:12px;gap:3px;}
+.food-focus-page .focus-node-status .focus-state-icon {width:12px;height:12px;}
+.focus-building-sprite {display:block;aspect-ratio:1;width:100%;max-height:100%;background-size:800% 100%;background-position:left center;background-repeat:no-repeat;image-rendering:pixelated;}
+.focus-detail-art .focus-building-sprite {width:230px;max-width:100%;}
+.focus-sector-labels {position:absolute;top:12px;left:16px;right:16px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;color:var(--amber);font-size:clamp(10px,1vw,16px);text-align:center;}
+.focus-map-guide {background:#000;border-bottom:1px solid #2a2a2a;padding:8px 12px;font-size:14px;color:var(--muted);}
+.focus-connection[data-either="true"] {stroke-dasharray:6 5;}
+.food-focus-page .focus-detail {align-self:start;min-height:640px;}
+@media(max-width:850px){.food-focus-page .focus-detail{min-height:0;}}
+@media(min-width:851px) and (max-width:1200px){
+  .food-focus-page .focus-nodes .focus-node{grid-template-columns:28px minmax(0,1fr);gap:3px;}
+  .food-focus-page .focus-node-title{font-size:12px;}
+  .food-focus-page .focus-node-status{display:none;}
+}
+@media(max-width:550px){
+  .food-focus-page .focus-tree-map{height:650px;padding:42px 6px 10px;}
+  .food-focus-page .focus-nodes{gap:22px 12px;}
+  .food-focus-page .focus-nodes .focus-node{grid-template-columns:1fr;grid-template-rows:24px 1fr;gap:2px;padding:3px;text-align:center;justify-items:center;}
+  .food-focus-page .focus-node-art{width:32px;height:24px;}
+  .food-focus-page .focus-node .focus-node-copy{align-items:center;justify-content:center;}
+  .food-focus-page .focus-node-title{font-size:11px;}
+  .food-focus-page .focus-node-status{display:none;}
+  .focus-sector-labels{left:6px;right:6px;gap:12px;font-size:10px;}
+}

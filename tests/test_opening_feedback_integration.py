@@ -157,6 +157,9 @@ def test_all_three_goal_deliveries_are_achievable_with_the_normal_engine_and_gra
             assert E.expand(cfg, st, tier, st['tick'])['ok']
             assert (st['cash'], st['materials']) == before
             replay(cfg, st, st['build']['t'] - st['tick'] + 1)
+            # Completing construction can introduce that business's offers;
+            # claiming the next project must still leave those offers alone.
+            random_offers = copy.deepcopy(st['offers'])
     final = view(cfg, st)
     assert final['groupProjects']['completed'] == 3 and final['goalOrder'] is None
     assert st['cStats']['done'] == 3 and st['regularDeliveries'] == 3

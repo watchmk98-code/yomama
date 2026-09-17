@@ -16,6 +16,7 @@ import business_assets
 import business_operations
 import crafting
 import inventory_costs
+import quest_engine
 
 SCALE = 1_000_000
 CONFIG_PATH = Path(__file__).parent / 'config/crafting-pilot.v1.json'
@@ -351,6 +352,7 @@ def tick(cfg, st, tick):
             pool['quantity'] -= qty; pool['value'] -= basis; pool['costMicros'] -= cost
             sale = qty * _price(item, bonus); st['cash'] += sale
             _record(cfg, st, tick, b['buildingId'], sales=sale, costsMicros=cost, sold=qty)
+            quest_engine.record_action(cfg, st, 'craft_sale', int(qty))
     live_ids = {b['buildingId']: b for b in st['b']}
     for aid, saved in data['assets'].items():
         b = live_ids.get(saved.get('buildingId'))
@@ -433,6 +435,7 @@ def _act(cfg, st, body):
             data['unlocked'][item['id']] = True; data['produced'][item['id']] = True
             return dict(ok=True, kind='craft_activate', itemId=item['id'], cost=charge)
         st['cash'] -= item['unlock']['cash']; data['unlocked'][item['id']] = True
+        quest_engine.record_action(cfg, st, 'craft_unlock')
         return dict(ok=True, kind='craft_unlock', itemId=item['id'], cost=item['unlock']['cash'])
     aid = body.get('assetId'); spec = _assets(cfg).get(aid)
     if not spec:
@@ -447,6 +450,7 @@ def _act(cfg, st, body):
         data['assets'][aid] = dict(purchasePrice=spec['price'], bookValue=spec['price'], lifeSeconds=spec['lifeSeconds'],
                                   remainingSeconds=spec['lifeSeconds'], buildingId=saved.get('buildingId') if saved else None,
                                   assignmentSlot=saved.get('assignmentSlot') if saved else None)
+        quest_engine.record_action(cfg, st, 'buy_asset')
         return dict(ok=True, kind='craft_asset_buy', assetId=aid, cost=spec['price'])
     if not saved:
         return fail('Buy this asset first')
@@ -468,6 +472,7 @@ def _act(cfg, st, body):
     if any(key != aid and a.get('buildingId') == b['buildingId'] and a.get('assignmentSlot') == slot for key, a in data['assets'].items()):
         return fail('Remove the assigned asset from that slot first')
     saved['buildingId'] = b['buildingId']; saved['assignmentSlot'] = slot
+    quest_engine.record_action(cfg, st, 'assign_asset')
     return dict(ok=True, kind='craft_asset_assign', assetId=aid, buildingId=b['buildingId'], assetSlot=slot)
 
 

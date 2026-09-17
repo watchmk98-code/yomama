@@ -24,6 +24,9 @@ METRICS = frozenset(('order_payout',))
 SALE_SOURCES = frozenset(('orders', 'walkIns', 'regularBuyers', 'clearance'))
 ACTIONS = frozenset(('quest_claim',))
 RECENT_LIMIT = 12
+DAY_MINUTES = 1440          # one game day, as the revenue-per-day figure uses
+LIVE_CHECKS = ('income:perMinute', 'margin:town', 'margin:business',
+               'takehome:percent', 'netWorth', 'cash', 'licence:open')
 
 
 def configure(cfg):
@@ -43,11 +46,38 @@ def quests(cfg):
     return rules_tables.derived(cfg, 'quest_engine_quests', _build_quests)
 
 
+def _home(cfg, quest):
+    if quest.get('scope') == 'group':
+        return None
+    """Which business a quest belongs to, so Build can show only the ones that
+    concern the shop you are looking at. A quest that spans the whole group -
+    'own six businesses', a daily, the licence - has no home and is listed
+    separately."""
+    if quest.get('buildingId'):
+        return quest['buildingId']
+    owns = quest.get('appear', {}).get('ownsBusiness')
+    if owns:
+        return owns
+    catalog = _catalog(cfg)
+    homes = set()
+    for objective in quest.get('objectives', ()):
+        counter = objective.get('counter') or ''
+        if counter.startswith('sell:business:') or counter.startswith('produce:business:'):
+            homes.add(counter.rsplit(':', 1)[1])
+        elif counter.startswith(('sell:', 'produce:')):
+            good = counter.split(':', 1)[1]
+            if good in catalog:
+                homes.add(catalog[good])
+    return homes.pop() if len(homes) == 1 else None
+
+
 def _build_quests(cfg):
     spec = cfg.get(STATE_KEY, {})
     result = {}
     for quest in spec.get('quests', ()):
-        result[quest['id']] = dict(quest, source='chapter')
+        row = dict(quest, source='chapter')
+        row['buildingId'] = _home(cfg, row)
+        result[quest['id']] = row
     for template in spec.get('templates', ()):
         if template.get('forEachBusiness'):
             for quest in _expand(cfg, template):
@@ -70,7 +100,14 @@ def _expand(cfg, template):
             'good2': goods[1]['id'], 'good2Name': goods[1]['name'],
             'good3': goods[2]['id'], 'good3Name': goods[2]['name'],
         }
-        quest = _fill(template, fields)
+        # The mechanical half (rewards, the developed flag, the recipe unlock)
+        # is generated so it cannot drift. The half a player reads - title,
+        # summary, what it teaches, and what it asks for - is authored per
+        # business, because twelve identical quests are twelve chores.
+        spec = dict(template)
+        spec.pop('businesses', None)
+        spec.update(template.get('businesses', {}).get(tier['id'], {}))
+        quest = _fill(spec, fields)
         quest.pop('forEachBusiness', None)
         quest.pop('skipBusinesses', None)
         quest['id'] = template['id'] + ':' + tier['id']
@@ -105,7 +142,7 @@ def ensure(cfg, st):
     data = st.setdefault(STATE_KEY, {})
     defaults = dict(version=1, counters={}, completed={}, boosts=[], vouchers=[],
                     flags=[], unlockedRecipes=[], perks={}, features=[], grants=[],
-                    recent=[], sequence=0)
+                    recent=[], sequence=0, scopes={}, repeats={}, choices={})
     for key, value in defaults.items():
         if key not in data:
             data[key] = copy.deepcopy(value)
@@ -143,6 +180,8 @@ def record_sale(cfg, st, requirements, source):
             continue
         _bump(data, 'sell:' + gid, qty)
         _bump(data, 'sell:business:' + catalog[gid], qty)
+        if source == 'orders':
+            _bump(data, 'deliver:' + gid, qty)
         _bump(data, 'sell:any', qty)
         if source in SALE_SOURCES:
             _bump(data, 'sell:source:' + source, qty)
@@ -171,8 +210,41 @@ def _owned(cfg, st):
             if type(ti) is int and 0 <= ti < len(tiers)}
 
 
+def _live(cfg, st, check):
+    """Rates and ratios the economy already computes. Imported lazily because
+    production_economy imports business_progression, which imports this module."""
+    import production_economy as economy
+    if check == 'income:perMinute':
+        return economy.town_income(cfg, st)
+    if check == 'netWorth':
+        return economy.net_worth(cfg, st)
+    if check == 'cash':
+        return st.get('cash', 0)
+    if check == 'licence:open':
+        return int(bool(economy.gate_open(cfg, st)))
+    import operating_margins
+    if check == 'margin:town':
+        return operating_margins.town_statement(cfg, st).get('margin') or 0
+    if check == 'takehome:percent':
+        totals = operating_margins.town_statement(cfg, st).get('totals') or {}
+        gross = totals.get('grossSales') or 0
+        return (totals.get('takeHome', 0) / gross * 100) if gross > 0 else 0
+    if check == 'margin:business':
+        # The best single business, so one strong shop can satisfy the goal.
+        # _recent_sales is the same matched-sales basis the shop panel shows and
+        # needs no rate table, unlike the full statement().
+        best = 0
+        for slot in range(len(st.get('b', ()))):
+            row = operating_margins._recent_sales(cfg, st, operating_margins._identity(st, slot))
+            best = max(best, row.get('margin') or 0)
+        return best
+    return 0
+
+
 def _state_value(cfg, st, objective):
     check = objective.get('check')
+    if check in LIVE_CHECKS:
+        return _live(cfg, st, check)
     if check == 'own:businesses':
         return len(_owned(cfg, st))
     if check == 'businesses_at_level':
@@ -190,16 +262,69 @@ def _state_value(cfg, st, objective):
     return 0
 
 
+def _scale(quest, data):
+    """A repeatable quest asks for more each time it is completed."""
+    repeat = quest.get('repeat')
+    if not repeat:
+        return 1.0
+    done = data['repeats'].get(quest['id'], {}).get('completions', 0)
+    return float(repeat.get('scale', 1.0)) ** done
+
+
+def _target(cfg, st, quest, objective, data=None):
+    data = data if data is not None else ensure(cfg, st)
+    base = max(1, int(objective.get('target', 1)))
+    return max(1, int(round(base * _scale(quest, data)))) if objective.get('kind') == 'count' \
+        else max(1, int(objective.get('target', 1)))
+
+
+def _counter(cfg, st, quest, objective, data):
+    """A scoped objective measures only what happened since this round armed,
+    so a daily cannot be satisfied by a lifetime total earned long ago."""
+    name = objective.get('counter', '')
+    current = data['counters'].get(name, 0)
+    if not objective.get('scoped'):
+        return current
+    return max(0, current - data['scopes'].get(quest['id'], {}).get(name, 0))
+
+
 def _progress(cfg, st, quest):
     data = ensure(cfg, st)
     rows = []
     for objective in quest.get('objectives', ()):
-        target = max(1, int(objective.get('target', 1)))
-        owned = (data['counters'].get(objective.get('counter', ''), 0)
-                 if objective.get('kind') == 'count' else _state_value(cfg, st, objective))
+        counted = objective.get('kind') == 'count'
+        target = _target(cfg, st, quest, objective, data)
+        owned = _counter(cfg, st, quest, objective, data) if counted else _state_value(cfg, st, objective)
+        owned = int(owned) if counted else round(float(owned), 1)
         rows.append(dict(label=objective.get('label', ''), owned=min(owned, target),
                          quantity=target, ready=owned >= target))
     return rows
+
+
+def _arm(cfg, st, quest):
+    """Snapshot the counters a repeatable round measures from. Called when the
+    round becomes available, never while it is waiting for the next day."""
+    data = ensure(cfg, st)
+    if not any(o.get('scoped') for o in quest.get('objectives', ())):
+        return
+    if quest['id'] in data['scopes']:
+        return
+    data['scopes'][quest['id']] = {o['counter']: data['counters'].get(o['counter'], 0)
+                                   for o in quest['objectives'] if o.get('counter')}
+
+
+def ticks_per_day(cfg):
+    return max(1, int(round(DAY_MINUTES * 60 / cfg['global']['tick'])))
+
+
+def _waiting(cfg, st, quest):
+    """Ticks until a repeatable re-arms; 0 when it is available now."""
+    if not quest.get('repeat'):
+        return 0
+    row = ensure(cfg, st)['repeats'].get(quest['id'])
+    if not row:
+        return 0
+    return max(0, row.get('nextArmTick', 0) - st.get('tick', 0))
 
 
 def _visible(cfg, st, quest):
@@ -215,20 +340,40 @@ def _visible(cfg, st, quest):
     return len(owned) >= appear.get('minBuildings', 0)
 
 
+def _choice_rows(cfg, quest):
+    return [dict(id=c['id'], label=c.get('label', ''),
+                 rewardText=' · '.join(l for l in (_reward_label(cfg, r) for r in c.get('rewards', ())) if l))
+            for c in quest.get('choices', ())]
+
+
 def _row(cfg, st, quest):
     data = ensure(cfg, st)
-    done = quest['id'] in data['completed']
+    repeatable = bool(quest.get('repeat'))
+    waiting = _waiting(cfg, st, quest)
+    if repeatable and not waiting:
+        _arm(cfg, st, quest)
+    done = quest['id'] in data['completed'] and not repeatable
     objectives = _progress(cfg, st, quest)
-    ready = not done and bool(objectives) and all(o['ready'] for o in objectives)
+    ready = not done and not waiting and bool(objectives) and all(o['ready'] for o in objectives)
     started = any(o['owned'] for o in objectives)
-    return dict(id=quest['id'], chapter=quest.get('chapter', 0), title=quest.get('title', ''),
+    repeats = data['repeats'].get(quest['id'], {})
+    status = ('done' if done else 'waiting' if waiting else 'ready' if ready
+              else 'tracking' if started else 'available')
+    return dict(id=quest['id'], chapter=quest.get('chapter', 0),
+                group=quest.get('group') or ('Chapter %s' % quest.get('chapter', 0)),
+                title=quest.get('title', ''),
                 summary=quest.get('summary', ''), teaches=quest.get('teaches', ''),
                 buildingId=quest.get('buildingId'), source=quest.get('source', 'chapter'),
-                status='done' if done else 'ready' if ready else 'tracking' if started else 'available',
-                objectives=objectives, rewardText=reward_text(cfg, quest), ready=ready)
+                status=status, objectives=objectives, ready=ready,
+                rewardText=reward_text(cfg, quest), choices=_choice_rows(cfg, quest),
+                chosen=data['choices'].get(quest['id']),
+                repeatable=repeatable, day=repeats.get('completions', 0) + 1 if repeatable else 0,
+                waitSeconds=int(waiting * cfg['global']['tick']) if waiting else 0)
 
 
 def reward_text(cfg, quest):
+    if quest.get('choices'):
+        return 'Choose one: ' + ' / '.join(c.get('label', '') for c in quest['choices'])
     labels = (_reward_label(cfg, r) for r in quest.get('rewards', ()))
     return ' · '.join(label for label in labels if label)
 
@@ -236,7 +381,7 @@ def reward_text(cfg, quest):
 def _reward_label(cfg, reward):
     kind = reward.get('type')
     if kind == 'cash':
-        return str(reward.get('amount', 0)) + ' YM'
+        return '{:,} YM'.format(int(reward.get('amount', 0)))
     if kind == 'supplies':
         return 'Supply pack'
     if kind == 'boost':
@@ -244,7 +389,7 @@ def _reward_label(cfg, reward):
                 reward.get('metric', '').replace('_', ' ') + ' · ' +
                 str(reward.get('charges', 0)) + ' uses')
     if kind == 'upgrade_voucher':
-        return 'Upgrade voucher ' + str(reward.get('amount', 0)) + ' YM'
+        return 'Upgrade voucher {:,} YM'.format(int(reward.get('amount', 0)))
     if kind == 'grant_building':
         return 'A funded ' + _business_name(cfg, reward.get('businessId'))
     if kind == 'unlock_recipe':
@@ -253,6 +398,8 @@ def _reward_label(cfg, reward):
         return 'Unlock a crafted product'
     if kind == 'unlock_feature':
         return 'Unlock ' + str(reward.get('feature', '')).replace('_', ' ')
+    if kind == 'unlock_regulars':
+        return 'Regular buyers open for business'
     if kind == 'speed_perk':
         return '+' + str(reward.get('percent', 0)) + '% ' + _good_name(cfg, reward.get('goodId')) + ' speed'
     return ''
@@ -284,13 +431,13 @@ def payload(cfg, st):
 
 # ------------------------------------------------------------------- rewards
 
-def _grant(cfg, st, reward):
+def _grant(cfg, st, reward, scale=1.0):
     data = ensure(cfg, st)
     kind = reward.get('type')
     if kind == 'cash':
-        st['cash'] = st.get('cash', 0) + max(0, int(reward.get('amount', 0)))
+        st['cash'] = st.get('cash', 0) + max(0, int(round(reward.get('amount', 0) * scale)))
     elif kind == 'supplies':
-        _supply_pack(cfg, st, int(reward.get('budget', 0)))
+        _supply_pack(cfg, st, int(round(reward.get('budget', 0) * scale)))
     elif kind == 'boost':
         if reward.get('metric') in METRICS:
             data['sequence'] += 1
@@ -321,6 +468,9 @@ def _grant(cfg, st, reward):
         gid = reward.get('goodId')
         if gid is not None:
             data['perks'][gid] = data['perks'].get(gid, 0) + max(0, int(reward.get('percent', 0)))
+    elif kind == 'unlock_regulars':
+        # The opening café project's reward: regular buyers become available.
+        st['regularDeliveries'] = max(3, st.get('regularDeliveries', 0))
     elif kind == 'flag':
         name = reward.get('name')
         if name is not None and name not in data['flags']:
@@ -444,17 +594,44 @@ def _act(cfg, st, body):
     quest = quests(cfg).get(body.get('questId'))
     if quest is None:
         return dict(ok=False, why='Unknown quest')
-    if quest['id'] in data['completed']:
+    repeatable = bool(quest.get('repeat'))
+    if not repeatable and quest['id'] in data['completed']:
         return dict(ok=False, why='This quest is already complete')
+    waiting = _waiting(cfg, st, quest)
+    if waiting:
+        hours = max(1, int(round(waiting * cfg['global']['tick'] / 3600)))
+        return dict(ok=False, why='This one comes back in about %d game hours' % hours)
     if not _visible(cfg, st, quest):
         return dict(ok=False, why='This quest is not available yet')
+    if repeatable:
+        _arm(cfg, st, quest)
     if not all(o['ready'] for o in _progress(cfg, st, quest)):
         return dict(ok=False, why='Finish the quest goals first')
-    for reward in quest.get('rewards', ()):
-        _grant(cfg, st, reward)
+
+    rewards = quest.get('rewards', ())
+    choice = None
+    if quest.get('choices'):
+        choice = next((c for c in quest['choices'] if c['id'] == body.get('choiceId')), None)
+        if choice is None:
+            return dict(ok=False, why='Choose one of the rewards first')
+        rewards = choice.get('rewards', ())
+
+    scale = _scale(quest, data)
+    for reward in rewards:
+        _grant(cfg, st, reward, scale)
+
+    earned = (' · '.join(l for l in (_reward_label(cfg, r) for r in rewards) if l)
+              or reward_text(cfg, quest))
     data['completed'][quest['id']] = dict(tick=st.get('tick', 0))
+    if choice is not None:
+        data['choices'][quest['id']] = choice['id']
+    if repeatable:
+        row = data['repeats'].setdefault(quest['id'], dict(completions=0))
+        row['completions'] += 1
+        row['nextArmTick'] = st.get('tick', 0) + ticks_per_day(cfg)
+        data['scopes'].pop(quest['id'], None)   # next round measures from scratch
     data['recent'].append(dict(id=quest['id'], title=quest.get('title', ''),
-                               tick=st.get('tick', 0), rewardText=reward_text(cfg, quest)))
+                               tick=st.get('tick', 0), rewardText=earned))
     del data['recent'][:-RECENT_LIMIT]
     return dict(ok=True, kind='quest', questId=quest['id'],
-                message=quest.get('title', 'Quest') + ' complete: ' + reward_text(cfg, quest))
+                message=quest.get('title', 'Quest') + ' complete: ' + earned)

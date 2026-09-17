@@ -16,6 +16,15 @@
     var market=nav.querySelector('a[href*="marketplace.html"]');
     if(!market)return;
     nav.dataset.craftNav='true';
+    var focusLink=nav.querySelector('a[href*="focus-tree.html"]');
+    if(!focusLink){
+      focusLink=document.createElement('a');focusLink.href='./focus-tree.html';
+      focusLink.innerHTML='<img src="./assets/focus-tree/focus.svg" alt="" width="28" height="28" aria-hidden="true"><span>Focus</span>';
+      var licence=nav.querySelector('a[href*="license.html"]');
+      if(licence)licence.before(focusLink);else nav.appendChild(focusLink);
+    }
+    focusLink.hidden=false;
+    if(location.pathname.endsWith('/focus-tree.html'))focusLink.setAttribute('aria-current','page');
     if(!nav.querySelector('a[href*="craft.html"]')){
       var craft=document.createElement('a');craft.href='./craft.html';
       craft.innerHTML='<span>Craft</span>';market.after(craft);
@@ -51,7 +60,7 @@
   }
   // Pages out of play. advanced-hq.html is Operations: the server redirects it
   // away as well (server.RETIRED_PAGES), this only keeps the link out of sight.
-  document.querySelectorAll('a[href*="produce.html"],a[href*="collect.html"],a[href*="focus-tree.html"],a[href*="advanced-hq.html"]').forEach(function(a){a.hidden=true;});
+  document.querySelectorAll('a[href*="produce.html"],a[href*="collect.html"],a[href*="advanced-hq.html"]').forEach(function(a){a.hidden=true;});
   document.querySelectorAll('a[href="./port_trading.html"]').forEach(function(a){
     a.hidden=!hasSeat;
     a.removeAttribute('data-econ-gate');

@@ -130,12 +130,20 @@ automatically from real activity; the player presses Claim. Manual claim is
 kept deliberately: it makes reward grants idempotent, and the child sees what
 they earned instead of a number changing silently.
 
-Twelve of the fifteen businesses need the same quest: run the ordinary line,
-earn the advanced recipe. Writing that out twelve times would be twelve
-near-identical records, so one **template** with `forEachBusiness: true`
-instantiates per owned business, resolving `{businessId}`, `{good1..3}` and
-their names from the tier table. The farm, fish stall and roastery are skipped:
-they keep their opening recipes from the start.
+Twelve of the fifteen businesses earn their advanced recipe the same way, so
+one **template** with `forEachBusiness: true` instantiates per owned business,
+resolving `{businessId}`, `{good1..3}` and their names from the tier table. The
+farm, fish stall and roastery are skipped: they keep their opening recipes.
+
+The template generates only the half that must not drift - the recipe unlock,
+the `business_developed:` flag and the speed perk. The half a player reads is
+authored per business under `templates[0].businesses`: Tinker's Garage is "Back
+on the Road" and wants repairs sold and parts on the shelf; the Ironworks is
+"Measure Twice" and wants brackets sold but frames *made*; the data centre is
+"Launch Day" and contrasts compute sold by the hour with storage rented by the
+month. Twelve identical quests are twelve chores, and a test now asserts all
+twelve titles, summaries and lessons differ, that the set uses both `sell` and
+`produce`, and that no quest asks for another business's goods.
 
 Templates carry no special behaviour. They expand to ordinary quest records
 before anything else looks at them.
@@ -156,6 +164,10 @@ Two kinds, because two are genuinely needed.
 **State checks** are evaluated when the payload is read, not accumulated:
 
 - `own:businesses`, `level:<businessId>`, `unlocked:<goodId>`
+- **Live economy numbers**, which cannot be idled into: `income:perMinute`,
+  `margin:town`, `margin:business`, `takehome:percent`, `netWorth`, `cash`,
+  `licence:open`. These read the economy through a lazy import, so a quest can
+  ask for a rate or a ratio rather than a running total.
 - `businesses_at_level` — how many businesses have reached a given level
 
 The `act:` verbs are the only new instrumentation: roughly eight one-line calls
@@ -165,6 +177,15 @@ quest is content once they exist, which is the whole reason to add them.
 Counters are recorded from adoption of the engine onward. No historical
 activity is invented, matching the rule already set in `SYSTEM_ROLES.md`.
 Claiming recognises activity; it never debits stock a second time.
+
+An objective marked `"scoped": true` measures only what has happened since its
+round armed, rather than a lifetime total. Repeatable quests need this: without
+it a daily would be satisfied the moment it appeared by sales banked weeks ago.
+
+Verbs recorded at their call sites: `upgrade`, `open_business`, `focus_node`,
+`set_regular`, `upgrade_regular`, `quiz_pass`, `craft_unlock`, `buy_asset`,
+`assign_asset`, `craft_sale`, `pause_business`, `resume_business`,
+`salvage_business`.
 
 ## Rewards
 
@@ -190,6 +211,14 @@ No reward grants Prestige or Know-how; see "Prestige is deferred".
 Upgrade cost scales at `growth: 1.55`, so a free level at tier 12 is worth
 thousands of times one at tier 1. A voucher is stable across the whole curve
 and teaches budgeting rather than handing out a jackpot.
+
+A quest may carry `choices` instead of `rewards`: three branches, of which the
+claim grants exactly one. The balance rule is that no branch dominates — cash
+now, a larger payout conditional on actually delivering orders, or a permanent
+edge that overtakes the cash only if the player keeps going. A child who is
+about to stop for the day should take the cash, and that is the correct answer.
+Six chapter-closing quests carry a choice; putting one on every quest would
+turn the decision into noise.
 
 ## Boosts
 
@@ -220,8 +249,8 @@ never wall-clock seconds.
 
 ## The fresh quest set
 
-Drafted in [config/quests.v1.json](config/quests.v1.json): **22 hand-written
-chapter quests plus 12 template instances, 34 in total**, against the real
+Drafted in [config/quests.v1.json](config/quests.v1.json): **39 hand-written quests plus 12
+template instances, 51 in total**, in ten named groups, against the real
 economy numbers (start cash 0, the farm free, the fish stall 110, the roastery
 650, goods priced 2 through 760, farm upgrades 24/37/58/89).
 
@@ -241,12 +270,48 @@ economy numbers (start cash 0, the farm free, the fish stall 110, the roastery
 Each quest carries a `teaches` line naming the one idea it exists to convey.
 Where a quest teaches nothing new, it says so.
 
-Chapter 1 hands out the fish stall and the roastery, which the three opening
-projects in `town_projects.py` currently grant. Both systems cannot grant the
-same building, so an engine-enabled class runs the opening sequence off and
-Chapter 1 carries the grants instead. Legacy classes are untouched.
+Chapter 1 hands out the fish stall and the roastery. This was written as a
+conflict to resolve against the three opening projects in `town_projects.py` -
+it is not one. The shipped config has `connectedProgression: true` with
+`groupProjectsEnabled: false`, and `town_projects.connected()` needs both, so
+the guided opening (Feed the neighborhood -> free fish stall -> Serve the
+harbor lunch -> free roastery -> Open the neighborhood cafe) **never fires
+today**. A brand-new player gets 0 cash, one farm, no guidance, and must earn
+110 YM unaided to open a second business.
+
+So Chapter 1 does not displace the guided opening: it restores one. First Crop
+pays 40 YM, Room to Grow 60, and First Delivery hands over a funded fish stall.
+If `groupProjectsEnabled` is ever turned back on, the two systems would then
+both grant the same buildings and the opening sequence must be switched off for
+engine classes - but that is a future conflict, not a current one.
 
 Quest count is now content. Adding a quest is an edit to one JSON file.
+
+## Group projects
+
+The three opening group projects in `town_projects.py` are now quests, in their
+own "Group projects" group. Their goods targets, order and rewards are ported
+unchanged from `PROJECTS` and `GROUP_COPY`: six tomatoes for a funded fish
+stall, then smoked fish and oysters for a funded roastery, then espresso and
+pastries to open regular buyers (`regularDeliveries = 3`, which is what the old
+third project set).
+
+Two things this needed:
+
+- **A `deliver:<goodId>` counter**, bumped only when a sale settles with source
+  `orders`. Group projects were always about deliveries, and a walk-in sale of
+  the same good must not advance them. `record_sale` bumps it alongside the
+  ordinary `sell:` counters, so there is still one observation per settled sale.
+- **An `unlock_regulars` reward**, which sets `regularDeliveries` the way the
+  café project did.
+
+A quest marked `"scope": "group"` is never filed under a business, even when
+all its goods come from one. Without that, "deliver six tomatoes" would have
+been listed under the farm rather than as group work.
+
+Only these two quests hand out buildings. The opening chapter's `first-delivery`
+and `harbour-lunch` used to, and now pay cash and a boost instead - two systems
+must never fund the same business. A test pins this.
 
 ## Files, state and route
 
@@ -262,6 +327,24 @@ Built:
   `#econ-quests` below `#econ-building`. It reads the snapshot `econ.js`
   already polls (`window.YomamaEcon.state()`) and issues **no requests of its
   own** except a claim, so a thirty-seat class adds no polling load.
+  The Build page shows **two one-line `game-building-activity` strips** - the
+  shape it already used - naming what is open and nothing more: the quests for
+  the business currently selected in the picker, and the group-wide ones. The
+  strip follows econ.js's own selection through
+  `sessionStorage.yomama_business_slot`.
+  Everything else is behind `#game-quests-dialog`, which has two levels: the
+  list of that scope's quests as `game-activity-card`s, and one quest's detail -
+  objectives with progress, what it teaches, and the claim or the three reward
+  choices - with a back link between them.
+  Two earlier attempts got this wrong and are recorded so they are not retried:
+  a full-width grid of tall cards grouped by chapter (at 51 quests, a wall that
+  pushed the page layout about), then a permanently visible panel listing every
+  quest at once. Quests are per-business and open on request, as they were.
+
+  Which business a quest belongs to is inferred in `_home`: an explicit
+  `buildingId`, else `appear.ownsBusiness`, else the single business its
+  objectives reference. 21 quests have a home; the 30 that span the group -
+  dailies, the licence, the margin goals - are listed separately.
 - `tests/test_quest_engine.py` (18) and `tests/test_quest_engine_integration.py` (8).
 
 Save state is one additive key:
@@ -303,9 +386,10 @@ their completed records, Prestige, recipe perks and focus qualification until
 they are reset; they simply never see the engine. New classes get the engine
 and never see the legacy quests. No class runs both.
 
-An engine class also runs with `townProjects` opening sequence off,
-`prestigeExpansion: false` and `prestigeCostsEnabled: false`, for the
-reasons given above. None of the three affects a legacy class.
+An engine class also runs with `prestigeExpansion: false` and
+`prestigeCostsEnabled: false`, for the reasons given above; neither affects a
+legacy class. The `townProjects` opening sequence needs no change while
+`groupProjectsEnabled` stays false.
 
 Schema is additive: one new state key, no new columns, no change to any
 existing key. The site needs Manual Deploy, between play sessions. Pushing

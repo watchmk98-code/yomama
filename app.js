@@ -37,7 +37,7 @@
   const sharedAccountBackupStorageKey = 'yomama_watchmk_account_v1_backup';
   const gameAccountUsername = 'WATCHMK';
   const legacyCharacterSelectionStorageKey = 'hero_select_active_character';
-  const temporarilyHiddenCharacterKeys = Object.freeze(['irene']);
+  const temporarilyHiddenCharacterKeys = Object.freeze(['marks']);
   const hiddenCharacterKeySet = new Set(temporarilyHiddenCharacterKeys);
 
   const toSafeNumber = (value, fallback = 0) => {

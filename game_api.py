@@ -865,6 +865,16 @@ def econ_quests(body):
     return _act(body, apply)
 
 
+def econ_focus_tree(body):
+    """Start a town development focus in the authenticated class save."""
+    def apply(cfg, st, cls):
+        if cfg.get('version') != 4:
+            return dict(ok=False, why='Town focus tree unavailable')
+        import focus_tree
+        return focus_tree.act(cfg, st, body)
+    return _act(body, apply)
+
+
 def econ_workforce(body):
     """Permanent teams and HQ share the class transaction and economy clock."""
     def apply(cfg, st, cls):
@@ -934,11 +944,17 @@ def _order_intention(body, replace=False):
         raise ApiError('orderId is required')
     def apply(cfg,st,cls):
         fn=economy.replace_order if replace else economy.fulfill_order
-        return dict(fn(cfg,st,offer,order_id=order_id),kind='order_replace' if replace else 'order')
+        result=fn(cfg,st,offer,order_id=order_id)
+        if result['ok'] and cfg.get('version')==4 and st.get('marketPendingGoods'):
+            economy.market_orders.sync(cfg,st)
+        return dict(result,kind='order_replace' if replace else 'order')
     return _act(body,apply)
 
 
 def econ_fulfill_order(body):
+    if 'orders' in body:
+        return _act(body,lambda cfg,st,cls: economy.market_orders.fulfill_ready(cfg,st,body['orders'])
+                    if cfg.get('version')==4 else dict(ok=False,why='Manual orders unavailable'))
     return _order_intention(body)
 
 
@@ -1042,6 +1058,8 @@ def econ_quiz(body) -> dict:
         cfg, book, st, behind = _player_econ(conn, p, s)
         if passed:
             st["checklist"]["quiz"] = True
+            import quest_engine
+            quest_engine.record_action(cfg, st, 'quiz_pass')
         _save_state(conn, p["id"], cfg, st)
         _settled.pop(p["code"], None)
         _log(conn, p["code"], p["id"], "quiz", {"score": score, "passed": passed})
@@ -1725,7 +1743,7 @@ def _class_locked(fn):
 
 for _name in ('port_state','port_order','port_cancel','port_chart','_port_chart_access','_port_settle','get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
               'econ_upgrade','econ_reserve','econ_processing','econ_fulfill_order','econ_replace_order','econ_commit_order','econ_focus','econ_breakfast',
-              'econ_business','econ_progression','econ_workforce','econ_craft','econ_quests',
+              'econ_business','econ_progression','econ_workforce','econ_craft','econ_quests','econ_focus_tree',
               'econ_contracts','econ_accept_contract','econ_customers','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
     globals()[_name]=_class_locked(globals()[_name])
 
