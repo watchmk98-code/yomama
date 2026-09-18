@@ -6,7 +6,7 @@
   if(location.hash==='#stock')tabs.Build=1;
   if(location.hash==='#team')tabs.Operations=1;
   if(location.hash==='#quests')tabs.Operations=2;
-  function compact(){return innerWidth<1100 || innerHeight<=650 || (innerHeight<720 && !!document.querySelector('#econ-building')) || (innerHeight<820 && !!document.querySelector('#econ-building #game-expansion-choice, #econ-building .game-construction')) || (innerHeight<950 && !!document.querySelector('#econ-building .has-craft-stock'));}
+  function compact(){if(document.body.classList.contains('build-illustrated'))return innerWidth<1100 || innerHeight<=650;return innerWidth<1100 || innerHeight<=650 || (innerHeight<720 && !!document.querySelector('#econ-building')) || (innerHeight<820 && !!document.querySelector('#econ-building #game-expansion-choice, #econ-building .game-construction')) || (innerHeight<950 && !!document.querySelector('#econ-building .has-craft-stock'));}
   function guideText(value){var node=document.createElement('span');node.textContent=value;return node.innerHTML;}
   function moneyGuide(state){
     if(!state.operatingStatement || !state.operatingStatement.enabled)return '';
@@ -41,10 +41,10 @@
     return '<p class="game-guide-intro">An order is a shopping list. Bring the goods to earn its reward.</p>'+
       '<ol class="game-guide-steps">'+
       '<li><strong>Pick a reward.</strong> The <strong>Goal order</strong> asks only for what your current opening goal still needs. Other cards are optional. Look at the cash reward at the bottom of a card.</li>'+
-      '<li><strong>Fill the shopping list.</strong> Read <strong>Have / need</strong> beside each item.<span class="game-guide-example">3 / 5 = 3 ready to use. You need 2 more.</span>Let your businesses make the missing goods. The estimate shows how long gathering them may take; <strong>If saved</strong> assumes you press <strong>Save for this order</strong>.'+(state.sectorRhythms && state.sectorRhythms.enabled?' Industry makes larger batches, so stock may jump after a wait.':'')+' Use <strong>Save for this order</strong> to keep supplies for this job after regular buyers get theirs.</li>'+
+      '<li><strong>Fill the shopping list.</strong> Read <strong>Have / need</strong> beside each item.<span class="game-guide-example">3 / 5 = 3 ready to use. You need 2 more.</span>Let your businesses make the missing goods. The estimate shows how long gathering them may take; <strong>If saved</strong> assumes you press <strong>Save goods</strong>.'+(state.sectorRhythms && state.sectorRhythms.enabled?' Industry makes larger batches, so stock may jump after a wait.':'')+' Use <strong>Save goods</strong> to keep supplies for this job after regular buyers get theirs.</li>'+
       '<li><strong>Deliver when every item is ready.</strong> Press <strong>Deliver</strong>. The goods leave your stock and you get the reward.'+
       (timed?' <strong>Start delivery</strong> sends a timed shipment instead: its goods are saved for the trip, and you get paid when the timer ends.':'')+'</li></ol>'+
-      '<p class="game-guide-tip"><strong>Returning to full shelves?</strong> Keep rolling with <strong>CLICK!!!!</strong>. Bulk orders can request more of the spare stock you already have, at the usual bulk price. <strong>Deliver ready</strong> collects the ready cards once.</p><p class="game-guide-tip"><strong>Want another offer?</strong> <strong>CLICK!!!!</strong> changes that card for free. Clicking it earns no cash.</p>'+
+      '<p class="game-guide-tip"><strong>Returning to full shelves?</strong> Keep rolling with <strong>Reroll</strong>. Bulk orders can request more of the spare stock you already have, at the usual bulk price. <strong>Deliver ready</strong> collects the ready cards once.</p><p class="game-guide-tip"><strong>Want another offer?</strong> <strong>Reroll</strong> changes that card for free. Clicking it earns no cash.</p>'+
       moneyGuide(state)+
       (varied?'<details class="game-guide-more"><summary>What do the order labels mean?</summary><ul><li><strong>Small:</strong> a few units of one product. Try this when you have a little stock to spare.</li><li><strong>Standard:</strong> a regular-sized shopping list.</li><li><strong>Bulk:</strong> lots of one product. Clear spare stock, but earn less per item than a Standard order on the same card.</li><li><strong>Large:</strong> a bigger shopping list with a better price per item.</li><li><strong>Rare and Jackpot:</strong> bigger requests with extra cash bonuses.</li></ul><p>Check the goods and reward each time. A bigger reward also uses more of your stock. On a timed card, you still wait for delivery.</p></details>':'')+
       (timed?'<details class="game-guide-more"><summary>What is different about the three cards?</summary><ul><li><strong>Delivery:</strong> wait for payment. A bigger payout takes longer.</li><li><strong>Sector:</strong> an order from one business group, such as Food. The game picks the group. Earn cash.</li><li><strong>Third card:</strong> a general order. Deliver its goods to get cash right away.</li></ul></details>':'')+
@@ -66,7 +66,7 @@
     items=items.filter(function(i){return i[1];});
     if(!items.length)return;
     items.forEach(function(i){i[1].classList.remove('game-view-hidden');i[1].removeAttribute('role');i[1].removeAttribute('aria-labelledby');});
-    if((!compact() && key!=='Operations') || items.length<2)return;
+    if((!compact() && key!=='Operations' && key!=='Market') || items.length<2)return;
     var selected=Math.min(tabs[key]||0,items.length-1);tabs[key]=selected;
     var nav=document.createElement('div');nav.className='game-view-tabs';nav.setAttribute('role','tablist');nav.setAttribute('aria-label',key+' panels');
     items.forEach(function(item,index){
@@ -86,6 +86,7 @@
     var children=Array.from(host.children);children.forEach(function(e){e.hidden=false;});
     host.classList.add('game-paged-list');
     var per=Math.max(columns,Math.floor((host.clientHeight-(inlinePager?0:36))/minHeight)*columns);
+    if(key==='Buildings' && document.body.classList.contains('build-illustrated'))per=Math.min(4,per);
     per=Math.min(per,children.length || 1);
     var count=Math.ceil(children.length/per);
     if(key==='Buildings'){
@@ -95,7 +96,7 @@
     }
     var current=Math.min(pages[key]||0,Math.max(0,count-1));pages[key]=current;
     children.forEach(function(e,i){e.hidden=i<current*per || i>=(current+1)*per;});
-    host.style.setProperty('--page-rows',Math.ceil(Math.min(per,children.length-current*per)/columns));
+    host.style.setProperty('--page-rows',Math.ceil((key==='Buildings' && document.body.classList.contains('build-illustrated')?per:Math.min(per,children.length-current*per))/columns));
     if(count<=1)return;
     var nav=document.createElement('div');nav.className='game-pager';nav.dataset.page=key;nav.setAttribute('aria-label',key+' pages');
     function button(label,step){var b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-label',(step>0?'Next ':'Previous ')+key.toLowerCase()+' page');b.disabled=step<0?current===0:current===count-1;b.addEventListener('click',function(){pages[key]=current+step;render();var nav=document.querySelector('.game-pager[data-page="'+key+'"]');var n=nav&&nav.querySelector('button'+(step>0?':last-child':':first-child'));if(n&&n.disabled)n=nav.querySelector('button:not(:disabled)');if(n)n.focus();});return b;}
@@ -112,21 +113,21 @@
     var count=Math.max(1,Math.ceil(rows.length/3));
     var current=Math.min(pages.Inventory||0,count-1);pages.Inventory=current;
     rows.forEach(function(row){row.hidden=true;row.style.removeProperty('order');});
-    for(var slot=0;slot<Math.min(3,rows.length);slot++){
-      var row=rows[(current*3+slot)%rows.length];row.hidden=false;row.style.order=String(slot);
+    for(var slot=0;slot<Math.min(3,rows.length-current*3);slot++){
+      var row=rows[current*3+slot];row.hidden=false;row.style.order=String(slot);
     }
     stock.querySelector('.game-inventory-rows').classList.add('game-paged-list');
-    stock.querySelector('.game-inventory-rows').style.setProperty('--page-rows',compact()?3:1);
+    stock.querySelector('.game-inventory-rows').style.setProperty('--page-rows',document.body.classList.contains('build-illustrated') || compact()?3:1);
     var old=heading.querySelector('.game-stock-pager');if(old)old.remove();
     var nav=document.createElement('div');nav.className='game-stock-pager';nav.setAttribute('aria-label','Stock pages');
     function arrow(label,step,name){
       var button=document.createElement('button');button.type='button';button.textContent=label;
-      button.setAttribute('aria-label',name+' stock items');button.disabled=step<0?current===0:current===count-1;
+      button.id=step<0?'game-stock-previous':'game-stock-next';button.setAttribute('aria-label',name+' stock items');button.disabled=step<0?current===0:current===count-1;
       button.addEventListener('click',function(){pages.Inventory=current+step;render();var next=stock.querySelector('.game-stock-pager button'+(step>0?':last-child':':first-child'));if(next)next.focus({preventScroll:true});});
       return button;
     }
     nav.appendChild(arrow('‹',-1,'Previous'));
-    var position=document.createElement('span');position.textContent=(current+1)+' / '+count;nav.appendChild(position);
+    var position=document.createElement('span');position.setAttribute('aria-live','polite');position.textContent=(current+1)+' / '+count;nav.appendChild(position);
     nav.appendChild(arrow('›',1,'Next'));
     heading.appendChild(nav);
   }
@@ -184,7 +185,7 @@
   var fitScale=1, fitKey='', fitAt=0;
   var FIT_FRAMES = '.game-layout,.game-center,.game-actions,.game-purpose-layout,.game-license-layout,'+
     '.game-site,.game-business-overview,.game-live-metrics,.game-operations,.game-expansion,'+
-    '.game-roster,.game-market-orders,.game-market-tools,.game-customer-contracts,.game-build-bottom,'+
+    '.game-roster,.game-operation,.game-market-orders,.game-order,.game-market-tools,.game-customer-contracts,.game-build-bottom,'+
     '.game-contract-panel,.game-contract-body,.game-contract-supply,.game-contract-footer';
   // Does every frame that must not clip still clear? Reads only, and it stops
   // at the first failure - this runs on every poll, so it has to be cheap.
@@ -276,6 +277,7 @@
       var shiftStage=document.body.classList.contains('first-shift-focus')?Number(document.body.dataset.firstShiftStage):-1;
       tabset(build,'Build',[['Building',site],['Stock',stock],
         ['Upgrades',shiftStage<0 || shiftStage===4?build.querySelector('.game-operations'):null],
+        ['Focus',document.body.classList.contains('build-illustrated')?build.querySelector('.game-milestone'):null],
         ['Expand',shiftStage<0 || shiftStage===6?build.querySelector('.game-expansion'):null]]);
       document.body.dataset.fitBuildView=String(tabs.Build||0);
       var picker=build.querySelector('.game-fit-picker');if(picker)picker.remove();
@@ -284,6 +286,9 @@
         var controls=document.createElement('div');controls.className='game-fit-controls';
         if(picker && picker.isConnected)controls.appendChild(picker);
         var buildTabs=build.querySelector('.game-view-tabs');if(buildTabs)controls.appendChild(buildTabs);
+        if(document.body.classList.contains('build-illustrated')){
+          var expandButton=document.createElement('button');expandButton.type='button';expandButton.id='game-open-business-mobile';expandButton.className='game-open-business-mobile';expandButton.dataset.openBusiness='';expandButton.setAttribute('aria-haspopup','dialog');expandButton.textContent='+ Open a business';controls.appendChild(expandButton);
+        }
         build.prepend(controls);
       }
     }
@@ -291,7 +296,7 @@
       var regulars=market.querySelector('.game-customer-contracts');
       var shiftOrdersOnly=document.body.classList.contains('first-shift-focus') && Number(document.body.dataset.firstShiftStage)<=2;
       tabset(market,'Market',[['Orders',market.querySelector('.game-market-orders')],['Contracts',shiftOrdersOnly?null:regulars]]);
-      market.classList.toggle('game-market-narrow',!compact() && !!regulars && innerWidth<1250);
+      market.classList.remove('game-market-narrow');
       var buyerPanel=market.querySelector('.game-contract-panel');
       market.classList.toggle('game-market-tight',!!buyerPanel && buyerPanel.clientHeight<570);
       var ordersHeading=market.querySelector('.game-market-orders > .game-panel-head');
@@ -312,10 +317,9 @@
     if(ops && !ops.querySelector('.wf-workspace'))tabset(ops,'Operations',[[(window.YomamaEcon && window.YomamaEcon.state() || {}).productionMode==='independent'?'Products':'Recipes',ops.querySelector('.game-purpose-main')],['Team',ops.querySelector('.game-business-team')],['Quests',ops.querySelector('.game-business-quests')]]);
     if(licence){var sections=Array.from(licence.querySelector('.game-license-layout')?.children||[]);tabset(licence,'Licence',sections.map(function(n){return [n.classList.contains('game-invest')?'Invest':n.querySelector('#game-goals')?'Goals':'Quiz',n];}));var goals=licence.querySelector('#game-goals');if(goals)goals.open=true;}
     if(!fitKey)fitWorkspace();   // first paint: size the page before paging it
-    paginate('.game-roster-list','Buildings',68,1);
+    paginate('.game-roster-list','Buildings',document.body.classList.contains('build-illustrated')?110:68,1);
     var orderGrid=market && market.querySelector('.game-order-grid');
-    var orderCardWidth=orderGrid && orderGrid.clientHeight<500?430:350;
-    var orderColumns=compact() || (market && market.classList.contains('game-market-narrow'))?1:Math.max(1,Math.min(3,Math.floor((orderGrid?orderGrid.clientWidth:0)/orderCardWidth)));
+    var orderColumns=innerWidth<900 || innerHeight<=650?1:3;
     if(market)market.style.setProperty('--market-order-columns',orderColumns);
     paginate('.game-market-orders .game-order-grid','Orders',10000,orderColumns);
     fitMarketGoods(market);

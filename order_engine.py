@@ -100,19 +100,7 @@ def _sector_order(cfg, state):
         choices.remove(previous)
     sector = choices[int.from_bytes(digest[16:24], 'big') % len(choices)]
     recipes = sectors[sector]
-    target = rarity['items'] or 2
-    sizes = [len(r['goods']) for r in recipes if len(r['goods']) <= target]
-    size = max(sizes) if sizes else min(len(r['goods']) for r in recipes)
-    candidates = [r for r in recipes if len(r['goods']) == size]
-    history = state.setdefault('orderRecipeHistory', [[], [], []])[1]
-    on_board = {offer.get('recipeId') for offer in state.get('offers') or []}
-    unseen = [r for r in candidates if r['id'] not in history]
-    if unseen:
-        unseen = [r for r in unseen if r['id'] not in on_board] or unseen
-        recipe = unseen[int.from_bytes(digest[8:16], 'big') % len(unseen)]
-    else:
-        rank = {rid: i for i, rid in enumerate(history)}
-        recipe = min(candidates, key=lambda r: rank[r['id']])
+    recipe = economy.choose_recipe(cfg, state, 1, rarity, digest, goods, recipes)
     requirements = []
     value = 0
     for gid in recipe['goods']:
@@ -125,10 +113,7 @@ def _sector_order(cfg, state):
         requirements.append(dict(goodId=gid, quantity=quantity))
         value += quantity * good['unitPrice']
     reward_percent = economy.jsround(110 * rarity['payoutPercent'] / 100)
-    if recipe['id'] in history:
-        history.remove(recipe['id'])
-    history.append(recipe['id'])
-    del history[:-len(ORDER_RECIPES)]
+    economy.record_recipe(cfg, state, 1, recipe)
     state['orderSerial'] += 1
     state['orderEngine']['lastSector'] = sector
     return _label(dict(id='order-{}-{}'.format(state.get('rngState', 1), serial),

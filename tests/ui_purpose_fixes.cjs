@@ -254,12 +254,12 @@ print(json.dumps(result))
    await go('buildings');
    assert.equal(state.breakfastEvent.locked,true);
    const projectsButton=page.locator('[data-building-activities="projects"]');
-   assert.equal(await page.locator('.game-opening-guide').count(),1,'Build keeps the next opening goal visible');
+   assert.equal(await page.locator('.game-opening-guide').count(),0,'Build hides the temporary notice board');
    assert.match(await page.locator('[data-activity-kind="projects"]').textContent(),/Feed the neighborhood/);
    await fit('fresh-build');
    if(await page.getByRole('tab',{name:'Building',exact:true}).isVisible())for(const name of ['Upgrades','Expand','Building']){
     await page.getByRole('tab',{name,exact:true}).click();await settle();
-    assert(await page.locator('.game-opening-guide').isVisible(),'The opening goal remains visible from every Build tab');
+    assert.equal(await page.locator('.game-opening-guide').count(),0,'The notice board stays hidden on every Build tab');
     await fit('fresh-build-'+name.toLowerCase());
    }
    await projectsButton.click();

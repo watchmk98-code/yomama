@@ -34,6 +34,37 @@ def buy(cfg, st, supply_id, quantity):
     return result
 
 
+def test_supply_shop_basket_checks_total_and_saves_once():
+    cfg, st = town()
+    items = [dict(supplyId='wooden_boards', quantity=3),
+             dict(supplyId='packaging', quantity=2)]
+    cost = sum(C.SUPPLIES[row['supplyId']]['unitPrice'] * row['quantity'] for row in items)
+    request = body(st, action='buy_supplies', items=items)
+    st['cash'] = cost - 1
+    assert not C.act(cfg, st, request)['ok']
+    assert st['cash'] == cost - 1
+    assert st['crafting']['supplies'] == {}
+    st['cash'] = cost + 50
+    receipt = C.act(cfg, st, request)
+    assert receipt['ok'] and receipt['cost'] == cost
+    assert st['cash'] == 50
+    assert st['crafting']['supplies']['wooden_boards']['quantity'] == 3
+    assert st['crafting']['supplies']['packaging']['quantity'] == 2
+    assert C.act(cfg, st, request)['duplicate']
+    assert st['cash'] == 50
+    assert st['crafting']['supplies']['wooden_boards']['quantity'] == 3
+
+
+def test_supply_shop_rejects_repeated_and_invalid_items_without_changes():
+    cfg, st = town()
+    before = copy.deepcopy(st)
+    for items in ([dict(supplyId='wooden_boards', quantity=1)] * 2,
+                  [dict(supplyId='wooden_boards', quantity=1), dict(supplyId='unknown', quantity=2)],
+                  [dict(supplyId='wooden_boards', quantity=True)], []):
+        assert not C.act(cfg, st, body(st, action='buy_supplies', items=items))['ok']
+        assert st == before
+
+
 def recipe(item_id):
     return next(row for row in C.RECIPES if row[0] == item_id)
 

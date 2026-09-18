@@ -1,6 +1,7 @@
 """Delivery variety must stay reachable, reproducible, and possible to produce."""
 from __future__ import annotations
 
+import collections
 import copy
 import json
 
@@ -49,26 +50,73 @@ def test_catalog_has_distinct_named_purposeful_bundles_for_every_product():
         assert selected <= set(goods)
 
 
-@pytest.mark.parametrize('rarity,size,slot', [
-    ('standard', 1, 0), ('standard', 2, 1),
-    ('large', 3, 0), ('rare', 4, 0), ('jackpot', 5, 0),
+@pytest.mark.parametrize('rarity,slot', [
+    ('standard', 0), ('standard', 1),
+    ('large', 0), ('rare', 0), ('jackpot', 0),
 ])
-def test_each_recipe_is_reachable_and_bucket_exhausts_before_repeating(monkeypatch, rarity, size, slot):
+def test_every_recipe_in_range_stays_reachable_under_its_rarity_cap(monkeypatch, rarity, slot):
+    """Weighted deals retire nothing: a job made rare must still be dealt.
+
+    The engine steers the odds by recency, worth and build order, so a bucket
+    no longer empties in order. Every recipe it can offer must still arrive,
+    and no deal may exceed the authored rarity cap.
+    """
     force_rarity(monkeypatch, rarity)
     cfg = E.load_config()
     state = town(cfg)
-    expected = {r['id'] for r in ORDER_RECIPES if len(r['goods']) == size}
+    authored = next(r for r in E.ORDER_ROLLS if r['id'] == rarity)['items']
+    cap = authored or (1 if slot == 0 else 2) + len(state['tierOf'])//4
+    # An authored rarity deals exactly its promised size; a standard roll,
+    # sized by the town, also reaches one product below it.
+    low = cap if authored else max(1, cap - 1)
+    expected = {r['id'] for r in ORDER_RECIPES if low <= len(r['goods']) <= cap}
     assert expected
-    # Start at the current offer, which already occupies the first history entry.
-    for cycle in range(2):
-        seen = set()
-        for _ in range(len(expected)):
-            order = state['offers'][slot]
-            assert len(order['requirements']) == size
-            assert order['recipeId'] not in seen, 'A recipe repeated before this size bucket was exhausted.'
-            seen.add(order['recipeId'])
-            assert E.replace_order(cfg, state, slot, order['id'])['ok']
-        assert seen == expected
+    # The other two cards keep their jobs for this whole run, and the board
+    # never shows one job twice, so those two are legitimately out of reach.
+    parked = {order['recipeId'] for i, order in enumerate(state['offers'])
+              if i != slot and order.get('recipeId')}
+    expected -= parked
+    seen = set()
+    for _ in range(2000):
+        order = state['offers'][slot]
+        assert low <= len(order['requirements']) <= cap, 'A deal escaped its rarity cap.'
+        seen.add(order['recipeId'])
+        if expected <= seen:
+            break
+        assert E.replace_order(cfg, state, slot, order['id'])['ok']
+    assert expected <= seen, 'These recipes never arrived: {}'.format(sorted(expected - seen))
+
+
+def test_a_sparse_town_receives_the_largest_bundle_it_can_supply(monkeypatch):
+    """A cap the catalog cannot reach is not widened downwards."""
+    force_rarity(monkeypatch, 'jackpot')
+    cfg = E.load_config()
+    state = town(cfg, [0])
+    for _ in range(12):
+        order = state['offers'][0]
+        assert len(order['requirements']) == 3, 'Only three farm products exist to ask for.'
+        assert E.replace_order(cfg, state, 0, order['id'])['ok']
+
+
+def test_an_outgrown_job_becomes_rare_without_becoming_impossible(monkeypatch):
+    """The value floor changes the odds only; nothing leaves the catalog."""
+    force_rarity(monkeypatch, 'standard')
+    cfg = E.load_config()
+    goods = E.catalog(cfg)
+    state = town(cfg)
+    cap = 1 + len(state['tierOf'])//4
+    in_range = [r for r in ORDER_RECIPES if max(1, cap - 1) <= len(r['goods']) <= cap]
+    worth = {r['id']: E._recipe_value(cfg, 0, E.ORDER_ROLLS[0], goods, r) for r in in_range}
+    cheapest = min(worth, key=worth.get)
+    counts = collections.Counter()
+    for _ in range(2000):
+        order = state['offers'][0]
+        counts[order['recipeId']] += 1
+        assert E.replace_order(cfg, state, 0, order['id'])['ok']
+    assert counts[cheapest], 'An outgrown job must still be reachable.'
+    dearest = max(worth, key=worth.get)
+    assert counts[dearest] > counts[cheapest], \
+        'A job the town has outgrown must be dealt less often than a worthwhile one.'
 
 
 @pytest.mark.parametrize('tiers', [(0,), (0, 2), (0, 5, 10, 12, 14)])
@@ -222,9 +270,12 @@ def test_committed_multibusiness_order_can_be_produced_and_delivered_atomically(
     state['cash'] = 1_000_000
     choices = [r for r in ORDER_RECIPES if len(r['goods']) == 5]
     # Exercise a real catalog bundle spanning several independent businesses.
+    # Worth breaks ties: an established town is rarely offered its cheapest
+    # jobs, so a retired bundle would take unbounded rerolls to arrive.
     target = max(choices, key=lambda r: (sum(bool(goods[g].get('inputs')) for g in r['goods']),
-                                         len({goods[g]['tier'] for g in r['goods']})))
-    for _ in range(len(choices)):
+                                         len({goods[g]['tier'] for g in r['goods']}),
+                                         E._recipe_value(cfg, 0, E.ORDER_ROLLS[-1], goods, r)))
+    for _ in range(3000):
         order = state['offers'][0]
         if order['recipeId'] == target['id']:
             break

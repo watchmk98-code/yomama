@@ -1,0 +1,276 @@
+/* Approved Build art direction. Nothing above #econ-building is restyled. */
+.build-illustrated #econ-building {--amber:#ffd21c;--green:#00ef87;--text:#f4f4e9;--border:#ae8818;--line:#514018;background:#000;padding:8px;gap:10px;overflow:auto;scrollbar-width:thin;scrollbar-color:#ae8818 #000;}
+#econ-building .game-panel {background:#020403;border:2px solid var(--amber);}
+#econ-building .game-panel-head {background:#030403;border-bottom:1px solid var(--amber);padding:6px 9px;min-height:40px;}
+#econ-building .game-panel-head h2 {font-size:28px;line-height:1;text-transform:uppercase;font-weight:700;color:var(--text);text-shadow:.7px 0 currentColor;letter-spacing:.5px;}
+#econ-building .game-panel-head > span {font-size:15px;}
+#econ-building .game-layout {grid-template-columns:minmax(210px,.92fr) minmax(0,2.12fr) minmax(310px,1.13fr);gap:10px;}
+#econ-building .game-roster-list {padding:6px;gap:6px;}
+#econ-building .game-building-choice {position:relative;display:flex;align-items:center;gap:0;min-height:130px;background:#060909;border:1px solid #5e615d;padding:4px;}
+#econ-building .game-building-choice[aria-pressed=true] {border:2px solid var(--amber);box-shadow:inset 0 0 12px #a0782540,0 0 6px #d8ac3260;background:#12110a;}
+#econ-building .game-building-choice .k-art {width:130px;height:130px;flex:0 0 130px;max-width:none;}
+#econ-building .game-building-choice > span {min-width:0;}
+#econ-building .game-building-choice strong {font-size:23px;line-height:1;text-transform:uppercase;color:var(--text);font-weight:700;}
+#econ-building .game-building-choice small {font-size:15px;line-height:1.15;color:var(--green);margin-top:7px;}
+#econ-building .game-roster-foot {color:var(--muted);font-size:15px;}
+#econ-building .game-business-overview {display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.65fr);gap:8px;padding:10px;flex:1;min-height:340px;}
+#econ-building .game-site-stage {display:flex;align-items:center;justify-content:center;padding:0;min-width:0;min-height:0;background:#020403;}
+#econ-building .game-site-stage .k-art {width:100%;height:auto;aspect-ratio:1;max-width:320px;max-height:none;flex:none;}
+#econ-building .game-business-numbers {display:flex;flex-direction:column;gap:6px;min-height:0;container-type:normal;}
+#econ-building .build-finance-title {color:var(--text);font-size:27px;line-height:1;margin:0;font-weight:700;letter-spacing:.5px;}
+#econ-building .game-live-heading.game-business-page-heading {display:flex;min-height:32px;border:1px solid var(--border);margin:0;padding:3px 6px;}
+#econ-building .game-report-period {font-size:14px;text-transform:uppercase;}
+#econ-building [data-business-feed] {color:var(--green);font-size:15px;text-transform:uppercase;}
+#econ-building [data-business-feed]::before {content:'● ';}
+#econ-building .game-live-metrics.has-costs {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:minmax(145px,1.2fr) minmax(115px,1fr);gap:6px;flex:1;min-height:0;}
+#econ-building .game-live-metrics > .game-margin-row {grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:0;gap:0;border:1px solid var(--border);}
+#econ-building .game-margin-row > div {container-type:inline-size;padding:10px 7px;gap:9px;border:0;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;}
+#econ-building .game-margin-row > div:last-child {border-right:0;}
+#econ-building .game-live-metrics > [data-business-metric] {border:1px solid var(--border);padding:12px;display:flex;flex-direction:column;justify-content:center;gap:9px;}
+#econ-building .game-live-metrics dt {font-size:17px;line-height:1.1;color:#ddd7c5;}
+#econ-building .game-live-metrics .game-live-value {font-size:clamp(14px,16cqw,28px);font-weight:700;line-height:1.05;white-space:normal;}
+#econ-building .game-finance-potential {font-size:13px;line-height:1.1;color:#bcb8a7;}
+#econ-building .game-cashflow-note {font-size:13px;line-height:1.15;margin:0;}
+#econ-building .game-operation-list {padding:8px;gap:8px;display:flex;flex-direction:column;}
+#econ-building .game-operation {position:relative;display:grid;grid-template-columns:105px minmax(0,1fr);grid-template-rows:1fr auto;gap:4px 8px;border:1px solid var(--amber);padding:5px;background:#030504;min-height:143px;}
+#econ-building .game-operation::before {content:'';grid-column:1;grid-row:1/3;display:block;min-height:120px;background:#1b160c url('./assets/build-ui/concept-art.png') 79.82% 29.73%/1290.75% 812.7% no-repeat;image-rendering:pixelated;}
+#econ-building .game-operation[data-upgrade-kind=sales]::before {background-position:79.82% 45.32%;}
+#econ-building .game-operation[data-upgrade-kind=storage]::before {background-position:79.82% 61.25%;}
+#econ-building .game-operation > div:first-child {grid-column:2;grid-row:1;min-width:0;}
+#econ-building .game-operation > div:first-child > strong {font-size:25px;text-transform:uppercase;font-weight:700;line-height:1;}
+#econ-building .game-operation strong small {font-size:14px;color:var(--muted);font-weight:400;}
+#econ-building .game-upgrade-buy {grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;}
+#econ-building .game-upgrade-buy button {background:var(--green);color:#001b10;border:3px double #003621;outline:1px solid var(--green);min-height:36px;font-size:21px;font-weight:700;white-space:normal;}
+#econ-building .game-upgrade-buy button:not(:disabled)::before {content:'UPGRADE · ';font-size:17px;}
+#econ-building .game-upgrade-buy button:disabled {background:#202522;color:#a7b7aa;outline-color:#546254;border-color:#546254;}
+#econ-building .game-operation small {font-size:14px;line-height:1.1;}
+#econ-building .game-upgrade-explanation {font-size:12px;}
+#econ-building .game-upgrade-reason {font-size:12px;line-height:1.1;text-align:right;}
+#econ-building .game-expansion-body {position:relative;padding:8px;gap:6px;}
+#econ-building .game-next-art .k-art {width:110px;height:110px;}
+#econ-building .game-expansion-body select {font-size:19px;}
+#econ-building .game-expansion .k-btn {font-size:19px;min-height:40px;}
+#econ-building .game-expansion .game-small-stats {font-size:14px;}
+#econ-building .game-building-stock {flex:0 0 282px!important;display:flex;flex-direction:column;border-top:2px solid var(--amber);min-height:282px;background:#020403;}
+#econ-building .game-stock-heading {gap:8px;min-height:43px;padding:4px 8px;}
+#econ-building .game-stock-heading h3 {font-size:26px;font-weight:700;text-transform:uppercase;color:var(--text);}
+#econ-building .game-stock-heading small {font-size:13px;}
+#econ-building .game-stock-pager {font-size:18px;gap:7px;}
+#econ-building .game-stock-pager button {width:30px;height:30px;font-size:26px;border-color:var(--amber);}
+#econ-building .game-inventory-head {display:none;}
+#econ-building .game-inventory-rows {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;margin:0 8px;flex:1;min-height:0;overflow:hidden;}
+#econ-building .game-inventory-row {display:grid;grid-template-columns:minmax(0,1fr) 100px 45px;gap:8px;padding:2px 6px;border:1px solid var(--line);min-height:0;align-items:center;}
+#econ-building .game-inventory-good {grid-column:auto;display:flex;align-items:center;gap:8px;min-width:0;}
+#econ-building .game-inventory-good > span:not(.game-craft-stock-icon) {display:grid;grid-template-columns:minmax(0,1fr) minmax(60px,.8fr);align-items:center;gap:6px;flex:1;min-width:0;}
+#econ-building .game-inventory-good strong {font-size:19px;font-weight:400;line-height:1.05;text-transform:uppercase;}
+#econ-building .game-inventory-good .econ-good-icon {width:40px;height:40px;flex:0 0 40px;}
+#econ-building .game-inventory-good .k-bar {height:8px;margin:0;background:#262831;}
+#econ-building .game-inventory-good .game-stock-craft-status,#econ-building .game-stock-unlock {grid-column:1/-1;}
+#econ-building [data-stock-count] {font-size:22px;color:var(--green);text-align:right!important;}
+#econ-building [data-stock-count] small {font-size:18px;color:var(--text);}
+#econ-building [data-stock-saved] {font-size:14px;color:#aaa;text-align:right;}
+#econ-building [data-stock-saved]::after {content:' saved';font-size:12px;}
+#econ-building [data-craft-reservations=automatic]::after {content:'';}
+#econ-building .game-stock-controls {padding:6px 8px;gap:8px;}
+#econ-building .game-stock-controls button {min-height:32px;font-size:17px;}
+#econ-building .game-build-bottom:has(.game-building-activity) {display:flex;flex-direction:row;align-items:stretch;gap:0;border:2px solid var(--amber);background:#000;min-height:65px;}
+#econ-building .game-build-bottom::before {content:'';display:block;width:95px;flex:none;background:url('./assets/build-ui/concept-art.png') 2.46% 95.3%/1335% 1249% no-repeat;image-rendering:pixelated;}
+#econ-building .game-building-activity {flex:1;min-width:0;min-height:60px;border:0;padding:8px 12px;gap:10px;}
+#econ-building .game-building-activity strong {font-size:24px;color:var(--text);text-transform:uppercase;}
+#econ-building .game-building-activity small {font-size:16px;}
+#econ-building .build-team-link {order:2;align-self:center;margin:8px;font-size:19px;text-transform:uppercase;text-decoration:none;padding:8px;border-color:var(--amber);white-space:nowrap;}
+#econ-building button:focus-visible,#econ-building a:focus-visible {outline:2px solid white;outline-offset:2px;}
+@media(min-width:1100px) and (min-height:651px) {
+ .build-illustrated #econ-building .game-layout {flex:none;min-height:700px;height:clamp(700px,calc(100svh - 300px),800px);}
+ #econ-building .game-center {display:flex;flex-direction:column;}
+ #econ-building .game-site {flex:1;display:flex;flex-direction:column;}
+ #econ-building .game-actions {display:flex;flex-direction:column;}
+ #econ-building .game-expansion {flex:1;}
+ #econ-building .game-roster {display:flex;flex-direction:column;}
+ #econ-building .game-roster-list {flex:1;min-height:0;overflow:hidden;}
+}
+@media(min-width:1100px) and (max-width:1450px) {
+ #econ-building .game-layout {grid-template-columns:minmax(180px,.85fr) minmax(0,2fr) minmax(290px,1.1fr);}
+ #econ-building .game-building-choice .k-art {width:110px;height:110px;flex-basis:110px;}
+ #econ-building .game-building-choice strong {font-size:20px;}
+ #econ-building .game-operation {grid-template-columns:85px minmax(0,1fr);}
+ #econ-building .game-business-overview {grid-template-columns:minmax(0,.6fr) minmax(0,1.8fr);}
+ #econ-building .game-live-metrics dt {font-size:15px;}
+ #econ-building .game-live-metrics .game-live-value {font-size:19px;}
+ #econ-building .game-finance-potential {font-size:12px;}
+}
+@media(max-width:1099px),(max-height:650px) {
+ #econ-building .game-business-overview {min-height:280px;flex:1;}
+ #econ-building .game-site {display:flex!important;flex-direction:column;}
+ #econ-building .game-roster {display:none;}
+ #econ-building .game-building-stock {min-height:282px;flex:1!important;}
+ #econ-building .game-operations {overflow:auto;}
+ #econ-building .game-operation {min-height:120px;}
+ #econ-building .game-operation::before {min-height:95px;}
+ #econ-building .game-build-bottom::before {width:60px;}
+ #econ-building .game-build-bottom {min-height:45px;}
+ #econ-building .game-building-activity {min-height:42px;padding:4px 8px;}
+ #econ-building .game-building-activity small {font-size:13px;}
+ #econ-building .build-team-link {font-size:15px;padding:5px;margin:5px;}
+}
+@media(max-width:599px) {
+ #econ-building .game-site:not(.game-view-hidden) {flex:0 0 auto!important;min-height:500px!important;}
+ #econ-building .game-business-overview {grid-template-columns:1fr;grid-template-rows:100px auto;min-height:400px;padding:6px;}
+ #econ-building .game-business-numbers {grid-column:1;grid-row:2;}
+ #econ-building .game-site-stage .k-art {width:115px;height:115px;}
+ #econ-building .game-live-metrics.has-costs {grid-template-rows:minmax(115px,1fr) minmax(85px,1fr);}
+ #econ-building .game-live-metrics .game-live-value {font-size:clamp(14px,16cqw,21px);}
+ #econ-building .game-live-metrics dt {font-size:14px;}
+ #econ-building .game-finance-potential {font-size:11px;}
+ #econ-building .game-margin-row > div {container-type:inline-size;padding:6px 4px;gap:6px;}
+ #econ-building .game-inventory-row {grid-template-columns:minmax(0,1fr) 74px 35px;gap:5px;}
+ #econ-building .game-inventory-good > span:not(.game-craft-stock-icon) {grid-template-columns:1fr;gap:3px;}
+ #econ-building .game-inventory-good strong {font-size:16px;}
+ #econ-building [data-stock-count] {font-size:18px;}
+ #econ-building [data-stock-count] small {font-size:14px;}
+ #econ-building .game-stock-heading small {display:none;}
+ #econ-building .game-building-activity strong {font-size:19px;}
+ #econ-building .game-panel-head h2 {font-size:24px;}
+}
+
+#econ-building .game-view-hidden {display:none!important;}
+/* Blueprint entry opens the existing, live construction controls. */
+#econ-building .game-open-business {display:flex;align-items:center;justify-content:center;flex:none;gap:12px;min-height:110px;margin:6px;border:1px solid #6b99bc;background:#04121f;color:#b7caff;text-transform:uppercase;font:700 23px/1 VT323,monospace;cursor:pointer;text-align:left;box-shadow:inset 0 0 16px #193651;}
+#econ-building .game-open-business > span:last-child {display:flex;align-items:center;gap:9px;}
+#econ-building .game-open-business b {font-size:42px;}
+#econ-building .game-open-business:hover {border-color:#daedff;background:#0d2539;}
+#econ-building .game-blueprint-art {display:block;width:125px;height:95px;background:url('./assets/build-ui/concept-art.png') -34px -666px/1326px 884px;image-rendering:pixelated;flex:none;}
+#econ-building .game-milestone {display:flex;flex-direction:column;flex:1;min-height:190px;}
+#econ-building .game-milestone-body {display:flex;align-items:stretch;padding:6px;gap:6px;flex:1;min-height:0;}
+#econ-building .game-milestone-art {width:112px;height:125px;min-height:125px;max-height:125px;flex:none;background:url('./assets/build-ui/concept-art.png') -1000px -658px/1365px 910px no-repeat;image-rendering:pixelated;align-self:center;}
+#econ-building .game-milestone-copy {display:flex;flex-direction:column;justify-content:space-between;gap:5px;min-width:0;flex:1;}
+#econ-building .game-focus-route {display:flex;align-items:center;justify-content:space-between;gap:4px;color:#ffe330;}
+#econ-building .game-focus-route b {font-size:31px;line-height:1;border:2px solid #ffe330;box-shadow:0 0 8px #f9cb4480;padding:5px 10px;color:#fff8aa;}
+#econ-building .game-focus-route i {font-style:normal;font-size:28px;text-shadow:0 0 6px #ffe330;}
+#econ-building .game-focus-route > span {font-size:25px;}
+#econ-building .game-milestone-copy p {margin:0;font-size:18px;line-height:1.05;color:#fff;}
+#econ-building .game-milestone-copy small {display:block;color:#ffdb21;font-size:14px;margin-top:3px;}
+#econ-building .game-focus-link {display:block;border:2px solid #ffe000;background:#090d02;text-align:center;color:#ffe748;font-size:23px;line-height:1;text-transform:uppercase;text-decoration:none;font-weight:700;padding:7px 3px;white-space:nowrap;}
+#econ-building .game-focus-link:hover {background:#ffe000;color:#000;}
+#econ-building .game-open-business-mobile {border:1px solid #729ccc;background:#051321;color:#c6dcff;min-height:34px;font:20px VT323,monospace;cursor:pointer;}
+#game-expansion-dialog {width:min(600px,calc(100vw - 24px));max-height:85svh;border:2px solid #ffe000;background:#030806;color:#eee;}
+#game-expansion-dialog .game-expansion {border:1px solid #76600c;}
+#game-expansion-dialog .game-expansion-body {padding:14px;}
+#game-expansion-dialog .game-next-art .k-art {width:150px;height:150px;}
+#game-expansion-dialog .game-dialog-head h2 {color:#ffdc21;text-transform:uppercase;}
+@media(min-width:1100px) and (min-height:651px) {
+ #econ-building .game-roster .game-pager {order:2;}
+ #econ-building .game-open-business {order:3;}
+}
+@media(max-width:1450px) and (min-width:1100px) {
+ #econ-building .game-open-business {font-size:19px;gap:3px;}
+ #econ-building .game-blueprint-art {width:86px;transform:scale(.8);margin-left:-10px;}
+ #econ-building .game-milestone-art {width:85px;}
+ #econ-building .game-focus-route {gap:1px;}
+ #econ-building .game-focus-route b {font-size:25px;padding:4px 6px;}
+ #econ-building .game-focus-link {font-size:20px;}
+}
+@media(max-width:1099px),(max-height:650px) {
+ #econ-building .game-milestone {min-height:220px;}
+ #econ-building .game-fit-controls {flex:none;}
+}
+
+/* Build uses a plain black canvas behind its banner and panels. */
+body.build-illustrated, .business-illustrated.build-illustrated .game-workspace {background:#000;}
+/* Fit the management panels into the available screen; lists retain their pages. */
+.build-illustrated #econ-building {overflow:hidden;gap:7px;}
+.build-illustrated #econ-building .game-layout {flex:1;min-height:0;height:auto;}
+#econ-building .game-site {min-height:0;overflow:hidden;}
+#econ-building .game-business-overview {min-height:0;}
+#econ-building .game-live-metrics.has-costs {grid-template-rows:minmax(0,1.2fr) minmax(0,1fr);}
+#econ-building .game-margin-row > div {padding:6px;gap:5px;}
+#econ-building .game-live-metrics > [data-business-metric] {padding:7px;gap:5px;}
+#econ-building .game-building-stock {flex:0 0 34%!important;min-height:180px;}
+#econ-building .game-stock-heading {min-height:35px;}
+#econ-building .game-stock-controls {padding-block:4px;}
+#econ-building .game-stock-controls button {min-height:27px;}
+#econ-building .game-inventory-good .econ-good-icon {width:32px;height:32px;flex-basis:32px;}
+#econ-building .game-building-choice {min-height:100px;}
+#econ-building .game-building-choice .k-art {width:clamp(85px,11vh,125px);height:clamp(85px,11vh,125px);flex-basis:clamp(85px,11vh,125px);}
+#econ-building .game-operations {flex:3;min-height:0;}
+#econ-building .game-operation-list {min-height:0;gap:5px;padding:5px;}
+#econ-building .game-operation {flex:1;min-height:0;gap:3px 7px;}
+#econ-building .game-operation::before {min-height:0;align-self:stretch;}
+#econ-building .game-operation > div:first-child > strong {font-size:22px;}
+#econ-building .game-upgrade-buy button {min-height:30px;font-size:19px;}
+#econ-building .game-milestone {flex:1;min-height:155px;}
+#econ-building .game-milestone-art {height:108px;min-height:0;max-height:108px;}
+#econ-building .game-focus-route b {font-size:25px;padding:3px 8px;}
+#econ-building .game-focus-link {font-size:21px;padding:5px 3px;}
+#econ-building .game-open-business {min-height:80px;}
+#econ-building .game-blueprint-art {height:75px;}
+#econ-building .game-build-bottom:has(.game-building-activity) {min-height:49px;}
+#econ-building .game-building-activity {min-height:45px;padding:4px 10px;}
+#econ-building .build-team-link {margin:4px;padding:5px;}
+@media(max-width:1099px),(max-height:650px) {
+ #econ-building .game-site:not(.game-view-hidden) {flex:1!important;min-height:0!important;}
+ #econ-building .game-business-overview {min-height:0;}
+ #econ-building .game-building-stock {flex:1!important;min-height:0;}
+ #econ-building .game-milestone {min-height:0;}
+ #econ-building .game-fit-controls {gap:4px;}
+ #econ-building .game-build-bottom::before {width:50px;}
+ #econ-building .game-building-activity strong {font-size:18px;}
+ #econ-building .game-building-activity small {font-size:12px;}
+}
+@media(max-width:599px) {
+ #econ-building .game-business-overview {grid-template-rows:minmax(45px,.25fr) minmax(0,1fr);padding:4px;gap:3px;}
+ #econ-building .game-site-stage .k-art {width:70px;height:70px;}
+ #econ-building .build-finance-title {font-size:22px;}
+ #econ-building .game-business-numbers {gap:3px;}
+ #econ-building .game-live-heading.game-business-page-heading {min-height:25px;}
+ #econ-building .game-live-metrics.has-costs {grid-template-rows:minmax(0,1.25fr) minmax(0,1fr);}
+ #econ-building .game-live-metrics dt {font-size:13px;}
+ #econ-building .game-live-metrics .game-live-value {font-size:14px;}
+ #econ-building .game-margin-row > div {padding:3px;gap:4px;}
+ #econ-building .game-panel-head {min-height:30px;padding:4px 6px;}
+ #econ-building .game-panel-head h2 {font-size:20px;}
+ #econ-building .game-finance-potential {font-size:10px;}
+}
+/* Keep artwork proportional inside its frame at every panel size. */
+#econ-building .game-concept-art {display:block;width:100%;height:100%;overflow:hidden;image-rendering:pixelated;}
+#econ-building .game-operation::before,#econ-building .game-build-bottom::before {content:none;}
+#econ-building .game-operation {grid-template-columns:minmax(75px,30%) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;align-items:stretch;gap:4px 9px;padding:7px;}
+#econ-building .game-operation-art {position:relative;grid-column:1;grid-row:1/3;align-self:stretch;min-width:0;min-height:0;}
+#econ-building .game-operation-art .game-concept-art {position:absolute;inset:0;}
+#econ-building .game-upgrade-copy {grid-column:2;grid-row:1;min-width:0;}
+#econ-building .game-upgrade-copy > strong {font-size:22px;text-transform:uppercase;font-weight:700;line-height:1.05;}
+#econ-building .game-upgrade-copy small {line-height:1.15;}
+#econ-building .game-upgrade-buy {gap:4px;}
+#econ-building .game-upgrade-buy button {min-height:31px;outline:none;border:1px solid #3bffad;}
+#econ-building .game-upgrade-reason {text-align:left;line-height:1.15;}
+#econ-building .game-blueprint-art {width:105px;height:76px;background:none;transform:none;margin:0;}
+#econ-building .game-open-business {padding:5px 10px;gap:10px;}
+#econ-building .game-milestone-art {width:100px;height:112px;max-height:112px;background:none;}
+#econ-building .game-milestone-body {align-items:center;gap:10px;}
+#econ-building .game-milestone-copy {align-self:stretch;justify-content:space-evenly;}
+#econ-building .game-focus-route > span {display:none;}
+#econ-building .game-keeper-art {display:block;width:65px;height:49px;align-self:center;flex:none;}
+#econ-building .game-roster-list {align-content:stretch;}
+#econ-building .game-building-choice {min-height:100px;gap:8px;padding:7px;}
+#econ-building .game-building-choice .k-art {width:100px;height:100px;flex-basis:100px;}
+#econ-building .game-building-choice strong {font-size:21px;}
+#econ-building .game-site-stage .k-art {width:min(100cqw,100cqh,290px);height:min(100cqw,100cqh,290px);aspect-ratio:1;}
+#econ-building .game-inventory-row {padding:3px 7px;gap:9px;}
+#econ-building .game-inventory-good {gap:9px;}
+#econ-building .game-inventory-good .econ-good-icon {object-fit:contain;transform:none;}
+@media(max-width:1450px) and (min-width:1100px) {
+ #econ-building .game-operation {grid-template-columns:minmax(65px,28%) minmax(0,1fr);gap:4px 7px;padding:6px;}
+ #econ-building .game-building-choice .k-art {width:85px;height:85px;flex-basis:85px;}
+ #econ-building .game-building-choice strong {font-size:20px;}
+ #econ-building .game-blueprint-art {width:80px;height:64px;}
+ #econ-building .game-milestone-art {width:85px;height:98px;}
+}
+@media(max-width:599px) {
+ #econ-building .game-site-stage .k-art {width:min(100cqw,100cqh,80px);height:min(100cqw,100cqh,80px);}
+ #econ-building .game-operation {grid-template-columns:minmax(65px,30%) minmax(0,1fr);}
+ #econ-building .game-keeper-art {width:42px;height:40px;}
+}
+#econ-building .game-operation {grid-template-rows:minmax(min-content,1fr) auto;}
+#econ-building .game-operation .game-upgrade-explanation {font-size:12px;line-height:1.1;}
+.build-illustrated.game-compact:not([data-fit-build-view="0"]) #econ-building .game-build-bottom {display:none;}
+#econ-building .game-open-business-mobile {width:100%;}

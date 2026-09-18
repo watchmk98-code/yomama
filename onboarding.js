@@ -3,6 +3,8 @@
 (function () {
   'use strict';
 
+  if (!window.YOMAMA_NOTICE_BOARD_ENABLED) return;
+
   var buildPage = !!document.getElementById('econ-building');
   var marketPage = !!document.getElementById('econ-market');
   if (!buildPage && !marketPage) return;
@@ -313,7 +315,9 @@
     if (!buildPage) { location.href = './buildings.html'; return; }
     if (action === 'upgrade') { show('.game-operations'); return; }
     if (action === 'expand') {
-      if (show('.game-expansion') && record.stage === 6) { record.viewedExpansion = true; advance(state); save(); render(state); }
+      var openBusiness = document.querySelector('[data-open-business]');
+      if (openBusiness) openBusiness.click();
+      if ((openBusiness || show('.game-expansion')) && record.stage === 6) { record.viewedExpansion = true; advance(state); save(); render(state); }
       return;
     }
     if (action === 'quest') {

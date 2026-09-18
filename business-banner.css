@@ -1,0 +1,71 @@
+/* Shared business-page chrome. The Sunny Ventures masthead stays untouched. */
+.business-illustrated.game-market-page .game-workspace {background:#11110d url('./assets/market/alley.png') center top/cover no-repeat;}
+.business-illustrated .game-page-head {padding:8px 8px 2px;margin:0;gap:10px;min-height:53px;flex:none;}
+/* Match the menu and resource borders to the content frame on pages whose
+   content starts at the workspace edge. Build has its own inset layout. */
+.business-illustrated:not(.game-build-page):not(.game-shop-page) .game-page-head {padding-inline:0;}
+.business-illustrated:is(.game-shop-page,.food-focus-page) .game-page-head {border:0;padding:8px 0 2px;margin:0;}
+.business-illustrated .game-page-head h1 {font-size:44px;line-height:1;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#ffe045;text-shadow:2px 0 #ffe045,0 3px #7b4b08,3px 4px #000;white-space:nowrap;}
+.business-illustrated .game-page-head .game-nav {gap:0;border:1px solid #ffe000;background:#020403;align-self:center;}
+.business-illustrated .game-page-head .game-nav a {min-height:34px;padding:3px 11px;gap:5px;font-size:19px;border:0;border-right:1px solid #7c6913;color:#f1edcf;}
+.business-illustrated .game-page-head .game-nav a:last-child {border-right:0;}
+.business-illustrated .game-page-head .game-nav a[aria-current=page] {background:#ffda16;color:#090b05;box-shadow:none;}
+.business-illustrated .game-page-head .game-nav a:hover {background:#554810;color:white;}
+.business-illustrated .game-page-head .game-nav img {width:24px;height:24px;object-fit:contain;image-rendering:pixelated;}
+.business-illustrated .game-page-head .game-nav .shop-nav-icon {font-size:0;background:url('./assets/build-ui/concept-art.png') -1050px -98px/1536px 1024px;width:32px;height:32px;flex-basis:32px;}
+.business-illustrated #game-hud {flex:none;margin:0;padding:4px 8px 8px;background:transparent;}
+.business-illustrated:not(.game-build-page) #game-hud {padding-inline:0;}
+.business-illustrated #game-hud .game-build-metrics {margin:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:2px solid #ffe000;background:#010403;box-shadow:0 2px 0 #181700;}
+.business-illustrated #game-hud .game-build-metrics > div {position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:58px;padding:5px 10px 5px 78px;gap:2px;border:0;border-right:2px solid #d9bf00;}
+.business-illustrated #game-hud .game-build-metrics > div:last-child {border-right:0;}
+.business-illustrated #game-hud [data-build-metric]::before {content:'';position:absolute;width:68px;height:48px;left:7px;top:50%;margin-top:-24px;background-image:url('./assets/build-ui/concept-art.png');background-size:1536px 1024px;image-rendering:pixelated;}
+.business-illustrated #game-hud [data-build-metric=cash]::before {background-position:-46px -148px;}
+.business-illustrated #game-hud [data-build-metric=net-worth]::before {background-position:-346px -148px;}
+.business-illustrated #game-hud [data-build-metric=income]::before {background-position:-652px -148px;}
+.business-illustrated #game-hud [data-build-metric=cost]::before {background-position:-944px -148px;}
+.business-illustrated #game-hud [data-build-metric=workers]::before {background-position:-1250px -148px;}
+.business-illustrated #game-hud .game-build-metrics dt {font-size:16px;letter-spacing:0;color:#f1f1e7;line-height:1;min-height:0;}
+.business-illustrated #game-hud .game-build-metrics dd {font-size:30px;line-height:1;font-weight:700;gap:6px;color:#00f1a0;text-shadow:1px 0 currentColor;}
+.business-illustrated #game-hud .game-build-metrics dd small {font-size:22px;color:inherit;}
+.business-illustrated #game-hud [data-build-metric=cost] dd {color:#ff3657;}
+.business-illustrated #game-hud .game-worker-link {color:#00f1a0;font-size:inherit;}
+.business-illustrated #game-hud .game-worker-link img {display:none;}
+.business-illustrated .game-page-head a:focus-visible {outline:2px solid white;outline-offset:2px;}
+@media(max-width:1199px) {
+ .business-illustrated .game-page-head h1 {font-size:36px;}
+ .business-illustrated .game-page-head .game-nav a {padding-inline:7px;font-size:17px;}
+ .business-illustrated #game-hud .game-build-metrics > div {padding-left:55px;}
+ .business-illustrated #game-hud [data-build-metric]::before {left:-2px;transform:scale(.7);}
+ .business-illustrated #game-hud .game-build-metrics dd {font-size:26px;}
+}
+@media(max-width:850px) {
+ .business-illustrated .game-page-head {flex-wrap:wrap;flex-direction:row;}
+ .business-illustrated .game-page-head .game-nav {width:100%;flex-basis:100%;}
+ .business-illustrated #game-hud .game-build-metrics > div {padding:5px 3px;align-items:center;text-align:center;gap:4px;}
+ .business-illustrated #game-hud [data-build-metric]::before {position:relative;left:auto;top:auto;margin:-8px 0;transform:scale(.65);}
+ .business-illustrated #game-hud .game-build-metrics dt {font-size:12px;min-height:24px;}
+ .business-illustrated #game-hud .game-build-metrics dd {font-size:22px;gap:2px;}
+ .business-illustrated #game-hud .game-build-metrics dd small {font-size:12px;}
+ .business-illustrated .game-page-head .game-nav a {font-size:15px;padding:3px 1px;min-height:34px;}
+}
+@media(max-width:430px) {
+ .business-illustrated #game-hud .game-build-metrics dd {font-size:18px;}
+ .business-illustrated .game-page-head h1 {font-size:32px;}
+ .business-illustrated .game-page-head .game-nav img,.business-illustrated .game-page-head .game-nav .shop-nav-icon {display:none;}
+}
+
+.business-illustrated .game-page-head h1 > span {font-weight:400;letter-spacing:0;text-shadow:none;}
+/* Separate, low-contrast scenes keep the page identity behind solid panels. */
+.game-build-page {--game-scene:url('./assets/page-backgrounds/build-black.png');--game-scene-shift:-205px;}
+.game-shop-page {--game-scene:none;--game-scene-shift:0px;}
+.game-craft-page {--game-scene:url('./assets/page-backgrounds/craft-black.png');--game-scene-shift:-110px;}
+.port-page {--game-scene:url('./assets/page-backgrounds/port-black.png');--game-scene-shift:-150px;}
+.food-focus-page {--game-scene:url('./assets/page-backgrounds/focus-black.png');--game-scene-shift:-130px;}
+.business-illustrated:is(.game-build-page,.game-shop-page,.game-craft-page,.port-page,.food-focus-page) .game-workspace {
+  background-color:#000;
+  background-image:var(--game-scene);
+  background-position:center var(--game-scene-shift);
+  background-size:cover;
+  background-repeat:no-repeat;
+}
+.build-illustrated #econ-building {background:transparent;}

@@ -1,5 +1,6 @@
 """The local browser adapter persists deliveries and pays only on arrival."""
 import copy
+import math
 import json
 
 import pytest
@@ -69,8 +70,10 @@ def test_browser_delivery_pays_only_on_arrival_counts_smoothly_and_persists(prev
     assert result['cash'] == state['cash']
     assert outbound['id'] == first['id']
     assert outbound['inTransit'] and outbound['committed']
-    assert outbound['deliveryRemainingSec'] == 60
-    assert outbound['deliverySeconds'] == result['orderPreview']['deliverySeconds'] == 60
+    duration = outbound['deliverySeconds']
+    assert duration == orders.quote_delivery_seconds(cfg, first)
+    assert result['orderPreview']['deliverySeconds'] == duration
+    assert outbound['deliveryRemainingSec'] == duration
     assert not outbound['canFulfill'] and not outbound['canCommit'] and not outbound['canReplace']
     assert not result['orderPreview']['lastDelivery']
     assert saved_state(seat)['inventory'] == state['inventory']
@@ -80,16 +83,16 @@ def test_browser_delivery_pays_only_on_arrival_counts_smoothly_and_persists(prev
     for committed in (False, True):
         with pytest.raises(A.ApiError):
             action(routes, seat, 'commit', 0, outbound['id'], committed=committed)
-    clock['seconds'] = 30.25
+    clock['seconds'] = duration/2 + 0.25
     halfway = A.econ_state({'token': seat['token']})
-    assert halfway['contracts']['offers'][0]['deliveryRemainingSec'] == 30
+    assert halfway['contracts']['offers'][0]['deliveryRemainingSec'] == math.ceil(duration - clock['seconds'])
     assert halfway['cash'] == state['cash']
     assert saved_state(seat)['offers'][0]['inTransit']
-    clock['seconds'] = 59.75
+    clock['seconds'] = duration - 0.25
     before = A.econ_state({'token': seat['token']})
     assert before['contracts']['offers'][0]['deliveryRemainingSec'] == 1
     assert before['cash'] == state['cash']
-    clock['seconds'] = 61
+    clock['seconds'] = duration + 1
     completed = A.econ_state({'token': seat['token']})
     ready = completed['contracts']['offers'][0]
     assert completed['cash'] == state['cash'] + first['reward']
@@ -132,7 +135,7 @@ def test_outbound_stock_stays_protected_after_reloading(preview):
     assert saved['cash'] == state['cash']
     for need in first['requirements']:
         assert saved['inventory'][need['goodId']] == need['quantity']
-    clock['seconds'] = 61
+    clock['seconds'] = reloaded['contracts']['offers'][0]['deliverySeconds'] + 1
     completed = A.econ_state({'token': seat['token']})
     assert completed['cash'] == state['cash'] + first['reward']
     saved = saved_state(seat)

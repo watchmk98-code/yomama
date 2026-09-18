@@ -19,19 +19,13 @@ const banner = window.contract.openingGuide({
   nextStep:null,
   build:{tier:1,name:'Harbor Fish Stall',remainingSec:30}
 });
-assert.match(banner,/class="game-opening-guide"/,'Active construction always renders the protected notice');
-assert.match(banner,/Harbor Fish Stall is being built/);
-assert.match(banner,/30s remaining\. Your other businesses keep working\./);
-assert.doesNotMatch(banner,/projects|data-building-activities|href=/i,'Construction notice stays independent of removed projects');
+assert.equal(banner, '', 'The temporary notice board switch hides construction notices');
 
 const idle = window.contract.openingGuide({paused:false,nextStep:null,build:null,buildingsOwned:1,buildings:[{}]});
-assert.match(idle,/class="game-opening-guide"/,'The protected notice remains present between construction jobs');
-assert.match(idle,/Choose your next business/);
-assert.doesNotMatch(idle,/projects/i);
+assert.equal(idle, '', 'The temporary notice board switch hides idle notices');
 
 const complete = window.contract.openingGuide({paused:false,nextStep:null,build:null,buildingsOwned:15});
-assert.match(complete,/Business network complete/,'The protected notice remains present after all businesses open');
-assert.match(complete,/All 15 businesses are open/);
+assert.equal(complete, '', 'The temporary notice board switch hides completion notices');
 
 const order = {id:'ordinary',name:'Ordinary delivery',requirements:[],reward:10,canFulfill:true};
 const market = window.contract.ordersMarkup({
@@ -48,4 +42,4 @@ assert.match(css,/\.game-opening-guide\s*\{[^}]*border:\s*1px solid #927bff[^}]*
 assert.match(css,/\.game-opening-guide strong\s*\{[^}]*color:#a89bff[^}]*text-shadow:/s,
   'Protected construction title retains its distinct light-violet emphasis');
 
-console.log('Passed permanent violet business-status notice and removed group-project UI contracts.');
+console.log('Passed disabled violet business-status notice and removed group-project UI contracts.');

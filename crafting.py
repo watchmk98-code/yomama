@@ -535,6 +535,25 @@ def act(cfg, st, body):
         if type(quantity) is not int or not 1 <= quantity <= 100:
             return dict(ok=False, why='Supply quantity must be an integer from 1 to 100')
         intent = ['buy_supply', supply_id, quantity]
+    elif action == 'buy_supplies':
+        raw = body.get('items')
+        catalog = all_supplies(cfg)
+        if not isinstance(raw, list) or not 1 <= len(raw) <= 30:
+            return dict(ok=False, why='Choose 1 to 30 different supplies')
+        items = []
+        seen = set()
+        for row in raw:
+            if not isinstance(row, dict):
+                return dict(ok=False, why='Invalid supply basket')
+            sid, quantity = row.get('supplyId'), row.get('quantity')
+            if not isinstance(sid, str) or sid not in catalog or sid in seen:
+                return dict(ok=False, why='Unknown or repeated crafting supply')
+            if type(quantity) is not int or not 1 <= quantity <= 100:
+                return dict(ok=False, why='Supply quantity must be an integer from 1 to 100')
+            seen.add(sid)
+            items.append((sid, quantity))
+        items.sort()
+        intent = ['buy_supplies', [[sid, quantity] for sid, quantity in items]]
     else:
         return dict(ok=False, why='Unknown crafting action')
     saved = st.get('crafting', {})
@@ -546,7 +565,17 @@ def act(cfg, st, body):
     if revision != saved.get('revision', 0):
         return dict(ok=False, why='Crafting changed; refresh and try again')
 
-    if action == 'buy_supply':
+    if action == 'buy_supplies':
+        catalog = all_supplies(cfg)
+        cost = sum(catalog[sid]['unitPrice'] * quantity for sid, quantity in items)
+        if st['cash'] < cost:
+            return dict(ok=False, why='Need ' + str(cost - st['cash']) + ' YM more')
+        saved = ensure(st)
+        st['cash'] -= cost
+        for sid, quantity in items:
+            _add(saved['supplies'], sid, quantity, catalog[sid]['unitPrice'] * quantity)
+        receipt = dict(ok=True, kind='craft_supply_basket', items=[dict(supplyId=sid, quantity=quantity) for sid, quantity in items], cost=cost)
+    elif action == 'buy_supply':
         cost = all_supplies(cfg)[supply_id]['unitPrice'] * quantity
         if st['cash'] < cost:
             return dict(ok=False, why='Need ' + str(cost - st['cash']) + ' YM more')

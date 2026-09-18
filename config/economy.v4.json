@@ -911,6 +911,13 @@
       4,
       8
     ],
+    "orderVariety": {
+      "valueFloorPercent": 60,
+      "valueFloorCurve": 3,
+      "goodCooldown": 12,
+      "frontierTiers": 2,
+      "frontierOrders": 12
+    },
     "orderRewardPercent": [
       125,
       135,

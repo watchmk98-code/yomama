@@ -27,6 +27,8 @@
   'use strict';
 
   var SESSION_KEY = 'yomama_session_v1';
+  // Temporary switch for the purple Build and Market notice board.
+  window.YOMAMA_NOTICE_BOARD_ENABLED = false;
   var BASE = '/api/game/econ';
   var POLL_MS = 15000;            // one tick
   var ART_DIR = './assets/buildings/';
@@ -405,7 +407,7 @@
       '<div class="game-roster-list" data-keep-scroll="roster">' + s.buildings.map(function (b) {
         return '<button type="button" class="game-building-choice" data-select-building="' + b.slot + '" aria-pressed="' + (b.slot === selectedSlot) + '">' +
           art({buildingId:b.id, buildingName:b.name, paused:true, artLevel:b.artLevel}) + '<span><strong>' + esc(b.name) + '</strong><small>' + (productionModel(s) ? esc(b.status || 'Working') : 'Lv ' + b.lv + ' · ' + ym(b.revenuePerTick) + ' / tick') + '</small></span></button>';
-      }).join('') + '</div><div class="game-roster-foot">Open businesses keep producing.</div></aside>';
+      }).join('') + '</div>'+(document.body.classList.contains('build-illustrated')?'<button id="game-open-business" type="button" class="game-open-business" data-open-business aria-haspopup="dialog"><span class="game-blueprint-art" aria-hidden="true">'+buildConceptArt('blueprint')+'</span><span><b>+</b> Open a<br>business</span></button>':'<div class="game-roster-foot">Open businesses keep producing.</div>')+'</aside>';
   }
 
   function site(b, s) {
@@ -463,9 +465,30 @@
       '<a href="./license.html" class="game-text-button">View goals ↗</a><button class="game-text-button" type="button" data-game-deliveries>Delivery jobs' + (s.contracts.active.length ? ' · ' + s.contracts.active.length + ' active' : '') + ' ↗</button></div>';
   }
 
+  // Nested SVG viewports crop the original art sheet and preserve its proportions.
+  function buildConceptArt(kind) {
+    var crops={production:[1131,270,150,122],sales:[1131,412,150,125],storage:[1131,555,150,125],blueprint:[41,774,143,108],milestone:[1130,738,124,144],keeper:[44,890,105,89]};
+    var box=crops[kind];
+    if(!box)return '';
+    return '<svg class="game-concept-art" viewBox="0 0 '+box[2]+' '+box[3]+'" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><svg width="'+box[2]+'" height="'+box[3]+'" viewBox="'+box.join(' ')+'" overflow="hidden"><image href="./assets/build-ui/concept-art.png" width="1536" height="1024" /></svg></svg>';
+  }
+
+  function buildMilestone(b,s) {
+    var tree=s.focusTree || {}, nodes=tree.nodes || [];
+    var relevant=nodes.filter(function(n){return n.art===b.id || (n.requirements || []).some(function(r){return r.text==='Own '+b.name;});});
+    var remaining=relevant.filter(function(n){return n.status!=='completed';});
+    var next=remaining.find(function(n){return n.status==='active';}) || remaining.find(function(n){return n.canStart;}) || remaining[0] || nodes.find(function(n){return n.status==='active' || n.canStart;});
+    var done=nodes.length>0 && nodes.every(function(n){return n.status==='completed';});
+    var label=done?'All focuses complete':next?next.title:'Develop your business';
+    var status=done?'Complete':next && next.status==='active'?'In progress':next && next.canStart?'Ready':'Locked';
+    var href='./focus-tree.html'+(next?'?focus='+encodeURIComponent(next.id):'');
+    return '<section class="game-panel game-milestone" aria-label="Next milestone">'+panelHead('Next milestone','')+
+      '<div class="game-milestone-body"><span class="game-milestone-art" aria-hidden="true">'+buildConceptArt('milestone')+'</span><div class="game-milestone-copy"><div class="game-focus-route" aria-hidden="true"><span>'+ (done?'✓':status==='Ready'?'!':'▣')+'</span><i>→</i><b>?</b><i>→</i><b>?</b></div><p>'+esc(label)+' <small>'+status+'</small></p><a class="game-focus-link" href="'+href+'">Open focus tree →</a></div></div></section>';
+  }
+
   function renderBuilding(el, s) {
     var b=selectedBuilding(s);
-    el.innerHTML=notice(s)+(productionModel(s)?openingGuide(s):'')+'<div class="game-layout">'+roster(s)+'<div class="game-center">'+site(b,s)+(productionModel(s)?'':stockPanel(b,s))+'</div><div class="game-actions">'+(productionModel(s)?operationsPanel(b,s):upgradePanel(b,s,false)+upgradePanel(b,s,true))+expansionPanel(s)+'</div></div><div class="game-build-bottom">'+(productionModel(s)?buildingActivityStrips(b,s):gameFooter(s)+breakfastStrip(s))+'</div>'+statusLine();
+    el.innerHTML=notice(s)+(productionModel(s)?openingGuide(s):'')+'<div class="game-layout">'+roster(s)+'<div class="game-center">'+site(b,s)+(productionModel(s)?'':stockPanel(b,s))+'</div><div class="game-actions">'+(productionModel(s)?operationsPanel(b,s):upgradePanel(b,s,false)+upgradePanel(b,s,true))+(document.body.classList.contains('build-illustrated')?buildMilestone(b,s):expansionPanel(s))+'</div></div><div class="game-build-bottom">'+(productionModel(s)?'<span class="game-keeper-art" aria-hidden="true">'+buildConceptArt('keeper')+'</span><a class="build-team-link game-small-button" href="./focus-tree.html">Manage team →</a>'+buildingActivityStrips(b,s):gameFooter(s)+breakfastStrip(s))+'</div>'+statusLine();
   }
 
   var breakfastGoods = {
@@ -573,7 +596,7 @@
       var direction=step<0?'Previous':'Next', destination=assetView?'financial results':'business assets';
       return '<button id="game-business-panel-'+(step<0?'previous':'next')+'" type="button" class="game-business-page-arrow" data-business-panel-step="'+step+'" aria-controls="game-business-panel-content" aria-label="'+direction+' panel: '+destination+'" title="Show '+destination+'"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><path d="'+(step<0?'M10 3 5 8l5 5':'m6 3 5 5-5 5')+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
     }).join('')+'</span>':'';
-    return '<div class="game-business-numbers"><div class="game-live-heading'+(switchable?' game-business-page-heading':'')+'">'+(switchable?'<span class="game-business-page-label">'+controls+heading+'</span>':heading)+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div>'+(switchable?'<div id="game-business-panel-content" class="game-business-panel-content" data-business-panel="'+(assetView?'assets':'finance')+'">'+(assetView?businessAssetSlots(b):figures)+'</div>':figures)+'</div>';
+    return '<div class="game-business-numbers">'+(switchable?'<h3 class="build-finance-title">'+(assetView?'Business assets':'EBITDA')+'</h3>':'')+'<div class="game-live-heading'+(switchable?' game-business-page-heading':'')+'">'+(switchable?'<span class="game-business-page-label">'+controls+heading+'</span>':heading)+'<span data-business-feed>'+(!businessConnected?'Reconnecting':s.paused || b.paused?'Paused':'Live')+'</span></div>'+(switchable?'<div id="game-business-panel-content" class="game-business-panel-content" data-business-panel="'+(assetView?'assets':'finance')+'">'+(assetView?businessAssetSlots(b):figures)+'</div>':figures)+'</div>';
   }
 
   function businessPanelKey(b) { return b.buildingId || b.id; }
@@ -810,7 +833,7 @@
   function ensureBusinessDialogs() {
     if(!document.querySelector('#econ-building, #econ-auto'))return;
     if(!document.getElementById('game-breakfast')){var breakfastDialog=document.createElement('dialog');breakfastDialog.id='game-breakfast';breakfastDialog.setAttribute('aria-labelledby','game-breakfast-title');breakfastDialog.innerHTML='<div class="game-dialog-head"><h2 id="game-breakfast-title">Breakfast Club</h2><button type="button" class="game-small-button" data-close-breakfast>Close ×</button></div><div id="game-breakfast-content" class="econ-kid"></div>'+statusLine();document.body.appendChild(breakfastDialog);}
-    [['game-growth',!snapshot || researchEnabled(snapshot)?(equipmentEnabled(snapshot || {})?'Research & equipment':'Research'):'Prestige'],['game-activities','Business activities'],['game-project','Business project'],['game-quest','Business quest'],['game-business-dialog','Close business'],['game-asset-picker','Business assets']].forEach(function(info){
+    [['game-growth',!snapshot || researchEnabled(snapshot)?(equipmentEnabled(snapshot || {})?'Research & equipment':'Research'):'Prestige'],['game-activities','Business activities'],['game-project','Business project'],['game-quest','Business quest'],['game-business-dialog','Close business'],['game-asset-picker','Business assets'],['game-expansion-dialog','Open a business']].forEach(function(info){
       if(document.getElementById(info[0]))return;
       var dialog=document.createElement('dialog');dialog.id=info[0];dialog.className='game-management-dialog';dialog.setAttribute('aria-labelledby',info[0]+'-title');
       dialog.innerHTML='<div class="game-dialog-head"><h2 id="'+info[0]+'-title">'+info[1]+'</h2><button id="'+info[0]+'-close" type="button" class="game-small-button" data-close-business-dialog>Close ×</button></div><div class="econ-kid game-dialog-content" data-keep-scroll="'+info[0]+'"><div id="'+info[0]+'-content"></div>'+statusLine()+'</div>';
@@ -820,7 +843,7 @@
 
   function renderBusinessDialogs(s) {
     ensureBusinessDialogs();
-    [['game-growth',growthMarkup],['game-activities',activitiesMarkup],['game-project',projectMarkup],['game-quest',questMarkup],['game-business-dialog',salvageMarkup],['game-asset-picker',assetPickerMarkup]].forEach(function(info){var dialog=document.getElementById(info[0]);if(dialog && dialog.open)document.getElementById(info[0]+'-content').innerHTML=info[1](s);});
+    [['game-growth',growthMarkup],['game-activities',activitiesMarkup],['game-project',projectMarkup],['game-quest',questMarkup],['game-business-dialog',salvageMarkup],['game-asset-picker',assetPickerMarkup],['game-expansion-dialog',expansionPanel]].forEach(function(info){var dialog=document.getElementById(info[0]);if(dialog && dialog.open)document.getElementById(info[0]+'-content').innerHTML=info[1](s);});
   }
 
   function openBusinessDialog(id,trigger) {
@@ -856,6 +879,7 @@
   }
 
   function openingGuide(s) {
+    if(!window.YOMAMA_NOTICE_BOARD_ENABLED)return '';
     if(buildNoticeDismissed && !(window.YomamaOnboarding && window.YomamaOnboarding.active(s)))return '';
     var n=s.nextStep;
     if(s.build)n={title:s.build.name+' is being built',detail:s.build.remainingSec+'s remaining. Your other businesses keep working.'};
@@ -901,7 +925,7 @@
   }
 
   function operationsPanel(b, s) {
-    return '<section class="game-panel game-operations">'+panelHead('Upgrades','')+upgradeRows(b,['production','sales','storage'])+'</section>';
+    return '<section class="game-panel game-operations">'+panelHead('Upgrade business','')+upgradeRows(b,['production','sales','storage'])+'</section>';
   }
 
   function rateUnits(value) {
@@ -955,7 +979,7 @@
       var income=!done && incomeValue?'<small class="game-upgrade-impact'+(incomeDelta>0?' k-good':incomeDelta<0?' k-bad':' game-no-gain')+'" aria-label="Estimated income change: '+incomeValue+'" title="'+incomeTitle+'">Sales <span class="game-upgrade-value">'+incomeValue+'</span></small>':'';
       var extra=kind==='production' && incomeDelta<=0 && !done?'<small class="game-upgrade-explanation">'+esc(u.consequence || 'More goods, no extra sales yet. Attract customers or save for orders.')+'</small>':'';
       var costs=!done && costValue?'<small class="game-upgrade-running-cost" aria-label="Estimated cost change: '+costValue+'" title="'+(statementReady?'Estimated production and selling cost change. Goods cost money to make; selling fees come out of customer payments.':'Estimated running cost change for this business after the next upgrade. Costs are charged as goods are produced.')+'">Costs <span class="game-upgrade-cost">'+costValue+'</span></small>':'';
-      return '<div class="game-operation"><div><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong>'+(done?'<span class="game-upgrade-capacity">Complete</span>':income+costs+extra)+'</div><div class="game-upgrade-buy"><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(cashCost)))+'"'+(!u.canBuy&&!done?' aria-describedby="'+reasonId+'"':'')+' title="'+esc(u.why || (capacity?capacity+(u.unlocksSpecialty?' · Specialty':''):u.consequence || u.effect))+'">'+(done?'MAX':ym(cashCost)+' ↑')+'</button>'+voucher+(!u.canBuy&&!done?'<small id="'+reasonId+'" class="game-upgrade-reason">'+esc(u.why || 'Keep earning to upgrade')+'</small>':'')+'</div></div>';
+      return '<div class="game-operation" data-upgrade-kind="'+kind+'">'+(document.body.classList.contains('build-illustrated')?'<span class="game-operation-art">'+buildConceptArt(kind)+'</span>':'')+'<div class="game-upgrade-copy"><strong>'+(kinds.length===1?'Level '+u.level:names[kind]+' <small>Lv '+u.level+'</small>')+'</strong>'+(done?'<span class="game-upgrade-capacity">Complete</span>':income+costs+extra)+'</div><div class="game-upgrade-buy"><button class="game-small-button" type="button" data-econ-action="upgrade:'+b.slot+':'+kind+'"'+(!u.canBuy?' disabled':'')+' aria-label="'+esc('Upgrade '+names[kind]+(done?'':', '+ym(cashCost)))+'"'+(!u.canBuy&&!done?' aria-describedby="'+reasonId+'"':'')+' title="'+esc(u.why || (capacity?capacity+(u.unlocksSpecialty?' · Specialty':''):u.consequence || u.effect))+'">'+(done?'MAX':ym(cashCost)+' ↑')+'</button>'+voucher+(!u.canBuy&&!done?'<small id="'+reasonId+'" class="game-upgrade-reason">'+esc(u.why || 'Keep earning to upgrade')+'</small>':'')+'</div></div>';
     }).join('')+'</div>';
   }
 
@@ -1039,10 +1063,43 @@
   function marketOrderTools(s) {
     if(s.orderPreview)return '';
     var offers=orderOffers(s), ready=offers.filter(function(o){return o.canFulfill && !o.project && !o.goalOrder && !o.inTransit;}).length;
-    return '<div class="game-market-order-tools"><button class="game-small-button game-deliver-ready" data-econ-action="market:deliver"'+(!ready || s.paused?' disabled':'')+'>Deliver ready'+(ready?' ('+ready+')':'')+'</button><small>Keep clicking CLICK!!!! for new offers. Bulk rolls can clear more spare stock.</small></div>';
+    var goods=[];
+    (s.buildings || []).forEach(function(b){(b.goods || []).forEach(function(g){if(!g.locked)goods.push({building:b,good:g});});});
+    var requested=[];
+    offers.forEach(function(o){(o.requirements || []).forEach(function(g){if(requested.indexOf(g.goodId)<0)requested.push(g.goodId);});});
+    goods.sort(function(a,b){return Number(requested.indexOf(b.good.goodId)>=0)-Number(requested.indexOf(a.good.goodId)>=0);});
+    return '<div class="game-market-order-tools"><a class="market-stock-label" href="./buildings.html#stock"><strong>Your stock</strong><small>Keep supplying<br>a brighter tomorrow.</small></a><div class="market-stock-items" aria-label="Stock for your orders">'+goods.slice(0,6).map(function(row){return '<span class="market-stock-item" title="'+esc(row.good.name)+' · '+units(row.good.quantity)+' in stock" aria-label="'+esc(row.good.name)+' · '+units(row.good.quantity)+' in stock">'+goodIcon(row.building,row.good,false)+'<strong>'+units(row.good.quantity)+'</strong></span>';}).join('')+'</div><button class="game-small-button game-deliver-ready" data-econ-action="market:deliver"'+(!ready || s.paused?' disabled':'')+'>Deliver ready'+(ready?' · '+ready+(ready===1?' order':' orders'):'')+' <span aria-hidden="true">❯</span></button></div>';
   }
 
   function ordersMarkup(s) {
+    // Other pages reuse orders in compact dialogs; keep their existing layout.
+    if(!document.getElementById('econ-market'))return compactOrdersMarkup(s);
+    var indexed=orderOffers(s).map(function(o,i){return {order:o,index:i};});
+    var rolls=(s.contracts || {}).rolls;
+    var rollTip='Free reroll · '+(Array.isArray(rolls)?rolls.map(function(r){return r.label+' '+r.chance+'%';}).join(', '):'Standard 65%, Large 25%, Rare 8%, Jackpot 2%')+' · Rewards require delivery';
+    indexed.sort(function(a,b){return Number(!!b.order.project && (!b.order.completed || !!orderReactions[b.index]))-Number(!!a.order.project && (!a.order.completed || !!orderReactions[a.index]));});
+    return '<div class="game-card-grid game-order-grid" data-keep-scroll="orders">'+indexed.map(function(entry){
+      var o=entry.order,i=entry.index;if(o.project)return projectCard(o,i,s);
+      var channel=o.customer==='breakfast'?'Saved town delivery':(o.channelLabel || 'Quick cash');
+      var rarity=['standard','small','bulk','large','rare','jackpot'].includes(o.rarity)?o.rarity:'standard';
+      var ready=o.canFulfill && !s.paused;
+      var names=['Sunrise Diner','Copper Cafe','Builders Union'];
+      return '<section class="k-card game-order market-illustrated-order" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+orderReactionMarkup(i)+
+        '<div class="market-order-scene market-scene-'+(i%3)+'" data-motion="'+(customerArtEnabled && !s.paused)+'" aria-hidden="true"><span></span></div>'+
+        '<h3><span class="market-buyer-name">'+names[i%3]+'</span><small class="game-order-tier">'+esc(o.rarityLabel || 'Standard')+'</small></h3>'+
+        '<div class="game-order-context"><span class="game-order-name" title="'+esc((o.name || channel)+' · '+channel)+'">'+esc(o.name || channel)+'</span></div>'+
+        '<div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){
+          var building=s.buildings.find(function(b){return b.id===g.buildingId;}) || {id:g.buildingId};
+          return '<div class="econ-good-line"><span class="econ-good-name">'+goodIcon(building,g,false)+'<span>'+esc(g.name)+'</span></span><span><b class="'+(g.owned>=g.quantity?'k-good':'k-bad')+'">'+units(g.owned)+'</b> / '+units(g.quantity)+'</span></div>';
+        }).join('')+'</div></div>'+
+        '<div class="market-order-payment"><span class="market-order-state '+(ready?'is-ready':'')+'" title="'+esc(s.paused?'Class paused':o.why || '')+'"><b aria-hidden="true">'+(ready?'✓':'⌛')+'</b>'+(s.paused?'Class paused':ready?'Ready to deliver':'Waiting for stock')+'</span><div class="game-order-reward"><small>Payout</small><span title="Paid after you deliver all requested goods">'+ym(o.reward)+'</span></div></div>'+
+        '<div class="game-order-controls">'+bigButton('fulfill:'+i+':'+o.id,'Deliver','',!ready)+
+        (s.rulesRevision>=2?'<button class="game-small-button game-order-commit" type="button" aria-pressed="'+!!o.committed+'" data-econ-action="commit:'+i+':'+esc(o.id)+'"'+(!o.committed && o.canCommit===false || s.paused?' disabled':'')+' title="Regular buyers get goods first. Save the rest for this order.">'+(o.committed?'Release goods':'Save goods')+'</button>':'')+
+        '<button class="game-text-button market-reroll" type="button" data-econ-action="replace:'+i+':'+esc(o.id)+'" title="'+esc(rollTip)+'" aria-label="Reroll order '+(i+1)+'"><span aria-hidden="true">↻</span> Reroll</button></div></section>';
+    }).join('')+'</div>';
+  }
+
+  function compactOrdersMarkup(s) {
     var indexed=orderOffers(s).map(function(o,i){return {order:o,index:i};});
     var rolls=(s.contracts || {}).rolls;
     var rollTip='Free reroll · '+(Array.isArray(rolls)?rolls.map(function(r){return r.label+' '+r.chance+'%';}).join(', '):'Standard 65%, Large 25%, Rare 8%, Jackpot 2%')+' · Rewards require delivery';
@@ -1199,7 +1256,7 @@
 
   function renderProductionInventory(el,s,b,market) {
     if(market){
-      el.innerHTML=notice(s)+'<div class="game-market-surface'+(s.customerContracts?' has-contracts':'')+'"><div class="game-market-income'+(s.customerContracts?' has-contracts':'')+'"><section class="game-market-orders" data-keep-scroll="market-panel" aria-label="Delivery orders">'+panelHead(connectedProgression(s)?'Orders':'Projects & deliveries',connectedProgression(s)?'Deliver goods · earn cash':'Build your town · earn cash')+marketOrderTools(s)+ordersMarkup(s)+'</section>'+customerContractsMarkup(s)+'</div></div>'+statusLine();
+      el.innerHTML=notice(s)+'<div class="game-market-surface'+(s.customerContracts?' has-contracts':'')+'"><div class="game-market-income'+(s.customerContracts?' has-contracts':'')+'"><section class="game-market-orders" data-keep-scroll="market-panel" aria-label="Delivery orders">'+panelHead('Manual orders',orderOffers(s).length+' open offers · deliver goods, earn cash')+marketOrderTools(s)+ordersMarkup(s)+'</section>'+customerContractsMarkup(s)+'</div></div>'+statusLine();
       return;
     }
   }
@@ -1709,6 +1766,8 @@
       performAsset(assetBody);return;
     }
     if(event.target.closest('[data-related-breakfast]')){var relatedBreakfast=document.getElementById('game-breakfast');if(relatedBreakfast){relatedBreakfast._returnFocusId='game-quest-breakfast';document.getElementById('game-breakfast-content').innerHTML=breakfastMarkup(snapshot);relatedBreakfast.showModal();}return;}
+    var openBusiness=event.target.closest('[data-open-business]');
+    if(openBusiness){openBusinessDialog('game-expansion-dialog',openBusiness);return;}
     var closeBusiness=event.target.closest('[data-close-business-dialog]');
     if(closeBusiness){closeBusiness.closest('dialog').close();return;}
     var growthOpen=event.target.closest('[data-game-growth]');
@@ -1826,7 +1885,7 @@
 
   // ------------------------------------------------------------------ boot --
   function boot() {
-    if (!mounted().length) return;
+    if (!mounted().length && !document.querySelector('#game-hud[data-economy-client]')) return;
     if (document.getElementById('econ-license')) {
       request('GET', '/quiz').then(function (data) { quiz = data; render(); }).catch(function () {});
     }

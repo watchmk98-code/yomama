@@ -42,6 +42,11 @@ ORDER_ROLLS = (
     dict(id='jackpot', label='Jackpot order', chance=2, items=5, quantityPercent=250, payoutPercent=250),
 )
 
+# Deal variety is steered, never restricted: recency, worth and build order
+# change the odds, so every authored bundle a town can supply stays reachable.
+ORDER_VARIETY = dict(valueFloorPercent=60, valueFloorCurve=3, goodCooldown=12,
+                     frontierTiers=2, frontierOrders=12)
+
 # Regular customers buy one small shipment at a time. Terms are deterministic;
 # accepting a customer authorizes automatic inventory sales, never cash spending.
 # Catalog bundles keep their existing goods, quantities and schedules.
@@ -110,6 +115,7 @@ def new_state(cfg, start_tick=0, seed=1):
     st=legacy.new_state(cfg,start_tick,seed)
     st.update(modelVersion=4,productionMode='independent',b=[_building(0)],inventory={},productionWork={},productionPhase={},salesWork={},
               materials=0,lastActiveTick=start_tick,orderSerial=0,orderRecipeHistory=[[],[],[]],
+              orderGoodHistory=[],orderFrontierSerial=0,
               report=dict(produced=0,unitsProduced=0,retailEarned=0,unitsSold=0,
                           overflowSold=0,overflowCost=0,builds=0,offlineTicksSkipped=0))
     _customer_defaults(st)
@@ -155,6 +161,9 @@ def migrate_state(cfg, st, tick=None):
     st.setdefault('productionPhase',{})
     _independent_production_defaults(st)
     st.setdefault('orderRecipeHistory',[[],[],[]])
+    # An existing town starts collecting request history from its next offer.
+    st.setdefault('orderGoodHistory',[])
+    st.setdefault('orderFrontierSerial',0)
     earnings.ensure(st)
     business_activity.ensure(st)
     # Existing v4 towns gain an empty roster without resetting their economy.
@@ -726,6 +735,7 @@ def expand(cfg,st,ti,tick):
 
 def finish_build(cfg,st,k,DAY=None):
     ti=st['build']['i'];st['b'].append(_building(ti));st['tierOf'].append(ti);st['build']=None
+    st['orderFrontierSerial']=st['orderSerial']
     business_operations.complete_construction(cfg,st,len(st['b'])-1)
     st['unlock'][str(len(st['b'])-1)]=k/ticks_per_day(cfg);st['report']['builds']+=1
     if st.get('gateDay') is None and len(st['b'])>=cfg['global']['gateTier']: st['gateDay']=k/ticks_per_day(cfg)
@@ -982,8 +992,83 @@ def customer_contract_payload(cfg,st):
                 earned=data.get('earned',0),deliveries=data.get('deliveries',0),customers=customers,active=active)
 
 
+def _variety(cfg):
+    return dict(ORDER_VARIETY,**(cfg['production'].get('orderVariety') or {}))
+
+
+def _recipe_value(cfg,index,rarity,goods,recipe):
+    """Relative worth of an authored bundle, before shelf caps and bulk stretch."""
+    total=0
+    for gid in recipe['goods']:
+        good=goods[gid]
+        qty=max(2,math.ceil(cfg['production']['orderMinutes'][index]*60/(good['cycleTicks']*cfg['global']['tick'])))
+        total+=math.ceil(qty*rarity['quantityPercent']/100)*good['unitPrice']
+    return total
+
+
+def choose_recipe(cfg,st,index,rarity,digest,goods,pool):
+    """Weight the town's producible bundles, then draw one from the same digest.
+
+    Authored rarity caps stand; only a standard roll asks for more products as
+    the town grows. A job the town has outgrown becomes rare rather than
+    impossible; the one exclusion is a job already on the board, and it
+    returns to the pool as soon as that card changes.
+    """
+    knobs=_variety(cfg)
+    target=rarity['items'] or ((1 if index==0 else 2)+len(st['tierOf'])//4)
+    sizes=[len(r['goods']) for r in pool if len(r['goods'])<=target]
+    high=max(sizes) if sizes else min(len(r['goods']) for r in pool)
+    # An authored rarity keeps its exact promise: a rare order asks for four
+    # products wherever the town can supply them. Only a standard roll, whose
+    # size follows the town itself, also considers one product fewer.
+    low=max(1,high-1) if not rarity['items'] else high
+    candidates=[r for r in pool if low<=len(r['goods'])<=high]
+    on_board={o.get('recipeId') for o in st.get('offers') or []}
+    elsewhere=[r for r in candidates if r['id'] not in on_board]
+    # A job parked on another card is not dealt again while anything else fits;
+    # it returns to the pool as soon as that card changes.
+    candidates=elsewhere or candidates
+    worth={r['id']:_recipe_value(cfg,index,rarity,goods,r) for r in candidates}
+    best=max(worth.values()) or 1
+    share_floor=max(knobs['valueFloorPercent'],1)/100
+    recent=(st.get('orderGoodHistory') or [])[-knobs['goodCooldown']*2:]
+    frontier=set(st['tierOf'][-knobs['frontierTiers']:]) if knobs['frontierTiers'] else set()
+    spotlight=st['orderSerial']-st.get('orderFrontierSerial',0)<knobs['frontierOrders']
+    seen=set(st.setdefault('orderRecipeHistory',[[],[],[]])[index])
+    weights=[]
+    for recipe in candidates:
+        weight=1.0
+        share=worth[recipe['id']]/best
+        if share<share_floor:
+            weight*=max(0.01,(share/share_floor)**knobs['valueFloorCurve'])
+        for gid in recipe['goods']:
+            gap=next((i for i,asked in enumerate(reversed(recent)) if asked==gid),None)
+            if gap is not None: weight*=min(1.0,(gap+1)/knobs['goodCooldown'])
+            if spotlight and goods[gid]['tier'] in frontier: weight*=3.0
+        if recipe['id'] not in seen: weight*=4.0
+        weights.append(max(weight,0.001))
+    draw=int.from_bytes(digest[8:16],'big')/2**64*sum(weights)
+    chosen=candidates[-1]
+    for recipe,weight in zip(candidates,weights):
+        draw-=weight
+        if draw<=0:
+            chosen=recipe;break
+    return chosen
+
+
+def record_recipe(cfg,st,index,recipe):
+    """Remember the dealt bundle and the products it asked for."""
+    history=st.setdefault('orderRecipeHistory',[[],[],[]])[index]
+    if recipe['id'] in history: history.remove(recipe['id'])
+    history.append(recipe['id'])
+    del history[:-len(ORDER_RECIPES)]
+    asked=st.setdefault('orderGoodHistory',[])
+    asked.extend(recipe['goods'])
+    del asked[:-_variety(cfg)['goodCooldown']*4]
+
+
 def _order_recipe(cfg,st,index,rarity,digest,goods,target_tier=None):
-    """Deal a complete job the town can produce, with a saved rotation per slot.
+    """Deal a complete job the town can produce, steered away from its last ones.
 
     Eligibility follows owned businesses and unlocked products.
     Recipes are authored bundles: larger rolls never pad them with random goods.
@@ -998,28 +1083,11 @@ def _order_recipe(cfg,st,index,rarity,digest,goods,target_tier=None):
         # Legacy migrations can preserve a town with only an industrial
         # business. Give it ordinary jobs until it can supply breakfast food.
         eligible=[r for r in eligible if r['breakfast']] or eligible
-    target=rarity['items'] or (1 if index==0 else 2)
-    size=max(len(r['goods']) for r in eligible if len(r['goods'])<=target)
-    candidates=[r for r in eligible if len(r['goods'])==size]
-    history=st.setdefault('orderRecipeHistory',[[],[],[]])[index]
-    # Deal every unseen recipe of this size before recycling the oldest one.
-    # Prefer distinct cards among unseen jobs, but a parked card must never
-    # make its recipe unreachable through another slot's New Order button.
-    on_board={o.get('recipeId') for o in st.get('offers') or []}
-    seen=set(history)
-    unseen=[r for r in candidates if r['id'] not in seen]
-    if unseen:
-        unseen=[r for r in unseen if r['id'] not in on_board] or unseen
-        recipe=unseen[int.from_bytes(digest[8:16],'big')%len(unseen)]
-    else:
-        rank={rid:i for i,rid in enumerate(history)}
-        recipe=min(candidates,key=lambda r:rank[r['id']])
+    recipe=choose_recipe(cfg,st,index,rarity,digest,goods,eligible)
     # A starter's first cash job teaches one fast, raw product.
     if st['orderSerial']==1 and index==0:
-        recipe=next((r for r in candidates if r['goods']==('farm_tomatoes',)),recipe)
-    if recipe['id'] in seen: history.remove(recipe['id'])
-    history.append(recipe['id'])
-    del history[:-len(ORDER_RECIPES)]
+        recipe=next((r for r in eligible if r['goods']==('farm_tomatoes',)),recipe)
+    record_recipe(cfg,st,index,recipe)
     return recipe
 
 
@@ -1110,7 +1178,11 @@ def _freeze_selling_terms(cfg,st,order):
 
 def offer_contracts(cfg,st,k,DAY=None):
     st.setdefault('orderSerial',0)
-    if st.get('offers') is None: st['offers']=[_make_order(cfg,st,i) for i in range(3)]
+    if st.get('offers') is None:
+        # Build the board one card at a time: each new job can then see the
+        # jobs already on the board and avoid repeating them.
+        st['offers']=[]
+        for index in range(3): st['offers'].append(_make_order(cfg,st,index))
     market_orders.defaults(cfg,st)
 
 

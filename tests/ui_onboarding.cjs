@@ -53,6 +53,20 @@ print(json.dumps(payload))
     });
 
     await page.goto(base + '/buildings.html');
+    if (!await page.evaluate(() => window.YOMAMA_NOTICE_BOARD_ENABLED)) {
+      await page.locator('.game-layout').waitFor();
+      assert.equal(await page.locator('.game-opening-guide,.game-first-shift-toggle').count(), 0);
+      assert.equal(await page.locator('body.first-shift-focus').count(), 0);
+      assert.notEqual(await page.locator('.game-actions').evaluate(node => getComputedStyle(node).display), 'none');
+      await page.goto(base + '/marketplace.html');
+      await page.locator('.game-market-orders').waitFor();
+      assert.equal(await page.locator('.game-orders-notice').isVisible(), false);
+      assert.equal(await page.locator('.game-first-shift-toggle').count(), 0);
+      assert.equal(await page.locator('body.first-shift-focus').count(), 0);
+      assert.equal(errors.length, 0, errors.join('\n'));
+      console.log('Passed disabled notice board checks on Build and Market.');
+      return;
+    }
     await page.locator('.game-first-shift-board').waitFor();
     if (process.env.ONBOARDING_SCREENSHOTS) {
       fs.mkdirSync(path.join(root, '.checks', 'onboarding'), {recursive: true});

@@ -33,6 +33,7 @@ import access
 import autopilot
 import alpaca_market
 import port_portfolio
+import quest_engine
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "game.db"
@@ -203,7 +204,22 @@ def equity_price(symbol: str, seed: int, minute: int) -> float:
 
 # --------------------------------------------------------------- economy ----
 
-_startup_config = crafting_pilot.configure(economy.load_config())
+def _stage_config():
+    """Stage the rules every new or reset class is stamped with.
+
+    The quest engine replaces the 30 business quests, which were the only
+    source of Prestige, so an engine class runs with the Prestige expansion
+    qualification off; the three businesses it gated would otherwise be
+    unreachable. Existing v4 classes keep their stored snapshot and never see
+    either change until they are reset.
+    """
+    cfg = quest_engine.configure(crafting_pilot.configure(economy.load_config()))
+    if quest_engine.enabled(cfg):
+        cfg.setdefault('businessDesign', {})['prestigeExpansion'] = False
+    return cfg
+
+
+_startup_config = _stage_config()
 _book_cache = {}
 _class_locks = {}
 _META_KEYS = {'tick', 'rngState', 'report', 'reportBaseline', 'lastRank', 'reportTick', 'rumour'}

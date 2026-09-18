@@ -131,3 +131,185 @@
   #econ-market .game-contract-controls .game-small-button,
   #econ-market .game-contract-controls .game-text-button {min-height:32px;}
 }
+
+
+/* The workspace owns the alley image so it stays continuous behind the page heading, HUD and orders. */
+#econ-market {--amber:#ffd21c;--green:#00ee85;--text:#f5f5e9;--muted:#c0bbad;background:transparent;padding:8px;gap:8px;isolation:isolate;}
+#econ-market .game-market-surface.has-contracts,
+#econ-market .game-market-income.has-contracts {display:flex;flex-direction:column;flex:1;min-height:0;}
+#econ-market .game-customer-contracts:not(.game-view-hidden) {flex:1;background:#030504;}
+#econ-market .game-market-orders {overflow:hidden;}
+#econ-market > .game-view-tabs {align-self:flex-end;gap:0;min-width:260px;background:#000;border:1px solid var(--amber);}
+#econ-market > .game-view-tabs button {min-height:28px;font-size:18px;border:0;padding:2px 14px;color:var(--text);}
+#econ-market > .game-view-tabs button[aria-selected=true] {background:var(--amber);color:#000;box-shadow:none;}
+#econ-market .game-market-orders > .game-panel-head {align-self:flex-start;min-height:38px;height:auto;border:1px solid var(--amber);padding:2px 8px;gap:12px;background:#000;}
+#econ-market .game-market-orders > .game-panel-head h2 {font-size:30px;color:white;font-weight:700;text-transform:uppercase;text-shadow:1px 0 currentColor;letter-spacing:1px;}
+#econ-market .game-market-orders > .game-panel-head > span {color:var(--amber);font-size:16px;}
+#econ-market .game-order-grid {flex:1;min-height:0;gap:8px;margin-top:0;}
+#econ-market .game-order.market-illustrated-order {display:flex;flex-direction:column;justify-content:flex-start;border:2px solid var(--amber);box-shadow:inset 0 0 0 2px #483510;background:#020403;padding:5px;gap:3px;overflow:hidden;}
+#econ-market .market-order-scene {flex:0 1 auto;min-height:70px;height:clamp(150px,26vh,310px);position:relative;overflow:hidden;border:1px solid #b88c12;background:#211609;}
+#econ-market .market-order-scene > span {display:block;position:absolute;inset:0;background-image:url('./assets/market/order-scenes.png');background-size:320% 348.3%;background-position:2.84% 33.15%;image-rendering:pixelated;animation:market-scene-breathe 7s ease-in-out infinite;}
+#econ-market .market-scene-1 > span {background-position:50.2% 33.15%;animation-delay:-2.3s;}
+#econ-market .market-scene-2 > span {background-position:97.54% 33.15%;animation-delay:-4.6s;}
+#econ-market .game-order.market-illustrated-order h3 {margin:3px 4px 0;align-items:center;flex-wrap:nowrap;gap:6px;color:var(--text);font-size:30px;font-weight:700;text-transform:uppercase;line-height:1;}
+#econ-market .market-buyer-name {letter-spacing:.8px;text-shadow:1px 0 currentColor;}
+#econ-market .market-illustrated-order .game-order-tier {font-size:13px;white-space:nowrap;}
+#econ-market .market-illustrated-order .game-order-context {flex:none;margin:0 4px;line-height:1;min-height:18px;}
+#econ-market .market-illustrated-order .game-order-name {font-size:18px;color:#e0dccc;}
+#econ-market .market-illustrated-order .game-order-items {margin:0 4px;}
+#econ-market .market-illustrated-order .game-order-caption {justify-content:flex-end;min-height:18px;font-size:15px;margin:0 0 3px;text-transform:uppercase;}
+#econ-market .market-illustrated-order .game-order-goods {gap:5px;}
+#econ-market .market-illustrated-order .econ-good-line {border:1px solid #8e7017;background:#030604;padding:2px 6px;min-height:calc(54px * var(--market-goods-geometry,1));}
+#econ-market .market-illustrated-order .econ-good-name {text-transform:uppercase;font-size:calc(22px * var(--market-goods-scale,1));}
+#econ-market .market-illustrated-order .econ-art-icon {--market-icon-size:54px;}
+#econ-market .market-illustrated-order .econ-good-line > span:last-child {font-size:calc(23px * var(--market-goods-scale,1));font-weight:700;}
+#econ-market .market-order-payment {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px;flex:none;}
+#econ-market .market-order-state {display:flex;align-items:center;gap:7px;color:var(--amber);font-size:18px;text-transform:uppercase;line-height:1;}
+#econ-market .market-order-state b {font-size:28px;}
+#econ-market .market-order-state.is-ready {color:var(--green);}
+#econ-market .market-order-state.is-ready b {display:grid;place-items:center;width:24px;height:24px;background:var(--green);color:#001b10;border-radius:50%!important;font-size:20px;}
+#econ-market .market-illustrated-order .game-order-reward {display:flex;flex-direction:column;align-items:flex-end;gap:0;line-height:1;color:var(--green);font-size:36px;white-space:nowrap;font-weight:700;}
+#econ-market .market-illustrated-order .game-order-reward small {color:var(--text);font-size:13px;text-transform:uppercase;letter-spacing:1px;font-weight:400;}
+#econ-market .market-illustrated-order .game-order-controls {flex:none;display:grid;grid-template-columns:1.35fr 1fr .85fr;gap:6px;margin:0 3px 3px;}
+#econ-market .market-illustrated-order .game-order-controls button {font-size:18px;min-height:42px;margin:0;padding:4px;border:1px solid var(--amber);background:#030504;color:var(--text);}
+#econ-market .market-illustrated-order .game-order-controls .k-btn {text-transform:uppercase;font-weight:700;font-size:24px;}
+#econ-market .market-illustrated-order .game-order-controls .k-btn:not(:disabled) {background:var(--green);color:#00150d;border:3px double #002d20;outline:1px solid var(--green);outline-offset:1px;}
+#econ-market .market-illustrated-order .game-order-controls .k-btn:disabled {background:#292d39;color:#9296a2;border-color:#555b6e;opacity:1;}
+#econ-market .market-illustrated-order .game-order-controls .market-reroll {color:var(--amber);display:flex;align-items:center;justify-content:center;gap:3px;}
+#econ-market .market-reroll > span {font-size:30px;line-height:1;}
+#econ-market .market-reroll:hover {background:#352806!important;}
+#econ-market .market-reroll:active {background:var(--amber)!important;color:#000!important;}
+#econ-market .game-market-order-tools {order:3;display:flex;flex-wrap:nowrap;align-items:center;gap:15px;border:2px solid var(--amber);margin-top:12px;padding:6px 12px;background:#020403;min-height:80px;}
+#econ-market .market-stock-label {text-decoration:none;flex:none;color:var(--amber);border-right:1px solid var(--amber);padding-right:15px;}
+#econ-market .market-stock-label strong {display:block;text-transform:uppercase;font-size:26px;font-weight:700;line-height:1;}
+#econ-market .market-stock-label small {display:block;color:var(--text);font-size:14px;text-transform:uppercase;margin-top:5px;line-height:1;}
+#econ-market .market-stock-items {display:flex;align-items:center;justify-content:space-evenly;gap:10px;flex:1;min-width:0;overflow:hidden;}
+#econ-market .market-stock-item {flex:0 1 76px;min-width:35px;text-align:center;display:flex;flex-direction:column;align-items:center;color:var(--green);font-size:22px;line-height:1;}
+#econ-market .market-stock-item .econ-art-icon {width:50px;height:50px;flex:none;image-rendering:pixelated;}
+#econ-market .game-market-order-tools .game-deliver-ready {flex:0 0 auto;text-transform:uppercase;font-size:24px;min-height:48px;padding:4px 14px;color:#001b0f;background:var(--green);border:3px double #002d20;outline:1px solid var(--green);outline-offset:2px;}
+#econ-market .game-deliver-ready > span {margin-left:14px;}
+#econ-market .game-deliver-ready:disabled {background:#292d39;color:#9296a2;border-color:#555b6e;outline-color:#555b6e;}
+#econ-market button:focus-visible,#econ-market a:focus-visible {outline:2px solid white;outline-offset:2px;}
+@keyframes market-scene-breathe {0%,100% {transform:scale(1.005);}50% {transform:scale(1.015) translateY(-1px);}}
+@media(prefers-reduced-motion:reduce) {#econ-market .market-order-scene > span {animation:none;}}
+@media(min-width:900px) and (max-height:850px) {
+ #econ-market .market-order-scene {height:clamp(110px,23vh,190px);min-height:90px;}
+ #econ-market .game-order.market-illustrated-order h3 {font-size:25px;}
+ #econ-market .market-order-state {font-size:16px;}
+ #econ-market .market-illustrated-order .game-order-reward {font-size:30px;}
+ #econ-market .game-market-order-tools {min-height:65px;margin-top:8px;padding:4px 10px;}
+ #econ-market .market-stock-item .econ-art-icon {width:40px;height:40px;}
+ #econ-market .market-stock-label small {display:none;}
+}
+@media(max-width:899px) {
+ #econ-market {padding:5px;}
+ #econ-market .market-order-scene {height:175px;min-height:75px;}
+ #econ-market .game-order.market-illustrated-order h3 {font-size:26px;}
+ #econ-market .game-market-order-tools {gap:8px;min-height:55px;padding:4px 8px;margin-top:6px;}
+ #econ-market .market-stock-label {padding-right:8px;}
+ #econ-market .market-stock-label strong {font-size:20px;}
+ #econ-market .market-stock-label small,#econ-market .market-stock-items {display:none;}
+ #econ-market .game-market-order-tools .game-deliver-ready {flex:1;font-size:20px;min-height:36px;padding:3px;}
+ #econ-market .game-market-orders > .game-panel-head h2 {font-size:25px;}
+ #econ-market .game-market-orders > .game-panel-head > span {display:none;}
+}
+@media(max-height:650px) {
+ #econ-market .market-order-scene {display:none;}
+ #econ-market .game-order.market-illustrated-order {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;}
+ #econ-market .game-order.market-illustrated-order h3 {grid-column:1;grid-row:1;font-size:22px;}
+ #econ-market .market-illustrated-order .game-order-context {grid-column:1;grid-row:2;}
+ #econ-market .market-illustrated-order .game-order-items {grid-column:2;grid-row:1 / 4;}
+ #econ-market .market-order-payment {grid-column:1;grid-row:3;}
+ #econ-market .market-illustrated-order .game-order-controls {grid-column:1 / -1;grid-row:4;}
+ #econ-market .game-market-order-tools {min-height:42px;padding:3px 8px;margin-top:4px;}
+ #econ-market .market-stock-items,#econ-market .market-stock-label small {display:none;}
+ #econ-market .game-market-order-tools .game-deliver-ready {min-height:30px;font-size:20px;}
+}
+
+/* Keep the full scene and readable goods; shorter screens scroll this panel. */
+#econ-market {overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;}
+#econ-market:has(.game-market-orders:not(.game-view-hidden)) .game-market-surface,
+#econ-market:has(.game-market-orders:not(.game-view-hidden)) .game-market-income {display:block;flex:none;min-height:0;}
+#econ-market .game-market-orders {flex:none;overflow:visible;}
+#econ-market .game-order-grid {flex:none;grid-auto-rows:auto;}
+#econ-market .game-order.market-illustrated-order {min-height:0;}
+#econ-market .market-order-scene {flex:none;aspect-ratio:480/294;height:auto;min-height:0;}
+#econ-market .market-illustrated-order .game-order-goods {flex:none;}
+#econ-market .market-illustrated-order .game-order-items {flex:1;min-height:128px;}
+#econ-market .market-illustrated-order .econ-good-line {min-height:54px;}
+#econ-market .market-order-payment {margin-top:5px;}
+@media(max-width:899px) {#econ-market .market-order-scene {aspect-ratio:480/270;}}
+@media(max-height:650px) {
+ #econ-market .game-order.market-illustrated-order {min-height:230px;}
+ #econ-market .market-illustrated-order .game-order-items {min-height:0;}
+}
+/* Fixed action positions let rapid rerolls stay under the pointer. */
+#econ-market .market-illustrated-order .game-order-items {height:148px;min-height:148px;flex:none;}
+#econ-market .market-illustrated-order .game-order-goods {flex:1;min-height:0;}
+#econ-market .market-illustrated-order .econ-good-line {min-height:calc(54px * var(--market-goods-geometry,1));}
+#econ-market .market-illustrated-order .game-order-context {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;height:20px;}
+#econ-market .market-order-scene[data-motion=false] > span {animation:none;}
+#econ-market {scrollbar-width:thin;scrollbar-color:#b68a15 #090804;}
+#econ-market::-webkit-scrollbar {display:block;width:7px;}
+#econ-market::-webkit-scrollbar-thumb {background:#b68a15;}
+@media(max-height:650px) {#econ-market .market-illustrated-order .game-order-items {height:148px;min-height:148px;}}
+@media(min-width:900px) and (min-height:651px) {
+ #econ-market {position:relative;}
+ #econ-market > .game-view-tabs {position:absolute;right:18px;top:12px;z-index:2;}
+ #econ-market .game-market-orders > .game-panel-head {max-width:calc(100% - 280px);}
+}
+#econ-market .market-illustrated-order .econ-art-icon {transform:scale(1.15);}
+/* Opt this lightweight scene motion into the game's otherwise paused effects. */
+.game-page.motion-paused #econ-market .market-order-scene[data-motion=true] > span {animation:market-scene-breathe 7s ease-in-out infinite!important;}
+.game-page.motion-paused #econ-market .market-scene-1[data-motion=true] > span {animation-delay:-2.3s!important;}
+.game-page.motion-paused #econ-market .market-scene-2[data-motion=true] > span {animation-delay:-4.6s!important;}
+@media(prefers-reduced-motion:reduce) {.game-page.motion-paused #econ-market .market-order-scene[data-motion=true] > span {animation:none!important;}}
+/* Screen-sized orders: artwork gives up space before goods or action controls. */
+#econ-market {overflow:hidden;}
+#econ-market:has(.game-market-orders:not(.game-view-hidden)) .game-market-surface,
+#econ-market:has(.game-market-orders:not(.game-view-hidden)) .game-market-income {display:flex;flex-direction:column;flex:1;min-height:0;}
+#econ-market .game-market-orders {display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+#econ-market .game-order-grid {flex:1;min-height:0;grid-auto-rows:minmax(0,1fr);}
+#econ-market .game-order.market-illustrated-order {min-height:0;}
+#econ-market .market-order-scene {flex:1 1 0;aspect-ratio:auto;height:auto;min-height:60px;max-height:310px;}
+#econ-market .market-illustrated-order .game-order-items {height:148px;min-height:110px;flex:0 1 148px;}
+#econ-market .market-order-payment,#econ-market .market-illustrated-order .game-order-controls {flex:none;}
+#econ-market .game-market-order-tools {flex:none;min-height:58px;margin-top:6px;padding-block:4px;}
+#econ-market .market-stock-item .econ-art-icon {width:38px;height:38px;}
+@media(max-height:850px) {
+ #econ-market .game-order.market-illustrated-order h3 {font-size:24px;}
+ #econ-market .market-illustrated-order .game-order-controls button {min-height:34px;font-size:17px;}
+ #econ-market .market-illustrated-order .game-order-reward {font-size:28px;}
+ #econ-market .market-illustrated-order .game-order-items {height:130px;flex-basis:130px;min-height:100px;}
+ #econ-market .market-order-scene {min-height:40px;}
+ #econ-market .market-stock-label small {display:none;}
+}
+@media(max-height:650px) {
+ #econ-market .game-order.market-illustrated-order {min-height:0;}
+ #econ-market .market-illustrated-order .game-order-items {height:auto;min-height:0;}
+}
+/* Crop the portraits without stretching them when cards become shorter. */
+#econ-market .market-order-scene {min-height:clamp(80px,15vh,160px);}
+#econ-market .market-order-scene > span {inset:auto 0;top:50%;height:auto;aspect-ratio:480/294;translate:0 -50%;}
+#econ-market .market-order-scene > span {top:25%;translate:0 -25%;}
+#econ-market .market-illustrated-order .econ-good-name {font-size:max(12px,calc(22px * var(--market-goods-scale,1)));}
+#econ-market .market-illustrated-order .econ-good-line > span:last-child {font-size:max(12px,calc(23px * var(--market-goods-scale,1)));}
+/* Give portraits a consistent face-first crop, without distorting their aspect. */
+#econ-market .market-order-scene > span {top:0;translate:none;}
+#econ-market .market-illustrated-order .econ-art-icon {transform:none;}
+#econ-market .market-illustrated-order .game-order-goods {gap:4px;}
+#econ-market .market-illustrated-order .econ-good-line {padding:2px 6px;align-items:center;}
+#econ-market .market-illustrated-order .game-order-controls {gap:5px;}
+#econ-market .market-illustrated-order .game-order-items {flex:0 0 160px;min-height:160px;height:160px;}
+@media(max-height:850px) {
+ #econ-market .market-illustrated-order .game-order-items {flex-basis:144px;min-height:144px;height:144px;}
+}
+@media(max-height:650px) {
+ #econ-market .market-illustrated-order .game-order-items {height:auto;min-height:0;}
+}
+/* Show the complete illustration inside its frame, including on short screens. */
+#econ-market .market-order-scene {background:#080c09;}
+#econ-market .market-order-scene > span {inset:auto;left:50%;top:0;width:auto;max-width:100%;height:100%;aspect-ratio:480/294;translate:-50% 0;}
+/* Copper Cafe's new representative is a still portrait; keep all order scenes still. */
+#econ-market .market-order-scene > span {animation:none!important;}
+#econ-market .market-scene-1 > span {inset:0;width:100%;max-width:none;height:100%;aspect-ratio:auto;translate:none;background-image:url('./assets/market/copper-cafe-representative.png');background-size:cover;background-position:center 10%;}

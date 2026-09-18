@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="./preload-manifest.js?v=1"></script>
+  <script src="./loading.js?v=2"></script>
+  <title>YOMAMA INVESTMENTS — SUPPLY SHOP</title>
+  <meta name="description" content="Buy real crafting supplies for your YoMama businesses.">
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="./assets/shop/shopkeeper-sprites-v2.png" as="image" type="image/png">
+  <link rel="stylesheet" href="./styles.css?v=20260917-fresh-start">
+  <link rel="stylesheet" href="./econ-kids.css?v=20260917-fresh-start">
+  <link rel="stylesheet" href="./shop.css?v=5">
+  <link rel="stylesheet" href="./business-banner.css?v=7">
+</head>
+<body class="business-illustrated motion-paused game-page game-shop-page">
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="left-meta"><span class="chip amber">2184 days in the market</span><span class="amber">Tue 23-APR-24</span></div>
+        <div class="ticker-container" aria-label="Live price action"><div class="ticker-wrap" id="ticker"></div></div>
+        <div class="right-meta"><span class="amber" id="clock"></span><button class="pill" type="button">LOG OUT</button></div>
+      </div>
+      <div class="banner-frame">
+        <div class="bubble-bg" aria-hidden="true"></div>
+        <div id="large-header" class="large-header" aria-hidden="true"><canvas id="demo-canvas"></canvas></div>
+        <img class="hero-banner" src="./banner-colored.png?v=20260916-sunny-smooth" alt="Sunny Ventures banner">
+      </div>
+      <nav class="tabs" aria-label="Primary navigation">
+        <a class="tab" href="./index.html">DASH</a><a class="tab active" href="./buildings.html" aria-current="page">GAME</a>
+        <a class="tab" href="./flow.html">ANALYSTS</a><a class="tab" href="./memos.html">LEAD</a>
+        <a class="tab" href="./analysis.html">NEWS</a><a class="tab" href="./about.html" hidden>PAPER</a>
+        <a class="tab" href="./chat.html">CHAT</a><a class="tab" href="./teach.html">TEACH</a>
+      </nav>
+    </header>
+    <main class="game-workspace shop-workspace" id="supply-shop">
+      <div class="game-page-head shop-heading">
+        <div class="shop-heading-copy"><h1>SUPPLY SHOP</h1><span>/ STOCK UP. KEEP BUSINESS MOVING.</span></div>
+        <nav class="game-nav" aria-label="Business navigation">
+          <a href="./buildings.html"><img src="./assets/buildings-icons/facility_contractor_office_custom_square.png" alt="" width="28" height="28"><span>Build</span></a>
+          <a href="./marketplace.html"><img src="./assets/buildings-icons/facility_marketplace_custom_square.png" alt="" width="28" height="28"><span>Market</span></a>
+          <a href="./shop.html" aria-current="page"><span class="shop-nav-icon" aria-hidden="true">▣</span><span>Shop</span></a>
+          <a href="./license.html"><img src="./assets/game-art/badges/licence_unlocked.png" alt="" width="28" height="28"><span>Licence</span></a>
+        </nav>
+      </div>
+      <div class="shop-status" id="shop-status" role="status" aria-live="polite">Opening the shop…</div>
+      <div class="shop-layout">
+        <div class="shop-left">
+          <section class="shop-scene" aria-label="Shopkeeper at the supply counter">
+            <canvas id="shopkeeper" width="512" height="512" role="img" aria-label="Bearded shopkeeper in a pink shirt and dark apron"></canvas>
+            <div class="shop-speech" id="shop-speech" role="status">I got what you need.</div>
+            <span class="shop-counter-name">SHOPKEEPER</span>
+          </section>
+          <section class="shop-catalog" aria-label="Supplies for sale">
+            <div class="shop-categories" role="group" aria-label="Supply category">
+              <button type="button" data-shop-category="all" aria-pressed="true">ALL</button>
+              <button type="button" data-shop-category="craft" aria-pressed="false">CRAFT</button>
+              <button type="button" data-shop-category="basics" aria-pressed="false">BASICS</button>
+              <button type="button" data-shop-category="materials" aria-pressed="false">MATERIALS</button>
+              <button type="button" data-shop-category="parts" aria-pressed="false">PARTS</button>
+            </div>
+            <div class="shop-products" id="shop-products"></div>
+          </section>
+        </div>
+        <aside class="shop-checkout" aria-label="Basket and purchase">
+          <section class="shop-basket">
+            <div class="shop-section-head"><h2>YOUR BASKET</h2><span id="shop-basket-count">0 ITEMS</span></div>
+            <div class="shop-basket-rows" id="shop-basket-rows"><p class="shop-empty">Pick a supply to get started.</p></div>
+            <div class="shop-basket-total"><span>TOTAL</span><strong id="shop-total">0 YM</strong></div>
+            <button class="shop-buy" id="shop-buy" type="button" disabled>BUY SUPPLIES</button>
+            <p class="shop-delivery">↝ TO YOUR CRAFT SUPPLIES</p>
+            <p class="shop-explainer">Stored supplies are ready to use in Craft.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <script src="./app.js?v=20260917-fresh-start"></script>
+  <script src="./econ.js?v=20260918-art-fit-1"></script>
+  <script src="./account.js?v=1"></script>
+  <script src="./econ-nav.js?v=20260918-banner-1"></script>
+  <script src="./craft-art.js?v=4"></script>
+  <script src="./shop.js?v=8"></script>
+</body>
+</html>
