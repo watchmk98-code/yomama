@@ -313,3 +313,12 @@
 /* Copper Cafe's new representative is a still portrait; keep all order scenes still. */
 #econ-market .market-order-scene > span {animation:none!important;}
 #econ-market .market-scene-1 > span {inset:0;width:100%;max-width:none;height:100%;aspect-ratio:auto;translate:none;background-image:url('./assets/market/copper-cafe-representative.png');background-size:cover;background-position:center 10%;}
+
+/* Manual orders keep their artwork and feedback still while values update. */
+body.game-market-page.motion-paused #econ-market .game-market-orders *,
+body.game-market-page.motion-paused #econ-market .game-market-orders *::before,
+body.game-market-page.motion-paused #econ-market .game-market-orders *::after,
+body.game-market-page.motion-paused #econ-market .game-market-orders .market-order-scene > span {
+  animation:none!important;
+  transition:none!important;
+}
