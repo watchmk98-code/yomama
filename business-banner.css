@@ -69,3 +69,47 @@
   background-repeat:no-repeat;
 }
 .build-illustrated #econ-building {background:transparent;}
+
+/* Quiet terminal frames: information stays bright, container edges recede. */
+.business-illustrated .game-workspace {
+  --terminal-frame:#3a3a3a;
+  --terminal-rule:#2a2a2a;
+  --border:var(--terminal-frame);
+  --line:var(--terminal-rule);
+}
+.business-illustrated #econ-building {--border:var(--terminal-frame);--line:var(--terminal-rule);}
+.business-illustrated .game-page-head h1 {text-shadow:none;}
+.business-illustrated .game-page-head .game-nav {border-color:var(--terminal-frame);}
+.business-illustrated .game-page-head .game-nav a {border-right-color:var(--terminal-rule);}
+.business-illustrated #game-hud .game-build-metrics {
+  border:1px solid var(--terminal-frame);
+  box-shadow:none;
+}
+.business-illustrated #game-hud .game-build-metrics > div {border-right:1px solid var(--terminal-rule);}
+.business-illustrated #game-hud .game-build-metrics dd {text-shadow:none;}
+.business-illustrated .game-workspace :is(.game-panel,.shop-scene,.shop-basket,.shop-product,.shop-status,.focus-board,.focus-detail,.focus-legend) {
+  border-width:1px;
+  border-color:var(--terminal-frame);
+}
+.business-illustrated #econ-building .game-panel,
+.business-illustrated #econ-building .game-build-bottom:has(.game-building-activity),
+.business-illustrated #econ-market .game-order.market-illustrated-order,
+.business-illustrated #econ-market .game-market-order-tools {
+  border:1px solid var(--terminal-frame);
+  box-shadow:none;
+}
+.business-illustrated #econ-building .game-panel-head,
+.business-illustrated .shop-section-head {border-bottom-color:var(--terminal-rule);}
+.business-illustrated #econ-building .game-building-stock {border-top:1px solid var(--terminal-rule);}
+.business-illustrated #econ-building .game-operation,
+.business-illustrated #econ-market .game-market-orders > .game-panel-head,
+.business-illustrated #econ-market > .game-view-tabs,
+.business-illustrated #econ-market .market-order-scene {border-color:var(--terminal-frame);}
+.business-illustrated #econ-building .game-building-choice[aria-pressed=true] {
+  border:1px solid #98783e;
+  box-shadow:inset 3px 0 #98783e;
+}
+.business-illustrated #econ-building .game-focus-route b,
+.business-illustrated #econ-building .game-focus-link {border-width:1px;box-shadow:none;}
+.business-illustrated .shop-basket-total {border-top:1px solid var(--terminal-rule);}
+.business-illustrated.food-focus-page .focus-node:not([data-status="completed"]):not([data-status="available"]):not([data-status="active"]):not(:hover):not([aria-pressed="true"]) {border-color:var(--terminal-frame);}
