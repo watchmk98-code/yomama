@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="./styles.css?v=20260917-fresh-start">
   <link rel="stylesheet" href="./econ-kids.css?v=20260917-fresh-start">
   <link rel="stylesheet" href="./business-banner.css?v=8">
-  <link rel="stylesheet" href="./bank.css?v=20260919-reference-5">
-  <link rel="stylesheet" href="./bank-fit.css?v=20260919-fit-6">
+  <link rel="stylesheet" href="./bank.css?v=20260919-shared-1">
+  <link rel="stylesheet" href="./bank-fit.css?v=20260919-shared-6">
 </head>
 <body class="business-illustrated motion-paused game-page game-bank-page">
   <div class="scanlines" aria-hidden="true"></div>
@@ -40,12 +40,7 @@
           <a href="./license.html"><span>Licence</span></a>
         </nav>
       </div>
-      <dl id="game-hud" class="bank-metrics" aria-label="Your finances">
-        <div><dt>CASH</dt><dd id="bank-cash">—</dd></div>
-        <div><dt>NET WORTH</dt><dd id="bank-worth">—</dd></div>
-        <div><dt>DEBT</dt><dd id="bank-debt">—</dd></div>
-        <div><dt>CREDIT SCORE</dt><dd class="bank-credit-value"><span class="bank-gauge" aria-hidden="true"><i id="bank-gauge-needle"></i></span><span id="bank-score">—</span><small>/ 850</small></dd></div>
-      </dl>
+      <div id="game-hud" class="econ-kid"></div>
       <div class="bank-layout">
         <section class="bank-panel bank-account">
           <h2>YOUR ACCOUNT</h2>
@@ -69,21 +64,29 @@
         <section class="bank-panel bank-exchange"><h2>CURRENCY EXCHANGE</h2>
           <form id="exchange-form">
             <select id="exchange-direction" aria-label="Exchange direction" hidden><option value="buy_usd">YM → USD</option><option value="sell_usd">USD → YM</option></select>
-            <div class="bank-pay"><div class="bank-exchange-heading"><label for="exchange-amount" id="exchange-label">YOU PAY</label><button type="button" id="exchange-switch" class="bank-text-button" aria-label="Reverse exchange direction" title="Switch YM and USD"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#exchange"/></svg></button></div>
-            <div class="bank-amount-field"><input id="exchange-amount" type="number" min="1" max="1000000000" step="1" value="1000" required inputmode="decimal"><span id="exchange-unit">YM</span></div></div>
+            <div class="bank-pay"><label for="exchange-amount" id="exchange-label">YOU PAY</label>
+            <div class="bank-amount-field"><input id="exchange-amount" type="text" pattern="(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)(?:\.[0-9]{1,2})?" value="1,000" required inputmode="decimal" maxlength="16" autocomplete="off"><span id="exchange-unit">YM</span></div></div>
             <div class="bank-receive"><label for="exchange-quote">YOU RECEIVE</label><output id="exchange-quote">—</output></div>
             <div class="bank-exchange-rate"><span>RATE</span><strong>1 USD = 35.09 YM</strong></div>
+            <div class="bank-exchange-modes" role="group" aria-label="Buy or sell USD"><button type="button" data-exchange-mode="buy_usd" aria-pressed="true">BUY USD</button><button type="button" data-exchange-mode="sell_usd" aria-pressed="false">SELL USD</button></div>
             <button type="submit">EXCHANGE</button>
             <div class="bank-usd-line"><span>USD WALLET</span><strong id="bank-usd">—</strong></div>
           </form>
         </section>
       </div>
+      <div class="bank-footer-panels">
+      <section class="bank-credit-panel" aria-labelledby="bank-credit-title">
+        <h2 id="bank-credit-title">CREDIT SCORE</h2>
+        <div class="bank-credit-value"><span class="bank-gauge" aria-hidden="true"><i id="bank-gauge-needle"></i></span><strong id="bank-score">—</strong><small>/ 850</small></div>
+        <div class="bank-credit-debt">DEBT <strong id="bank-debt">—</strong></div>
+      </section>
       <section class="bank-repayment" aria-label="Next payment">
         <svg class="bank-icon bank-calendar-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#calendar"/></svg>
         <div class="bank-payment-copy"><h2>NEXT PAYMENT</h2><strong id="bank-next-payment">—</strong></div>
         <span id="bank-next-due">NO ACTIVE LOAN</span>
         <div class="bank-payment-actions"><button type="button" class="bank-white-button" data-bank-open="lend"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#lend"/></svg>LEND TO BANK</button><button type="button" data-bank-open="repay" id="bank-repay-open"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#repay"/></svg>REPAY</button></div>
       </section>
+      </div>
       <div class="bank-bottom-line"><div class="bank-message"><p id="bank-status" role="status" aria-live="polite">Opening your account…</p><button id="bank-retry" type="button" hidden>Check pending transaction</button></div><div class="bank-tools"><button type="button" data-bank-open="history" class="bank-text-button">ACCOUNT ACTIVITY <span id="history-count"></span></button><button type="button" data-bank-open="terms" class="bank-text-button">HOW IT WORKS</button></div></div>
 
       <dialog id="bank-savings-dialog" class="bank-dialog" aria-labelledby="bank-savings-title">
@@ -126,6 +129,6 @@
   <script src="./econ.js?v=20260918-art-fit-1"></script>
   <script src="./account.js?v=1"></script>
   <script src="./econ-nav.js?v=20260919-bank-1"></script>
-  <script src="./bank.js?v=20260919-fit-6"></script>
+  <script src="./bank.js?v=20260919-shared-1"></script>
 </body>
 </html>

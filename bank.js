@@ -50,7 +50,8 @@
   function quote() {
     if (!state) return;
     var rules = state.bank.rules, direction = el('exchange-direction').value;
-    var amount = Number(el('exchange-amount').value);
+    var amount = Number(el('exchange-amount').value.replace(/,/g, ''));
+    el('exchange-amount').style.width = Math.max(3, el('exchange-amount').value.length) + 'ch';
     var received = direction === 'buy_usd' ? Math.floor(amount * 10000 / rules.ymPerUsdHundredths) : Math.floor(Math.round(amount * 100) * rules.ymPerUsdHundredths / 10000);
     el('exchange-quote').textContent = !Number.isFinite(received) || received < 0 ? '—' : direction === 'buy_usd' ? usd(received) : ym(received);
     el('exchange-quote').style.setProperty('--bank-quote-length', el('exchange-quote').textContent.length);
@@ -75,8 +76,7 @@
   function render() {
     if (!state) { controls(); return; }
     var bank = state.bank;
-    el('bank-cash').textContent = shortYM(state.cash);
-    el('bank-worth').textContent = shortYM(state.netWorth);
+    el('game-hud').innerHTML = window.YomamaEcon.resourceBar(state);
     el('bank-debt').textContent = shortYM(bank.debt);
     el('bank-score').textContent = bank.creditScore;
     el('bank-gauge-needle').style.transform = 'rotate(' + (-80 + (bank.creditScore - 300) / 550 * 160) + 'deg)';
@@ -150,22 +150,26 @@
   el('repay-form').addEventListener('submit', function (event) { event.preventDefault(); transact('repay', Number(el('repay-amount').value)); });
   el('repay-full').addEventListener('click', function () { if (state) transact('repay_all', state.bank.debt); });
   el('exchange-form').addEventListener('submit', function (event) {
-    event.preventDefault(); var action = el('exchange-direction').value, amount = Number(el('exchange-amount').value);
+    event.preventDefault(); var action = el('exchange-direction').value, amount = Number(el('exchange-amount').value.replace(/,/g, ''));
     transact(action, action === 'sell_usd' ? Math.round(amount * 100) : amount);
   });
   el('exchange-direction').addEventListener('change', function () {
     var selling = this.value === 'sell_usd';
     el('exchange-label').textContent = 'YOU PAY';
     el('exchange-unit').textContent = selling ? 'USD' : 'YM';
-    el('exchange-amount').step = selling ? '0.01' : '1';
-    el('exchange-amount').min = selling ? '0.03' : '1';
-    el('exchange-amount').max = selling ? '10000000' : '1000000000';
-    el('exchange-amount').value = selling ? '1.00' : '1000'; quote();
+    el('exchange-amount').value = selling ? '1.00' : '1,000';
+    root.querySelectorAll('[data-exchange-mode]').forEach(function (button) {
+      button.setAttribute('aria-pressed', String(button.dataset.exchangeMode === el('exchange-direction').value));
+    });
+    quote();
   });
-  el('exchange-switch').addEventListener('click', function () {
-    var select = el('exchange-direction');
-    select.value = select.value === 'buy_usd' ? 'sell_usd' : 'buy_usd';
-    select.dispatchEvent(new Event('change'));
+  root.querySelectorAll('[data-exchange-mode]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var select = el('exchange-direction');
+      if (select.value === button.dataset.exchangeMode) return;
+      select.value = button.dataset.exchangeMode;
+      select.dispatchEvent(new Event('change'));
+    });
   });
   root.addEventListener('click', function (event) {
     var opener = event.target.closest('[data-bank-open]');

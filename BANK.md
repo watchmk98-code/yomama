@@ -5,10 +5,17 @@ masthead, typography, navigation and terminal borders as the other business
 pages. The banker image is decorative; all controls and balances are live HTML.
 
 The reference-led layout keeps account actions, the banker and a slim business
-loan strip, and exchange in three columns under the four-stat HUD. The next
-payment strip sits below. Deposit, withdrawal, borrowing, lending and repayment
+loan strip, and exchange in three columns under the shared game resource banner
+(`YomamaEcon.resourceBar`, with the existing business-page styles). Credit score
+and debt live in their own panel beside the next-payment strip, not in a custom
+HUD. Exchange uses bold mint figures and compact, fixed spacing. Buy USD and
+Sell USD select the quoted direction; Exchange confirms the transaction. Comma-
+grouped amounts are accepted, and large quotes keep every digit while fitting.
+Deposit, withdrawal, borrowing, lending and repayment
 details open in accessible native dialogs rather than crowding the main screen.
-On phones the banker moves above the two account/exchange columns. The Bank
+On phones the banker moves above the two account/exchange columns; the decorative
+scene is hidden on especially short phones to keep transaction controls visible.
+The Bank
 fills the viewport without page scrolling; shorter landscape and phone layouts
 compact their spacing without scaling the controls. Long help/history dialogs
 retain internal scrolling for accessibility. Custom SVG icons replace emoji

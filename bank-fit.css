@@ -126,3 +126,109 @@ body.game-bank-page .shell>.hero{flex:none}
  .bank-loan-name{gap:2px}.bank-loan-name h2{font-size:13px}.bank-building-icon{width:20px;height:20px}
  .bank-panel>h2{font-size:16px}.bank-tools{gap:4px}
 }
+
+/* Use the same renderer and chrome as every other business page. */
+.game-bank-page .bank-workspace #game-hud{display:block;border:0;background:transparent;padding:0!important;margin:0}
+.bank-footer-panels{display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px;min-width:0}
+.bank-credit-panel{border:1px solid var(--terminal-frame);background:#010403;padding:7px 12px;display:grid;align-content:center;gap:4px}
+.bank-credit-panel h2{font:16px/1 "VT323 Local",monospace;letter-spacing:0;color:#eee;margin:0}
+.bank-credit-panel .bank-credit-value{font:700 26px/1 "VT323 Local",monospace;color:var(--bank-green);gap:8px}
+.bank-credit-panel .bank-credit-value small{font-size:20px;font-weight:400}
+.bank-credit-debt{display:flex;justify-content:space-between;font:14px/1 "VT323 Local",monospace;color:#aaa}.bank-credit-debt strong{color:#ff244b}
+.bank-footer-panels .bank-repayment{min-width:0}
+
+/* Reference exchange: fixed type sizes and deliberate spacing, not stretched. */
+.game-bank-page .bank-exchange{align-self:start;padding:0 14px 8px}
+.game-bank-page .bank-exchange>h2{font:400 18px/1 "VT323 Local",monospace;padding:8px 0 6px}
+.game-bank-page .bank-exchange form{display:block;flex:none;padding:18px 0 0}
+.game-bank-page .bank-exchange label,.game-bank-page .bank-exchange-rate>span{display:block;font:400 14px/1 "VT323 Local",monospace;color:#b7b7b7;margin:0 0 5px}
+.game-bank-page .bank-amount-field{height:31px;font:700 30px/1 "VT323 Local",monospace;padding:0 8px;gap:6px;color:#00edab;text-shadow:.5px 0 currentColor}
+.game-bank-page .bank-amount-field input{width:5ch;max-width:calc(100% - 3ch);flex:none;font:inherit;color:inherit}
+.game-bank-page .bank-receive{margin-top:20px}
+.game-bank-page .bank-receive output{height:31px;font-family:"VT323 Local",monospace;font-weight:700;font-size:min(30px,calc((100cqw - 16px) / var(--bank-quote-length,10) * 1.9));padding:0 8px;text-shadow:.5px 0 currentColor}
+.game-bank-page .bank-exchange-rate{margin:22px 0 0}
+.game-bank-page .bank-exchange-rate strong{display:block;font:700 22px/1 "VT323 Local",monospace;color:#eee}
+.bank-exchange-modes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:22px}
+.game-bank-page .bank-exchange-modes button{font:400 18px/1 "VT323 Local",monospace;min-height:30px;padding:4px;color:#aaa;border-color:#685405}
+.game-bank-page .bank-exchange-modes button[aria-pressed=true]{background:#ffda00;color:#050505;border-color:#ffda00}
+.game-bank-page .bank-exchange form>button[type=submit]{margin-top:8px;min-height:33px;font:400 20px/1 "VT323 Local",monospace;padding:5px}
+.game-bank-page .bank-usd-line{margin-top:8px;font-size:12px}
+@media(max-width:760px){
+ .bank-footer-panels{grid-template-columns:112px minmax(0,1fr);gap:5px}
+ .bank-credit-panel{padding:5px 7px;gap:5px}.bank-credit-panel h2{font-size:13px}.bank-credit-panel .bank-credit-value{font-size:22px;gap:4px}.bank-credit-panel .bank-credit-value small{font-size:16px}.bank-credit-panel .bank-gauge{display:none}
+ .bank-credit-debt{font-size:12px}.bank-footer-panels .bank-payment-actions button{font-size:14px;gap:0}.bank-footer-panels .bank-payment-actions .bank-icon{display:none}
+ .bank-footer-panels .bank-repayment{grid-template-columns:22px 1fr;gap:3px 5px;padding:4px 6px}
+ .bank-footer-panels #bank-next-due{grid-column:1/-1;max-width:none;margin:0;font-size:11px}
+ .bank-layout{grid-template-rows:minmax(50px,1fr) 316px}
+ .game-bank-page .bank-exchange{align-self:stretch;padding:0 8px 5px}
+ .game-bank-page .bank-exchange>h2{font-size:17px;padding:7px 0 5px}
+ .game-bank-page .bank-exchange form{padding-top:12px}
+ .game-bank-page .bank-receive{margin-top:14px}.game-bank-page .bank-exchange-rate{margin-top:14px}
+ .bank-exchange-modes{margin-top:14px}.game-bank-page .bank-usd-line{font-size:10px;margin-top:5px}
+}
+@media(max-height:700px){
+ .game-bank-page .bank-exchange form{padding-top:8px}
+ .game-bank-page .bank-receive,.game-bank-page .bank-exchange-rate{margin-top:10px}
+ .bank-exchange-modes{margin-top:10px}
+}
+@media(max-width:760px) and (max-height:700px){
+ body.game-bank-page .shell>.hero .banner-frame{height:36px}
+ .bank-layout{grid-template-rows:39px minmax(240px,1fr)}
+ .bank-center{grid-template-rows:39px}.bank-scene{display:none}
+ .game-bank-page .bank-exchange>h2{font-size:15px;padding:5px 0}
+ .game-bank-page .bank-amount-field{height:27px;font-size:25px}
+ .game-bank-page .bank-receive output{height:27px;font-size:min(25px,calc((100cqw - 16px) / var(--bank-quote-length,10) * 1.9))}
+ .game-bank-page .bank-exchange label{font-size:12px;margin-bottom:3px}
+ .game-bank-page .bank-receive,.game-bank-page .bank-exchange-rate{margin-top:8px}
+ .game-bank-page .bank-exchange-rate>span{display:none}
+ .game-bank-page .bank-exchange-rate strong{font-size:18px}
+ .bank-exchange-modes{gap:4px;margin-top:8px}.game-bank-page .bank-exchange-modes button{font-size:16px;min-height:26px}
+ .game-bank-page .bank-exchange form>button[type=submit]{min-height:29px;margin-top:6px;padding:3px}
+ .bank-footer-panels .bank-payment-copy h2{font-size:12px}.bank-footer-panels .bank-payment-copy>strong{font-size:18px}
+ .bank-footer-panels .bank-payment-actions button{min-height:25px;font-size:12px}
+ .bank-footer-panels .bank-repayment{gap:2px 4px;padding:2px 5px}
+ .bank-footer-panels #bank-next-due{font-size:10px}
+}
+@media(max-width:760px) and (max-height:600px){
+ .game-bank-page .bank-workspace .game-nav{grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:1px}
+ .game-bank-page .bank-workspace .game-nav a{font-size:11px;padding:2px 0;min-height:22px}
+ .bank-layout{grid-template-rows:32px minmax(0,1fr)}
+ .bank-center{grid-template-rows:32px}.bank-scene{display:none}
+ .game-bank-page .bank-exchange form{padding-top:5px}
+ .game-bank-page .bank-exchange label{font-size:11px;margin-bottom:2px}
+ .game-bank-page .bank-amount-field{height:24px;font-size:22px}
+ .game-bank-page .bank-receive output{height:24px;font-size:min(22px,calc((100cqw - 16px) / var(--bank-quote-length,10) * 1.9))}
+ .game-bank-page .bank-receive,.game-bank-page .bank-exchange-rate{margin-top:5px}
+ .bank-exchange-modes{margin-top:5px}
+ .game-bank-page .bank-exchange form>button[type=submit]{margin-top:4px;min-height:26px}
+ .game-bank-page .bank-exchange label{font-size:10px;line-height:1;margin-bottom:1px}
+ .game-bank-page .bank-amount-field,.game-bank-page .bank-receive output{height:21px}
+ .game-bank-page .bank-receive,.game-bank-page .bank-exchange-rate{margin-top:3px}
+ .game-bank-page .bank-exchange-rate strong{font-size:16px}
+ .game-bank-page .bank-exchange-modes{margin-top:3px}
+ .game-bank-page .bank-exchange-modes button{min-height:22px;padding:2px;font-size:14px}
+ .game-bank-page .bank-exchange form>button[type=submit]{margin-top:3px;min-height:23px;padding:2px;font-size:17px}
+ .game-bank-page .bank-usd-line{margin-top:3px;font-size:9px}
+}
+@media(min-width:761px) and (max-height:600px){
+ .game-bank-page #game-hud .game-build-metrics>div{min-height:50px;padding:4px 5px 4px 46px;align-items:flex-start;text-align:left;gap:2px}
+ .game-bank-page #game-hud [data-build-metric]::before{position:absolute;left:-9px;top:50%;margin-top:-24px;transform:scale(.6)}
+ .game-bank-page #game-hud .game-build-metrics dt{min-height:0;font-size:11px}
+ .game-bank-page #game-hud .game-build-metrics dd{font-size:22px}.game-bank-page #game-hud .game-build-metrics dd small{font-size:14px}
+ .bank-footer-panels{grid-template-columns:200px minmax(0,1fr);gap:6px}
+ .bank-credit-panel{grid-template-columns:1fr auto;gap:2px;padding:4px 8px}
+ .bank-credit-panel h2{font-size:12px;grid-column:1/-1}
+ .bank-credit-panel .bank-credit-value{font-size:23px;gap:5px}.bank-credit-panel .bank-credit-value small{font-size:16px}
+ .bank-credit-debt{font-size:11px;flex-direction:column;align-items:flex-end;gap:2px}
+ .game-bank-page .bank-exchange{padding:0 9px 2px}
+ .game-bank-page .bank-exchange>h2{font-size:16px;padding:4px 0}
+ .game-bank-page .bank-exchange form{padding-top:3px}
+ .game-bank-page .bank-exchange label{font-size:11px;margin-bottom:2px}
+ .game-bank-page .bank-amount-field{height:22px;font-size:23px;padding:0 6px}
+ .game-bank-page .bank-receive output{height:22px;font-size:min(23px,calc((100cqw - 16px) / var(--bank-quote-length,10) * 1.9))}
+ .game-bank-page .bank-receive,.game-bank-page .bank-exchange-rate{margin-top:3px}
+ .game-bank-page .bank-exchange-rate>span{display:none}.game-bank-page .bank-exchange-rate strong{font-size:16px}
+ .bank-exchange-modes{margin-top:3px;gap:4px}.game-bank-page .bank-exchange-modes button{min-height:23px;font-size:14px;padding:2px}
+ .game-bank-page .bank-exchange form>button[type=submit]{margin-top:2px;min-height:24px;font-size:17px;padding:2px}
+ .game-bank-page .bank-usd-line{margin-top:2px;font-size:10px}
+}
