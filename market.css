@@ -148,9 +148,13 @@
 #econ-market .game-order-grid {flex:1;min-height:0;gap:8px;margin-top:0;}
 #econ-market .game-order.market-illustrated-order {display:flex;flex-direction:column;justify-content:flex-start;border:2px solid var(--amber);box-shadow:inset 0 0 0 2px #483510;background:#020403;padding:5px;gap:3px;overflow:hidden;}
 #econ-market .market-order-scene {flex:0 1 auto;min-height:70px;height:clamp(150px,26vh,310px);position:relative;overflow:hidden;border:1px solid #b88c12;background:#211609;}
-#econ-market .market-order-scene > span {display:block;position:absolute;inset:0;background-image:url('./assets/market/order-scenes.png');background-size:320% 348.3%;background-position:2.84% 33.15%;image-rendering:pixelated;animation:market-scene-breathe 7s ease-in-out infinite;}
-#econ-market .market-scene-1 > span {background-position:50.2% 33.15%;animation-delay:-2.3s;}
-#econ-market .market-scene-2 > span {background-position:97.54% 33.15%;animation-delay:-4.6s;}
+#econ-market .market-order-scene > span {display:block;position:absolute;inset:0;background-size:cover;background-position:center;image-rendering:pixelated;animation:market-scene-breathe 7s ease-in-out infinite;}
+#econ-market .market-scene--sunrise > span,#econ-market .market-scene--builders > span {background-image:url('./assets/market/order-scenes.png');background-size:320% 348.3%;background-position:2.84% 33.15%;}
+#econ-market .market-scene--builders > span {background-position:97.54% 33.15%;animation-delay:-4.6s;}
+#econ-market .market-scene--copper > span {background-image:url('./assets/market/copper-cafe-representative.png');}
+#econ-market .market-scene--harbor > span {background-image:url('./assets/market/harbor-bistro.png');}
+#econ-market .market-scene--grid > span {background-image:url('./assets/market/grid-cooperative.png');}
+#econ-market .market-scene--innovation > span {background-image:url('./assets/market/innovation-lab.png');}
 #econ-market .game-order.market-illustrated-order h3 {margin:3px 4px 0;align-items:center;flex-wrap:nowrap;gap:6px;color:var(--text);font-size:30px;font-weight:700;text-transform:uppercase;line-height:1;}
 #econ-market .market-buyer-name {letter-spacing:.8px;text-shadow:1px 0 currentColor;}
 #econ-market .market-illustrated-order .game-order-tier {font-size:13px;white-space:nowrap;}
@@ -261,8 +265,6 @@
 #econ-market .market-illustrated-order .econ-art-icon {transform:scale(1.15);}
 /* Opt this lightweight scene motion into the game's otherwise paused effects. */
 .game-page.motion-paused #econ-market .market-order-scene[data-motion=true] > span {animation:market-scene-breathe 7s ease-in-out infinite!important;}
-.game-page.motion-paused #econ-market .market-scene-1[data-motion=true] > span {animation-delay:-2.3s!important;}
-.game-page.motion-paused #econ-market .market-scene-2[data-motion=true] > span {animation-delay:-4.6s!important;}
 @media(prefers-reduced-motion:reduce) {.game-page.motion-paused #econ-market .market-order-scene[data-motion=true] > span {animation:none!important;}}
 /* Screen-sized orders: artwork gives up space before goods or action controls. */
 #econ-market {overflow:hidden;}
@@ -310,9 +312,9 @@
 /* Show the complete illustration inside its frame, including on short screens. */
 #econ-market .market-order-scene {background:#080c09;}
 #econ-market .market-order-scene > span {inset:auto;left:50%;top:0;width:auto;max-width:100%;height:100%;aspect-ratio:480/294;translate:-50% 0;}
-/* Copper Cafe's new representative is a still portrait; keep all order scenes still. */
+/* Buyer portraits are still so live order updates never make the cards jump. */
 #econ-market .market-order-scene > span {animation:none!important;}
-#econ-market .market-scene-1 > span {inset:0;width:100%;max-width:none;height:100%;aspect-ratio:auto;translate:none;background-image:url('./assets/market/copper-cafe-representative.png');background-size:cover;background-position:center 10%;}
+#econ-market .market-scene--copper > span,#econ-market .market-scene--harbor > span,#econ-market .market-scene--grid > span,#econ-market .market-scene--innovation > span {inset:0;width:100%;max-width:none;height:100%;aspect-ratio:auto;translate:none;background-size:cover;background-position:center 28%;}
 
 /* Manual orders keep their artwork and feedback still while values update. */
 body.game-market-page.motion-paused #econ-market .game-market-orders *,

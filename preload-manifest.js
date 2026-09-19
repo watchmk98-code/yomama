@@ -210,6 +210,9 @@ window.YomamaPreloadManifest = {
     ["assets/hero-select/player-pelli.png?v=20260216-2",161604],
     ["assets/market/alley.png",2735554],
     ["assets/market/copper-cafe-representative.png",1993693],
+    ["assets/market/grid-cooperative.png",995530],
+    ["assets/market/harbor-bistro.png",1175027],
+    ["assets/market/innovation-lab.png",1047885],
     ["assets/market/order-scenes.png",2286613],
     ["assets/music/shy-fx-this-style.mp4",2997198],
     ["assets/page-backgrounds/build-black.png",839959],
@@ -221,5 +224,5 @@ window.YomamaPreloadManifest = {
     ["assets/shop/supply-store-interior.png",2076976],
     ["banner-colored.png?v=20260916-sunny-smooth",805658],
   ],
-  "version": "9f58d8432844c777"
+  "version": "575a0abd998bd5ed"
 };

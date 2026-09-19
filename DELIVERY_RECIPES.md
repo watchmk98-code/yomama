@@ -2,6 +2,13 @@
 
 185 distinct orders across all 45 goods and all 15 businesses. Every name has its own exact goods bundle and a buyer with a reason to order it.
 
+Every newly dealt manual order now carries one of six stable buyer types:
+Sunrise Diner, Copper Cafe, Builders Union, Harbor Bistro, Grid Cooperative or
+Innovation Lab. The type selects the buyer character and is determined from the
+authored job and requested businesses. Existing saved cards without a type keep
+working through the same deterministic fallback; their next replacement is
+stored with the new type.
+
 Bundles grow from single-product restocks to coordinated five-product projects. Quantities and rewards are calculated by the game. Breakfast-marked bundles use food goods only. These are shopping lists for deliveries, not automatic production recipes: every unlocked product is made independently without using other town stock.
 
 The catalog is application content, outside the class economy configuration snapshot. After deployment, existing version 4 classes receive the new recipes on their next order replacement or fulfillment. Existing offers, cash and stock are retained; no class reset is needed. This change needs Manual Deploy.

@@ -1071,6 +1071,36 @@
     return '<div class="game-market-order-tools"><a class="market-stock-label" href="./buildings.html#stock"><strong>Your stock</strong><small>Keep supplying<br>a brighter tomorrow.</small></a><div class="market-stock-items" aria-label="Stock for your orders">'+goods.slice(0,6).map(function(row){return '<span class="market-stock-item" title="'+esc(row.good.name)+' · '+units(row.good.quantity)+' in stock" aria-label="'+esc(row.good.name)+' · '+units(row.good.quantity)+' in stock">'+goodIcon(row.building,row.good,false)+'<strong>'+units(row.good.quantity)+'</strong></span>';}).join('')+'</div><button class="game-small-button game-deliver-ready" data-econ-action="market:deliver"'+(!ready || s.paused?' disabled':'')+'>Deliver ready'+(ready?' · '+ready+(ready===1?' order':' orders'):'')+' <span aria-hidden="true">❯</span></button></div>';
   }
 
+  var MANUAL_ORDER_BUYERS=[
+    {id:'sunrise',name:'Sunrise Diner',businesses:['farm','cannery'],words:/breakfast|pantry|food|meal|diner|salad|omelet|honey|toast|sauce|preserve|farm/g},
+    {id:'copper',name:'Copper Cafe',businesses:['roastery'],words:/coffee|espresso|cafe|bakery|pastry/g},
+    {id:'builders',name:'Builders Union',businesses:['garage','workshop','freight_terminal'],words:/build|repair|workshop|factory|fleet|bridge|freight|parcel|tool|assembly/g},
+    {id:'harbor',name:'Harbor Bistro',businesses:['fish_stall'],words:/fish|seafood|oyster|harbor|coastal|marina|shellfish/g},
+    {id:'grid',name:'Grid Cooperative',businesses:['solar_coop','turbine_field','generator','solar_array'],words:/power|solar|wind|energy|grid|heat|utility|battery|carbon/g},
+    {id:'innovation',name:'Innovation Lab',businesses:['machine_works','relay_station','data_center','uplink_center'],words:/data|network|internet|digital|cloud|satellite|signal|studio|prototype|inventor|app|sensor|telemetry|bandwidth|uplink|machine/g}
+  ];
+
+  function manualOrderBuyer(o) {
+    var authored=MANUAL_ORDER_BUYERS.find(function(buyer){return buyer.id===o.buyerType;});
+    if(authored)return authored;
+    var text=((o.name || '')+' '+(o.purpose || '')+' '+(o.channelLabel || '')).toLowerCase();
+    var scores=MANUAL_ORDER_BUYERS.map(function(buyer){
+      var matches=text.match(buyer.words);
+      return matches?matches.length*1.5:0;
+    });
+    (o.requirements || []).forEach(function(need,index){
+      var building=need.buildingId || '';
+      var good=need.goodId || '';
+      MANUAL_ORDER_BUYERS.forEach(function(buyer,buyerIndex){
+        var supplied=buyer.businesses.some(function(id){return building===id || good.indexOf(id+'_')===0;});
+        if(supplied)scores[buyerIndex]+=1+(index===0?.15:0);
+      });
+    });
+    var best=0;
+    scores.forEach(function(score,index){if(score>scores[best])best=index;});
+    return MANUAL_ORDER_BUYERS[best];
+  }
+
   function ordersMarkup(s) {
     // Other pages reuse orders in compact dialogs; keep their existing layout.
     if(!document.getElementById('econ-market'))return compactOrdersMarkup(s);
@@ -1083,10 +1113,10 @@
       var channel=o.customer==='breakfast'?'Saved town delivery':(o.channelLabel || 'Quick cash');
       var rarity=['standard','small','bulk','large','rare','jackpot'].includes(o.rarity)?o.rarity:'standard';
       var ready=o.canFulfill && !s.paused;
-      var names=['Sunrise Diner','Copper Cafe','Builders Union'];
+      var buyer=manualOrderBuyer(o);
       return '<section class="k-card game-order market-illustrated-order" data-rarity="'+rarity+'" data-order-slot="'+i+'">'+orderReactionMarkup(i)+
-        '<div class="market-order-scene market-scene-'+(i%3)+'" data-motion="'+(customerArtEnabled && !s.paused)+'" aria-hidden="true"><span></span></div>'+
-        '<h3><span class="market-buyer-name">'+names[i%3]+'</span><small class="game-order-tier">'+esc(o.rarityLabel || 'Standard')+'</small></h3>'+
+        '<div class="market-order-scene market-scene--'+buyer.id+'" data-buyer-scene="'+buyer.id+'" data-motion="'+(customerArtEnabled && !s.paused)+'" aria-hidden="true"><span></span></div>'+
+        '<h3><span class="market-buyer-name">'+buyer.name+'</span><small class="game-order-tier">'+esc(o.rarityLabel || 'Standard')+'</small></h3>'+
         '<div class="game-order-context"><span class="game-order-name" title="'+esc((o.name || channel)+' · '+channel)+'">'+esc(o.name || channel)+'</span></div>'+
         '<div class="game-order-items" data-order-items="'+i+'" data-order-id="'+esc(o.id)+'"><div class="game-order-caption">Have / need</div><div class="game-order-goods">'+o.requirements.map(function(g){
           var building=s.buildings.find(function(b){return b.id===g.buildingId;}) || {id:g.buildingId};

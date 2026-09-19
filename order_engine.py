@@ -12,7 +12,7 @@ import math
 
 import business_progression as progression
 import production_economy as economy
-from delivery_recipes import ORDER_RECIPES
+from delivery_recipes import ORDER_RECIPES, manual_order_type
 
 
 ORDER_CLASSES = (
@@ -118,6 +118,7 @@ def _sector_order(cfg, state):
     state['orderEngine']['lastSector'] = sector
     return _label(dict(id='order-{}-{}'.format(state.get('rngState', 1), serial),
                        name=recipe['name'], recipeId=recipe['id'], purpose=recipe['purpose'],
+                       buyerType=manual_order_type(recipe),
                        channelLabel='Sector delivery', requirements=requirements,
                        reward=economy.jsround(value * reward_percent / 100),
                        materials=0,

@@ -9,6 +9,51 @@ See DELIVERY_RECIPES.md for the complete player-facing catalog.
 from __future__ import annotations
 
 
+# Manual-order buyer types are application content, not economy configuration.
+# The first three retain the original market scenes; the final three are the
+# dedicated seafood, utilities and technology order types added in 2026-09.
+MANUAL_ORDER_TYPES = (
+    dict(id="sunrise", label="Sunrise Diner", businesses=("farm", "cannery"),
+         keywords=("breakfast", "pantry", "food", "meal", "diner", "salad", "omelet",
+                   "honey", "toast", "sauce", "preserve", "farm")),
+    dict(id="copper", label="Copper Cafe", businesses=("roastery",),
+         keywords=("coffee", "espresso", "cafe", "bakery", "pastry")),
+    dict(id="builders", label="Builders Union", businesses=("garage", "workshop", "freight_terminal"),
+         keywords=("build", "repair", "workshop", "factory", "fleet", "bridge", "freight",
+                   "parcel", "tool", "assembly")),
+    dict(id="harbor", label="Harbor Bistro", businesses=("fish_stall",),
+         keywords=("fish", "seafood", "oyster", "harbor", "coastal", "marina", "shellfish")),
+    dict(id="grid", label="Grid Cooperative",
+         businesses=("solar_coop", "turbine_field", "generator", "solar_array"),
+         keywords=("power", "solar", "wind", "energy", "grid", "heat", "utility", "battery", "carbon")),
+    dict(id="innovation", label="Innovation Lab",
+         businesses=("machine_works", "relay_station", "data_center", "uplink_center"),
+         keywords=("data", "network", "internet", "digital", "cloud", "satellite", "signal",
+                   "studio", "prototype", "inventor", "app", "sensor", "telemetry", "bandwidth",
+                   "uplink", "machine")),
+)
+
+
+def manual_order_type(recipe):
+    """Return the stable buyer type for a recipe or an already-built offer."""
+    known = {row["id"] for row in MANUAL_ORDER_TYPES}
+    explicit = recipe.get("buyerType")
+    if explicit in known:
+        return explicit
+    text = "{} {} {}".format(recipe.get("name", ""), recipe.get("purpose", ""),
+                              recipe.get("channelLabel", "")).lower()
+    scores = [sum(text.count(word) for word in row["keywords"]) * 1.5
+              for row in MANUAL_ORDER_TYPES]
+    goods = recipe.get("goods")
+    if goods is None:
+        goods = tuple(need.get("goodId", "") for need in recipe.get("requirements", ()))
+    for index, good_id in enumerate(goods):
+        for type_index, row in enumerate(MANUAL_ORDER_TYPES):
+            if any(good_id.startswith(business + "_") for business in row["businesses"]):
+                scores[type_index] += 1 + (.15 if index == 0 else 0)
+    return MANUAL_ORDER_TYPES[max(range(len(scores)), key=lambda index: scores[index])]["id"]
+
+
 ORDER_RECIPES = (
     # 1-good jobs.
     {

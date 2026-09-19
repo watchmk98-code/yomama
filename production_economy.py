@@ -10,7 +10,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
-from delivery_recipes import ORDER_RECIPES
+from delivery_recipes import ORDER_RECIPES, manual_order_type
 import business_activity
 import business_operations
 import business_progression
@@ -1160,6 +1160,7 @@ def _make_order(cfg,st,index,target_tier=None):
     reward_percent=jsround([125,110,115][index]*rarity['payoutPercent']/100)
     breakfast=index==2 and recipe['breakfast'] and not business_progression.connected_enabled(cfg)
     order=dict(id=f'order-{st.get("rngState",1)}-{serial}',name=recipe['name'],recipeId=recipe['id'],purpose=recipe['purpose'],
+                buyerType=manual_order_type(recipe),
                 channelLabel=['Quick cash','Sector delivery','Product deliveries' if business_progression.connected_enabled(cfg) else 'Breakfast regulars' if breakfast else 'Town deliveries'][index],
                 requirements=requirements,reward=jsround(value*reward_percent/100),materials=materials,
                 customer='breakfast' if breakfast else None,committed=False,

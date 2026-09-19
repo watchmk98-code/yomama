@@ -9,7 +9,7 @@ import pytest
 
 import production_economy as E
 import business_progression as P
-from delivery_recipes import ORDER_RECIPES
+from delivery_recipes import MANUAL_ORDER_TYPES, ORDER_RECIPES, manual_order_type
 
 
 def town(cfg, tiers=None):
@@ -48,6 +48,14 @@ def test_catalog_has_distinct_named_purposeful_bundles_for_every_product():
         selected = set(recipe['goods'])
         assert len(selected) == len(recipe['goods'])
         assert selected <= set(goods)
+
+
+def test_catalog_uses_all_six_manual_order_types():
+    type_ids = {row['id'] for row in MANUAL_ORDER_TYPES}
+    assert type_ids == {'sunrise', 'copper', 'builders', 'harbor', 'grid', 'innovation'}
+    represented = {manual_order_type(recipe) for recipe in ORDER_RECIPES}
+    assert represented == type_ids
+    assert {'harbor', 'grid', 'innovation'} <= represented
 
 
 @pytest.mark.parametrize('rarity,slot', [
@@ -134,6 +142,7 @@ def test_sparse_towns_only_receive_complete_recipes_they_can_supply(tiers):
         requested = {n['goodId'] for n in order['requirements']}
         assert requested == set(recipe['goods']), 'Rarity must never add unrelated goods to a recipe.'
         assert order['name'] == recipe['name'] and order['purpose'] == recipe['purpose']
+        assert order['buyerType'] == manual_order_type(recipe)
         assert order['channelLabel']
         for good_id in requested:
             assert goods[good_id]['tier'] in tiers
