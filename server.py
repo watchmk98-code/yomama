@@ -390,6 +390,7 @@ class NewsProxyHandler(SimpleHTTPRequestHandler):
     }
     # No route opens a class: admin.py does that, off the web.
     GAME_POST_ROUTES = {
+        "/api/game/bank": game_api.bank_action,
         "/api/game/port/order": game_api.port_order,
         "/api/game/port/cancel": game_api.port_cancel,
         "/api/game/join": game_api.join,

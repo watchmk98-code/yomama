@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>YOMAMA INVESTMENTS — BANK</title>
+  <link rel="preload" href="./assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20260917-fresh-start">
+  <link rel="stylesheet" href="./econ-kids.css?v=20260917-fresh-start">
+  <link rel="stylesheet" href="./business-banner.css?v=8">
+  <link rel="stylesheet" href="./bank.css?v=20260919-reference-5">
+  <link rel="stylesheet" href="./bank-fit.css?v=20260919-fit-6">
+</head>
+<body class="business-illustrated motion-paused game-page game-bank-page">
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="left-meta"><span class="chip amber">2184 days in the market</span><span class="amber">Tue 23-APR-24</span></div>
+        <div class="ticker-container" aria-label="Live price action"><div class="ticker-wrap" id="ticker"></div></div>
+        <div class="right-meta"><span class="amber" id="clock"></span><button class="pill" type="button">LOG OUT</button></div>
+      </div>
+      <div class="banner-frame">
+        <div class="bubble-bg" aria-hidden="true"></div>
+        <div id="large-header" class="large-header" aria-hidden="true"><canvas id="demo-canvas"></canvas></div>
+        <img class="hero-banner" src="./banner-colored.png?v=20260916-sunny-smooth" alt="Sunny Ventures banner">
+      </div>
+      <nav class="tabs" aria-label="Primary navigation">
+        <a class="tab" href="./index.html">DASH</a><a class="tab active" href="./buildings.html" aria-current="page">GAME</a>
+        <a class="tab" href="./flow.html">ANALYSTS</a><a class="tab" href="./memos.html">LEAD</a>
+        <a class="tab" href="./analysis.html">NEWS</a><a class="tab" href="./about.html" hidden>PAPER</a>
+        <a class="tab" href="./chat.html">CHAT</a><a class="tab" href="./teach.html">TEACH</a>
+      </nav>
+    </header>
+    <main class="game-workspace bank-workspace" id="bank-page">
+      <div class="game-page-head"><div class="bank-title"><h1>BANK</h1><span>/ CITY BANK</span></div>
+        <nav class="game-nav" aria-label="Business navigation">
+          <a href="./buildings.html"><span>Build</span></a>
+          <a href="./marketplace.html"><span>Market</span></a>
+          <a href="./license.html"><span>Licence</span></a>
+        </nav>
+      </div>
+      <dl id="game-hud" class="bank-metrics" aria-label="Your finances">
+        <div><dt>CASH</dt><dd id="bank-cash">—</dd></div>
+        <div><dt>NET WORTH</dt><dd id="bank-worth">—</dd></div>
+        <div><dt>DEBT</dt><dd id="bank-debt">—</dd></div>
+        <div><dt>CREDIT SCORE</dt><dd class="bank-credit-value"><span class="bank-gauge" aria-hidden="true"><i id="bank-gauge-needle"></i></span><span id="bank-score">—</span><small>/ 850</small></dd></div>
+      </dl>
+      <div class="bank-layout">
+        <section class="bank-panel bank-account">
+          <h2>YOUR ACCOUNT</h2>
+          <div class="bank-account-body">
+            <div class="bank-account-balance"><svg class="bank-icon bank-cash-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#cash"/></svg><strong id="bank-account-cash">—</strong></div>
+            <div class="bank-account-actions">
+              <button type="button" data-bank-open="savings" data-bank-mode="deposit"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#deposit"/></svg> DEPOSIT</button>
+              <button class="bank-white-button" type="button" data-bank-open="savings" data-bank-mode="withdraw"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#withdraw"/></svg> WITHDRAW</button>
+            </div>
+            <div class="bank-account-summary"><span>SAVINGS <b id="bank-savings">—</b></span><button class="bank-text-button" type="button" data-bank-open="savings">0.2% OVERNIGHT ↗</button></div>
+          </div>
+        </section>
+        <div class="bank-center">
+          <figure class="bank-scene"><img src="./assets/bank/bank-counter.png" width="1774" height="887" alt="The banker in a burgundy waistcoat behind his counter, with a brass vault and green lamps."></figure>
+          <section class="bank-loan-strip" aria-label="Business loan">
+            <div class="bank-loan-name"><svg class="bank-icon bank-building-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#bank"/></svg><h2>BUSINESS LOAN</h2></div>
+            <strong id="bank-loan-offer">—</strong><strong>7 DAYS</strong>
+            <button class="bank-primary" type="button" data-bank-open="borrow" id="bank-borrow-open">TAKE LOAN</button>
+          </section>
+        </div>
+        <section class="bank-panel bank-exchange"><h2>CURRENCY EXCHANGE</h2>
+          <form id="exchange-form">
+            <select id="exchange-direction" aria-label="Exchange direction" hidden><option value="buy_usd">YM → USD</option><option value="sell_usd">USD → YM</option></select>
+            <div class="bank-pay"><div class="bank-exchange-heading"><label for="exchange-amount" id="exchange-label">YOU PAY</label><button type="button" id="exchange-switch" class="bank-text-button" aria-label="Reverse exchange direction" title="Switch YM and USD"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#exchange"/></svg></button></div>
+            <div class="bank-amount-field"><input id="exchange-amount" type="number" min="1" max="1000000000" step="1" value="1000" required inputmode="decimal"><span id="exchange-unit">YM</span></div></div>
+            <div class="bank-receive"><label for="exchange-quote">YOU RECEIVE</label><output id="exchange-quote">—</output></div>
+            <div class="bank-exchange-rate"><span>RATE</span><strong>1 USD = 35.09 YM</strong></div>
+            <button type="submit">EXCHANGE</button>
+            <div class="bank-usd-line"><span>USD WALLET</span><strong id="bank-usd">—</strong></div>
+          </form>
+        </section>
+      </div>
+      <section class="bank-repayment" aria-label="Next payment">
+        <svg class="bank-icon bank-calendar-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#calendar"/></svg>
+        <div class="bank-payment-copy"><h2>NEXT PAYMENT</h2><strong id="bank-next-payment">—</strong></div>
+        <span id="bank-next-due">NO ACTIVE LOAN</span>
+        <div class="bank-payment-actions"><button type="button" class="bank-white-button" data-bank-open="lend"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#lend"/></svg>LEND TO BANK</button><button type="button" data-bank-open="repay" id="bank-repay-open"><svg class="bank-icon" aria-hidden="true"><use href="./assets/bank/bank-icons.svg#repay"/></svg>REPAY</button></div>
+      </section>
+      <div class="bank-bottom-line"><div class="bank-message"><p id="bank-status" role="status" aria-live="polite">Opening your account…</p><button id="bank-retry" type="button" hidden>Check pending transaction</button></div><div class="bank-tools"><button type="button" data-bank-open="history" class="bank-text-button">ACCOUNT ACTIVITY <span id="history-count"></span></button><button type="button" data-bank-open="terms" class="bank-text-button">HOW IT WORKS</button></div></div>
+
+      <dialog id="bank-savings-dialog" class="bank-dialog" aria-labelledby="bank-savings-title">
+        <div class="bank-dialog-head"><h2 id="bank-savings-title">DEPOSIT YM</h2><button type="button" data-bank-close aria-label="Close savings">×</button></div>
+        <div class="bank-dialog-body"><p>Move YM between spendable cash and savings. Deposits earn 0.2% per class day, paid to cash at midnight.</p>
+          <form id="savings-form"><label for="savings-amount">Amount · YM</label><input id="savings-amount" type="number" min="1" max="1000000000" step="1" value="100" required inputmode="numeric"><div class="bank-actions"><button name="action" value="deposit" type="submit">Deposit ↓</button><button name="action" value="withdraw" type="submit">Withdraw ↑</button></div></form>
+          <dl class="bank-dialog-details"><div><dt>Next interest payment</dt><dd id="bank-midnight">—</dd></div><div><dt>Interest earned</dt><dd id="bank-earned">—</dd></div></dl>
+          <p class="bank-small">Interest counts only the time your money is deposited. Fractions carry forward until they reach 1 YM.</p><p class="bank-dialog-status" role="status"></p>
+        </div>
+      </dialog>
+      <dialog id="bank-borrow-dialog" class="bank-dialog" aria-labelledby="bank-borrow-title">
+        <div class="bank-dialog-head"><h2 id="bank-borrow-title">BUSINESS LOAN</h2><button type="button" data-bank-close aria-label="Close business loan">×</button></div>
+        <div class="bank-dialog-body"><p class="bank-rate">1% per day · 7-day term</p><p id="borrow-limit">Loading your borrowing limit…</p>
+          <form id="borrow-form"><label for="borrow-amount">Borrow · YM</label><input id="borrow-amount" type="number" min="100" max="1000000000" step="1" value="100" required inputmode="numeric"><p id="borrow-quote"></p><button type="submit" class="bank-primary">Confirm loan</button></form>
+          <p class="bank-small">Your limit grows with net worth and credit score. One loan at a time. Repay early to reduce interest. On-time repayment after one day earns +10 credit; a missed maturity costs 50.</p><p class="bank-dialog-status" role="status"></p>
+        </div>
+      </dialog>
+      <dialog id="bank-lend-dialog" class="bank-dialog" aria-labelledby="bank-lend-title">
+        <div class="bank-dialog-head"><h2 id="bank-lend-title">LEND TO THE BANK</h2><button type="button" data-bank-close aria-label="Close lending">×</button></div>
+        <div class="bank-dialog-body"><p class="bank-rate">0.5% per day · 7-day term</p><p>Your YM is locked for seven class days, then returned automatically with interest.</p>
+          <form id="lend-form"><label for="lend-amount">Lend · YM</label><input id="lend-amount" type="number" min="100" max="1000000000" step="1" value="1000" required inputmode="numeric"><p id="lend-quote"></p><button type="submit" class="bank-primary">Lend YM</button></form><div id="bank-notes" class="bank-notes"></div><p class="bank-dialog-status" role="status"></p>
+        </div>
+      </dialog>
+      <dialog id="bank-repay-dialog" class="bank-dialog" aria-labelledby="bank-repay-title">
+        <div class="bank-dialog-head"><h2 id="bank-repay-title">REPAY YOUR LOAN</h2><button type="button" data-bank-close aria-label="Close repayment">×</button></div>
+        <div class="bank-dialog-body"><strong id="loan-balance">No active loan</strong><p id="loan-due">Your next move is yours.</p>
+          <form id="repay-form"><label for="repay-amount">Repay · YM</label><input id="repay-amount" type="number" min="1" step="1" value="100" required inputmode="numeric"><div class="bank-actions"><button type="submit">Repay amount</button><button type="button" id="repay-full">Repay in full</button></div></form><p class="bank-dialog-status" role="status"></p>
+        </div>
+      </dialog>
+      <dialog id="bank-history-dialog" class="bank-dialog" aria-labelledby="bank-history-title">
+        <div class="bank-dialog-head"><h2 id="bank-history-title">ACCOUNT ACTIVITY</h2><button type="button" data-bank-close aria-label="Close account activity">×</button></div><div class="bank-dialog-body"><ol id="bank-history"></ol></div>
+      </dialog>
+      <dialog id="bank-terms-dialog" class="bank-dialog" aria-labelledby="bank-terms-title">
+        <div class="bank-dialog-head"><h2 id="bank-terms-title">HOW THE BANK WORKS</h2><button type="button" data-bank-close aria-label="Close bank help">×</button></div>
+        <div class="bank-dialog-body"><p>A class day is 24 running hours. Teacher pause stops banking time. Savings and lending keep earning beyond the production offline limit.</p><p>At loan maturity, spendable cash pays the full balance automatically if sufficient. Overdue loans continue accruing simple interest. Savings and lending notes are not liquidated.</p><p>Exchange uses a fixed game rate with no fee. USD rounds down to cents; YM rounds down to whole units. This USD wallet is separate from Port trading funds.</p></div>
+      </dialog>
+    </main>
+  </div>
+  <script src="./app.js?v=20260917-fresh-start"></script>
+  <script src="./econ.js?v=20260918-art-fit-1"></script>
+  <script src="./account.js?v=1"></script>
+  <script src="./econ-nav.js?v=20260919-bank-1"></script>
+  <script src="./bank.js?v=20260919-fit-6"></script>
+</body>
+</html>

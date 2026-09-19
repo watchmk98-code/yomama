@@ -3,6 +3,9 @@
    before the loading screen finishes. [url, uncompressed bytes]. */
 window.YomamaPreloadManifest = {
   "all": [
+    ["assets/bank/bank-black-background.png",1515302],
+    ["assets/bank/bank-counter.png",2249777],
+    ["assets/bank/bank-icons.svg",2425],
     ["assets/build-ui/concept-art.png",1947910],
     ["assets/buildings/data_center.png",285934],
     ["assets/buildings/farm.png",178958],
@@ -218,5 +221,5 @@ window.YomamaPreloadManifest = {
     ["assets/shop/supply-store-interior.png",2076976],
     ["banner-colored.png?v=20260916-sunny-smooth",805658],
   ],
-  "version": "36db72ac0c477118"
+  "version": "9f58d8432844c777"
 };

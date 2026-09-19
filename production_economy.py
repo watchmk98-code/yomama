@@ -27,6 +27,7 @@ import crafting
 import crafting_pilot
 import focus_tree
 import market_orders
+import banking
 import economy as legacy
 from economy import *  # Stable public helpers used by the classroom API.
 
@@ -113,6 +114,7 @@ def _building(tier, lv=1, sales=1, storage=1):
 
 def new_state(cfg, start_tick=0, seed=1):
     st=legacy.new_state(cfg,start_tick,seed)
+    banking.ensure(st)
     st.update(modelVersion=4,productionMode='independent',b=[_building(0)],inventory={},productionWork={},productionPhase={},salesWork={},
               materials=0,lastActiveTick=start_tick,orderSerial=0,orderRecipeHistory=[[],[],[]],
               orderGoodHistory=[],orderFrontierSerial=0,
@@ -152,6 +154,7 @@ def migrate_state(cfg, st, tick=None):
     The API records original JSON and handles clock reset for old snapshots.
     """
     if not isinstance(st,State): st=State(st)
+    banking.ensure(st)
     st['materials']=0
     for offer in (st.get('offers') or []) + [st.get('goalOffer')]:
         if offer:
@@ -539,6 +542,7 @@ def player_tick(cfg,cls,st,k):
     business_operations.advance_shifts(cfg,st)
     workforce.advance(cfg,st)
     st['tick']=k+1
+    banking.advance(cfg,st,st['tick'])
     focus_tree.advance(cfg,st,st['tick'])
 
 
@@ -590,6 +594,7 @@ def _advance_class(cfg,cls,players,start,target):
         while st.get('build') and st['build']['t']<target:
             finish_build(cfg,st,st['build']['t'])
         st['tick']=max(st['tick'],target)
+        banking.advance(cfg,st,st['tick'])
         focus_tree.advance(cfg,st,st['tick'])
         _sync_pools(cfg,st)
     cls['k']=max(0,target-1);cls['nextTick']=target
@@ -609,7 +614,7 @@ def net_worth(cfg_or_state,st=None):
     st=cfg_or_state if st is None else st
     return (int(st['cash'])+sum(st.get('pend',{}).values())+int(st['book'])
             +int(st.get('businessProgression',{}).get('equipmentValue',0))
-            +crafting.stored_value(st)+crafting_pilot.stored_value(st))
+            +crafting.stored_value(st)+crafting_pilot.stored_value(st)+banking.stored_value(st))
 
 
 def upgrade_cost(cfg,st,slot,kind):

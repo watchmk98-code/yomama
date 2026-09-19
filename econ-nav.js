@@ -41,6 +41,13 @@
       if(licence)licence.before(focusLink);else nav.appendChild(focusLink);
     }
     focusLink.hidden=false;
+    var bankLink=nav.querySelector('a[href*="bank.html"]');
+    if(!bankLink){
+      bankLink=document.createElement('a');bankLink.href='./bank.html';
+      bankLink.innerHTML='<span aria-hidden="true">▥</span><span>Bank</span>';
+      focusLink.after(bankLink);
+    }
+    if(location.pathname.endsWith('/bank.html'))bankLink.setAttribute('aria-current','page');
     if(location.pathname.endsWith('/focus-tree.html'))focusLink.setAttribute('aria-current','page');
     if(!nav.querySelector('a[href*="craft.html"]')){
       var craft=document.createElement('a');craft.href='./craft.html';

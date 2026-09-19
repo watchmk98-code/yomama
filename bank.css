@@ -1,0 +1,104 @@
+/* Bank composition follows the approved concept; all controls remain live. */
+.game-bank-page .bank-workspace {
+  --bank-gold:#ba960b; --bank-yellow:#ffda00; --bank-green:#00edab;
+  box-sizing:border-box; min-width:0; min-height:calc(100vh - 85px); padding:10px 14px 32px;
+  background:#020303 url('./assets/bank/bank-black-background.png') center top/cover no-repeat;
+  font-family:"VT323 Local",monospace; font-size:20px; letter-spacing:0;
+}
+.game-bank-page .bank-workspace *{box-sizing:border-box}
+.game-bank-page .bank-workspace .game-page-head{min-height:36px;padding:0;margin:0 0 8px;gap:12px}
+.game-bank-page .bank-title{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.game-bank-page .bank-title h1{font-family:inherit;font-size:24px;line-height:1;color:var(--bank-yellow);letter-spacing:0;margin:0}
+.bank-title>span{font-size:19px;color:#a4a4a5}
+.game-bank-page .bank-workspace .game-nav{border:0;background:transparent;gap:5px;margin:0}
+.game-bank-page .bank-workspace .game-nav a{font:17px "VT323 Local",monospace;letter-spacing:0;border:1px solid #685405;background:#020303;color:#aaa;min-height:32px;min-width:68px;justify-content:center;padding:4px 12px}
+.game-bank-page .bank-workspace .game-nav a[aria-current=page]{color:var(--bank-yellow);border-color:var(--bank-gold);box-shadow:inset 0 -2px var(--bank-yellow);background:#050500}
+.game-bank-page .bank-workspace .game-nav a img,.game-bank-page .bank-workspace .game-nav a>span[aria-hidden],.game-bank-page .bank-workspace .game-nav .craft-nav-icon,.game-bank-page .bank-workspace .game-nav .shop-nav-icon{display:none!important}
+.game-bank-page .bank-workspace #game-hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--bank-gold);padding:8px 0!important;margin:0 0 12px;background:rgba(0,3,3,.95)}
+.bank-metrics>div{padding:0 22px;border-right:1px solid #8d7207;min-width:0}.bank-metrics>div:last-child{border:0}
+.bank-metrics dt{font-size:12px;line-height:1;color:#aaa;letter-spacing:1px;margin:0 0 5px}.bank-metrics dd{margin:0;line-height:1;font-size:26px;font-weight:bold;color:var(--bank-green);white-space:nowrap}
+#bank-debt{color:#ff244b}.bank-credit-value{display:flex;align-items:center;gap:10px}.bank-credit-value small{font-size:22px;color:#eee}
+.bank-gauge{display:inline-block;position:relative;width:44px;height:24px;overflow:hidden;flex:none}
+.bank-gauge:before{content:"";position:absolute;inset:0;border:7px solid #1d302b;border-top-color:#00b980;border-left-color:#00b980;border-radius:40px 40px 0 0!important;border-bottom:0}
+.bank-gauge i{position:absolute;left:20px;bottom:0;width:3px;height:21px;background:#eee;transform-origin:center bottom;transform:rotate(45deg);border-radius:2px}
+.bank-layout{display:grid;grid-template-columns:minmax(0,21fr) minmax(0,57fr) minmax(0,21fr);gap:10px;aspect-ratio:3.12;min-height:300px;max-height:530px}
+.bank-panel,.bank-loan-strip,.bank-repayment{border:1px solid var(--bank-gold);background:rgba(0,3,3,.97);min-width:0}
+.bank-panel{display:flex;flex-direction:column;padding:0 14px}
+.bank-panel>h2{color:var(--bank-yellow);font:22px/1 "VT323 Local",monospace;margin:0;padding:12px 0 9px;border-bottom:1px solid #7d6508}
+.bank-workspace button{font:21px/1 "VT323 Local",monospace;letter-spacing:0;cursor:pointer;border:1px solid var(--bank-yellow);border-radius:0;color:var(--bank-yellow);background:#030505;padding:8px 12px;min-height:40px}
+.bank-workspace button:hover:not(:disabled){background:#302800}.bank-workspace button:disabled{opacity:.4;cursor:not-allowed}.bank-workspace :focus-visible{outline:2px solid white;outline-offset:3px}
+.bank-workspace button.bank-white-button{border-color:#a6a6a6;color:#e9e9ef}.bank-workspace button.bank-primary{background:#ffda00;color:#080903;border-color:#ffda00;font-weight:bold}
+.bank-workspace button.bank-primary:hover:not(:disabled){background:#ffe75c}
+.bank-account-body{flex:1;display:flex;flex-direction:column;min-height:0}
+.bank-account-balance{display:flex;align-items:center;gap:6px;margin:clamp(22px,3.2vw,55px) 0 clamp(18px,3.5vw,58px)}
+.bank-account-balance strong{font-size:clamp(23px,2.55vw,38px);font-weight:bold;white-space:nowrap;color:var(--bank-green)}
+.bank-cash-art{display:block;flex:0 0 58px;height:46px;background:url('./assets/build-ui/concept-art.png') -46px -148px / 1536px 1024px;image-rendering:pixelated}
+.bank-account-actions{display:grid;gap:14px}.bank-account-actions button{position:relative;min-height:46px}.bank-account-actions button>span{position:absolute;left:18px;font-size:30px;top:4px;border-bottom:2px solid currentColor;line-height:25px}
+.bank-account-summary{margin-top:auto;padding:14px 0 11px;color:#929795;display:grid;gap:6px;font-size:14px}
+.bank-account-summary>span{display:flex;justify-content:space-between;gap:5px}.bank-account-summary b{color:#bbb;font-weight:normal}
+.bank-workspace button.bank-text-button{background:transparent;border:0;min-height:0;font-size:14px;padding:0;text-align:left;color:#aaa}
+.bank-workspace button.bank-text-button:hover{color:var(--bank-yellow);background:transparent}
+.bank-center{min-width:0;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) clamp(48px,4.7vw,68px);gap:9px}
+.bank-scene{margin:0;border:1px solid var(--bank-gold);overflow:hidden;min-height:0;background:#0f0b04}
+.bank-scene img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 47%}
+.bank-loan-strip{display:grid;grid-template-columns:1.65fr 1fr .78fr 1.15fr;align-items:center;padding:6px 10px;gap:0}
+.bank-loan-strip>strong{color:var(--bank-green);font-size:23px;text-align:center;border-left:1px solid #806b0f;font-weight:bold;white-space:nowrap;padding:6px 5px}
+.bank-loan-name{display:flex;align-items:center;gap:9px;min-width:0}.bank-loan-name h2{font:22px/1 "VT323 Local",monospace;color:#eee;margin:0}.bank-building-art{font:36px/1 sans-serif}
+.bank-loan-strip button{font-size:20px;min-height:36px;padding:7px 4px;margin-left:7px}
+.bank-exchange form{display:flex;flex-direction:column;flex:1;min-height:0;padding:clamp(12px,2.2vw,32px) 0 10px}
+.bank-exchange-heading{display:flex;align-items:center;justify-content:space-between}
+.bank-exchange label,.bank-exchange-rate>span{display:block;font-size:17px;line-height:1;color:#bbb;margin-bottom:7px}
+.bank-exchange #exchange-switch{font-size:24px;line-height:16px;color:#888;padding:0 3px 6px}
+.bank-amount-field{display:flex;align-items:center;border:1px solid #8a7107;background:#000;height:43px;flex:none;padding:0 10px;gap:6px;color:var(--bank-green);font-size:27px;font-weight:bold}
+.bank-amount-field input{background:transparent;border:0;border-radius:0;min-width:0;width:100%;font:inherit;color:inherit;padding:0;appearance:textfield;outline-offset:5px}.bank-amount-field input::-webkit-inner-spin-button{appearance:none}
+.bank-receive{margin-top:clamp(18px,3vw,42px)}
+.bank-receive output{display:flex;align-items:center;color:var(--bank-green);font-size:29px;font-weight:bold;height:43px;border:1px solid #8a7107;padding:0 10px;white-space:nowrap}
+.bank-exchange-rate{margin-top:clamp(16px,2.8vw,38px)}.bank-exchange-rate strong{font-size:23px;color:#eee;font-weight:normal;white-space:nowrap}
+.bank-exchange form>button[type=submit]{margin-top:auto;width:100%;min-height:46px}
+.bank-usd-line{display:flex;justify-content:space-between;gap:4px;margin-top:9px;color:#777;font-size:13px}.bank-usd-line strong{font-weight:normal;color:#aaa}
+.bank-repayment{display:flex;align-items:center;gap:18px;margin-top:12px;padding:10px 22px;min-height:75px}
+.bank-payment-copy h2{margin:0 0 4px;font:22px/1 "VT323 Local",monospace;color:#eee}.bank-payment-copy>strong{font-size:29px;line-height:1;font-weight:bold;color:var(--bank-green)}
+.bank-calendar{position:relative;display:flex;align-items:center;justify-content:center;width:45px;height:44px;background:linear-gradient(#e43435 0 12px,#fff 12px,#d7d9df);box-shadow:3px 3px 0 #3f4050;flex:none;transform:rotate(-3deg);border-radius:4px}
+.bank-calendar:before,.bank-calendar:after{content:"";position:absolute;top:-4px;width:5px;height:13px;background:#b7c0cc;border:1px solid #303a4c;border-radius:2px}.bank-calendar:before{left:8px}.bank-calendar:after{right:8px}.bank-calendar b{font:bold 28px/1 "VT323 Local",monospace;color:#111;margin-top:13px}
+#bank-next-due{color:#999;font-size:16px;margin-left:8px}
+.bank-payment-actions{margin-left:auto;display:flex;gap:12px}.bank-payment-actions button{min-width:140px}
+.bank-bottom-line{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-top:10px}.bank-message{font-size:15px;color:#999;min-width:0}.bank-message p{margin:0;line-height:1.2}.bank-message [data-tone=error],.bank-dialog-status[data-tone=error]{color:#ff7387}.bank-message [data-tone=success],.bank-dialog-status[data-tone=success]{color:var(--bank-green)}
+.bank-message button{font-size:16px;margin-top:8px}.bank-tools{display:flex;gap:20px;flex:none}
+.bank-dialog{font:22px/1.3 "VT323 Local",monospace;letter-spacing:0;background:#050807 url('./assets/bank/bank-black-background.png') center/cover;color:#ddd;border:1px solid var(--bank-gold);padding:0;width:min(520px,calc(100vw - 30px));max-height:85vh;box-shadow:0 20px 100px #000}
+.bank-dialog::backdrop{background:rgba(0,0,0,.8);backdrop-filter:blur(5px)}
+.bank-dialog-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #79620b;padding:12px 18px;gap:12px}.bank-dialog-head h2{font:25px/1 "VT323 Local",monospace;color:var(--bank-yellow);margin:0}.bank-dialog-head button{font-size:26px;min-width:38px;min-height:34px;padding:0;border:0}
+.bank-dialog-body{padding:20px}.bank-dialog p{margin:0 0 18px}.bank-dialog .bank-small{color:#999;font-size:18px;margin-top:16px}.bank-dialog label{display:block;color:#bbb;font-size:19px;margin:10px 0 5px}
+.bank-dialog input{width:100%;border:1px solid #92770c;padding:10px;background:#000;color:var(--bank-green);font:28px "VT323 Local",monospace}
+.bank-dialog form>button{width:100%;margin-top:12px}.bank-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.bank-dialog form>p{font-size:19px;color:#d9cc93;margin:12px 0}
+#savings-form .bank-actions{grid-template-columns:1fr}.bank-workspace button[hidden]{display:none!important}
+.bank-dialog-details{font-size:19px}.bank-dialog-details>div{display:flex;justify-content:space-between;gap:15px;margin:10px 0}.bank-dialog-details dd{margin:0;color:var(--bank-green)}
+.bank-dialog-status{font-size:19px}.bank-dialog-status:empty{display:none}.bank-note{font-size:19px;padding:12px 0;border-top:1px solid #514613}
+#bank-history{list-style:none;padding:0;margin:0}#bank-history li{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #383016;padding:12px 0;font-size:19px}
+@media(min-width:1700px){.game-bank-page .bank-workspace{padding:14px max(18px,calc((100vw - 1640px)/2)) 50px}}
+@media(max-width:1100px) and (min-width:761px){
+ .game-bank-page .bank-workspace{padding:8px 10px 25px}.bank-layout{gap:7px}.bank-panel{padding:0 10px}.bank-panel>h2{font-size:19px;padding:9px 0}
+ .game-bank-page .bank-workspace .game-nav a{min-width:52px;padding:4px 8px;font-size:15px}
+ .bank-account-balance{margin:25px 0 32px;gap:0}.bank-cash-art{flex-basis:43px;width:43px;transform:scale(.75);transform-origin:left center;margin-right:-6px}
+ .bank-account-actions{gap:11px}.bank-account-actions button{font-size:19px;min-height:38px;padding-left:25px}.bank-account-actions button>span{left:9px;font-size:25px}
+ .bank-account-summary{font-size:12px}.bank-exchange form{padding-top:18px}.bank-exchange label,.bank-exchange-rate>span{font-size:15px}.bank-amount-field,.bank-receive output{height:34px;font-size:24px}.bank-exchange-rate strong{font-size:19px}.bank-exchange form>button[type=submit]{min-height:36px;font-size:19px}
+ .bank-building-art{font-size:28px}.bank-loan-name{gap:4px}.bank-loan-name h2{font-size:18px}.bank-loan-strip{padding:5px 6px}.bank-loan-strip>strong{font-size:19px}.bank-loan-strip button{font-size:18px;min-height:32px;margin-left:5px}
+}
+@media(max-width:850px){.game-bank-page .bank-workspace .game-page-head{flex-wrap:wrap}.game-bank-page .bank-workspace .game-nav{width:100%;flex-basis:100%}}
+@media(max-width:760px){
+ .game-bank-page .bank-workspace{padding:10px 9px 24px}
+ .game-bank-page .bank-workspace .game-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+ .game-bank-page .bank-workspace .game-nav a{min-width:0;min-height:36px;padding:5px 8px}
+ .game-bank-page .bank-workspace #game-hud{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 0}.bank-metrics>div{padding:0 12px}.bank-metrics>div:nth-child(2){border:0}.bank-metrics dd{font-size:25px}
+ .bank-layout{grid-template-columns:1fr 1fr;aspect-ratio:auto;max-height:none;min-height:0}.bank-center{grid-column:1/-1;grid-row:1;grid-template-rows:auto 58px}
+ .bank-scene{aspect-ratio:2.15}.bank-panel{padding:0 10px}.bank-panel>h2{font-size:19px;padding:10px 0}
+ .bank-account-balance{margin:24px 0 25px;gap:0}.bank-cash-art{flex-basis:40px;transform:scale(.7);transform-origin:left center;margin-right:-9px}.bank-account-balance strong{font-size:25px}
+ .bank-account-actions{gap:12px}.bank-account-actions button{font-size:20px;padding-left:24px}.bank-account-actions button>span{left:9px}
+ .bank-exchange form{padding:16px 0 10px}.bank-exchange label,.bank-exchange-rate>span{font-size:14px}
+ .bank-amount-field,.bank-receive output{height:36px;font-size:24px;padding-inline:7px}.bank-receive{margin-top:22px}.bank-exchange-rate{margin:22px 0}.bank-exchange-rate strong{font-size:20px}.bank-exchange form>button[type=submit]{min-height:40px}
+ .bank-usd-line{flex-wrap:wrap;font-size:12px}.bank-account-summary{font-size:12px;margin-top:30px}.bank-account-summary>span{flex-wrap:wrap}
+ .bank-loan-strip{padding:4px 6px;grid-template-columns:1.3fr .9fr .7fr 1fr}.bank-loan-name{gap:4px}.bank-loan-name h2{font-size:17px}.bank-building-art{font-size:25px}.bank-loan-strip>strong{font-size:19px}.bank-loan-strip button{font-size:17px;padding:6px 3px;margin-left:3px}
+ .bank-repayment{flex-wrap:wrap;gap:12px;padding:12px}.bank-payment-copy h2{font-size:20px}#bank-next-due{font-size:14px;max-width:120px;margin-left:auto}.bank-payment-actions{width:100%;margin:0;display:grid;grid-template-columns:1fr 1fr}.bank-payment-actions button{min-width:0}
+ .bank-bottom-line{flex-direction:column;gap:12px}.bank-tools{width:100%;justify-content:space-between}.bank-title>span{font-size:17px}
+ .bank-workspace .bank-gauge{width:36px;height:20px}.bank-gauge i{left:16px;height:17px}.bank-credit-value{gap:7px}.bank-credit-value small{font-size:19px}
+}
+@media(prefers-reduced-motion:no-preference){.bank-dialog[open]{animation:bank-appear .15s ease-out}@keyframes bank-appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}}

@@ -34,6 +34,7 @@ import autopilot
 import alpaca_market
 import port_portfolio
 import quest_engine
+import banking
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "game.db"
@@ -441,6 +442,7 @@ def econ_payload(cfg, st, cls, session, behind=False):
     else:
         result = _legacy_econ_payload(cfg, st, cls, session, behind)
     result['classCompetition'] = session['code'] != SOLO_CODE
+    result['bank'] = banking.payload(cfg, st)
     return result
 
 
@@ -832,6 +834,10 @@ def _index(body, key):
     value=body.get(key)
     if isinstance(value,bool) or not isinstance(value,int): raise ApiError(key+' must be an integer')
     return value
+
+
+def bank_action(body):
+    return _act(body, lambda cfg, st, cls: banking.act(cfg, st, body))
 
 
 def econ_breakfast(body):
@@ -1759,7 +1765,7 @@ def _class_locked(fn):
 
 for _name in ('port_state','port_order','port_cancel','port_chart','_port_chart_access','_port_settle','get_state','econ_state','econ_login','econ_sell','econ_level','econ_auto','econ_expand',
               'econ_upgrade','econ_reserve','econ_processing','econ_fulfill_order','econ_replace_order','econ_commit_order','econ_focus','econ_breakfast',
-              'econ_business','econ_progression','econ_workforce','econ_craft','econ_quests','econ_focus_tree',
+              'econ_business','econ_progression','econ_workforce','econ_craft','econ_quests','econ_focus_tree','bank_action',
               'econ_contracts','econ_accept_contract','econ_customers','econ_ticker','econ_quiz','econ_keep','teacher_econ','teacher_event','trade_equity','join','teacher'):
     globals()[_name]=_class_locked(globals()[_name])
 
