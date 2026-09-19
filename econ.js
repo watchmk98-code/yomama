@@ -465,8 +465,11 @@
       '<a href="./license.html" class="game-text-button">View goals ↗</a><button class="game-text-button" type="button" data-game-deliveries>Delivery jobs' + (s.contracts.active.length ? ' · ' + s.contracts.active.length + ' active' : '') + ' ↗</button></div>';
   }
 
-  // Nested SVG viewports crop the original art sheet and preserve its proportions.
+  // Upgrade symbols are deliberately industry-neutral; the remaining scenes stay
+  // on the original art sheet and use nested SVG viewports for proportional crops.
   function buildConceptArt(kind) {
+    var upgradeArt={production:'upgrade-production.png',sales:'upgrade-customers.png',storage:'upgrade-storage.png'};
+    if(upgradeArt[kind])return '<img class="game-concept-art" src="./assets/build-ui/'+upgradeArt[kind]+'" alt="">';
     var crops={production:[1131,270,150,122],sales:[1131,412,150,125],storage:[1131,555,150,125],blueprint:[41,774,143,108],milestone:[1130,738,124,144],keeper:[44,890,105,89]};
     var box=crops[kind];
     if(!box)return '';

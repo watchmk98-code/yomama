@@ -6,7 +6,15 @@ window.YomamaPreloadManifest = {
     ["assets/bank/bank-black-background.png",1515302],
     ["assets/bank/bank-counter.png",2249777],
     ["assets/bank/bank-icons.svg",2425],
+    ["assets/bank/bank-section-concept-v2.png",1574721],
+    ["assets/bank/bank-section-concept-v3.png",1539465],
+    ["assets/bank/bank-section-concept.png",2030804],
+    ["assets/bank/banker-character-v2.png",1866214],
+    ["assets/bank/banker-character.png",1913258],
     ["assets/build-ui/concept-art.png",1947910],
+    ["assets/build-ui/upgrade-customers.png",160555],
+    ["assets/build-ui/upgrade-production.png",185849],
+    ["assets/build-ui/upgrade-storage.png",189421],
     ["assets/buildings/data_center.png",285934],
     ["assets/buildings/farm.png",178958],
     ["assets/buildings/generator.png",309808],
@@ -224,5 +232,5 @@ window.YomamaPreloadManifest = {
     ["assets/shop/supply-store-interior.png",2076976],
     ["banner-colored.png?v=20260916-sunny-smooth",805658],
   ],
-  "version": "575a0abd998bd5ed"
+  "version": "cbcca13d028fb0b9"
 };

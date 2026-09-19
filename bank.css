@@ -6,14 +6,11 @@
   font-family:"VT323 Local",monospace; font-size:20px; letter-spacing:0;
 }
 .game-bank-page .bank-workspace *{box-sizing:border-box}
-.game-bank-page .bank-workspace .game-page-head{min-height:36px;padding:0;margin:0 0 8px;gap:12px}
 .game-bank-page .bank-title{display:flex;align-items:center;gap:12px;white-space:nowrap}
 .game-bank-page .bank-title h1{font-family:inherit;font-size:24px;line-height:1;color:var(--bank-yellow);letter-spacing:0;margin:0}
 .bank-title>span{font-size:19px;color:#a4a4a5}
-.game-bank-page .bank-workspace .game-nav{border:0;background:transparent;gap:5px;margin:0}
-.game-bank-page .bank-workspace .game-nav a{font:17px "VT323 Local",monospace;letter-spacing:0;border:1px solid #685405;background:#020303;color:#aaa;min-height:32px;min-width:68px;justify-content:center;padding:4px 12px}
-.game-bank-page .bank-workspace .game-nav a[aria-current=page]{color:var(--bank-yellow);border-color:var(--bank-gold);box-shadow:inset 0 -2px var(--bank-yellow);background:#050500}
-.game-bank-page .bank-workspace .game-nav a img,.game-bank-page .bank-workspace .game-nav a>span[aria-hidden],.game-bank-page .bank-workspace .game-nav .craft-nav-icon,.game-bank-page .bank-workspace .game-nav .shop-nav-icon{display:none!important}
+/* The Bank body uses tighter terminal type; restore the shared game-nav type. */
+.game-bank-page .bank-workspace .game-nav{font-family:var(--font-terminal);letter-spacing:.8px}
 .game-bank-page .bank-workspace #game-hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--bank-gold);padding:8px 0!important;margin:0 0 12px;background:rgba(0,3,3,.95)}
 .bank-metrics>div{padding:0 22px;border-right:1px solid #8d7207;min-width:0}.bank-metrics>div:last-child{border:0}
 .bank-metrics dt{font-size:12px;line-height:1;color:#aaa;letter-spacing:1px;margin:0 0 5px}.bank-metrics dd{margin:0;line-height:1;font-size:26px;font-weight:bold;color:var(--bank-green);white-space:nowrap}
@@ -77,17 +74,13 @@
 @media(min-width:1700px){.game-bank-page .bank-workspace{padding:14px max(18px,calc((100vw - 1640px)/2)) 50px}}
 @media(max-width:1100px) and (min-width:761px){
  .game-bank-page .bank-workspace{padding:8px 10px 25px}.bank-layout{gap:7px}.bank-panel{padding:0 10px}.bank-panel>h2{font-size:19px;padding:9px 0}
- .game-bank-page .bank-workspace .game-nav a{min-width:52px;padding:4px 8px;font-size:15px}
  .bank-account-balance{margin:25px 0 32px;gap:0}.bank-cash-art{flex-basis:43px;width:43px;transform:scale(.75);transform-origin:left center;margin-right:-6px}
  .bank-account-actions{gap:11px}.bank-account-actions button{font-size:19px;min-height:38px;padding-left:25px}.bank-account-actions button>span{left:9px;font-size:25px}
  .bank-account-summary{font-size:12px}.bank-exchange form{padding-top:18px}.bank-exchange label,.bank-exchange-rate>span{font-size:15px}.bank-amount-field,.bank-receive output{height:34px;font-size:24px}.bank-exchange-rate strong{font-size:19px}.bank-exchange form>button[type=submit]{min-height:36px;font-size:19px}
  .bank-building-art{font-size:28px}.bank-loan-name{gap:4px}.bank-loan-name h2{font-size:18px}.bank-loan-strip{padding:5px 6px}.bank-loan-strip>strong{font-size:19px}.bank-loan-strip button{font-size:18px;min-height:32px;margin-left:5px}
 }
-@media(max-width:850px){.game-bank-page .bank-workspace .game-page-head{flex-wrap:wrap}.game-bank-page .bank-workspace .game-nav{width:100%;flex-basis:100%}}
 @media(max-width:760px){
  .game-bank-page .bank-workspace{padding:10px 9px 24px}
- .game-bank-page .bank-workspace .game-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important}
- .game-bank-page .bank-workspace .game-nav a{min-width:0;min-height:36px;padding:5px 8px}
  .game-bank-page .bank-workspace #game-hud{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 0}.bank-metrics>div{padding:0 12px}.bank-metrics>div:nth-child(2){border:0}.bank-metrics dd{font-size:25px}
  .bank-layout{grid-template-columns:1fr 1fr;aspect-ratio:auto;max-height:none;min-height:0}.bank-center{grid-column:1/-1;grid-row:1;grid-template-rows:auto 58px}
  .bank-scene{aspect-ratio:2.15}.bank-panel{padding:0 10px}.bank-panel>h2{font-size:19px;padding:10px 0}

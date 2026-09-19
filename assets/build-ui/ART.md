@@ -1,4 +1,6 @@
-Build uses the approved ImageGen concept as a shared CSS art sheet for the three upgrade illustrations and mechanic portrait. All labels, amounts, actions, building selection and financial figures are live HTML; no illustrated numbers are displayed.
+Build uses the approved ImageGen concept as a shared CSS art sheet for the mechanic portrait, blueprint, milestone and supporting HUD art. The three upgrade cards use separate transparent, industry-neutral pixel-art symbols: `upgrade-production.png`, `upgrade-customers.png` and `upgrade-storage.png`. They represent process/output, audience/reach and universal capacity rather than a brewery, restaurant or warehouse. All labels, amounts, actions, building selection and financial figures are live HTML; no illustrated numbers are displayed.
+
+The upgrade symbols were generated with built-in ImageGen from the approved screen's visual style, then reduced to 384 px PNGs while preserving alpha. The production prompt specified a glowing generic unit passing through gears and flow arrows; the customers prompt specified a varied group around a shared star and signal; the storage prompt specified modular cubes, a capacity gauge and a subtle database motif. Each prompt excluded words, logos and industry-specific settings.
 
 The six original financial cells and their calculations are unchanged. EBITDA is only the requested section heading. Business art uses the existing level-aware sprite library. The backdrop reuses assets/market/alley.png.
 
